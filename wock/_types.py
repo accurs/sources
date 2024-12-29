@@ -1,41 +1,50 @@
-from typing import Optional, Union, Any, Dict, List
-from random import uniform
-import orjson
-from contextlib import contextmanager
 import traceback
+from contextlib import contextmanager
 from logging import getLogger
+from random import uniform
+from typing import Any, Dict, List, Optional, Union
+
+import orjson
 
 logger = getLogger(__name__)
 
+
 @contextmanager
-def catch(exception_type = Exception):
+def catch(exception_type=Exception):
     try:
-       yield
+        yield
     except exception_type as error:
-        exc = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        exc = "".join(
+            traceback.format_exception(type(error), error, error.__traceback__)
+        )
         logger.info(f"error raised: {exc}")
         raise error
 
 
 Numeric = Union[float, int, str]
-    
-def maximum(self: Numeric,  maximum: Numeric) -> Optional[Numeric]:
+
+
+def maximum(self: Numeric, maximum: Numeric) -> Optional[Numeric]:
     return min(float(self), float(maximum))
 
-def maximum_(self: Numeric,  maximum: Numeric) -> Optional[Numeric]:
+
+def maximum_(self: Numeric, maximum: Numeric) -> Optional[Numeric]:
     return int(min(float(self), float(maximum)))
 
 
 def minimum(self: Numeric, minimum: Numeric) -> Optional[Numeric]:
     return max(float(minimum), float(self))
 
+
 def minimum_(self: Numeric, minimum: Numeric) -> Optional[Numeric]:
     return int(max(float(minimum), float(self)))
 
+
 @property
 def positive(self: Numeric) -> Optional[Numeric]:
-    return max(float(0.00), float(self)) 
-    
+    return max(float(0.00), float(self))
+
+
 @property
 def positive_(self: Numeric) -> Optional[Numeric]:
     return int(max(float(0.00), float(self)))
@@ -45,14 +54,17 @@ def calculate_(chance: Numeric, total: Optional[Numeric] = 100.0) -> bool:
     roll = uniform(0.0, float(total))
     return roll < float(chance)
 
+
 def hyperlink(text: str, url: str, character: Optional[str] = None) -> str:
     if character:
         return f"[{character}{text}{character}]({url})"
     else:
         return f"[{text}]({url})"
 
+
 def shorten(self: str, length: int) -> str:
     return self[:length]
+
 
 class ObjectTransformer(dict):
     def __getattr__(self, key: str) -> Any:
@@ -91,7 +103,7 @@ class ObjectTransformer(dict):
     async def from_data(cls, data: Union[Dict[str, Any], bytes]) -> "ObjectTransformer":
         parsed_data = orjson.loads(data) if isinstance(data, bytes) else data
         return cls(cls._convert(parsed_data))
-    
+
 
 def asDict(obj, max_depth=5) -> dict:
     """
@@ -101,9 +113,10 @@ def asDict(obj, max_depth=5) -> dict:
     :param max_depth: The maximum depth to recurse.
     :return: A dictionary containing the properties and their values.
     """
+
     def is_property(obj):
         return isinstance(obj, property)
-    
+
     def get_properties(obj, depth, seen):
         if depth > max_depth or id(obj) in seen:
             return {}  # Avoid infinite recursion and limit depth
@@ -114,19 +127,22 @@ def asDict(obj, max_depth=5) -> dict:
             if is_property(value):
                 try:
                     prop_value = getattr(obj, name)
-                    if hasattr(prop_value, '__class__') and not isinstance(prop_value, (int, float, str, bool, type(None))):
+                    if hasattr(prop_value, "__class__") and not isinstance(
+                        prop_value, (int, float, str, bool, type(None))
+                    ):
                         try:
-                            properties[name] = get_properties(prop_value, depth + 1, seen)
+                            properties[name] = get_properties(
+                                prop_value, depth + 1, seen
+                            )
                         except AttributeError:
                             continue
                     else:
                         properties[name] = prop_value
                 except RecursionError:
-                    properties[name] = 'RecursionError'
+                    properties[name] = "RecursionError"
         return properties
-    
-    return get_properties(obj, 0, set())
 
+    return get_properties(obj, 0, set())
 
 
 # def test():
@@ -152,7 +168,7 @@ def asDict(obj, max_depth=5) -> dict:
 #     number = float(1000.0)
 #     print(f"{isinstance(number, float)}")
 #     negative_number = float(-1.0)
-#     if isinstance(n, int): 
+#     if isinstance(n, int):
 #         print("it is an integer")
 #         print(", ".join(m for m in dir(n) if not m.startswith("__")))
 #     else: print(f"not an integer its a {type(n)}")

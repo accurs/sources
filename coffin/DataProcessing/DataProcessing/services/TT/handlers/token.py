@@ -1,28 +1,19 @@
+import asyncio
+import json
 import os
 import re
-import json
-import yaml
-import httpx
-import asyncio
-
-from typing import Union
 from pathlib import Path
+from typing import Union
 
+import httpx
+import yaml
 from loguru import logger
+
+from .api_exceptions import (APIConnectionError, APIError, APINotFoundError,
+                             APIResponseError, APIUnauthorizedError)
+from .utils import (extract_valid_urls, gen_random_str, get_timestamp,
+                    split_filename)
 from .xbogus import XBogus as XB
-from .utils import (
-    gen_random_str,
-    get_timestamp,
-    extract_valid_urls,
-    split_filename,
-)
-from .api_exceptions import (
-    APIError,
-    APIConnectionError,
-    APIResponseError,
-    APIUnauthorizedError,
-    APINotFoundError,
-)
 
 # yayayayaya
 # Read the configuration file
@@ -36,7 +27,6 @@ path = f"{path}{splitting_char}config.yaml".replace(f"handlers{splitting_char}",
 
 with open(path, "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
-
 
 
 class TokenManager:
@@ -108,8 +98,12 @@ class TokenManager:
             except Exception as e:
                 # yayayayamsToken (Return a fake msToken)
                 logger.error("yayaTikTok msToken APIyaya：{0}".format(e))
-                logger.info("yayayayayayayayayayaTikTokyayaya，yayayayayayamsTokenyayayayaya。")
-                logger.info("yayaTikTokyayaAPIyayayayayayayayaya，yaya(/tiktok/web/config.yaml)yayayayaya。")
+                logger.info(
+                    "yayayayayayayayayayaTikTokyayaya，yayayayayayamsTokenyayayayaya。"
+                )
+                logger.info(
+                    "yayaTikTokyayaAPIyayayayayayayayaya，yaya(/tiktok/web/config.yaml)yayayayaya。"
+                )
                 logger.info("yayayayayayayayaTikTokyayaAPI，yayayayayaya。")
                 return cls.gen_false_msToken()
 
@@ -147,23 +141,28 @@ class TokenManager:
 
             except httpx.RequestError as exc:
                 # yayayaya httpx yayayayayayayayaya (Captures all httpx request-related exceptions)
-                raise APIConnectionError("yayayayayaya，yayayayayayayayaya。 yaya：{0}，yaya：{1}，yayayaya：{2}，yayayayayaya：{3}"
-                                         .format(cls.ttwid_conf["url"], cls.proxies, cls.__name__, exc)
-                                         )
+                raise APIConnectionError(
+                    "yayayayayaya，yayayayayayayayaya。 yaya：{0}，yaya：{1}，yayayaya：{2}，yayayayayaya：{3}".format(
+                        cls.ttwid_conf["url"], cls.proxies, cls.__name__, exc
+                    )
+                )
 
             except httpx.HTTPStatusError as e:
                 # ya httpx yayayayayayaya (captures specific status code errors from httpx)
                 if response.status_code == 401:
-                    raise APIUnauthorizedError("yayayayayaya，yayaya Douyin_TikTok_Download_API yayayayayaya {0}，yayaya {1} yayaya"
-                                               .format("ttwid", "tiktok")
-                                               )
+                    raise APIUnauthorizedError(
+                        "yayayayayaya，yayaya Douyin_TikTok_Download_API yayayayayaya {0}，yayaya {1} yayaya".format(
+                            "ttwid", "tiktok"
+                        )
+                    )
 
                 elif response.status_code == 404:
                     raise APINotFoundError("{0} yayayayaAPIyaya".format("ttwid"))
                 else:
-                    raise APIResponseError("yaya：{0}，yayaya {1}：{2} ".format(
-                        e.response.url, e.response.status_code, e.response.text
-                    )
+                    raise APIResponseError(
+                        "yaya：{0}，yayaya {1}：{2} ".format(
+                            e.response.url, e.response.status_code, e.response.text
+                        )
                     )
 
     @classmethod
@@ -186,32 +185,37 @@ class TokenManager:
 
             except httpx.RequestError as exc:
                 # yayayaya httpx yayayayayayayayaya (Captures all httpx request-related exceptions)
-                raise APIConnectionError("yayayayayaya，yayayayayayayayaya。 yaya：{0}，yaya：{1}，yayayaya：{2}，yayayayayaya：{3}"
-                                         .format(cls.odin_tt_conf["url"], cls.proxies, cls.__name__, exc)
-                                         )
+                raise APIConnectionError(
+                    "yayayayayaya，yayayayayayayayaya。 yaya：{0}，yaya：{1}，yayayaya：{2}，yayayayayaya：{3}".format(
+                        cls.odin_tt_conf["url"], cls.proxies, cls.__name__, exc
+                    )
+                )
 
             except httpx.HTTPStatusError as e:
                 # ya httpx yayayayayayaya (captures specific status code errors from httpx)
                 if response.status_code == 401:
-                    raise APIUnauthorizedError("yayayayayaya，yayaya Douyin_TikTok_Download_API yayayayayaya {0}，yayaya {1} yayaya"
-                                               .format("odin_tt", "tiktok")
-                                               )
+                    raise APIUnauthorizedError(
+                        "yayayayayaya，yayaya Douyin_TikTok_Download_API yayayayayaya {0}，yayaya {1} yayaya".format(
+                            "odin_tt", "tiktok"
+                        )
+                    )
 
                 elif response.status_code == 404:
                     raise APINotFoundError("{0} yayayayaAPIyaya".format("odin_tt"))
                 else:
-                    raise APIResponseError("yaya：{0}，yayaya {1}：{2} ".format(
-                        e.response.url, e.response.status_code, e.response.text
-                    )
+                    raise APIResponseError(
+                        "yaya：{0}，yayaya {1}：{2} ".format(
+                            e.response.url, e.response.status_code, e.response.text
+                        )
                     )
 
 
 class BogusManager:
     @classmethod
     def xb_str_2_endpoint(
-            cls,
-            user_agent: str,
-            endpoint: str,
+        cls,
+        user_agent: str,
+        endpoint: str,
     ) -> str:
         try:
             final_endpoint = XB(user_agent).getXBogus(endpoint)
@@ -222,10 +226,10 @@ class BogusManager:
 
     @classmethod
     def model_2_endpoint(
-            cls,
-            base_endpoint: str,
-            params: dict,
-            user_agent: str,
+        cls,
+        base_endpoint: str,
+        params: dict,
+        user_agent: str,
     ) -> str:
         # yaparamsyayayayayayaya (Check if params is a dict)
         if not isinstance(params, dict):
@@ -272,28 +276,30 @@ class SecUserIdFetcher:
         url = extract_valid_urls(url)
 
         if url is None:
-            raise (
-                APINotFoundError("yayayaURLyayaya。yaya：{0}".format(cls.__name__))
-            )
+            raise (APINotFoundError("yayayaURLyayaya。yaya：{0}".format(cls.__name__)))
 
         transport = httpx.AsyncHTTPTransport(retries=5)
         async with httpx.AsyncClient(
-                transport=transport, proxies=TokenManager.proxies, timeout=10
+            transport=transport, proxies=TokenManager.proxies, timeout=10
         ) as client:
             try:
                 response = await client.get(url, follow_redirects=True)
                 # 444yayayaNginxyaya，yayayayaya (444 is generally intercepted by Nginx and does not return status)
                 if response.status_code in {200, 444}:
                     if cls._TIKTOK_NOTFOUND_PARREN.search(str(response.url)):
-                        raise APINotFoundError("yayayayaya，yayayayayayayayaya（yaya）yayaya。yaya: {0}"
-                                               .format(cls.__name__)
-                                               )
+                        raise APINotFoundError(
+                            "yayayayaya，yayayayayayayayaya（yaya）yayaya。yaya: {0}".format(
+                                cls.__name__
+                            )
+                        )
 
                     match = cls._TIKTOK_SECUID_PARREN.search(str(response.text))
                     if not match:
-                        raise APIResponseError("yayayayayayaya {0}，yayayayayayayayayayaya。yaya: {1}"
-                                               .format("sec_uid", cls.__name__)
-                                               )
+                        raise APIResponseError(
+                            "yayayayayayaya {0}，yayayayayayayayayayaya。yaya: {1}".format(
+                                "sec_uid", cls.__name__
+                            )
+                        )
 
                     # yaSIGI_STATEyayayayasec_uid
                     data = json.loads(match.group(1))
@@ -313,9 +319,11 @@ class SecUserIdFetcher:
 
             except httpx.RequestError as exc:
                 # yayayaya httpx yayayayayayayayaya (Captures all httpx request-related exceptions)
-                raise APIConnectionError("yayayayayaya，yayayayayayayayaya。 yaya：{0}，yaya：{1}，yayayaya：{2}，yayayayayaya：{3}"
-                                         .format(url, TokenManager.proxies, cls.__name__, exc)
-                                         )
+                raise APIConnectionError(
+                    "yayayayayaya，yayayayayayayayaya。 yaya：{0}，yaya：{1}，yayayaya：{2}，yayayayayaya：{3}".format(
+                        url, TokenManager.proxies, cls.__name__, exc
+                    )
+                )
 
     @classmethod
     async def get_all_secuid(cls, urls: list) -> list:
@@ -337,9 +345,7 @@ class SecUserIdFetcher:
 
         if urls == []:
             raise (
-                APINotFoundError(
-                    "yayayaURL Listyayaya。yaya：{0}".format(cls.__name__)
-                )
+                APINotFoundError("yayayaURL Listyayaya。yaya：{0}".format(cls.__name__))
             )
 
         secuids = [cls.get_secuid(url) for url in urls]
@@ -363,28 +369,26 @@ class SecUserIdFetcher:
         url = extract_valid_urls(url)
 
         if url is None:
-            raise (
-                APINotFoundError("yayayaURLyayaya。yaya：{0}".format(cls.__name__))
-            )
+            raise (APINotFoundError("yayayaURLyayaya。yaya：{0}".format(cls.__name__)))
 
         transport = httpx.AsyncHTTPTransport(retries=5)
         async with httpx.AsyncClient(
-                transport=transport, proxies=TokenManager.proxies, timeout=10
+            transport=transport, proxies=TokenManager.proxies, timeout=10
         ) as client:
             try:
                 response = await client.get(url, follow_redirects=True)
 
                 if response.status_code in {200, 444}:
                     if cls._TIKTOK_NOTFOUND_PARREN.search(str(response.url)):
-                        raise APINotFoundError("yayayayaya，yayayayayayayayaya（yaya）yayaya。yaya: {0}"
-                                               .format(cls.__name__)
-                                               )
+                        raise APINotFoundError(
+                            "yayayayaya，yayayayayayayayaya（yaya）yayaya。yaya: {0}".format(
+                                cls.__name__
+                            )
+                        )
 
                     match = cls._TIKTOK_UNIQUEID_PARREN.search(str(response.url))
                     if not match:
-                        raise APIResponseError(
-                            "yayayayayayaya {0}".format("unique_id")
-                        )
+                        raise APIResponseError("yayayayayayaya {0}".format("unique_id"))
 
                     unique_id = match.group(1)
 
@@ -400,9 +404,11 @@ class SecUserIdFetcher:
                     )
 
             except httpx.RequestError:
-                raise APIConnectionError("yayayayayaya，yayayayayayayayaya：{0} yaya：{1} yaya：{2}"
-                                         .format(url, TokenManager.proxies, cls.__name__),
-                                         )
+                raise APIConnectionError(
+                    "yayayayayaya，yayayayayayayayaya：{0} yaya：{1} yaya：{2}".format(
+                        url, TokenManager.proxies, cls.__name__
+                    ),
+                )
 
     @classmethod
     async def get_all_uniqueid(cls, urls: list) -> list:
@@ -424,9 +430,7 @@ class SecUserIdFetcher:
 
         if urls == []:
             raise (
-                APINotFoundError(
-                    "yayayaURL Listyayaya。yaya：{0}".format(cls.__name__)
-                )
+                APINotFoundError("yayayaURL Listyayaya。yaya：{0}".format(cls.__name__))
             )
 
         unique_ids = [cls.get_uniqueid(url) for url in urls]
@@ -483,16 +487,18 @@ class AwemeIdFetcher:
         print(f"yayayaURLyayayayaya: {url}")
         transport = httpx.AsyncHTTPTransport(retries=10)
         async with httpx.AsyncClient(
-                transport=transport, proxies=TokenManager.proxies, timeout=10
+            transport=transport, proxies=TokenManager.proxies, timeout=10
         ) as client:
             try:
                 response = await client.get(url, follow_redirects=True)
 
                 if response.status_code in {200, 444}:
                     if cls._TIKTOK_NOTFOUND_PATTERN.search(str(response.url)):
-                        raise APINotFoundError("yayayayaya，yayayayayayayayaya（yaya）yayaya。yaya: {0}"
-                                               .format(cls.__name__)
-                                               )
+                        raise APINotFoundError(
+                            "yayayayaya，yayayayayayayayaya（yaya）yayaya。yaya: {0}".format(
+                                cls.__name__
+                            )
+                        )
 
                     video_match = cls._TIKTOK_AWEMEID_PATTERN.search(str(response.url))
                     photo_match = cls._TIKTOK_PHOTOID_PATTERN.search(str(response.url))
@@ -500,20 +506,28 @@ class AwemeIdFetcher:
                     if not video_match and not photo_match:
                         raise APIResponseError("yayayayayayaya aweme_id ya photo_id")
 
-                    aweme_id = video_match.group(1) if video_match else photo_match.group(1)
+                    aweme_id = (
+                        video_match.group(1) if video_match else photo_match.group(1)
+                    )
 
                     if aweme_id is None:
-                        raise RuntimeError("yaya aweme_id ya photo_id yaya，{0}".format(response.url))
+                        raise RuntimeError(
+                            "yaya aweme_id ya photo_id yaya，{0}".format(response.url)
+                        )
 
                     return aweme_id
                 else:
-                    raise ConnectionError("yayayayayayaya {0}，yayayayaya".format(response.status_code))
+                    raise ConnectionError(
+                        "yayayayayayaya {0}，yayayayaya".format(response.status_code)
+                    )
 
             except httpx.RequestError as exc:
                 # yayayaya httpx yayayayayayayayaya
-                raise APIConnectionError("yayayayayaya，yayayayayayayayaya。 yaya：{0}，yaya：{1}，yayayaya：{2}，yayayayayaya：{3}"
-                                         .format(url, TokenManager.proxies, cls.__name__, exc)
-                                         )
+                raise APIConnectionError(
+                    "yayayayayaya，yayayayayayayayaya。 yaya：{0}，yaya：{1}，yayayaya：{2}，yayayayayaya：{3}".format(
+                        url, TokenManager.proxies, cls.__name__, exc
+                    )
+                )
 
     @classmethod
     async def get_all_aweme_id(cls, urls: list) -> list:
@@ -535,9 +549,7 @@ class AwemeIdFetcher:
 
         if urls == []:
             raise (
-                APINotFoundError(
-                    "yayayaURL Listyayaya。yaya：{0}".format(cls.__name__)
-                )
+                APINotFoundError("yayayaURL Listyayaya。yaya：{0}".format(cls.__name__))
             )
 
         aweme_ids = [cls.get_aweme_id(url) for url in urls]
@@ -545,9 +557,9 @@ class AwemeIdFetcher:
 
 
 def format_file_name(
-        naming_template: str,
-        aweme_data: dict = {},
-        custom_fields: dict = {},
+    naming_template: str,
+    aweme_data: dict = {},
+    custom_fields: dict = {},
 ) -> str:
     """
     yayayayayayayayayayayayayayaya
@@ -627,7 +639,7 @@ def create_user_folder(kwargs: dict, nickname: Union[str, int]) -> Path:
 
     # yayayayayayayayaya
     user_path = (
-            base_path / "tiktok" / kwargs.get("mode", "PLEASE_SETUP_MODE") / str(nickname)
+        base_path / "tiktok" / kwargs.get("mode", "PLEASE_SETUP_MODE") / str(nickname)
     )
 
     # yayayayayayayayayayaya
@@ -660,7 +672,7 @@ def rename_user_folder(old_path: Path, new_nickname: str) -> Path:
 
 
 def create_or_rename_user_folder(
-        kwargs: dict, local_user_data: dict, current_nickname: str
+    kwargs: dict, local_user_data: dict, current_nickname: str
 ) -> Path:
     """
     yayayayayayayayayaya (Create or rename user directory)

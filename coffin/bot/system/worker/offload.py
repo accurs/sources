@@ -5,10 +5,11 @@ import os
 from contextlib import suppress
 from functools import partial
 from typing import Awaitable, Callable, TypeVar
-from typing_extensions import ParamSpec
 
 import distributed.client
 from tornado import gen
+from typing_extensions import ParamSpec
+
 from .dask import get_dask, start_dask
 
 P = ParamSpec("P")

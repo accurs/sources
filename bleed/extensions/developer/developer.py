@@ -1,18 +1,11 @@
 import subprocess
-
 from traceback import format_exception
 from typing import Optional
 
 from discord import Embed, Member, Message, User
-from discord.ext.commands import (
-    Cog,
-    ExtensionAlreadyLoaded,
-    ExtensionFailed,
-    ExtensionNotFound,
-    ExtensionNotLoaded,
-    command,
-    group,
-)
+from discord.ext.commands import (Cog, ExtensionAlreadyLoaded, ExtensionFailed,
+                                  ExtensionNotFound, ExtensionNotLoaded,
+                                  command, group)
 from discord.utils import format_dt
 from tools import Bleed
 from tools.client.context import Context
@@ -243,7 +236,6 @@ class Developer(Cog):
                 f"Failed to restart bot:\n```\n{e.stderr or 'Unknown error'}```"
             )
 
-
     @group(
         name="donator",
         aliases=["d"],
@@ -310,13 +302,10 @@ class Developer(Cog):
         # Create list of embeds for pagination
         embeds = []
         donators_per_page = 10
-        
+
         for i in range(0, len(donators), donators_per_page):
-            chunk = donators[i:i + donators_per_page]
-            embed = Embed(
-                title="Donators",
-                description="\n".join(chunk)
-            )
+            chunk = donators[i : i + donators_per_page]
+            embed = Embed(title="Donators", description="\n".join(chunk))
             if len(donators) > donators_per_page:
                 embed.set_footer(
                     text=f"Page {i//donators_per_page + 1}/{(len(donators) + donators_per_page - 1) // donators_per_page}"

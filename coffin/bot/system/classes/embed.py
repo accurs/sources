@@ -1,19 +1,23 @@
-from re import Match, compile, sub, DOTALL  # noqa: F401
+import datetime
+import re
+from re import DOTALL, Match, compile, sub  # noqa: F401
 from typing import Any, Callable, Dict, Optional, Union
-from discord.ext.commands import CommandError, Context, Converter
-from discord import Embed, Guild, ActionRow, User, Member, Message, ButtonStyle  # noqa: F401
-from discord.abc import GuildChannel
-from aiohttp import ClientSession
-from typing_extensions import Type, NoReturn, Self
-from discord.ui import View, Button
-from data.variables import EMOJI_REGEX, DEFAULT_EMOJIS
-from discord.utils import format_dt
+
 import discord
 import regex
-import re
-import datetime
-from .exceptions import EmbedError
+from aiohttp import ClientSession
+from data.variables import DEFAULT_EMOJIS, EMOJI_REGEX
+from discord import (ActionRow, ButtonStyle, Embed, Guild,  # noqa: F401
+                     Member, Message, User)
+from discord.abc import GuildChannel
+from discord.ext.commands import CommandError, Context, Converter
+from discord.ui import Button, View
+from discord.utils import format_dt
 from loguru import logger
+from typing_extensions import NoReturn, Self, Type
+
+from .exceptions import EmbedError
+
 
 def escape_md(s):
     transformations = {
@@ -26,11 +30,17 @@ def escape_md(s):
     pattern = regex.compile("|".join(transformations.keys()))
     return pattern.sub(replace, s)
 
+
 image_link = compile(
     r"https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*(?:\.png|\.jpe?g|\.gif|\.jpg|))"
 )
 
-def embed_to_code(embed: Union[dict, Message, Embed], message: Optional[str] = None, escaped: Optional[bool] = True) -> dict:
+
+def embed_to_code(
+    embed: Union[dict, Message, Embed],
+    message: Optional[str] = None,
+    escaped: Optional[bool] = True,
+) -> dict:
     """Converts an embed to a code block."""
     code = "{embed}"
     msg = None
@@ -63,7 +73,7 @@ def embed_to_code(embed: Union[dict, Message, Embed], message: Optional[str] = N
                                 substeps += f"{str(child.emoji)} && "
                             substeps += f"{child.url}}}"
                             code += substeps
-                        
+
     if message:
         code += f"$v{{content: {message}}}"
     if embed.title:
@@ -95,7 +105,7 @@ def embed_to_code(embed: Union[dict, Message, Embed], message: Optional[str] = N
             substeps += f" && {url}"
         if icon_url:
             substeps += f" && {icon_url}"
-        code += "$v{"+ substeps + "}"
+        code += "$v{" + substeps + "}"
     if image_url := embed.image.url:
         code += f"$v{{image: {image_url}}}"
     if thumbnail_url := embed.thumbnail.url:
@@ -105,9 +115,7 @@ def embed_to_code(embed: Union[dict, Message, Embed], message: Optional[str] = N
     if escaped:
         code = code.replace("```", "`\u200b`\u200b`")
     return code
-    
 
-        
 
 def format_plays(amount):
     if amount == 1:
@@ -119,6 +127,7 @@ def ordinal(n):
     n = int(n)
     return "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4])
 
+
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 
 # URL pattern to verify the format
@@ -126,14 +135,15 @@ URL_PATTERN = re.compile(
     r"^(https?://)"
     r"([a-zA-Z0-9.-]+)"  # Domain
     r"(\.[a-zA-Z]{2,})"  # TLD
-    r"(/.*)?$",          # Path
+    r"(/.*)?$",  # Path
 )
+
 
 async def is_valid_icon_url(url: str) -> bool:
     # Check if URL format is valid
     if not URL_PATTERN.match(url):
         return False
-    
+
     # Check the Content-Type to ensure it's an allowed image format
     async with ClientSession() as session:
         try:
@@ -143,7 +153,6 @@ async def is_valid_icon_url(url: str) -> bool:
         except Exception as e:
             print(f"Failed to fetch URL: {e}")
             return False
-
 
 
 class EmbedConverter(Converter):
@@ -158,7 +167,14 @@ class EmbedConverter(Converter):
 
 
 class Script:
-    def __init__(self, template: str, user: Union[Member, User], lastfm_data: dict = {}, *, channel: Optional[GuildChannel] = None):
+    def __init__(
+        self,
+        template: str,
+        user: Union[Member, User],
+        lastfm_data: dict = {},
+        *,
+        channel: Optional[GuildChannel] = None,
+    ):
         self.pattern = compile(r"\{([\s\S]*?)\}")  # compile(r"{(.*?)}")
         self.data: Dict[str, Union[Dict, str]] = {
             "embed": {},
@@ -208,7 +224,9 @@ class Script:
             "{date}": lastfm_data.get("date", ""),
             "{whitespace}": "\u200e",
         }
-        self.template = self._replace_placeholders(template.replace("`\u200b`\u200b`", "```"))
+        self.template = self._replace_placeholders(
+            template.replace("`\u200b`\u200b`", "```")
+        )
 
     def get_color(self, color: str):
         try:
@@ -337,7 +355,9 @@ class Script:
             raise EmbedError("field `embed` is to long the limit is 6000 characters")
         keys = [k for k in self.data.get("embed", {}).keys()]
         if len(keys) == 1 and "color" in keys:
-            raise EmbedError("A field or description is required if you provide a color")
+            raise EmbedError(
+                "A field or description is required if you provide a color"
+            )
 
     def _replace_placeholders(self: Self, template: str) -> str:
         template = (
@@ -390,7 +410,9 @@ class Script:
                                     "icon_url"
                                 ] = v.lstrip().rstrip()
                             else:
-                                self.data["embed"]["author"]["icon_url"] = v.lstrip().rstrip()
+                                self.data["embed"]["author"][
+                                    "icon_url"
+                                ] = v.lstrip().rstrip()
                 elif parts[0] == "button":
                     button_data = parts[1].split("&&")
                     if len(button_data) == 3:
@@ -413,7 +435,6 @@ class Script:
                         else:
                             self.data["buttons"].append(data)
 
-
                     if len(button_data) == 2:
                         button_label = button_data[0].strip()
                         if _matches := EMOJI_REGEX.findall(button_label):
@@ -427,12 +448,16 @@ class Script:
                         )
                         self.validate_url(_button_url)
                         if not self.data.get("buttons"):
-                            self.data["buttons"] = [{
-                                button_key: button_label,
-                                "url": _button_url,
-                            }]
+                            self.data["buttons"] = [
+                                {
+                                    button_key: button_label,
+                                    "url": _button_url,
+                                }
+                            ]
                         else:
-                            self.data["buttons"].append({button_key: button_label, "url": _button_url})
+                            self.data["buttons"].append(
+                                {button_key: button_label, "url": _button_url}
+                            )
                 elif parts[0] == "field":
                     if "fields" not in self.data["embed"]:
                         self.data["embed"]["fields"] = []
@@ -468,7 +493,9 @@ class Script:
         if len(self.data.get("embed", {}).keys()) == 0:
             self.data.pop("embed", None)
 
-    async def send(self: Self, target: Union[Context , GuildChannel], **kwargs) -> Message:
+    async def send(
+        self: Self, target: Union[Context, GuildChannel], **kwargs
+    ) -> Message:
         buttons = self.data.pop("buttons", None)
         if buttons:
             view = View()
@@ -480,13 +507,7 @@ class Script:
                     k["emoji"] = emoji
                 if not k.get("emoji", k.get("label")):
                     continue
-                view.add_item(
-                    Button(
-                        style=ButtonStyle.link,
-                        url=button["url"],
-                        **k
-                    )
-                )
+                view.add_item(Button(style=ButtonStyle.link, url=button["url"], **k))
             kwargs["view"] = view
         else:
             if kwargs.get("view"):
@@ -512,7 +533,7 @@ class Script:
         return await target.send(
             **kwargs,
         )
-    
+
     async def edit(self: Self, message: Message, **kwargs):
         buttons = self.data.pop("buttons", None)
         if buttons:
@@ -526,11 +547,7 @@ class Script:
                 if not kwargs.get("emoji", kwargs.get("button")):
                     continue
                 view.add_item(
-                    Button(
-                        style=ButtonStyle.link,
-                        url=button["url"],
-                        **kwargs
-                    )
+                    Button(style=ButtonStyle.link, url=button["url"], **kwargs)
                 )
             kwargs["view"] = view
         else:
@@ -565,6 +582,3 @@ class Script:
 
     def __str__(self: Self) -> str:
         return self.template
-
-
-

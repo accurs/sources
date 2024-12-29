@@ -128,7 +128,7 @@ class HighlightsInfo(BaseModel):
 
 
 class Result(BaseModel):
-    field__typename: Optional[str] = Field(None, alias='__typename')
+    field__typename: Optional[str] = Field(None, alias="__typename")
     id: Optional[str] = None
     rest_id: Optional[str] = None
     affiliates_highlighted_label: Optional[AffiliatesHighlightedLabel] = None

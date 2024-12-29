@@ -1,6 +1,3 @@
-
-
-
 class WebhookError(RuntimeError):
     """Base class for Webhook cog exceptions."""
 

@@ -1,6 +1,6 @@
-from discord.ext import commands
 import discord
-from bot.managers.emojis import Emojis, Colors
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
 
 
 class reacts(commands.Cog):

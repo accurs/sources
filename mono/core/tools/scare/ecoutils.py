@@ -1,5 +1,5 @@
-from discord.ext.commands import CommandError, Converter
 from core.client.context import Context
+from discord.ext.commands import CommandError, Converter
 
 
 class Bank(Converter):

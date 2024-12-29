@@ -1,12 +1,17 @@
-from discord.ext import commands
-import discord, json, asyncio, datetime, re
-from uwuipy import uwuipy
-from discord import Embed, Message, User
-from reposter.reposter import Reposter
-from patches.permissions import Perms
+import asyncio
+import datetime
+import json
+import re
 from collections import defaultdict
+
+import discord
+from bot.managers.emojis import Colors, Emojis
+from discord import Embed, Message, User
+from discord.ext import commands
 from patches import functions
-from bot.managers.emojis import Emojis, Colors
+from patches.permissions import Perms
+from reposter.reposter import Reposter
+from uwuipy import uwuipy
 
 DISCORD_API_LINK = "https://discord.com/api/invite/"
 

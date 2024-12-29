@@ -2,18 +2,8 @@ import re
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Union, cast
 
-from discord import (
-    Asset,
-    Color,
-    Guild,
-    Member,
-    Role,
-    Status,
-    TextChannel,
-    Thread,
-    User,
-    VoiceChannel,
-)
+from discord import (Asset, Color, Guild, Member, Role, Status, TextChannel,
+                     Thread, User, VoiceChannel)
 from humanfriendly import format_timespan
 from pydantic import BaseModel
 

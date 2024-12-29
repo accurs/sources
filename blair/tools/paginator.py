@@ -1,23 +1,33 @@
 from __future__ import annotations
 
-import discord
 import uuid
 
+import discord
 from discord.ext import commands
-
-from tools.config import emoji, color
+from tools.config import color, emoji
 
 
 class Simple(discord.ui.View):
-    def __init__(self, *,
-                 timeout: int = None,
-                 PreviousButton: discord.ui.Button = discord.ui.Button(emoji='<:left:1294716353952874547>', style=discord.ButtonStyle.primary),
-                 NextButton: discord.ui.Button = discord.ui.Button(emoji='<:right:1294716290199720037>', style=discord.ButtonStyle.primary),
-                 ExitButton: discord.ui.Button = discord.ui.Button(emoji='<:exit:1294716331538645044>', style=discord.ButtonStyle.grey),
-                 PaginateButton: discord.ui.Button = discord.ui.Button(emoji='<:paginate:1294716310701215784>', style=discord.ButtonStyle.grey),
-                 InitialPage: int = 0,
-                 AllowExtInput: bool = False,
-                 ephemeral: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        timeout: int = None,
+        PreviousButton: discord.ui.Button = discord.ui.Button(
+            emoji="<:left:1294716353952874547>", style=discord.ButtonStyle.primary
+        ),
+        NextButton: discord.ui.Button = discord.ui.Button(
+            emoji="<:right:1294716290199720037>", style=discord.ButtonStyle.primary
+        ),
+        ExitButton: discord.ui.Button = discord.ui.Button(
+            emoji="<:exit:1294716331538645044>", style=discord.ButtonStyle.grey
+        ),
+        PaginateButton: discord.ui.Button = discord.ui.Button(
+            emoji="<:paginate:1294716310701215784>", style=discord.ButtonStyle.grey
+        ),
+        InitialPage: int = 0,
+        AllowExtInput: bool = False,
+        ephemeral: bool = False,
+    ) -> None:
         super().__init__(timeout=timeout)
 
         self.PreviousButton = PreviousButton
@@ -50,7 +60,9 @@ class Simple(discord.ui.View):
         self.add_item(self.ExitButton)
         self.add_item(self.PaginateButton)
 
-    async def start(self, ctx: discord.Interaction | commands.Context, pages: list[discord.Embed]):
+    async def start(
+        self, ctx: discord.Interaction | commands.Context, pages: list[discord.Embed]
+    ):
         if isinstance(ctx, discord.Interaction):
             ctx = await commands.Context.from_interaction(ctx)
 
@@ -59,7 +71,9 @@ class Simple(discord.ui.View):
         self.ctx = ctx
         self.current_page = self.InitialPage
 
-        self.message = await ctx.send(embed=self.pages[self.InitialPage], view=self, ephemeral=self.ephemeral)
+        self.message = await ctx.send(
+            embed=self.pages[self.InitialPage], view=self, ephemeral=self.ephemeral
+        )
 
     async def previous(self):
         if self.current_page == 0:
@@ -86,29 +100,36 @@ class Simple(discord.ui.View):
             await self.ctx.send(f"{emoji.deny} Invalid page number", ephemeral=True)
 
     async def previous_button_callback(self, interaction: discord.Interaction):
-        if not self.is_valid_interaction(interaction, 'previous'):
+        if not self.is_valid_interaction(interaction, "previous"):
             return
         await self.previous()
         await interaction.response.defer()
 
     async def next_button_callback(self, interaction: discord.Interaction):
-        if not self.is_valid_interaction(interaction, 'next'):
+        if not self.is_valid_interaction(interaction, "next"):
             return
         await self.next()
         await interaction.response.defer()
 
     async def exit_button_callback(self, interaction: discord.Interaction):
-        if not self.is_valid_interaction(interaction, 'exit'):
+        if not self.is_valid_interaction(interaction, "exit"):
             return
         await self.exit()
         await interaction.response.defer()
 
     async def paginate_button_callback(self, interaction: discord.Interaction):
-        if not await self.is_valid_interaction(interaction, 'paginate'):
+        if not await self.is_valid_interaction(interaction, "paginate"):
             return
 
-        options = [discord.SelectOption(label=f"Page {i + 1}", value=str(i)) for i in range(self.total_page_count)]
-        select = discord.ui.Select(placeholder="Select a page", options=options, custom_id=f"select:{self.paginator_id}")
+        options = [
+            discord.SelectOption(label=f"Page {i + 1}", value=str(i))
+            for i in range(self.total_page_count)
+        ]
+        select = discord.ui.Select(
+            placeholder="Select a page",
+            options=options,
+            custom_id=f"select:{self.paginator_id}",
+        )
 
         async def select_callback(interaction: discord.Interaction):
             page_number = int(select.values[0])
@@ -122,17 +143,28 @@ class Simple(discord.ui.View):
 
         view = discord.ui.View()
         view.add_item(select)
-        user_pfp = (interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
-        embed = discord.Embed(description="> **Choose** a page for you to go on", color=color.default)
+        user_pfp = (
+            interaction.user.avatar.url
+            if interaction.user.avatar
+            else interaction.user.default_avatar.url
+        )
+        embed = discord.Embed(
+            description="> **Choose** a page for you to go on", color=color.default
+        )
         embed.set_author(name=f"{interaction.user.name} | paginate", icon_url=user_pfp)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    async def is_valid_interaction(self, interaction: discord.Interaction, button_id: str):
-        if interaction.data['custom_id'] != f"{button_id}:{self.paginator_id}":
+    async def is_valid_interaction(
+        self, interaction: discord.Interaction, button_id: str
+    ):
+        if interaction.data["custom_id"] != f"{button_id}:{self.paginator_id}":
             return False
 
         if interaction.user != self.ctx.author and not self.AllowExtInput:
-            embed = discord.Embed(description=f"{emoji.deny} {interaction.user.mention}: You **cannot** interact with this", color=color.deny)
+            embed = discord.Embed(
+                description=f"{emoji.deny} {interaction.user.mention}: You **cannot** interact with this",
+                color=color.deny,
+            )
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return False
 

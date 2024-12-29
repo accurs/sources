@@ -4,6 +4,7 @@ from io import BytesIO
 import discord
 import tabulate
 from PIL import Image, ImageDraw, ImageFont
+
 from grief.core.utils import AsyncIter
 from grief.core.utils.chat_formatting import humanize_number
 
@@ -87,7 +88,9 @@ class CompareMixin(MixinMeta):
                     await ctx.send("You haven't listened to any artists yet.")
                 else:
                     await ctx.send(
-                        "You haven't listened to any artists in the last {}s.".format(period)
+                        "You haven't listened to any artists in the last {}s.".format(
+                            period
+                        )
                     )
                 return
 
@@ -115,8 +118,12 @@ class CompareMixin(MixinMeta):
             data = {"Artist": artist_names, ctx.author: author_plays, user: user_plays}
             table = tabulate.tabulate(data, headers="keys", tablefmt="fancy_grid")
             color = await ctx.embed_colour()
-            img = await self.bot.loop.run_in_executor(None, self.make_table_into_image, table)
-            embed = discord.Embed(color=color, title=f"{ctx.author} vs {user} ({displayperiod})")
+            img = await self.bot.loop.run_in_executor(
+                None, self.make_table_into_image, table
+            )
+            embed = discord.Embed(
+                color=color, title=f"{ctx.author} vs {user} ({displayperiod})"
+            )
             embed.set_image(url="attachment://result.webp")
 
             with contextlib.suppress(discord.NotFound):
@@ -162,7 +169,9 @@ class CompareMixin(MixinMeta):
                 if period == "overall":
                     await ctx.send("You haven't listened to any tracks yet.")
                 else:
-                    await ctx.send("You haven't listened to any tracks in that time period.")
+                    await ctx.send(
+                        "You haven't listened to any tracks in that time period."
+                    )
                 return
 
             g = await ctx.send("Gathering data... This might take a while.")
@@ -200,8 +209,12 @@ class CompareMixin(MixinMeta):
             }
             table = tabulate.tabulate(data, headers="keys", tablefmt="fancy_grid")
             color = await ctx.embed_colour()
-            img = await self.bot.loop.run_in_executor(None, self.make_table_into_image, table)
-            embed = discord.Embed(color=color, title=f"{ctx.author} vs {user} ({displayperiod})")
+            img = await self.bot.loop.run_in_executor(
+                None, self.make_table_into_image, table
+            )
+            embed = discord.Embed(
+                color=color, title=f"{ctx.author} vs {user} ({displayperiod})"
+            )
             embed.set_image(url="attachment://result.webp")
 
             with contextlib.suppress(discord.NotFound):
@@ -247,7 +260,9 @@ class CompareMixin(MixinMeta):
                 if period == "overall":
                     await ctx.send("You haven't listened to any albums yet.")
                 else:
-                    await ctx.send("You haven't listened to any albums in that time period.")
+                    await ctx.send(
+                        "You haven't listened to any albums in that time period."
+                    )
                 return
 
             g = await ctx.send("Gathering data... This might take a while.")
@@ -285,8 +300,12 @@ class CompareMixin(MixinMeta):
             }
             table = tabulate.tabulate(data, headers="keys", tablefmt="fancy_grid")
             color = await ctx.embed_colour()
-            img = await self.bot.loop.run_in_executor(None, self.make_table_into_image, table)
-            embed = discord.Embed(color=color, title=f"{ctx.author} vs {user} ({displayperiod})")
+            img = await self.bot.loop.run_in_executor(
+                None, self.make_table_into_image, table
+            )
+            embed = discord.Embed(
+                color=color, title=f"{ctx.author} vs {user} ({displayperiod})"
+            )
             embed.set_image(url="attachment://result.webp")
 
             with contextlib.suppress(discord.NotFound):

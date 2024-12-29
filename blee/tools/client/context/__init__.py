@@ -2,37 +2,18 @@ from contextlib import suppress
 from copy import copy
 from datetime import datetime
 from io import BytesIO, StringIO
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Optional,
-    Self,
-    TypedDict,
-    Unpack,
-    cast,
-)
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Self, TypedDict,
+                    Unpack, cast)
 
-from discord import (
-    AllowedMentions,
-    ButtonStyle,
-    Color,
-    Embed,
-    File,
-    Guild,
-    HTTPException,
-    Member,
-    Message,
-    MessageReference,
-)
-from discord.ext.commands import Command, CommandError, Context as BaseContext
+import config
+from discord import (AllowedMentions, ButtonStyle, Color, Embed, File, Guild,
+                     HTTPException, Member, Message, MessageReference)
+from discord.ext.commands import Command, CommandError
+from discord.ext.commands import Context as BaseContext
 from discord.ext.commands import FlagConverter as DefaultFlagConverter
 from discord.ext.commands import Group, UserInputError
 from discord.ui import Button, View
 from discord.utils import cached_property
-
-import config
 from tools.client import views
 from tools.managers.paginator import Paginator
 from tools.utilities.text import shorten

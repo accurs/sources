@@ -2,6 +2,7 @@ from typing import Optional
 
 import discord
 from discord.http import Route
+
 from grief.core.bot import Grief
 
 
@@ -43,7 +44,9 @@ async def send_message(
         payload["embed"] = embed.to_dict()
 
     if url_button:
-        payload["components"] = [{"type": 1, "components": [url_button.to_dict()]}]  # type:ignore
+        payload["components"] = [
+            {"type": 1, "components": [url_button.to_dict()]}
+        ]  # type:ignore
 
     if file:
         form = [

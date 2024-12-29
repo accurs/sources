@@ -1,9 +1,8 @@
 import re
 from io import BytesIO
 
-from typing_extensions import Type
-
 from structure.managers import Context
+from typing_extensions import Type
 
 from . import Error
 

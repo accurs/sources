@@ -1,4 +1,3 @@
-
 import random
 from datetime import datetime, timezone
 from typing import Tuple
@@ -47,27 +46,36 @@ class Giveaway:
         if not self.kwargs.get("multientry", False) and user.id in self.entrants:
             raise GiveawayEnterError("You have already entered this giveaway.")
         if self.kwargs.get("roles", []) and all(
-            int(role) not in [x.id for x in user.roles] for role in self.kwargs.get("roles", [])
+            int(role) not in [x.id for x in user.roles]
+            for role in self.kwargs.get("roles", [])
         ):
-            raise GiveawayEnterError("You do not have the required roles to join this giveaway.")
+            raise GiveawayEnterError(
+                "You do not have the required roles to join this giveaway."
+            )
 
         if self.kwargs.get("blacklist", []) and any(
-            int(role) in [x.id for x in user.roles] for role in self.kwargs.get("blacklist", [])
+            int(role) in [x.id for x in user.roles]
+            for role in self.kwargs.get("blacklist", [])
         ):
             raise GiveawayEnterError("Your role is blacklisted from this giveaway.")
         if (
             self.kwargs.get("joined", None) is not None
-            and (datetime.now(timezone.utc) - user.joined_at.replace(tzinfo=timezone.utc)).days
+            and (
+                datetime.now(timezone.utc) - user.joined_at.replace(tzinfo=timezone.utc)
+            ).days
             <= self.kwargs["joined"]
         ):
             raise GiveawayEnterError("Your account is too new to join this giveaway.")
         if (
             self.kwargs.get("created", None) is not None
-            and (datetime.now(timezone.utc) - user.created_at.replace(tzinfo=timezone.utc)).days
+            and (
+                datetime.now(timezone.utc)
+                - user.created_at.replace(tzinfo=timezone.utc)
+            ).days
             <= self.kwargs["created"]
         ):
             raise GiveawayEnterError("Your account is too new to join this giveaway.")
-        
+
         if required_server := self.kwargs.get("server", None):
             required_server = int(required_server[0])
             partner_guild: discord.Guild = bot.get_guild(required_server)
@@ -79,7 +87,8 @@ class Giveaway:
 
         self.entrants.append(user.id)
         if self.kwargs.get("multi", None) is not None and any(
-            int(role) in [x.id for x in user.roles] for role in self.kwargs.get("multi-roles", [])
+            int(role) in [x.id for x in user.roles]
+            for role in self.kwargs.get("multi-roles", [])
         ):
             for _ in range(self.kwargs["multi"] - 1):
                 self.entrants.append(user.id)

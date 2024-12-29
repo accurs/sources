@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 
 import discord
+
 from grief.core import commands
 from grief.core.bot import Grief
 from grief.core.config import Config
@@ -30,7 +31,9 @@ class Birthday(
     def __init__(self, bot: Grief) -> None:
         self.bot = bot
 
-        self.config: Config = Config.get_conf(self, 418078199982063626, force_registration=True)
+        self.config: Config = Config.get_conf(
+            self, 418078199982063626, force_registration=True
+        )
         self.config.register_global(version=0)
         self.config.register_guild(
             time_utc_s=None,
@@ -69,7 +72,9 @@ class Birthday(
         # will delete for any requester
         target_u_id: int | None = kwargs.get("user_id")
         if target_u_id is None:
-            log.info("Unable to delete user data for user with ID 0 because it's invalid.")
+            log.info(
+                "Unable to delete user data for user with ID 0 because it's invalid."
+            )
             return
 
         hit = False
@@ -80,7 +85,9 @@ class Birthday(
                 hit = True
                 await self.config.member_from_ids(g_id, target_u_id).clear()
                 log.debug(
-                    "Deleted user data for user with ID %s in guild with ID %s.", target_u_id, g_id
+                    "Deleted user data for user with ID %s in guild with ID %s.",
+                    target_u_id,
+                    g_id,
                 )
 
         if not hit:

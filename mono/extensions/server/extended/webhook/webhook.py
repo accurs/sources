@@ -2,20 +2,14 @@ from secrets import token_urlsafe
 from typing import Optional, cast
 
 import discord
-from discord import Embed, HTTPException, Message, TextChannel
-from discord.ext.commands import (
-    BucketType,
-    Range,
-    cooldown,
-    flag,
-    group,
-    has_permissions,
-)
-from discord.utils import get
-
-from core.tools import CompositeMetaClass, MixinMeta, FlagConverter, codeblock, vowel
 from core.client.context import Context
 from core.managers.script import EmbedScript as Script
+from core.tools import (CompositeMetaClass, FlagConverter, MixinMeta,
+                        codeblock, vowel)
+from discord import Embed, HTTPException, Message, TextChannel
+from discord.ext.commands import (BucketType, Range, cooldown, flag, group,
+                                  has_permissions)
+from discord.utils import get
 
 
 class Flags(FlagConverter):

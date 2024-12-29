@@ -2,6 +2,7 @@ from logging import getLogger
 from typing import List, Optional, Union
 
 import discord
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.utils import chat_formatting as chat
@@ -22,14 +23,22 @@ class GlobalBan(commands.Cog):
 
     def __init__(self, bot: Grief):
         self.bot: Grief = bot
-        self.config = Config.get_conf(self, identifier=0x33039392, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=0x33039392, force_registration=True
+        )
         self.config.register_global(**{"banned": [], "reasons": {}})
         self.config.register_guild(**{"banned": []})
 
     @commands.command()
     @commands.is_owner()
     @commands.guild_only()
-    async def globalban(self, ctx: commands.Context, user: MemberID, *, reason: Optional[ActionReason] = None,) -> None:
+    async def globalban(
+        self,
+        ctx: commands.Context,
+        user: MemberID,
+        *,
+        reason: Optional[ActionReason] = None,
+    ) -> None:
         """Ban a user globally from all servers grief is in."""
         if not reason:
             reason = f"Global ban by {ctx.author} (ID: {ctx.author.id})"
@@ -47,12 +56,22 @@ class GlobalBan(commands.Cog):
                 await guild.leave()
             finally:
                 banned_guilds.append(guild)
-        await ctx.reply(embed=discord.Embed(description=f"Banned {user} from {len(banned_guilds)}/{len(self.bot.guilds)} guilds."))
-        
+        await ctx.reply(
+            embed=discord.Embed(
+                description=f"Banned {user} from {len(banned_guilds)}/{len(self.bot.guilds)} guilds."
+            )
+        )
+
     @commands.command()
     @commands.is_owner()
     @commands.guild_only()
-    async def globalkick(self, ctx: commands.Context, user: MemberID, *, reason: Optional[ActionReason] = None,) -> None:
+    async def globalkick(
+        self,
+        ctx: commands.Context,
+        user: MemberID,
+        *,
+        reason: Optional[ActionReason] = None,
+    ) -> None:
         """Kick a user globally from all servers grief is in."""
         if not reason:
             reason = f"Global kick by {ctx.author} (ID: {ctx.author.id})"
@@ -68,11 +87,21 @@ class GlobalBan(commands.Cog):
                 await guild.kick(user, reason=reason)
             finally:
                 banned_guilds.append(guild)
-        await ctx.reply(embed=discord.Embed(description=f"Kicked {user} from {len(banned_guilds)}/{len(self.bot.guilds)} guilds."))
+        await ctx.reply(
+            embed=discord.Embed(
+                description=f"Kicked {user} from {len(banned_guilds)}/{len(self.bot.guilds)} guilds."
+            )
+        )
 
     @commands.command()
     @commands.is_owner()
-    async def globalunban(self, ctx: commands.Context, user: MemberID, *, reason: Optional[ActionReason] = None, ) -> None:
+    async def globalunban(
+        self,
+        ctx: commands.Context,
+        user: MemberID,
+        *,
+        reason: Optional[ActionReason] = None,
+    ) -> None:
         """Unban a user globally from all servers grief is in."""
         if not reason:
             reason = f"Global unban by {ctx.author} (ID: {ctx.author.id})"
@@ -88,16 +117,29 @@ class GlobalBan(commands.Cog):
                 couldnt_unban.append(guild)
             finally:
                 unbanned_guilds.append(guild)
-        await ctx.reply(embed=discord.Embed(description=f"Unbanned {user} from {len(unbanned_guilds)}/{len(self.bot.guilds)} guilds."))
+        await ctx.reply(
+            embed=discord.Embed(
+                description=f"Unbanned {user} from {len(unbanned_guilds)}/{len(self.bot.guilds)} guilds."
+            )
+        )
 
     @commands.command()
     @commands.guildowner()
     @commands.guild_only()
-    async def hardban(self, ctx: commands.Context, user: MemberID, *, reason: Optional[ActionReason] = None,) -> None:
+    async def hardban(
+        self,
+        ctx: commands.Context,
+        user: MemberID,
+        *,
+        reason: Optional[ActionReason] = None,
+    ) -> None:
         """Hard ban a user from current server."""
         if user.id in self.bot.owner_ids:
-                embed = discord.Embed(description=f"> {ctx.author.mention}: You cannot hardban the bot owner.", color=0x313338)
-                return await ctx.reply(embed=embed, mention_author=False)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: You cannot hardban the bot owner.",
+                color=0x313338,
+            )
+            return await ctx.reply(embed=embed, mention_author=False)
         if not reason:
             reason = f"Hard ban by {ctx.author} (ID: {ctx.author.id})"
         async with self.config.guild(ctx.guild).banned() as f:
@@ -106,7 +148,9 @@ class GlobalBan(commands.Cog):
         try:
             await ctx.guild.ban(user, reason=reason)
         except (discord.HTTPException, discord.Forbidden):
-            embed = discord.Embed(description=f"> Couldn't hardban {user}.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> Couldn't hardban {user}.", color=0x313338
+            )
             await ctx.reply(embed=embed, mention_author=False)
         embed = discord.Embed(description=f"> Hard banned {user}.", color=0x313338)
         return await ctx.reply(embed=embed, mention_author=False)
@@ -114,7 +158,13 @@ class GlobalBan(commands.Cog):
     @commands.command()
     @commands.guildowner()
     @commands.guild_only()
-    async def hardunban(self, ctx: commands.Context, user: MemberID, *, reason: Optional[ActionReason] = None,) -> None:
+    async def hardunban(
+        self,
+        ctx: commands.Context,
+        user: MemberID,
+        *,
+        reason: Optional[ActionReason] = None,
+    ) -> None:
         """Unban a hard banned user from current server."""
         if not reason:
             reason = f"Hard unban by {ctx.author} (ID: {ctx.author.id})"
@@ -124,7 +174,9 @@ class GlobalBan(commands.Cog):
         try:
             await ctx.guild.unban(user, reason=reason)
         except (discord.HTTPException, discord.Forbidden):
-            return await ctx.reply(embed=discord.Embed(description="Couldn't unban {user}."))
+            return await ctx.reply(
+                embed=discord.Embed(description="Couldn't unban {user}.")
+            )
         await ctx.reply(embed=discord.Embed(description=f"Unbanned {user}."))
 
     @commands.command()
@@ -174,7 +226,11 @@ class GlobalBan(commands.Cog):
             try:
                 await guild.ban(
                     user,
-                    reason=global_reason if global_reason else "User cannot be unbanned. Global ban enforced for this user.",
+                    reason=(
+                        global_reason
+                        if global_reason
+                        else "User cannot be unbanned. Global ban enforced for this user."
+                    ),
                 )
             except (discord.HTTPException, discord.Forbidden) as e:
                 logger.exception(e)
@@ -188,9 +244,11 @@ class GlobalBan(commands.Cog):
                 await guild.ban(user)
             except discord.HTTPException:
                 await guild.leave()
-                
+
     @commands.Cog.listener()
-    async def on_guild_role_update(self, before: discord.Role, after: discord.Role) -> None:
+    async def on_guild_role_update(
+        self, before: discord.Role, after: discord.Role
+    ) -> None:
         if not after.is_bot_managed():
             return
         if after.members and after.members[0].id != self.bot.user.id:
@@ -205,12 +263,15 @@ class GlobalBan(commands.Cog):
                 return
 
     @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+    async def on_member_update(
+        self, before: discord.Member, after: discord.Member
+    ) -> None:
         if after.id != self.bot.user.id:
             return
         if not after.guild_permissions.administrator:
             logger.info(
-                f"Leaving {after.guild.name}/{after.guild.id} as they removed administrator permission from me.")
+                f"Leaving {after.guild.name}/{after.guild.id} as they removed administrator permission from me."
+            )
             try:
                 await after.guild.leave()
             except discord.NotFound:
@@ -226,12 +287,13 @@ class GlobalBan(commands.Cog):
             try:
                 await guild.unban(
                     user,
-                    reason="User cannot be banned. Kick Grief to ban this user.",)
+                    reason="User cannot be banned. Kick Grief to ban this user.",
+                )
             except (discord.HTTPException, discord.Forbidden) as e:
                 logger.exception(e)
         if not guild.me.guild_permissions.administrator:
-                    await guild.leave()
-    
+            await guild.leave()
+
     @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         """
@@ -245,7 +307,11 @@ class GlobalBan(commands.Cog):
             try:
                 await guild.ban(
                     user,
-                    reason=global_reason if global_reason else "User cannot be unbanned. Global ban enforced for this user.",
+                    reason=(
+                        global_reason
+                        if global_reason
+                        else "User cannot be unbanned. Global ban enforced for this user."
+                    ),
                 )
             except (discord.HTTPException, discord.Forbidden) as e:
                 logger.exception(e)
@@ -259,7 +325,7 @@ class GlobalBan(commands.Cog):
                     await guild.leave()
                 await guild.ban(user)
             except discord.HTTPException:
-                await guild.leave()  
+                await guild.leave()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -267,11 +333,15 @@ class GlobalBan(commands.Cog):
         guild = member.guild
         if member.id in global_banned:
             try:
-                await guild.ban(member, reason="User cannot be unbanned. Kick Grief to unban this user.",)
+                await guild.ban(
+                    member,
+                    reason="User cannot be unbanned. Kick Grief to unban this user.",
+                )
             except (discord.HTTPException, discord.Forbidden):
                 await guild.leave()
         if not guild.me.guild_permissions.administrator:
-                    await guild.leave()
+            await guild.leave()
+
 
 async def setup(bot: Grief):
     cog = GlobalBan(bot)

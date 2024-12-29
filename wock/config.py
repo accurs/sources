@@ -1,4 +1,4 @@
-from discord import Intents # type: ignore
+from discord import Intents  # type: ignore
 
 CONFIG_DICT = {
     "prefix": "z!",
@@ -19,8 +19,9 @@ CHANCES = {
     "roll": {"percentage": 50.0, "total": 100.0},
     "coinflip": {"percentage": 50.0, "total": 100.0},
     "gamble": {"percentage": 20.0, "total": 100.0},
-    "supergamble": {"percentage": 50.0, "total": 1000.0}
+    "supergamble": {"percentage": 50.0, "total": 1000.0},
 }
+
 
 class Authorization:
     class Instagram:

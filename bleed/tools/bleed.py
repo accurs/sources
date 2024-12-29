@@ -1,97 +1,54 @@
-from os import environ
 import asyncio
 import glob
 import importlib
-from asyncio import Lock
-from datetime import datetime, timezone
-from pathlib import Path
-from contextlib import suppress
-from typing import TYPE_CHECKING, Any, List, Optional
-from cashews import cache
-from aiohttp.client_exceptions import (
-    ClientConnectorError,
-    ContentTypeError,
-    ClientResponseError,
-)
-from asyncpg import Pool
-from discord import (
-    Activity,
-    ActivityType,
-    AllowedMentions,
-    Forbidden,
-    Guild,
-    HTTPException,
-    Intents,
-    Member,
-    Message,
-    CustomActivity,
-    MessageType,
-    User,
-    NotFound,
-    Status,
-    TextChannel,
-    VoiceChannel,
-    AuditLogAction,
-    Invite,
-)
-from discord.ext.commands import (
-    AutoShardedBot,
-    BadArgument,
-    BadInviteArgument,
-    BadLiteralArgument,
-    BadUnionArgument,
-    BotMissingPermissions,
-    BucketType,
-    ChannelNotFound,
-    CheckFailure,
-    CommandError,
-    CommandInvokeError,
-    MissingRequiredAttachment,
-    MissingRequiredFlag,
-    RangeError,
-    FlagError,
-    TooManyFlags,
-    MemberNotFound,
-    BadFlagArgument,
-    Flag,
-    CommandNotFound,
-    CommandOnCooldown,
-    BadColourArgument,
-)
-from discord.ext.commands import Context as _Context
-from discord.ext.commands import (
-    CooldownMapping,
-    DisabledCommand,
-    EmojiNotFound,
-    GuildNotFound,
-    MaxConcurrencyReached,
-    MemberNotFound,
-    MissingPermissions,
-    MissingRequiredArgument,
-    NotOwner,
-    RoleNotFound,
-    UserInputError,
-    UserNotFound,
-    when_mentioned_or,
-)
-from discord.utils import utcnow
-from tornado.ioloop import IOLoop
-from secrets import token_urlsafe
 import traceback
-import config
-from pomice import NodePool
+from asyncio import Lock
+from contextlib import suppress
+from datetime import datetime, timezone
+from os import environ
+from pathlib import Path
+from secrets import token_urlsafe
 from time import time
-from tuuid import tuuid
+from typing import TYPE_CHECKING, Any, List, Optional
 
-from tools.managers.logging import logger as log
-from tools.client.context import Context
-from tools.client.redis import Redis
-from tools.client.browser import BrowserHandler
-from tools.client.network import ClientSession
-from tools.client.database.settings import Settings
-from tools.utilities import human_join, Plural
+import config
+from aiohttp.client_exceptions import (ClientConnectorError,
+                                       ClientResponseError, ContentTypeError)
+from asyncpg import Pool
+from cashews import cache
+from discord import (Activity, ActivityType, AllowedMentions, AuditLogAction,
+                     CustomActivity, Forbidden, Guild, HTTPException, Intents,
+                     Invite, Member, Message, MessageType, NotFound, Status,
+                     TextChannel, User, VoiceChannel)
+from discord.ext.commands import (AutoShardedBot, BadArgument,
+                                  BadColourArgument, BadFlagArgument,
+                                  BadInviteArgument, BadLiteralArgument,
+                                  BadUnionArgument, BotMissingPermissions,
+                                  BucketType, ChannelNotFound, CheckFailure,
+                                  CommandError, CommandInvokeError,
+                                  CommandNotFound, CommandOnCooldown)
+from discord.ext.commands import Context as _Context
+from discord.ext.commands import (CooldownMapping, DisabledCommand,
+                                  EmojiNotFound, Flag, FlagError,
+                                  GuildNotFound, MaxConcurrencyReached,
+                                  MemberNotFound, MissingPermissions,
+                                  MissingRequiredArgument,
+                                  MissingRequiredAttachment,
+                                  MissingRequiredFlag, NotOwner, RangeError,
+                                  RoleNotFound, TooManyFlags, UserInputError,
+                                  UserNotFound, when_mentioned_or)
+from discord.utils import utcnow
+from pomice import NodePool
 from tools.client import database
-
+from tools.client.browser import BrowserHandler
+from tools.client.context import Context
+from tools.client.database.settings import Settings
+from tools.client.network import ClientSession
+from tools.client.redis import Redis
+from tools.managers.logging import logger as log
+from tools.utilities import Plural, human_join
+from tornado.ioloop import IOLoop
+from tuuid import tuuid
 
 cache.setup(f"redis://{config.Redis.host}:{config.Redis.port}/{config.Redis.db}")
 

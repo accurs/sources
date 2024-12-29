@@ -2,14 +2,12 @@ import math
 import re
 import time
 from pathlib import Path
-
 from typing import List, Optional
 
 import discord
 import lavalink
-from red_commons.logging import getLogger
-
 from lavalink import NodeNotFound
+from red_commons.logging import getLogger
 
 from grief.core import commands
 from grief.core.i18n import Translator
@@ -27,7 +25,12 @@ RE_SQUARE = re.compile(r"[\[\]]")
 
 class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
     async def _genre_search_button_action(
-        self, ctx: commands.Context, options: List, emoji: str, page: int, playlist: bool = False
+        self,
+        ctx: commands.Context,
+        options: List,
+        emoji: str,
+        page: int,
+        playlist: bool = False,
     ) -> str:
         try:
             if emoji == "\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP}":
@@ -61,9 +64,9 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
         search_idx_start = (page_num - 1) * 5
         search_idx_end = search_idx_start + 5
         search_list = ""
-        async for i, entry in AsyncIter(tracks[search_idx_start:search_idx_end]).enumerate(
-            start=search_idx_start
-        ):
+        async for i, entry in AsyncIter(
+            tracks[search_idx_start:search_idx_end]
+        ).enumerate(start=search_idx_start):
             search_track_num = i + 1
             if search_track_num > 5:
                 search_track_num = search_track_num % 5
@@ -71,7 +74,10 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
                 search_track_num = 5
             if playlist:
                 name = "**[{}]({})** - {} {}".format(
-                    entry.get("name"), entry.get("url"), str(entry.get("tracks")), _("tracks")
+                    entry.get("name"),
+                    entry.get("url"),
+                    str(entry.get("tracks")),
+                    _("tracks"),
                 )
             else:
                 name = f"{list(entry.keys())[0]}"
@@ -96,24 +102,35 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
                 description = None
                 if await self.bot.is_owner(ctx.author):
                     description = _("Please check your console or logs for details.")
-                return await self.send_embed_msg(ctx, title=msg, description=description)
+                return await self.send_embed_msg(
+                    ctx, title=msg, description=description
+                )
             try:
                 await lavalink.connect(
                     ctx.author.voice.channel,
-                    self_deaf=await self.config.guild_from_id(ctx.guild.id).auto_deafen(),
+                    self_deaf=await self.config.guild_from_id(
+                        ctx.guild.id
+                    ).auto_deafen(),
                 )
             except AttributeError:
-                return await self.send_embed_msg(ctx, title=_("Connect to a voice channel first."))
+                return await self.send_embed_msg(
+                    ctx, title=_("Connect to a voice channel first.")
+                )
             except NodeNotFound:
                 return await self.send_embed_msg(
-                    ctx, title=_("Connection to Lavalink node has not yet been established.")
+                    ctx,
+                    title=_(
+                        "Connection to Lavalink node has not yet been established."
+                    ),
                 )
         player = lavalink.get_player(ctx.guild.id)
         player.store("notify_channel", ctx.channel.id)
         guild_data = await self.config.guild(ctx.guild).all()
         if len(player.queue) >= 10000:
             return await self.send_embed_msg(
-                ctx, title=_("Unable To Play Tracks"), description=_("Queue size limit reached.")
+                ctx,
+                title=_("Unable To Play Tracks"),
+                description=_("Queue size limit reached."),
             )
         if not await self.maybe_charge_requester(ctx, guild_data["jukebox_price"]):
             return
@@ -132,12 +149,16 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
                 search_choice = tracks[0 + (page * 5)]
         except IndexError:
             search_choice = tracks[-1]
-        if not hasattr(search_choice, "is_local") and getattr(search_choice, "uri", None):
+        if not hasattr(search_choice, "is_local") and getattr(
+            search_choice, "uri", None
+        ):
             description = await self.get_track_description(
                 search_choice, self.local_folder_current_path
             )
         else:
-            search_choice = Query.process_input(search_choice, self.local_folder_current_path)
+            search_choice = Query.process_input(
+                search_choice, self.local_folder_current_path
+            )
             if search_choice.is_local:
                 if (
                     search_choice.local_track_path.exists()
@@ -182,7 +203,9 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
                     "red_audio_track_enqueue", player.guild, search_choice, ctx.author
                 )
             else:
-                return await self.send_embed_msg(ctx, title=_("Track exceeds maximum length."))
+                return await self.send_embed_msg(
+                    ctx, title=_("Track exceeds maximum length.")
+                )
         else:
             search_choice.extras.update(
                 {
@@ -193,7 +216,9 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
             )
             player.add(ctx.author, search_choice)
             player.maybe_shuffle()
-            self.bot.dispatch("red_audio_track_enqueue", player.guild, search_choice, ctx.author)
+            self.bot.dispatch(
+                "red_audio_track_enqueue", player.guild, search_choice, ctx.author
+            )
 
         if not guild_data["shuffle"] and queue_dur > 0:
             songembed.set_footer(
@@ -222,9 +247,9 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
         search_list = ""
         command = ctx.invoked_with
         folder = False
-        async for i, track in AsyncIter(tracks[search_idx_start:search_idx_end]).enumerate(
-            start=search_idx_start
-        ):
+        async for i, track in AsyncIter(
+            tracks[search_idx_start:search_idx_end]
+        ).enumerate(start=search_idx_start):
             search_track_num = i + 1
             if search_track_num > 5:
                 search_track_num = search_track_num % 5
@@ -237,24 +262,30 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
                         search_track_num,
                         discord.utils.escape_markdown(track.title),
                         discord.utils.escape_markdown(
-                            LocalPath(track.uri, self.local_folder_current_path).to_string_user()
+                            LocalPath(
+                                track.uri, self.local_folder_current_path
+                            ).to_string_user()
                         ),
                     )
                 else:
                     search_list += "`{0}.` **[{1}]({2})**\n".format(
-                        search_track_num, discord.utils.escape_markdown(track.title), track.uri
+                        search_track_num,
+                        discord.utils.escape_markdown(track.title),
+                        track.uri,
                     )
             except AttributeError:
                 track = Query.process_input(track, self.local_folder_current_path)
                 if track.is_local and command != "search":
                     search_list += "`{}.` **{}**\n".format(
-                        search_track_num, discord.utils.escape_markdown(track.to_string_user())
+                        search_track_num,
+                        discord.utils.escape_markdown(track.to_string_user()),
                     )
                     if track.is_album:
                         folder = True
                 else:
                     search_list += "`{}.` **{}**\n".format(
-                        search_track_num, discord.utils.escape_markdown(track.to_string_user())
+                        search_track_num,
+                        discord.utils.escape_markdown(track.to_string_user()),
                     )
         if hasattr(tracks[0], "uri") and hasattr(tracks[0], "track_identifier"):
             title = _("Tracks Found:")
@@ -269,7 +300,9 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
             colour=await ctx.embed_colour(), title=title, description=search_list
         )
         embed.set_footer(
-            text=(_("Page {page_num}/{total_pages}") + " | {num_results} {footer}").format(
+            text=(
+                _("Page {page_num}/{total_pages}") + " | {num_results} {footer}"
+            ).format(
                 page_num=page_num,
                 total_pages=search_num_pages,
                 num_results=len(tracks),
@@ -309,8 +342,9 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
                             string = f"{(string[:40]).rstrip(' ')}..."
                         string = f'**{escape(f"{string}", formatting=True)}**'
                     else:
-                        string = f'**{escape(f"{track.title}", formatting=True)}**' + escape(
-                            f"\n{query.to_string_user()} ", formatting=True
+                        string = (
+                            f'**{escape(f"{track.title}", formatting=True)}**'
+                            + escape(f"\n{query.to_string_user()} ", formatting=True)
                         )
                 else:
                     string = query.to_string_user()
@@ -384,7 +418,11 @@ class FormattingUtilities(MixinMeta, metaclass=CompositeMetaClass):
             " - Tracks: < {ptracks} >\n"
             " - Author: < {author} >\n\n"
         ).format(
-            pname=pname, scope=self.humanize_scope(scope), pid=pid, ptracks=ptracks, author=author
+            pname=pname,
+            scope=self.humanize_scope(scope),
+            pid=pid,
+            ptracks=ptracks,
+            author=author,
         )
         return box(line, lang="md")
 

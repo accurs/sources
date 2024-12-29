@@ -1,20 +1,19 @@
-from textwrap import shorten
+import asyncio
 from asyncio import TimeoutError as AsyncTimeoutError
-from typing import Union
+from textwrap import shorten
+from typing import List, Literal, Union
 
+import aiohttp
 import discord
-from grief.core import checks
-from grief.core import commands
+from tabulate import tabulate
+
+from grief.core import checks, commands
 from grief.core.config import Config
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils import chat_formatting as chat
-from grief.core.utils.menus import menu, DEFAULT_CONTROLS
+from grief.core.utils.menus import DEFAULT_CONTROLS, menu
 from grief.core.utils.mod import get_audit_reason
 from grief.core.utils.predicates import ReactionPredicate
-from tabulate import tabulate
-from typing import Literal, List
-import asyncio
-import aiohttp
 
 try:
     from grief import json  # support of Draper's branch
@@ -31,7 +30,9 @@ async def has_assigned_role(ctx):
     user_roles = {r.id for r in ctx.author.roles}
     user_roles &= auto_roles
 
-    return len(user_roles) > 0 or ctx.guild.get_role(await ctx.cog.config.member(ctx.author).role())
+    return len(user_roles) > 0 or ctx.guild.get_role(
+        await ctx.cog.config.member(ctx.author).role()
+    )
 
 
 async def role_icons_feature(ctx):
@@ -48,7 +49,9 @@ class PersonalRoles(commands.Cog):
     # noinspection PyMissingConstructor
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=0x3D86BBD3E2B744AE8AA8B5D986EB4DD8, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=0x3D86BBD3E2B744AE8AA8B5D986EB4DD8, force_registration=True
+        )
         default_member = {"role": None, "auto_role": False}
         default_guild = {"blacklist": [], "auto_roles": [], "position_role": None}
         self.config.register_member(**default_member)
@@ -90,7 +93,9 @@ class PersonalRoles(commands.Cog):
             except:
                 await ctx.tick()
         else:
-            await ctx.send("User didn't have a role or it wasn't found. Role unassigned anyway to make sure.")
+            await ctx.send(
+                "User didn't have a role or it wasn't found. Role unassigned anyway to make sure."
+            )
             return
 
         await ctx.tick()
@@ -102,7 +107,9 @@ class PersonalRoles(commands.Cog):
         """Assigned roles list"""
         members_data = await self.config.all_members(ctx.guild)
         if not members_data:
-            await ctx.send(chat.info(_("There is no assigned personal roles on this server")))
+            await ctx.send(
+                chat.info(_("There is no assigned personal roles on this server"))
+            )
             return
         assigned_roles = []
         for member, data in members_data.items():
@@ -111,16 +118,23 @@ class PersonalRoles(commands.Cog):
             dic = {
                 _("User"): ctx.guild.get_member(member) or f"[X] {member}",
                 _("Role"): shorten(
-                    str(ctx.guild.get_role(data["role"]) or "[X] {}".format(data["role"])),
+                    str(
+                        ctx.guild.get_role(data["role"])
+                        or "[X] {}".format(data["role"])
+                    ),
                     32,
                     placeholder="…",
                 ),
             }
             assigned_roles.append(dic)
         if not assigned_roles:
-            await ctx.send(chat.info(_("There is no assigned personal roles on this server")))
+            await ctx.send(
+                chat.info(_("There is no assigned personal roles on this server"))
+            )
             return
-        pages = list(chat.pagify(tabulate(assigned_roles, headers="keys", tablefmt="orgtbl")))
+        pages = list(
+            chat.pagify(tabulate(assigned_roles, headers="keys", tablefmt="orgtbl"))
+        )
         pages = [chat.box(page) for page in pages]
         await menu(ctx, pages, DEFAULT_CONTROLS)
 
@@ -144,13 +158,17 @@ class PersonalRoles(commands.Cog):
         names = [r.name for r in roles if r is not None]
         msg = ""
         if None in curr:
-            msg += chat.warning("Some auto roles cannot be found, they have been removed from the list.\n")
+            msg += chat.warning(
+                "Some auto roles cannot be found, they have been removed from the list.\n"
+            )
             for i, role in enumerate(roles):
                 if role is None:
                     del curr[i]
             await self.config.guild(guild).auto_roles.set(curr)
 
-        await ctx.send(f"Current auto roles: {chat.humanize_list(names) if names else chat.bold('None')}")
+        await ctx.send(
+            f"Current auto roles: {chat.humanize_list(names) if names else chat.bold('None')}"
+        )
 
     @myrole_auto.command(name="roles")
     async def myrole_auto_autoroles(self, ctx, *role_list: discord.Role):
@@ -216,7 +234,9 @@ class PersonalRoles(commands.Cog):
         rolename = rolename.casefold()
         async with self.config.guild(ctx.guild).blacklist() as blacklist:
             if rolename in blacklist:
-                await ctx.send(chat.error(_("`{}` is already in blacklist").format(rolename)))
+                await ctx.send(
+                    chat.error(_("`{}` is already in blacklist").format(rolename))
+                )
             else:
                 blacklist.append(rolename)
                 await ctx.tick()
@@ -229,11 +249,13 @@ class PersonalRoles(commands.Cog):
         rolename = rolename.casefold()
         async with self.config.guild(ctx.guild).blacklist() as blacklist:
             if rolename not in blacklist:
-                await ctx.send(chat.error(_("`{}` is not blacklisted").format(rolename)))
+                await ctx.send(
+                    chat.error(_("`{}` is not blacklisted").format(rolename))
+                )
             else:
                 blacklist.remove(rolename)
                 await ctx.tick()
-                
+
     @blacklist.command(name="list")
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.has_permissions(administrator=True)
@@ -256,11 +278,17 @@ class PersonalRoles(commands.Cog):
         role = await self.config.member(ctx.author).role()
         role = ctx.guild.get_role(role)
         if not role:
-            await ctx.send(chat.warning(f"Please create your role using `{ctx.prefix}myrole create`!"))
+            await ctx.send(
+                chat.warning(
+                    f"Please create your role using `{ctx.prefix}myrole create`!"
+                )
+            )
             return
 
         try:
-            await role.edit(colour=colour, reason=get_audit_reason(ctx.author, _("Personal Role")))
+            await role.edit(
+                colour=colour, reason=get_audit_reason(ctx.author, _("Personal Role"))
+            )
         except discord.Forbidden:
             ctx.command.reset_cooldown(ctx)
             await ctx.send(
@@ -276,7 +304,11 @@ class PersonalRoles(commands.Cog):
             await ctx.send(chat.error(_("Unable to edit role: {}").format(e)))
         else:
             if not colour.value:
-                await ctx.send(_("Reset {user}'s personal role color").format(user=ctx.message.author.name))
+                await ctx.send(
+                    _("Reset {user}'s personal role color").format(
+                        user=ctx.message.author.name
+                    )
+                )
             else:
                 await ctx.tick()
 
@@ -292,7 +324,11 @@ class PersonalRoles(commands.Cog):
         role = await self.config.member(ctx.author).role()
         role = ctx.guild.get_role(role)
         if not role:
-            await ctx.send(chat.warning(f"Please create your role using `{ctx.prefix}myrole create`!"))
+            await ctx.send(
+                chat.warning(
+                    f"Please create your role using `{ctx.prefix}myrole create`!"
+                )
+            )
             return
 
         name = name[:30]
@@ -300,7 +336,9 @@ class PersonalRoles(commands.Cog):
             await ctx.send(chat.error(_("This rolename is blacklisted.")))
             return
         try:
-            await role.edit(name=name, reason=get_audit_reason(ctx.author, _("Personal Role")))
+            await role.edit(
+                name=name, reason=get_audit_reason(ctx.author, _("Personal Role"))
+            )
         except discord.Forbidden:
             ctx.command.reset_cooldown(ctx)
             await ctx.send(
@@ -334,7 +372,9 @@ class PersonalRoles(commands.Cog):
 
             try:
                 role = await ctx.guild.create_role(
-                    name=str(ctx.author), colour=ctx.author.colour, reason=_("Personal role")
+                    name=str(ctx.author),
+                    colour=ctx.author.colour,
+                    reason=_("Personal role"),
                 )
                 await asyncio.sleep(0.3)
                 await role.edit(position=pos)
@@ -343,7 +383,11 @@ class PersonalRoles(commands.Cog):
                 await self.config.member(ctx.author).role.set(role.id)
                 await self.config.member(ctx.author).auto_role.set(True)
             except:
-                await ctx.send(chat.warning("Could not create your personal role, please contact an admin."))
+                await ctx.send(
+                    chat.warning(
+                        "Could not create your personal role, please contact an admin."
+                    )
+                )
                 return
 
             await ctx.tick()
@@ -359,12 +403,18 @@ class PersonalRoles(commands.Cog):
 
     @icon.command(name="emoji")
     @commands.cooldown(1, 30, commands.BucketType.user)
-    async def icon_emoji(self, ctx, *, emoji: Union[discord.Emoji, discord.PartialEmoji] = None):
+    async def icon_emoji(
+        self, ctx, *, emoji: Union[discord.Emoji, discord.PartialEmoji] = None
+    ):
         """Change icon of personal role using emoji"""
         role = await self.config.member(ctx.author).role()
         role = ctx.guild.get_role(role)
         if not role:
-            await ctx.send(chat.warning(f"Please create your role using `{ctx.prefix}myrole create`."))
+            await ctx.send(
+                chat.warning(
+                    f"Please create your role using `{ctx.prefix}myrole create`."
+                )
+            )
             return
 
         if not emoji:
@@ -373,7 +423,9 @@ class PersonalRoles(commands.Cog):
                 try:
                     reaction = await ctx.bot.wait_for(
                         "reaction_add",
-                        check=ReactionPredicate.same_context(message=m, user=ctx.author),
+                        check=ReactionPredicate.same_context(
+                            message=m, user=ctx.author
+                        ),
                         timeout=30,
                     )
                     emoji = reaction[0].emoji
@@ -417,9 +469,15 @@ class PersonalRoles(commands.Cog):
                 )
         except discord.Forbidden:
             ctx.command.reset_cooldown(ctx)
-            await ctx.send(chat.error(_("Unable to edit role.\nRole must be lower than my top role")))
+            await ctx.send(
+                chat.error(
+                    _("Unable to edit role.\nRole must be lower than my top role")
+                )
+            )
         except discord.InvalidArgument:
-            await ctx.send(chat.error(_("This image type is unsupported, or link is incorrect")))
+            await ctx.send(
+                chat.error(_("This image type is unsupported, or link is incorrect"))
+            )
         except discord.HTTPException as e:
             ctx.command.reset_cooldown(ctx)
             await ctx.send(chat.error(_("Unable to edit role: {}").format(e)))
@@ -433,7 +491,11 @@ class PersonalRoles(commands.Cog):
         role = await self.config.member(ctx.author).role()
         role = ctx.guild.get_role(role)
         if not role:
-            await ctx.send(chat.warning(f"Please create your role using `{ctx.prefix}myrole create`."))
+            await ctx.send(
+                chat.warning(
+                    f"Please create your role using `{ctx.prefix}myrole create`."
+                )
+            )
             return
 
         if not (ctx.message.attachments or url):
@@ -445,7 +507,9 @@ class PersonalRoles(commands.Cog):
                 async with ctx.cog.session.get(url, raise_for_status=True) as resp:
                     image = await resp.read()
             except aiohttp.ClientResponseError as e:
-                await ctx.send(chat.error(_("Unable to get image: {}").format(e.message)))
+                await ctx.send(
+                    chat.error(_("Unable to get image: {}").format(e.message))
+                )
                 return
         try:
             await edit_role_icon(
@@ -456,9 +520,15 @@ class PersonalRoles(commands.Cog):
             )
         except discord.Forbidden:
             ctx.command.reset_cooldown(ctx)
-            await ctx.send(chat.error(_("Unable to edit role.\nRole must be lower than my top role")))
+            await ctx.send(
+                chat.error(
+                    _("Unable to edit role.\nRole must be lower than my top role")
+                )
+            )
         except discord.InvalidArgument:
-            await ctx.send(chat.error(_("This image type is unsupported, or link is incorrect")))
+            await ctx.send(
+                chat.error(_("This image type is unsupported, or link is incorrect"))
+            )
         except discord.HTTPException as e:
             ctx.command.reset_cooldown(ctx)
             await ctx.send(chat.error(_("Unable to edit role: {}").format(e)))
@@ -472,7 +542,11 @@ class PersonalRoles(commands.Cog):
         role = await self.config.member(ctx.author).role()
         role = ctx.guild.get_role(role)
         if not role:
-            await ctx.send(chat.warning(f"Please create your role using `{ctx.prefix}myrole create`!"))
+            await ctx.send(
+                chat.warning(
+                    f"Please create your role using `{ctx.prefix}myrole create`!"
+                )
+            )
             return
 
         try:
@@ -486,7 +560,11 @@ class PersonalRoles(commands.Cog):
             await ctx.tick()
         except discord.Forbidden:
             ctx.command.reset_cooldown(ctx)
-            await ctx.send(chat.error(_("Unable to edit role.\nRole must be lower than my top role")))
+            await ctx.send(
+                chat.error(
+                    _("Unable to edit role.\nRole must be lower than my top role")
+                )
+            )
         except discord.HTTPException as e:
             ctx.command.reset_cooldown(ctx)
             await ctx.send(chat.error(_("Unable to edit role: {}").format(e)))

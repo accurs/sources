@@ -6,6 +6,3 @@ from discord.ext.commands import CommandError
 from pydantic import BaseModel, Field
 from typing_extensions import Self
 from yarl import URL
-
-
-

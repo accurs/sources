@@ -1,11 +1,13 @@
-from PILL import Image, ImageDraw, ImageFont  # type: ignore
-from discord.ext.commands import Context, Cog  # type: ignore
-from discord import Message, File  # type: ignore # type: ignore # type: ignore
-from asyncio import to_thread as thread, Lock
-from collections import defaultdict
-from typing import Optional
 import textwrap
+from asyncio import Lock
+from asyncio import to_thread as thread
+from collections import defaultdict
 from io import BytesIO
+from typing import Optional
+
+from discord import File, Message  # type: ignore # type: ignore # type: ignore
+from discord.ext.commands import Cog, Context  # type: ignore
+from PILL import Image, ImageDraw, ImageFont  # type: ignore
 
 
 class Quotes(Cog):

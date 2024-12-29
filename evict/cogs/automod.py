@@ -1,9 +1,8 @@
 import discord
+from bot.bot import Evict
+from bot.helpers import EvictContext
 from discord.ext import commands
 from patches.permissions import Permissions, Whitelist
-
-from bot.helpers import EvictContext
-from bot.bot import Evict
 
 
 async def decrypt_message(content: str) -> str:

@@ -16,9 +16,14 @@ TimedeltaConverter = get_timedelta_converter(
     minimum=datetime.timedelta(seconds=0),
 )
 
+
 def _(untranslated: str) -> str:  # `redgettext` will found these strings.
     return untranslated
-ERROR_MESSAGE = _("I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}")
+
+
+ERROR_MESSAGE = _(
+    "I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}"
+)
 
 _ = Translator("DiscordEdit", __file__)
 
@@ -43,7 +48,9 @@ class PositionConverter(commands.Converter):
 class PermissionConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str) -> str:
         permissions = [
-            key for key, value in dict(discord.Permissions.all_channel()).items() if value
+            key
+            for key, value in dict(discord.Permissions.all_channel()).items()
+            if value
         ]
         if argument not in permissions:
             raise commands.BadArgument(_("This permission is invalid."))
@@ -135,7 +142,11 @@ class EditTextChannel(Cog):
     @commands.has_permissions(manage_channels=True)
     @edittextchannel.command(name="clone")
     async def edittextchannel_clone(
-        self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], *, name: str
+        self,
+        ctx: commands.Context,
+        channel: typing.Optional[discord.TextChannel],
+        *,
+        name: str,
     ) -> None:
         """Clone a text channel."""
         if channel is None:
@@ -192,7 +203,10 @@ class EditTextChannel(Cog):
     @commands.has_permissions(manage_channels=True)
     @edittextchannel.command(name="name")
     async def edittextchannel_name(
-        self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], name: str
+        self,
+        ctx: commands.Context,
+        channel: typing.Optional[discord.TextChannel],
+        name: str,
     ) -> None:
         """Edit text channel name."""
         if channel is None:
@@ -212,7 +226,11 @@ class EditTextChannel(Cog):
     @commands.has_permissions(manage_channels=True)
     @edittextchannel.command(name="topic")
     async def edittextchannel_topic(
-        self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], *, topic: str
+        self,
+        ctx: commands.Context,
+        channel: typing.Optional[discord.TextChannel],
+        *,
+        topic: str,
     ) -> None:
         """Edit text channel topic."""
         if channel is None:
@@ -260,7 +278,10 @@ class EditTextChannel(Cog):
     @commands.has_permissions(manage_channels=True)
     @edittextchannel.command(name="nsfw")
     async def edittextchannel_nsfw(
-        self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], nsfw: bool = None
+        self,
+        ctx: commands.Context,
+        channel: typing.Optional[discord.TextChannel],
+        nsfw: bool = None,
     ) -> None:
         """Edit text channel nsfw."""
         if channel is None:
@@ -494,7 +515,9 @@ class EditTextChannel(Cog):
                 targets.append(ctx.guild.default_role)
         if not targets:
             raise commands.UserFeedbackCheckFailure(
-                _("You need to provide a role or user you want to edit permissions for.")
+                _(
+                    "You need to provide a role or user you want to edit permissions for."
+                )
             )
         # for target in targets:
         #     if (
@@ -514,7 +537,11 @@ class EditTextChannel(Cog):
         channel_permissions = channel.permissions_for(ctx.author)
         for permission in permissions:
             if not getattr(channel_permissions, permission):
-                raise commands.UserFeedbackCheckFailure(_("You don't have the permission {permission_name} in this channel.").format(permission_name=permission))
+                raise commands.UserFeedbackCheckFailure(
+                    _(
+                        "You don't have the permission {permission_name} in this channel."
+                    ).format(permission_name=permission)
+                )
         overwrites = channel.overwrites
         for target in targets:
             if target in overwrites:
@@ -563,9 +590,7 @@ class EditTextChannel(Cog):
                 content = f"{ctx.author.mention} " + _(
                     "Do you really want to delete the text channel {channel.mention} ({channel.id})?"
                 ).format(channel=channel)
-            if not await CogsUtils.ConfirmationAsk(
-                ctx, content=content, embed=embed
-            ):
+            if not await CogsUtils.ConfirmationAsk(ctx, content=content, embed=embed):
                 await CogsUtils.delete_message(ctx.message)
                 return
         try:

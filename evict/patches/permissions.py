@@ -1,7 +1,9 @@
-from discord.ext import commands
+import json
 from typing import Union
-import discord, json
+
+import discord
 from bot.managers.emojis import Colors
+from discord.ext import commands
 
 OWNERS = [214753146512080907, 598125772754124823]
 STAFF = [

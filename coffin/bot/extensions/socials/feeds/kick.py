@@ -1,14 +1,19 @@
-from DataProcessing.models.Kick import KickChannel, User, Livestream # type: ignore
-from .base import Feed, BaseRecord
-from discord import Client, Embed, Color
-from typing import List, Dict, cast, Optional
-from collections import defaultdict
-from system.classes.builtins import shorten
-from random import uniform
 from asyncio import sleep
+from collections import defaultdict
+from random import uniform
+from typing import Dict, List, Optional, cast
+
+from DataProcessing.models.Kick import (KickChannel,  # type: ignore
+                                        Livestream, User)
+from discord import Client, Color, Embed
+from system.classes.builtins import shorten
+
+from .base import BaseRecord, Feed
+
 
 class Record(BaseRecord):
     username: str
+
 
 class Kick(Feed):
     def __init__(self, bot: Client):
@@ -34,17 +39,20 @@ class Kick(Feed):
             result[record["username"]].append(record)
 
         return result
-    
+
     async def get_streams(self, username: str, records: List[Record]):
-        user = await self.bot.services.kick.get_channel(username, cached = False)
+        user = await self.bot.services.kick.get_channel(username, cached=False)
         if user.livestream:
             if await self.redis.sismember(self.key, str(user.livestream.id)):
                 return
-            self.bot.loop.create_task(self.dispatch(user.livestream, user.user, user, records))
+            self.bot.loop.create_task(
+                self.dispatch(user.livestream, user.user, user, records)
+            )
             self.posted += 1
 
-
-    async def dispatch(self, stream: Livestream, user: User, raw: KickChannel, records: List[Record]):
+    async def dispatch(
+        self, stream: Livestream, user: User, raw: KickChannel, records: List[Record]
+    ):
 
         async def send(embed: Embed, record: Record):
             if not (guild := self.bot.get_guild(record.guild_id)):
@@ -53,20 +61,30 @@ class Kick(Feed):
                 return
             if not self.can_post(channel):
                 return
-            return await channel.send(embed = embed)
-        
-        embed = Embed(title = f"{user.username} is now live!", description = shorten(stream.session_title, 256), color = Color.from_str("#00e701"), url = f"https://kick.com/{user.username}")
-        embed.add_field(name = "Views", value = stream.viewer_count.humanize(), inline = True)
-        embed.add_field(name = "Followers", value = raw.followersCount.humanize() if raw.followersCount else "0", inline = True)
-        embed.set_footer(text = "Kick Notifications", icon_url = "https://kick.com/img/kick-logo.svg")
-        embed.set_author(name = user.username, icon_url = user.profile_pic)
+            return await channel.send(embed=embed)
+
+        embed = Embed(
+            title=f"{user.username} is now live!",
+            description=shorten(stream.session_title, 256),
+            color=Color.from_str("#00e701"),
+            url=f"https://kick.com/{user.username}",
+        )
+        embed.add_field(name="Views", value=stream.viewer_count.humanize(), inline=True)
+        embed.add_field(
+            name="Followers",
+            value=raw.followersCount.humanize() if raw.followersCount else "0",
+            inline=True,
+        )
+        embed.set_footer(
+            text="Kick Notifications", icon_url="https://kick.com/img/kick-logo.svg"
+        )
+        embed.set_author(name=user.username, icon_url=user.profile_pic)
         if stream.thumbnail:
             embed.set_thumbnail(url=stream.thumbnail.url)
 
         for record in records:
             await send(embed, record)
         await self.redis.sadd(self.key, str(stream.id))
-
 
     async def start(self) -> None:
         self.log = self.logger

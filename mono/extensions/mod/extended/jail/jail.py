@@ -1,20 +1,16 @@
-from core.tools.logging import logger as log
-from typing import Optional
 from functools import wraps
+from typing import Optional
 
-from discord import (
-    Embed,
-    Member,
-)
-from discord.ext.commands import group, has_permissions, Cog, command, CheckFailure
-from discord.utils import utcnow, get
-from humanize import naturaldelta
-from discord.ext import tasks
-from discord.abc import GuildChannel
-
-from core.tools import CompositeMetaClass, MixinMeta
-from core.tools import Duration
 from core.client.context import Context
+from core.tools import CompositeMetaClass, Duration, MixinMeta
+from core.tools.logging import logger as log
+from discord import Embed, Member
+from discord.abc import GuildChannel
+from discord.ext import tasks
+from discord.ext.commands import (CheckFailure, Cog, command, group,
+                                  has_permissions)
+from discord.utils import get, utcnow
+from humanize import naturaldelta
 
 
 class Jail(MixinMeta, metaclass=CompositeMetaClass):
@@ -97,9 +93,8 @@ class Jail(MixinMeta, metaclass=CompositeMetaClass):
         *,
         reason: str = "No reason provided",
     ):
-        from extensions.mod.moderation import (
-            Action,
-        )  # Import here to avoid circular import
+        from extensions.mod.moderation import \
+            Action  # Import here to avoid circular import
 
         """
         Jail a member for a specified duration.
@@ -214,9 +209,8 @@ class Jail(MixinMeta, metaclass=CompositeMetaClass):
         """
         Remove a member from jail.
         """
-        from extensions.mod.moderation import (
-            Action,
-        )  # Import here to avoid circular import
+        from extensions.mod.moderation import \
+            Action  # Import here to avoid circular import
 
         success = await self.unjail_member(ctx.guild.id, member.id)
         if success:

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import io
@@ -142,7 +141,9 @@ class Poll:
         for option in self.options:
             results[option.name] = 0
 
-        all_poll_vote_data = await self.cog.config.guild_from_id(self.guild_id).poll_user_choices()
+        all_poll_vote_data = await self.cog.config.guild_from_id(
+            self.guild_id
+        ).poll_user_choices()
         raw_vote_data = all_poll_vote_data.get(self.unique_poll_id, {})
 
         for str_option in raw_vote_data.values():
@@ -194,7 +195,9 @@ class Poll:
                     del poll_settings[self.unique_poll_id]
                 except KeyError:
                     pass
-            async with self.cog.config.guild(guild).poll_user_choices() as poll_user_choices:
+            async with self.cog.config.guild(
+                guild
+            ).poll_user_choices() as poll_user_choices:
                 try:
                     del poll_user_choices[self.unique_poll_id]
                 except KeyError:
@@ -213,7 +216,8 @@ class Poll:
             description=self.description or None,
         )
         sorted_results = {
-            k: v for k, v in sorted(poll_results.items(), key=lambda x: x[1], reverse=True)
+            k: v
+            for k, v in sorted(poll_results.items(), key=lambda x: x[1], reverse=True)
         }
 
         embed.add_field(
@@ -247,7 +251,9 @@ class Poll:
             view = discord.ui.View()
             view.add_item(
                 discord.ui.Button(
-                    label="Original message", style=ButtonStyle.link, url=poll_msg.jump_url
+                    label="Original message",
+                    style=ButtonStyle.link,
+                    url=poll_msg.jump_url,
                 )
             )
 
@@ -262,7 +268,9 @@ class Poll:
                 del poll_settings[self.unique_poll_id]
             except KeyError:
                 pass
-        async with self.cog.config.guild(guild).poll_user_choices() as poll_user_choices:
+        async with self.cog.config.guild(
+            guild
+        ).poll_user_choices() as poll_user_choices:
             try:
                 del poll_user_choices[self.unique_poll_id]
             except KeyError:
@@ -272,14 +280,20 @@ class Poll:
 
     async def plot(self) -> discord.File:
         results = await self.get_results()
-        df = pd.DataFrame.from_dict(results, orient="index", columns=["count"])  # type:ignore
+        df = pd.DataFrame.from_dict(
+            results, orient="index", columns=["count"]
+        )  # type:ignore
 
         df = df.loc[df["count"] != 0]
 
         def _plot() -> discord.File:
             """blocking"""
             fig: Figure = px.pie(
-                df, template="plotly_dark", values="count", names=df.index, title=self.question
+                df,
+                template="plotly_dark",
+                values="count",
+                names=df.index,
+                title=self.question,
             )
             fig.update_traces(textfont_size=18)
 

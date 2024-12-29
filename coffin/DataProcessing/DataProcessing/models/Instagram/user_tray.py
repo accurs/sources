@@ -4,11 +4,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, List
+from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
-from .instagram_post2 import InstagramPostResponse, InstagramUserResponse  # noqa
+from .instagram_post2 import (InstagramPostResponse,  # noqa
+                              InstagramUserResponse)
 
 
 class FanClubInfo(BaseModel):

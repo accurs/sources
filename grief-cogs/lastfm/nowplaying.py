@@ -2,6 +2,7 @@ import asyncio
 from typing import Optional
 
 import discord
+
 from grief.core.utils.chat_formatting import escape
 from grief.core.utils.menus import DEFAULT_CONTROLS, menu
 
@@ -49,12 +50,14 @@ class NowPlayingMixin(MixinMeta):
                 image_url = tracks["image"][-1]["#text"]
                 url = tracks["url"]
 
-            content = discord.Embed(color=await self.bot.get_embed_color(ctx.channel), url=url)
-
-            content.description = f"**{escape(album, formatting=True)}**" if album else ""
-            content.title = (
-                f"**{escape(artist, formatting=True)}** — ***{escape(track, formatting=True)} ***"
+            content = discord.Embed(
+                color=await self.bot.get_embed_color(ctx.channel), url=url
             )
+
+            content.description = (
+                f"**{escape(album, formatting=True)}**" if album else ""
+            )
+            content.title = f"**{escape(artist, formatting=True)}** — ***{escape(track, formatting=True)} ***"
             content.set_thumbnail(url=image_url)
 
             # tags and playcount
@@ -76,7 +79,9 @@ class NowPlayingMixin(MixinMeta):
                     trackdata = trackdata["track"]
                     playcount = int(trackdata["userplaycount"])
                     if playcount > 0:
-                        content.description += f"\n> {playcount} {self.format_plays(playcount)}"
+                        content.description += (
+                            f"\n> {playcount} {self.format_plays(playcount)}"
+                        )
                     if isinstance(trackdata["toptags"], dict):
                         for tag in trackdata["toptags"]["tag"]:
                             if "name" in tag:

@@ -3,32 +3,39 @@
   Email: cop@catgir.ls
   Discord: aiohttp
 """
-from typing import List, Optional, Any, Tuple
-from redis.asyncio import Redis
-from .Base import BaseService, cache
-from contextlib import suppress
-from loguru import logger as log
-from playwright.async_api import Page, async_playwright
-from playwright.async_api import Request as PlaywrightRequest
-from playwright.async_api import Response as PlaywrightResponse
+
+import asyncio
+import json
+import random
+import re
+import time
 from collections import deque
-from playwright._impl._errors import TargetClosedError
-from ..models.Instagram import InstagramProfileModel, InstagramProfileModelResponse, UserPostItem, InstaStoryModel, InstagramStoryResponse, InstagramUserResponse, StoryItem, InstagramHighlightGraphQueryRaw, InstagramHighlightRaw
+from contextlib import suppress
+from pathlib import Path
+from typing import Any, List, Optional, Tuple
+from urllib.parse import urlparse
+
+import msgpack
+import orjson
 from asyncer import asyncify
 from bs4 import BeautifulSoup
-from pathlib import Path
-from ..models.Instagram.raw_post import InstagramPost
+from loguru import logger as log
+from playwright._impl._errors import TargetClosedError
+from playwright.async_api import Page
+from playwright.async_api import Request as PlaywrightRequest
+from playwright.async_api import Response as PlaywrightResponse
+from playwright.async_api import async_playwright
+from redis.asyncio import Redis
 from tornado.escape import url_unescape
-from urllib.parse import urlparse
-from ..models.mime import mimes
 
-import re
-import orjson
-import time
-import json
-import asyncio
-import msgpack
-import random
+from ..models.Instagram import (InstagramHighlightGraphQueryRaw,
+                                InstagramHighlightRaw, InstagramProfileModel,
+                                InstagramProfileModelResponse,
+                                InstagramStoryResponse, InstagramUserResponse,
+                                InstaStoryModel, StoryItem, UserPostItem)
+from ..models.Instagram.raw_post import InstagramPost
+from ..models.mime import mimes
+from .Base import BaseService, cache
 
 try:
     from asyncio import timeout
@@ -40,34 +47,36 @@ except ImportError:
 
 
 async def get_proxy_ports():
-	process = await asyncio.create_subprocess_exec(
-		'netstat', '-tlnp',
-		stdout=asyncio.subprocess.PIPE,
-		stderr=asyncio.subprocess.PIPE
-	)
+    process = await asyncio.create_subprocess_exec(
+        "netstat",
+        "-tlnp",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
 
-	stdout, stderr = await process.communicate()
+    stdout, stderr = await process.communicate()
 
-	if stderr:
-		print(f"Error: {stderr.decode().strip()}")
-		return []
+    if stderr:
+        print(f"Error: {stderr.decode().strip()}")
+        return []
 
-	ports = []
-	for line in stdout.decode().splitlines():
-		if '3proxy' in line:
-			parts = line.split()
-			if len(parts) > 3:
-				port_info = parts[3]
-				port = port_info.split(':')[-1]  # Get the port number
-				ports.append(port)
+    ports = []
+    for line in stdout.decode().splitlines():
+        if "3proxy" in line:
+            parts = line.split()
+            if len(parts) > 3:
+                port_info = parts[3]
+                port = port_info.split(":")[-1]  # Get the port number
+                ports.append(port)
 
-	return ports
+    return ports
 
 
 async def get_random_proxy():
-	ports = await get_proxy_ports()
-	port = random.choice(ports)
-	return f"http://admin:admin@127.0.0.1:{port}"
+    ports = await get_proxy_ports()
+    port = random.choice(ports)
+    return f"http://admin:admin@127.0.0.1:{port}"
+
 
 def url_to_mime(url) -> Tuple[Optional[str], str]:
     """Guess the mime from a URL.
@@ -82,6 +91,7 @@ def url_to_mime(url) -> Tuple[Optional[str], str]:
     """
     suffix = Path(urlparse(url_unescape(url)).path).suffix
     return (mimes.get(suffix), suffix)
+
 
 @asyncify
 def extract_json_tag(data, key_ident: str, soap=True) -> bytes:
@@ -171,18 +181,23 @@ class InstagramService(BaseService):
             await context.add_cookies([cookie])
         return True
 
-    def get_url(self: "InstagramService", url: str, params: Optional[dict] = None) -> str:
+    def get_url(
+        self: "InstagramService", url: str, params: Optional[dict] = None
+    ) -> str:
         """Construct URL with query parameters."""
         if params is None:
             params = {}
         response = url.rstrip("?")
         query_string = "&".join(f"{key}={value}" for key, value in params.items())
         return f"{response}?{query_string}" if query_string else response
-    
+
     async def login(self: "InstagramService", username: str, password: str):
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", proxy={"server": await get_random_proxy()})
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                proxy={"server": await get_random_proxy()},
+            )
             page = await context.new_page()
             await page.goto("https://www.instagram.com/")
             username_locator = page.get_by_label("username")
@@ -201,17 +216,22 @@ class InstagramService(BaseService):
             await page.goto("https://yahoo.com")
             state = await page.context.storage_state()
             with open(self.cookies_file, "wb") as file:
-                file.write(orjson.dumps(state['cookies']))
+                file.write(orjson.dumps(state["cookies"]))
             await context.close()
             await browser.close()
         await p.stop()
         return True
-    
+
     @cache()
-    async def get_post(self: "InstagramService", url: str, **kwargs: Any) -> InstagramPost:
+    async def get_post(
+        self: "InstagramService", url: str, **kwargs: Any
+    ) -> InstagramPost:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", proxy={"server": await get_random_proxy()})
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                proxy={"server": await get_random_proxy()},
+            )
             await self.load_cookies_into_browser(context)
             page = await context.new_page()
             url = self.get_url(url, {"__a": 1, "__d": "dis"})
@@ -223,21 +243,29 @@ class InstagramService(BaseService):
         return InstagramPost(**html)
 
     @cache()
-    async def get_user(self: "InstagramService", username: str, **kwargs: Any) -> InstagramProfileModelResponse:
+    async def get_user(
+        self: "InstagramService", username: str, **kwargs: Any
+    ) -> InstagramProfileModelResponse:
         async def fetch(username: str):
             loop = asyncio.get_running_loop()
             fut = loop.create_future()
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
-                context = await browser.new_context(user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", proxy={"server": await get_random_proxy()})
+                context = await browser.new_context(
+                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                    proxy={"server": await get_random_proxy()},
+                )
                 page = await context.new_page()
 
                 async def find_user(r: PlaywrightRequest):
-                    if r.url == f"https://www.instagram.com/api/v1/users/web_profile_info/?username={username}":
+                    if (
+                        r.url
+                        == f"https://www.instagram.com/api/v1/users/web_profile_info/?username={username}"
+                    ):
                         if fut.done():
                             return
                         if r.redirected_to:
-                            
+
                             return
 
                         resp = await r.response()
@@ -260,15 +288,24 @@ class InstagramService(BaseService):
 
                             html_data = await page.content()
 
-                            result = await extract_json_tag(html_data, "biography_with_entities")
+                            result = await extract_json_tag(
+                                html_data, "biography_with_entities"
+                            )
                             if result:
-                                log.success("Found {} userdata via extract_json_tag", username)
-                                data = orjson.dumps({"data": {"user": orjson.loads(result)}})
+                                log.success(
+                                    "Found {} userdata via extract_json_tag", username
+                                )
+                                data = orjson.dumps(
+                                    {"data": {"user": orjson.loads(result)}}
+                                )
                                 fut.set_result(data)
 
                 page.on("request", find_user)
                 try:
-                    await page.goto(f"https://www.instagram.com/{username}", wait_until="domcontentloaded")
+                    await page.goto(
+                        f"https://www.instagram.com/{username}",
+                        wait_until="domcontentloaded",
+                    )
                     async with timeout(12):
                         data = await fut
                     if data is False:
@@ -306,19 +343,25 @@ class InstagramService(BaseService):
                     final.post_items.append(pi)
             await browser.close()
             return final
+
         with suppress(TargetClosedError):
             return await fetch(username)
-    
+
     @cache()
-    async def get_user_story(self: "InstagramService", username: str, **kwargs: Any) -> Optional[InstagramStoryResponse]:
+    async def get_user_story(
+        self: "InstagramService", username: str, **kwargs: Any
+    ) -> Optional[InstagramStoryResponse]:
         async def fetch(username: str):
             loop = asyncio.get_running_loop()
             future = loop.create_future()
             data = None
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=False)
-                context = await browser.new_context(user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", proxy={"server": await get_random_proxy()})
-                await self.load_cookies_into_browser( context)
+                context = await browser.new_context(
+                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                    proxy={"server": await get_random_proxy()},
+                )
+                await self.load_cookies_into_browser(context)
                 page = await context.new_page()
 
                 async def on_request(r: PlaywrightRequest):
@@ -330,7 +373,10 @@ class InstagramService(BaseService):
 
                 page.on("request", on_request)
                 try:
-                    await page.goto(f"https://www.instagram.com/stories/{username}/", wait_until="domcontentloaded")
+                    await page.goto(
+                        f"https://www.instagram.com/stories/{username}/",
+                        wait_until="domcontentloaded",
+                    )
                     if username not in page.url:
                         try:
                             await browser.close()
@@ -350,10 +396,14 @@ class InstagramService(BaseService):
 
                     html = await page.content()
 
-                    story_feed = await extract_json_tag(html, "xdt_api__v1__feed__reels_media")
+                    story_feed = await extract_json_tag(
+                        html, "xdt_api__v1__feed__reels_media"
+                    )
                     if story_feed:
                         story_feed = orjson.loads(story_feed)
-                        data = orjson.dumps(story_feed["xdt_api__v1__feed__reels_media"])
+                        data = orjson.dumps(
+                            story_feed["xdt_api__v1__feed__reels_media"]
+                        )
 
                 except Exception as e:
                     log.error("Unknown playwright erorr of type {}", e)
@@ -390,7 +440,12 @@ class InstagramService(BaseService):
                     pass
                 return None
             s2 = data.reels_media[0].user
-            final.author = InstagramUserResponse(username=s2.username, full_name=s2.full_name, is_private=s2.is_private, is_verified=s2.is_verified)
+            final.author = InstagramUserResponse(
+                username=s2.username,
+                full_name=s2.full_name,
+                is_private=s2.is_private,
+                is_verified=s2.is_verified,
+            )
             for reel in data.reels_media:
                 for item in reel.items:
                     story = StoryItem()
@@ -414,10 +469,13 @@ class InstagramService(BaseService):
             except Exception:
                 pass
             return final
+
         with suppress(TargetClosedError):
             return await fetch(username)
-    
-    async def get_user_highlights(self: "InstagramService", username: str, **kwargs: Any):
+
+    async def get_user_highlights(
+        self: "InstagramService", username: str, **kwargs: Any
+    ):
         raise TypeError("not finished")
         fut = asyncio.get_running_loop().create_future()
 
@@ -440,13 +498,19 @@ class InstagramService(BaseService):
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=False)
-            context = await browser.new_context(user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", proxy={"server": await get_random_proxy()})
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                proxy={"server": await get_random_proxy()},
+            )
             await self.load_cookies_into_browser(context)
             page = await context.new_page()
             page.on("request", handle_ql)
             try:
                 d = None
-                await page.goto(f"https://www.instagram.com/{username}", wait_until="domcontentloaded")
+                await page.goto(
+                    f"https://www.instagram.com/{username}",
+                    wait_until="domcontentloaded",
+                )
                 html = await page.content()
                 _data = await extract_json_tag(html, "edge_highlight_reels")
                 if _data:
@@ -485,26 +549,40 @@ class InstagramService(BaseService):
                     elif "api/graphql" in r.url:
                         data = await r.body()
                         data = orjson.loads(data)
-                        con = data["data"].get("xdt_api__v1__feed__reels_media__connection")
+                        con = data["data"].get(
+                            "xdt_api__v1__feed__reels_media__connection"
+                        )
                         if con:
                             reels_media = []
                             edges = con["edges"]
                             for e in edges:
                                 node = e["node"]
                                 reels_media.append(node)
-                            fut.set_result(orjson.dumps({"reels_media": reels_media, "status": "ok"}))
+                            fut.set_result(
+                                orjson.dumps(
+                                    {"reels_media": reels_media, "status": "ok"}
+                                )
+                            )
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=False)
-            context = await browser.new_context(user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", proxy={"server": await get_random_proxy()})
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                proxy={"server": await get_random_proxy()},
+            )
             await self.load_cookies_into_browser(context)
             page = await context.new_page()
             page.on("response", handle_req)
             data = None
             try:
-                await page.goto(f"https://www.instagram.com/stories/highlights/{highlight_id}", wait_until="domcontentloaded")
+                await page.goto(
+                    f"https://www.instagram.com/stories/highlights/{highlight_id}",
+                    wait_until="domcontentloaded",
+                )
                 html = await page.content()
-                _data = await extract_json_tag(html, "xdt_api__v1__feed__reels_media__connection")
+                _data = await extract_json_tag(
+                    html, "xdt_api__v1__feed__reels_media__connection"
+                )
                 if _data:
                     _data = orjson.loads(_data)
                     con = _data.get("xdt_api__v1__feed__reels_media__connection")
@@ -514,7 +592,9 @@ class InstagramService(BaseService):
                         for e in edges:
                             node = e["node"]
                             reels_media.append(node)
-                        data = orjson.dumps({"reels_media": reels_media, "status": "ok"})
+                        data = orjson.dumps(
+                            {"reels_media": reels_media, "status": "ok"}
+                        )
 
                 if not data:
                     data = await fut
@@ -526,6 +606,3 @@ class InstagramService(BaseService):
                 if not fut.done():
                     fut.cancel()
                 page.remove_listener("response", handle_req)
-
-
-    

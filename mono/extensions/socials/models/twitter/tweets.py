@@ -10,11 +10,10 @@ from typing import List, Literal, Optional
 
 from cashews import cache
 from discord import File
+from extensions.socials.models.twitter import API, ClientSession
 from humanfriendly import format_timespan
 from pydantic import BaseModel, Field
 from typing_extensions import Self
-
-from extensions.socials.models.twitter import API, ClientSession
 
 from .user import BasicUser
 

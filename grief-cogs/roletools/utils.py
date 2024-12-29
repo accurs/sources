@@ -1,18 +1,21 @@
-
-
+import argparse
 import re
 from typing import List, Optional, Tuple
 
-import argparse
 import discord
+
 from grief.core import commands
 from grief.core.bot import Grief
 from grief.core.utils.chat_formatting import humanize_list
 
 
-async def is_allowed_by_hierarchy(bot: Grief, mod: discord.Member, member: discord.Member) -> bool:
+async def is_allowed_by_hierarchy(
+    bot: Grief, mod: discord.Member, member: discord.Member
+) -> bool:
     return (
-        mod.guild.owner_id == mod.id or mod.top_role >= member.top_role or await bot.is_owner(mod)
+        mod.guild.owner_id == mod.id
+        or mod.top_role >= member.top_role
+        or await bot.is_owner(mod)
     )
 
 
@@ -26,7 +29,9 @@ async def is_allowed_by_role_hierarchy(
         return (False, f"I am not higher than `{role}` in hierarchy.")
     else:
         return (
-            (mod.top_role > role) or mod.id == mod.guild.owner_id or await bot.is_owner(mod),
+            (mod.top_role > role)
+            or mod.id == mod.guild.owner_id
+            or await bot.is_owner(mod),
             f"You are not higher than `{role}` in hierarchy.",
         )
 
@@ -80,6 +85,7 @@ async def delete_quietly(message: discord.Message):
 
 def guild_roughly_chunked(guild: discord.Guild) -> bool:
     return len(guild.members) / guild.member_count > 0.9
+
 
 class NoExitParser(argparse.ArgumentParser):
     def error(self, message: str) -> None:

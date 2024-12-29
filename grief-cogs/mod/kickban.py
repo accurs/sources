@@ -1,36 +1,33 @@
-import msgpack
-import orjson
-import aiohttp
 import asyncio
 import contextlib
 import logging
+from contextlib import suppress
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
 from typing import Dict, List, Optional, Tuple, Union
 
+import aiohttp
 import discord
-from grief.core import commands, i18n
-from grief.core.commands import RawUserIdConverter
-from grief.core.utils import AsyncIter
-from grief.core.utils.chat_formatting import (
-    pagify,
-    humanize_number,
-    bold,
-    humanize_list,
-    format_perms_list,
-)
-from contextlib import suppress
-from grief.core.utils.mod import get_audit_reason
-from .abc import MixinMeta
-from .utils import is_allowed_by_hierarchy
-from io import BytesIO
-from grief.core.commands.converter import TimedeltaConverter
-from discord.utils import utcnow
-from grief.core.utils.views import ConfirmView
-from .converters import ImageFinder
-from pydantic import BaseModel
-from grief.core.bot import Grief
-from grief.core import Config
+import msgpack
+import orjson
 from aiomisc.periodic import PeriodicCallback
+from discord.utils import utcnow
+from pydantic import BaseModel
+
+from grief.core import Config, commands, i18n
+from grief.core.bot import Grief
+from grief.core.commands import RawUserIdConverter
+from grief.core.commands.converter import TimedeltaConverter
+from grief.core.utils import AsyncIter
+from grief.core.utils.chat_formatting import (bold, format_perms_list,
+                                              humanize_list, humanize_number,
+                                              pagify)
+from grief.core.utils.mod import get_audit_reason
+from grief.core.utils.views import ConfirmView
+
+from .abc import MixinMeta
+from .converters import ImageFinder
+from .utils import is_allowed_by_hierarchy
 
 log = logging.getLogger("grief.mod")
 _ = i18n.Translator("Mod", __file__)
@@ -40,9 +37,11 @@ class KickBanMixin(MixinMeta):
     """
     Kick and ban commands and tasks go here.
     """
-    
+
     @staticmethod
-    async def get_invite_for_reinvite(ctx: commands.Context, max_age: int = 86400) -> str:
+    async def get_invite_for_reinvite(
+        ctx: commands.Context, max_age: int = 86400
+    ) -> str:
         """Handles the reinvite logic for getting an invite to send the newly unbanned user"""
         guild = ctx.guild
         my_perms: discord.Permissions = guild.me.guild_permissions
@@ -61,10 +60,15 @@ class KickBanMixin(MixinMeta):
                 return inv.url
         else:  # No existing invite found that is valid
             channels_and_perms = (
-                (channel, channel.permissions_for(guild.me)) for channel in guild.text_channels
+                (channel, channel.permissions_for(guild.me))
+                for channel in guild.text_channels
             )
             channel = next(
-                (channel for channel, perms in channels_and_perms if perms.create_instant_invite),
+                (
+                    channel
+                    for channel, perms in channels_and_perms
+                    if perms.create_instant_invite
+                ),
                 None,
             )
             if channel is None:
@@ -77,7 +81,9 @@ class KickBanMixin(MixinMeta):
 
     @staticmethod
     async def _voice_perm_check(
-        ctx: commands.Context, user_voice_state: Optional[discord.VoiceState], **perms: bool
+        ctx: commands.Context,
+        user_voice_state: Optional[discord.VoiceState],
+        **perms: bool,
     ) -> bool:
         """Check if the bot and user have sufficient permissions for voicebans.
 
@@ -99,9 +105,9 @@ class KickBanMixin(MixinMeta):
         required_perms.update(**perms)
         if not voice_channel.permissions_for(ctx.me) >= required_perms:
             await ctx.send(
-                _("I require the {perms} permission(s) in that user's channel to do that.").format(
-                    perms=format_perms_list(required_perms)
-                )
+                _(
+                    "I require the {perms} permission(s) in that user's channel to do that."
+                ).format(perms=format_perms_list(required_perms))
             )
             return False
         if (
@@ -136,9 +142,13 @@ class KickBanMixin(MixinMeta):
             if author == user:
                 return (
                     False,
-                    _("I cannot let you do that. Self-harm is bad {}").format("\N{PENSIVE FACE}"),
+                    _("I cannot let you do that. Self-harm is bad {}").format(
+                        "\N{PENSIVE FACE}"
+                    ),
                 )
-            elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, user):
+            elif not await is_allowed_by_hierarchy(
+                self.bot, self.config, guild, author, user
+            ):
                 return (
                     False,
                     _(
@@ -154,12 +164,16 @@ class KickBanMixin(MixinMeta):
             if toggle:
                 with contextlib.suppress(discord.HTTPException):
                     em = discord.Embed(
-                        title=bold(_("You have been banned from {guild}.").format(guild=guild)),
+                        title=bold(
+                            _("You have been banned from {guild}.").format(guild=guild)
+                        ),
                         color=await self.bot.get_embed_color(user),
                     )
                     em.add_field(
                         name=_("**Reason**"),
-                        value=reason if reason is not None else _("No reason was given."),
+                        value=(
+                            reason if reason is not None else _("No reason was given.")
+                        ),
                         inline=False,
                     )
                     await user.send(embed=em)
@@ -180,7 +194,9 @@ class KickBanMixin(MixinMeta):
                 else:
                     return (
                         False,
-                        _("User with ID {user_id} is already banned.").format(user_id=user.id),
+                        _("User with ID {user_id} is already banned.").format(
+                            user_id=user.id
+                        ),
                     )
 
             ban_type = "hackban"
@@ -189,7 +205,10 @@ class KickBanMixin(MixinMeta):
 
         if removed_temp:
             log.info(
-                "%s (%s) upgraded the tempban for %s to a permaban.", author, author.id, user.id
+                "%s (%s) upgraded the tempban for %s to a permaban.",
+                author,
+                author.id,
+                user.id,
             )
             success_message = _(
                 "User with ID {user_id} was upgraded from a temporary to a permanent ban."
@@ -197,7 +216,9 @@ class KickBanMixin(MixinMeta):
         else:
             user_handle = str(user) if isinstance(user, discord.abc.User) else "Unknown"
             try:
-                await guild.ban(user, reason=audit_reason, delete_message_seconds=days * 86400)
+                await guild.ban(
+                    user, reason=audit_reason, delete_message_seconds=days * 86400
+                )
                 log.info(
                     "%s (%s) %sned %s (%s), deleting %s days worth of messages.",
                     author,
@@ -211,7 +232,9 @@ class KickBanMixin(MixinMeta):
             except discord.Forbidden:
                 return False, _("I'm not allowed to do that.")
             except discord.NotFound:
-                return False, _("User with ID {user_id} not found").format(user_id=user.id)
+                return False, _("User with ID {user_id} not found").format(
+                    user_id=user.id
+                )
             except Exception:
                 log.exception(
                     "%s (%s) attempted to %s %s (%s), but an error occurred.",
@@ -261,7 +284,9 @@ class KickBanMixin(MixinMeta):
             )
             if datetime.now(timezone.utc) > unban_time:
                 try:
-                    await guild.unban(discord.Object(id=uid), reason=_("Tempban finished"))
+                    await guild.unban(
+                        discord.Object(id=uid), reason=_("Tempban finished")
+                    )
                 except discord.NotFound:
                     # user is not banned anymore
                     guild_tempbans.remove(uid)
@@ -285,25 +310,35 @@ class KickBanMixin(MixinMeta):
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True)
-    async def kick(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
+    async def kick(
+        self, ctx: commands.Context, member: discord.Member, *, reason: str = None
+    ):
         """
         Kick a user.
         """
         author = ctx.author
         guild = ctx.guild
-        
+
         if reason == None:
             reason = "no reason given"
 
         if isinstance(member, discord.Member):
             if member.id in self.bot.owner_ids:
-                embed = discord.Embed(description=f"{ctx.author.mention} you cannot kick the bot owner.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"{ctx.author.mention} you cannot kick the bot owner.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
-        
+
         if author == member:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: you can't kick yourself.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: you can't kick yourself.",
+                color=0x313338,
+            )
             return await ctx.reply(embed=embed, mention_author=False)
-        elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, member):
+        elif not await is_allowed_by_hierarchy(
+            self.bot, self.config, guild, author, member
+        ):
             await ctx.send(
                 _(
                     "I cannot let you do that. You are "
@@ -313,7 +348,10 @@ class KickBanMixin(MixinMeta):
             )
             return
         elif ctx.guild.me.top_role <= member.top_role or member == ctx.guild.owner:
-            embed = discord.Embed(description=f"{ctx.author.mention}: I cannot do that due to Discord hierarchy rules.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: I cannot do that due to Discord hierarchy rules.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
         audit_reason = get_audit_reason(author, reason, shorten=True)
@@ -321,7 +359,9 @@ class KickBanMixin(MixinMeta):
         if toggle:
             with contextlib.suppress(discord.HTTPException):
                 em = discord.Embed(
-                    title=bold(_("You have been kicked from {guild}.").format(guild=guild)),
+                    title=bold(
+                        _("You have been kicked from {guild}.").format(guild=guild)
+                    ),
                     color=await self.bot.get_embed_color(member),
                 )
                 em.add_field(
@@ -332,10 +372,15 @@ class KickBanMixin(MixinMeta):
                 await member.send(embed=em)
         try:
             await guild.kick(member, reason=audit_reason)
-            embed = discord.Embed(description=f"{ctx.author.mention}: kicked **{member}** for {reason}", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: kicked **{member}** for {reason}",
+                color=0x313338,
+            )
             return await ctx.reply(embed=embed, mention_author=False)
         except discord.errors.Forbidden:
-            embed = discord.Embed(description=f"> I'm not allowed to do that.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> I'm not allowed to do that.", color=0x313338
+            )
             return await ctx.reply(embed=embed, mention_author=False)
         except Exception:
             log.exception(
@@ -358,23 +403,23 @@ class KickBanMixin(MixinMeta):
     ):
         guild = ctx.guild
         if user in self.bot.owner_ids:
-                    embed = discord.Embed(description=f"{ctx.author.mention}: you cannot ban the bot owner.", color=0x313338)
-                    return await ctx.reply(embed=embed, mention_author=False)
-        
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: you cannot ban the bot owner.",
+                color=0x313338,
+            )
+            return await ctx.reply(embed=embed, mention_author=False)
+
         if days is None:
             days = await self.config.guild(guild).default_days()
-        
+
         if isinstance(user, int):
             user = self.bot.get_user(user) or discord.Object(id=user)
 
-        message = await self.ban_user(
-            user=user, ctx=ctx, days=days, reason=reason
-        )
+        message = await self.ban_user(user=user, ctx=ctx, days=days, reason=reason)
 
         await ctx.send(message)
         await ctx.tick()
 
-    
     @commands.command(aliases=["hackban", "mb"], usage="<user_ids...> [days] [reason]")
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.guild)
@@ -415,12 +460,15 @@ class KickBanMixin(MixinMeta):
 
         author = ctx.author
         guild = ctx.guild
-        
+
         if isinstance(user, discord.Member):
             if user.id in self.bot.owner_ids:
-                embed = discord.Embed(description=f"> {ctx.author.mention} You cannot ban the bot owner.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention} You cannot ban the bot owner.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
-        
+
         if not user_ids:
             await ctx.send_help()
             return
@@ -471,7 +519,9 @@ class KickBanMixin(MixinMeta):
         # If guild isn't chunked, we might possibly be missing the member from cache,
         # so we need to make sure that isn't the case by querying the user IDs for such guilds.
         while to_query:
-            queried_members = await guild.query_members(user_ids=to_query[:100], limit=100)
+            queried_members = await guild.query_members(
+                user_ids=to_query[:100], limit=100
+            )
             members.update((member.id, member) for member in queried_members)
             to_query = to_query[100:]
 
@@ -485,9 +535,9 @@ class KickBanMixin(MixinMeta):
                 if success:
                     banned.append(user_id)
                 else:
-                    errors[user_id] = _("Failed to ban user {user_id}: {reason}").format(
-                        user_id=user_id, reason=failure_reason
-                    )
+                    errors[user_id] = _(
+                        "Failed to ban user {user_id}: {reason}"
+                    ).format(user_id=user_id, reason=failure_reason)
             except Exception as e:
                 errors[user_id] = _("Failed to ban user {user_id}: {reason}").format(
                     user_id=user_id, reason=e
@@ -515,9 +565,15 @@ class KickBanMixin(MixinMeta):
                 else:
                     try:
                         await guild.ban(
-                            user, reason=audit_reason, delete_message_seconds=days * 86400
+                            user,
+                            reason=audit_reason,
+                            delete_message_seconds=days * 86400,
                         )
-                        log.info("{}({}) hackbanned {}".format(author.name, author.id, user_id))
+                        log.info(
+                            "{}({}) hackbanned {}".format(
+                                author.name, author.id, user_id
+                            )
+                        )
                     except discord.NotFound:
                         errors[user_id] = _("User with ID {user_id} not found").format(
                             user_id=user_id
@@ -547,19 +603,22 @@ class KickBanMixin(MixinMeta):
         """Temporarily ban a user from this server."""
         guild = ctx.guild
         author = ctx.author
-       
+
         if isinstance(member, discord.Member):
             if member.id in self.bot.owner_ids:
-                embed = discord.Embed(description=f"{ctx.author.mention}: You cannot tempban the bot owner.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"{ctx.author.mention}: You cannot tempban the bot owner.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
-        
+
         if author == member:
-            await ctx.send(
-                _("You cannot ban yourself.")
-            )
+            await ctx.send(_("You cannot ban yourself."))
             return
-        
-        elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, member):
+
+        elif not await is_allowed_by_hierarchy(
+            self.bot, self.config, guild, author, member
+        ):
             await ctx.send(
                 _(
                     "I cannot let you do that. You are "
@@ -584,7 +643,9 @@ class KickBanMixin(MixinMeta):
         if not (0 <= days <= 7):
             await ctx.send(_("Invalid days. Must be between 0 and 7."))
             return
-        invite = await self.get_invite_for_reinvite(ctx, int(duration.total_seconds() + 86400))
+        invite = await self.get_invite_for_reinvite(
+            ctx, int(duration.total_seconds() + 86400)
+        )
 
         await self.config.member(member).banned_until.set(unban_time.timestamp())
         async with self.config.guild(guild).current_tempbans() as current_tempbans:
@@ -592,22 +653,24 @@ class KickBanMixin(MixinMeta):
 
         with contextlib.suppress(discord.HTTPException):
             # We don't want blocked DMs preventing us from banning
-            msg = _("You have been temporarily banned from {server_name} until {date}.").format(
-                server_name=guild.name, date=discord.utils.format_dt(unban_time)
-            )
+            msg = _(
+                "You have been temporarily banned from {server_name} until {date}."
+            ).format(server_name=guild.name, date=discord.utils.format_dt(unban_time))
             if guild_data["dm_on_kickban"] and reason:
                 msg += _("\n\n**Reason:** {reason}").format(reason=reason)
             if invite:
-                msg += _("\n\nHere is an invite for when your ban expires: {invite_link}").format(
-                    invite_link=invite
-                )
+                msg += _(
+                    "\n\nHere is an invite for when your ban expires: {invite_link}"
+                ).format(invite_link=invite)
             await member.send(msg)
 
         audit_reason = get_audit_reason(author, reason, shorten=True)
 
         try:
             await ctx.tick()
-            await guild.ban(member, reason=audit_reason, delete_message_seconds=days * 86400)
+            await guild.ban(
+                member, reason=audit_reason, delete_message_seconds=days * 86400
+            )
         except discord.Forbidden:
             await ctx.send(_("I can't do that for some reason."))
         except discord.HTTPException:
@@ -617,22 +680,27 @@ class KickBanMixin(MixinMeta):
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @commands.has_permissions(ban_members=True)
-    async def softban(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
+    async def softban(
+        self, ctx: commands.Context, member: discord.Member, *, reason: str = None
+    ):
         """Kick a user and delete 1 day's worth of their messages."""
         guild = ctx.guild
         author = ctx.author
-        
+
         if isinstance(member, discord.Member):
             if member.id in self.bot.owner_ids:
-                embed = discord.Embed(description=f"{ctx.author.mention}: You cannot softban the bot owner.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"{ctx.author.mention}: You cannot softban the bot owner.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
-        
+
         if author == member:
-            await ctx.send(
-                ("You cannot ban yourself.")
-            )
+            await ctx.send(("You cannot ban yourself."))
             return
-        elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, member):
+        elif not await is_allowed_by_hierarchy(
+            self.bot, self.config, guild, author, member
+        ):
             await ctx.send(
                 _(
                     "I cannot let you do that. You are "
@@ -688,20 +756,30 @@ class KickBanMixin(MixinMeta):
     @commands.command(aliases=["vk"])
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @commands.has_permissions(move_members=True)
-    async def voicekick(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
+    async def voicekick(
+        self, ctx: commands.Context, member: discord.Member, *, reason: str = None
+    ):
         """Kick a member from a voice channel."""
         author = ctx.author
         guild = ctx.guild
         user_voice_state: discord.VoiceState = member.voice
-        
+
         if isinstance(member, discord.Member):
             if member.id in self.bot.owner_ids:
-                embed = discord.Embed(description=f"{ctx.author.mention}: You cannot voicekick the bot owner.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"{ctx.author.mention}: You cannot voicekick the bot owner.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
-        
-        if await self._voice_perm_check(ctx, user_voice_state, move_members=True) is False:
+
+        if (
+            await self._voice_perm_check(ctx, user_voice_state, move_members=True)
+            is False
+        ):
             return
-        elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, member):
+        elif not await is_allowed_by_hierarchy(
+            self.bot, self.config, guild, author, member
+        ):
             await ctx.send(
                 _(
                     "I cannot let you do that. You are "
@@ -710,8 +788,11 @@ class KickBanMixin(MixinMeta):
                 )
             )
             return
-        
-        embed = discord.Embed(description=f"> {ctx.author.mention}: {member} has been voice kicked.", color=0x313338)
+
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: {member} has been voice kicked.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=True)
 
         try:
@@ -720,14 +801,18 @@ class KickBanMixin(MixinMeta):
             await ctx.send(_("I am unable to kick this member from the voice channel."))
             return
         except discord.HTTPException:
-            await ctx.send(_("Something went wrong while attempting to kick that member."))
+            await ctx.send(
+                _("Something went wrong while attempting to kick that member.")
+            )
             return
 
     @commands.command(aliases=["vu"])
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @commands.has_permissions(mute_members=True, deafen_members=True)
-    async def voiceunban(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
+    async def voiceunban(
+        self, ctx: commands.Context, member: discord.Member, *, reason: str = None
+    ):
         """Unban a user from speaking and listening in the server's voice channels."""
         user_voice_state = member.voice
         if (
@@ -737,8 +822,11 @@ class KickBanMixin(MixinMeta):
             is False
         ):
             return
-        
-        embed = discord.Embed(description=f"{ctx.author.mention}: {member} has been un-voice banned.", color=0x313338)
+
+        embed = discord.Embed(
+            description=f"{ctx.author.mention}: {member} has been un-voice banned.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
 
         needs_unmute = True if user_voice_state.mute else False
@@ -758,13 +846,18 @@ class KickBanMixin(MixinMeta):
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @commands.has_permissions(mute_members=True, deafen_members=True)
-    async def voiceban(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
+    async def voiceban(
+        self, ctx: commands.Context, member: discord.Member, *, reason: str = None
+    ):
         """Ban a user from speaking and listening in the server's voice channels."""
         user_voice_state: discord.VoiceState = member.voice
-        
+
         if isinstance(member, discord.Member):
             if member.id in self.bot.owner_ids:
-                embed = discord.Embed(description=f"{ctx.author.mention}: You cannot voiceban the bot owner.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"{ctx.author.mention}: You cannot voiceban the bot owner.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
         if (
             await self._voice_perm_check(
@@ -774,7 +867,7 @@ class KickBanMixin(MixinMeta):
         ):
             return
         await ctx.tick()
-        
+
         needs_mute = True if user_voice_state.mute is False else False
         needs_deafen = True if user_voice_state.deaf is False else False
         audit_reason = get_audit_reason(ctx.author, reason, shorten=True)
@@ -801,7 +894,7 @@ class KickBanMixin(MixinMeta):
         guild = ctx.guild
         author = ctx.author
         audit_reason = get_audit_reason(ctx.author, reason, shorten=True)
-        
+
         try:
             ban_entry = await guild.fetch_ban(discord.Object(user_id))
         except discord.NotFound:
@@ -810,53 +903,62 @@ class KickBanMixin(MixinMeta):
         try:
             await guild.unban(ban_entry.user, reason=audit_reason)
         except discord.HTTPException:
-            await ctx.send(_("Something went wrong while attempting to unban that user."))
+            await ctx.send(
+                _("Something went wrong while attempting to unban that user.")
+            )
             return
 
         if await self.config.guild(guild).reinvite_on_unban():
             user = ctx.bot.get_user(user_id)
             if not user:
                 await ctx.send(
-                    _("I don't share another server with this user. I can't reinvite them.")
+                    _(
+                        "I don't share another server with this user. I can't reinvite them."
+                    )
                 )
                 return
-            
-        embed = discord.Embed(description=f"{ctx.author.mention}: **{user}** has been unbanned.", color=0x313338)
+
+        embed = discord.Embed(
+            description=f"{ctx.author.mention}: **{user}** has been unbanned.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
 
         invite = await self.get_invite_for_reinvite(ctx)
         if invite:
-                try:
-                    await user.send(
-                        _(
-                            "You've been unbanned from {server}.\n"
-                            "Here is an invite for that server: {invite_link}"
-                        ).format(server=guild.name, invite_link=invite)
-                    )
-                except discord.Forbidden:
-                    await ctx.send(
-                        _(
-                            "I failed to send an invite to that user. "
-                            "Perhaps you may be able to send it for me?\n"
-                            "Here's the invite link: {invite_link}"
-                        ).format(invite_link=invite)
-                    )
-                except discord.HTTPException:
-                    await ctx.send(
-                        _(
-                            "Something went wrong when attempting to send that user "
-                            "an invite. Here's the link so you can try: {invite_link}"
-                        ).format(invite_link=invite)
-                    )
-    
-    @commands.group(name="gedit",)
+            try:
+                await user.send(
+                    _(
+                        "You've been unbanned from {server}.\n"
+                        "Here is an invite for that server: {invite_link}"
+                    ).format(server=guild.name, invite_link=invite)
+                )
+            except discord.Forbidden:
+                await ctx.send(
+                    _(
+                        "I failed to send an invite to that user. "
+                        "Perhaps you may be able to send it for me?\n"
+                        "Here's the invite link: {invite_link}"
+                    ).format(invite_link=invite)
+                )
+            except discord.HTTPException:
+                await ctx.send(
+                    _(
+                        "Something went wrong when attempting to send that user "
+                        "an invite. Here's the link so you can try: {invite_link}"
+                    ).format(invite_link=invite)
+                )
+
+    @commands.group(
+        name="gedit",
+    )
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     async def guildedit(self, ctx: commands.Context) -> None:
         """Vanity management for Grief."""
-   
+
     @guildedit.command()
-    async def banner(self, ctx, url: str=None):
+    async def banner(self, ctx, url: str = None):
         """Set the server banner.
 
         `<image>` URL to the image or image uploaded with running the
@@ -866,7 +968,7 @@ class KickBanMixin(MixinMeta):
 
         if len(ctx.message.attachments) > 0:  # Attachments take priority
             data = await ctx.message.attachments[0].read()
-        
+
         elif url is not None:
             if url.startswith("<") and url.endswith(">"):
                 url = url[1:-1]
@@ -878,30 +980,36 @@ class KickBanMixin(MixinMeta):
                 except aiohttp.InvalidURL:
                     return await ctx.send(_("That URL is invalid."))
                 except aiohttp.ClientError:
-                    return await ctx.send(_("Something went wrong while trying to get the image."))
+                    return await ctx.send(
+                        _("Something went wrong while trying to get the image.")
+                    )
         else:
             await ctx.guild.edit(banner=None)
-            embed = discord.Embed(description=f"{ctx.author.mention}: server banner has been cleared.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: server banner has been cleared.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
 
         try:
             async with ctx.typing():
-                await ctx.guild.edit(banner=data, reason=f'server banner updated by {ctx.author}')
-        except discord.HTTPException:
-            await ctx.send(
-                _(
-                    "Must be a valid image in either JPG or PNG format."
+                await ctx.guild.edit(
+                    banner=data, reason=f"server banner updated by {ctx.author}"
                 )
-            )
+        except discord.HTTPException:
+            await ctx.send(_("Must be a valid image in either JPG or PNG format."))
         except ValueError:
             await ctx.send(_("JPG / PNG format only."))
         else:
-            embed = discord.Embed(description=f"{ctx.author.mention}: server banner has been updated.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: server banner has been updated.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
-    
+
     @guildedit.command()
-    async def icon(self, ctx, url: str=None):
+    async def icon(self, ctx, url: str = None):
         """Set the server icon of the server.
 
         `<image>` URL to the image or image uploaded with running the
@@ -921,37 +1029,43 @@ class KickBanMixin(MixinMeta):
                 except aiohttp.InvalidURL:
                     return await ctx.send(_("That URL is invalid."))
                 except aiohttp.ClientError:
-                    return await ctx.send(_("Something went wrong while trying to get the image."))
+                    return await ctx.send(
+                        _("Something went wrong while trying to get the image.")
+                    )
         else:
             await ctx.guild.edit(icon=None)
-            embed = discord.Embed(description=f"{ctx.author.mention}: server icon has been cleared.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: server icon has been cleared.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
 
         try:
             async with ctx.typing():
-                await ctx.guild.edit(icon=data, reason=f'server icon updated by {ctx.author}')
-        except discord.HTTPException:
-            await ctx.send(
-                _(
-                    "must be a valid image in either JPG or PNG format."
+                await ctx.guild.edit(
+                    icon=data, reason=f"server icon updated by {ctx.author}"
                 )
-            )
+        except discord.HTTPException:
+            await ctx.send(_("must be a valid image in either JPG or PNG format."))
         except ValueError:
             await ctx.send(_("JPG / PNG format only."))
         else:
-            embed = discord.Embed(description=f"{ctx.author.mention}: server icon has been updated.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: server icon has been updated.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
 
     @guildedit.command()
-    async def splash(self, ctx, url: str=None):
+    async def splash(self, ctx, url: str = None):
         """Set the invite splash screen of the server.
 
         `<image>` URL to the image or image uploaded with running the
         command
 
         """
-        
+
         if len(ctx.message.attachments) > 0:  # Attachments take priority
             data = await ctx.message.attachments[0].read()
         elif url is not None:
@@ -965,16 +1079,23 @@ class KickBanMixin(MixinMeta):
                 except aiohttp.InvalidURL:
                     return await ctx.send(_("That URL is invalid."))
                 except aiohttp.ClientError:
-                    return await ctx.send(_("Something went wrong while trying to get the image."))
+                    return await ctx.send(
+                        _("Something went wrong while trying to get the image.")
+                    )
         else:
             await ctx.guild.edit(splash=None)
-            embed = discord.Embed(description=f"{ctx.author.mention}: server splash has been cleared.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: server splash has been cleared.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
 
         try:
             async with ctx.typing():
-                await ctx.guild.edit(splash=data, reason=f'server splash updated by {ctx.author}')
+                await ctx.guild.edit(
+                    splash=data, reason=f"server splash updated by {ctx.author}"
+                )
         except discord.HTTPException:
             await ctx.send(
                 _(
@@ -986,7 +1107,10 @@ class KickBanMixin(MixinMeta):
         except ValueError:
             await ctx.send(_("JPG / PNG format only."))
         else:
-            embed = discord.Embed(description=f"{ctx.author.mention}: server invite splash has been updated.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: server invite splash has been updated.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command()
@@ -998,10 +1122,14 @@ class KickBanMixin(MixinMeta):
             return await ctx.send("The channel is already marked as NSFW.")
         try:
             await channel.edit(nsfw=True)
-            await ctx.send(f"The channel {channel.mention} has been marked as NSFW for 30 seconds.")
+            await ctx.send(
+                f"The channel {channel.mention} has been marked as NSFW for 30 seconds."
+            )
             await asyncio.sleep(30)
             await channel.edit(nsfw=False)
-            await ctx.send(f"The channel {channel.mention} is no longer marked as NSFW.")
+            await ctx.send(
+                f"The channel {channel.mention} is no longer marked as NSFW."
+            )
         except discord.Forbidden:
             await ctx.send("I don't have the required permissions to manage channels.")
 
@@ -1009,9 +1137,11 @@ class KickBanMixin(MixinMeta):
     @commands.has_permissions(manage_guild=True)
     async def clearinvites(self, ctx):
         """Delete all invites in the server."""
-        
+
         invites = await ctx.guild.invites()
         for invite in invites:
             await invite.delete()
-        embed = discord.Embed(description="All existing invites have been removed.", color=0x313338)
+        embed = discord.Embed(
+            description="All existing invites have been removed.", color=0x313338
+        )
         await ctx.send(embed=embed)

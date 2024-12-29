@@ -1,6 +1,8 @@
-from pydantic import BaseModel
 from pathlib import Path
+
 from discord import Client
+from pydantic import BaseModel
+
 
 class Statistics(BaseModel):
     files: str

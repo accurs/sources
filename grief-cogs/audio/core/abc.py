@@ -2,22 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import (
-    Set,
-    TYPE_CHECKING,
-    Any,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Tuple,
-    Union,
-    Dict,
-)
+from typing import (TYPE_CHECKING, Any, Dict, List, Mapping, MutableMapping,
+                    Optional, Set, Tuple, Union)
 
 import aiohttp
 import discord
@@ -98,7 +87,9 @@ class MixinMeta(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def update_bot_presence(self, track: lavalink.Track, playing_servers: int) -> None:
+    async def update_bot_presence(
+        self, track: lavalink.Track, playing_servers: int
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -181,7 +172,9 @@ class MixinMeta(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _can_instaskip(self, ctx: commands.Context, member: discord.Member) -> bool:
+    async def _can_instaskip(
+        self, ctx: commands.Context, member: discord.Member
+    ) -> bool:
         raise NotImplementedError()
 
     @abstractmethod
@@ -207,7 +200,9 @@ class MixinMeta(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def is_track_length_allowed(self, track: Union[lavalink.Track, int], maxlength: int) -> bool:
+    def is_track_length_allowed(
+        self, track: Union[lavalink.Track, int], maxlength: int
+    ) -> bool:
         raise NotImplementedError()
 
     @abstractmethod
@@ -221,13 +216,18 @@ class MixinMeta(ABC):
 
     @abstractmethod
     async def get_track_description_unformatted(
-        self, track: Union[lavalink.rest_api.Track, "Query"], local_folder_current_path: Path
+        self,
+        track: Union[lavalink.rest_api.Track, "Query"],
+        local_folder_current_path: Path,
     ) -> Optional[str]:
         raise NotImplementedError()
 
     @abstractmethod
     def humanize_scope(
-        self, scope: str, ctx: Union[discord.Guild, discord.abc.User, str] = None, the: bool = None
+        self,
+        scope: str,
+        ctx: Union[discord.Guild, discord.abc.User, str] = None,
+        the: bool = None,
     ) -> Optional[str]:
         raise NotImplementedError()
 
@@ -257,7 +257,10 @@ class MixinMeta(ABC):
     def _has_notify_perms(
         self,
         channel: Union[
-            discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.Thread,
         ],
     ) -> bool:
         raise NotImplementedError()
@@ -320,7 +323,9 @@ class MixinMeta(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _skip_action(self, ctx: commands.Context, skip_to_track: int = None) -> None:
+    async def _skip_action(
+        self, ctx: commands.Context, skip_to_track: int = None
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -361,7 +366,10 @@ class MixinMeta(ABC):
 
     @abstractmethod
     async def _maybe_update_playlist(
-        self, ctx: commands.Context, player: lavalink.player.Player, playlist: "Playlist"
+        self,
+        ctx: commands.Context,
+        player: lavalink.player.Player,
+        playlist: "Playlist",
     ) -> Tuple[List[lavalink.Track], List[lavalink.Track], "Playlist"]:
         raise NotImplementedError()
 
@@ -406,7 +414,12 @@ class MixinMeta(ABC):
 
     @abstractmethod
     async def _genre_search_button_action(
-        self, ctx: commands.Context, options: List, emoji: str, page: int, playlist: bool = False
+        self,
+        ctx: commands.Context,
+        options: List,
+        emoji: str,
+        page: int,
+        playlist: bool = False,
     ) -> str:
         raise NotImplementedError()
 
@@ -517,7 +530,11 @@ class MixinMeta(ABC):
 
     @abstractmethod
     async def _build_playlist_list_page(
-        self, ctx: commands.Context, page_num: int, abc_names: List, scope: Optional[str]
+        self,
+        ctx: commands.Context,
+        page_num: int,
+        abc_names: List,
+        scope: Optional[str],
     ) -> discord.Embed:
         raise NotImplementedError()
 

@@ -1,70 +1,50 @@
 import asyncio
 import contextlib
 import datetime
+import getpass
 import importlib
+import io
 import itertools
 import keyword
 import logging
-import io
-import random
-import markdown
 import os
+import platform
+import random
 import re
 import sys
-import platform
-import psutil
-import getpass
-import pip
 import traceback
-from pathlib import Path
 from collections import defaultdict
-from grief.core import app_commands, data_manager
-from grief.core.utils.menus import menu
-from grief.core.utils.views import SetApiView
-from grief.core.commands import GuildConverter, RawUserIdConverter
+from pathlib import Path
 from string import ascii_letters, digits
-from typing import (
-    TYPE_CHECKING,
-    Union,
-    Tuple,
-    List,
-    Optional,
-    Iterable,
-    Sequence,
-    Dict,
-    Set,
-    Literal,
-)
+from typing import (TYPE_CHECKING, Dict, Iterable, List, Literal, Optional,
+                    Sequence, Set, Tuple, Union)
 
 import aiohttp
 import discord
-from babel import Locale as BabelLocale, UnknownLocaleError
-from grief.core.data_manager import storage_type
+import markdown
+import pip
+import psutil
+from babel import Locale as BabelLocale
+from babel import UnknownLocaleError
 
-from . import (
-    __version__,
-    version_info as red_version_info,
-    commands,
-    errors,
-    i18n,
-)
+from grief.core import app_commands, data_manager
+from grief.core.commands import GuildConverter, RawUserIdConverter
+from grief.core.data_manager import storage_type
+from grief.core.utils.menus import menu
+from grief.core.utils.views import SetApiView
+
+from . import __version__, commands, errors, i18n
+from . import version_info as red_version_info
 from ._diagnoser import IssueDiagnoser
+from .commands import CogConverter, CommandConverter
+from .commands.help import HelpMenuSetting
+from .commands.requires import PrivilegeLevel
 from .utils import AsyncIter, can_user_send_messages_in
 from .utils._internal_utils import fetch_latest_red_version_info
+from .utils.chat_formatting import (box, escape, humanize_list,
+                                    humanize_number, humanize_timedelta,
+                                    inline, pagify, warning)
 from .utils.predicates import MessagePredicate
-from .utils.chat_formatting import (
-    box,
-    escape,
-    humanize_list,
-    humanize_number,
-    humanize_timedelta,
-    inline,
-    pagify,
-    warning,
-)
-from .commands import CommandConverter, CogConverter
-from .commands.requires import PrivilegeLevel
-from .commands.help import HelpMenuSetting
 
 _entities = {
     "*": "&midast;",
@@ -128,7 +108,9 @@ class CoreLogic:
         self.bot.register_rpc_handler(self._version_info)
         self.bot.register_rpc_handler(self._invite_url)
 
-    async def _load(self, pkg_names: Iterable[str]) -> Dict[str, Union[List[str], Dict[str, str]]]:
+    async def _load(
+        self, pkg_names: Iterable[str]
+    ) -> Dict[str, Union[List[str], Dict[str, str]]]:
         """
         Loads packages by name.
 
@@ -176,7 +158,9 @@ class CoreLogic:
                 log.exception("Package import failed", exc_info=e)
 
                 exception_log = "Exception during import of package\n"
-                exception_log += "".join(traceback.format_exception(type(e), e, e.__traceback__))
+                exception_log += "".join(
+                    traceback.format_exception(type(e), e, e.__traceback__)
+                )
                 bot._last_exception = exception_log
                 failed_packages.append(name)
 
@@ -206,7 +190,9 @@ class CoreLogic:
                 log.exception("Package loading failed", exc_info=e)
 
                 exception_log = "Exception during loading of package\n"
-                exception_log += "".join(traceback.format_exception(type(e), e, e.__traceback__))
+                exception_log += "".join(
+                    traceback.format_exception(type(e), e, e.__traceback__)
+                )
                 bot._last_exception = exception_log
                 failed_packages.append(name)
             else:
@@ -293,7 +279,10 @@ class CoreLogic:
             else:
                 notloaded_packages.append(name)
 
-        return {"unloaded_packages": unloaded_packages, "notloaded_packages": notloaded_packages}
+        return {
+            "unloaded_packages": unloaded_packages,
+            "notloaded_packages": notloaded_packages,
+        }
 
     async def _reload(
         self, pkg_names: Sequence[str]
@@ -499,14 +488,18 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                 "you can invite me on new servers.\n\n"
                 "You can change this by ticking `Public bot` in "
                 "your token settings: "
-                "https://discord.com/developers/applications/{0}/bot".format(self.bot.user.id)
+                "https://discord.com/developers/applications/{0}/bot".format(
+                    self.bot.user.id
+                )
             )
             return
         if not confirm:
             await ctx.send(
                 "You're about to make the `{0}invite` command public. "
                 "All users will be able to invite me on their server.\n\n"
-                "If you agree, you can type `{0}inviteset public yes`.".format(ctx.clean_prefix)
+                "If you agree, you can type `{0}inviteset public yes`.".format(
+                    ctx.clean_prefix
+                )
             )
         else:
             await self.bot._config.invite_public.set(True)
@@ -550,7 +543,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             )
         else:
             await ctx.send(
-                _("The `applications.commands` scope has been removed from the invite URL.")
+                _(
+                    "The `applications.commands` scope has been removed from the invite URL."
+                )
             )
 
     @commands.command()
@@ -581,7 +576,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         if leaving_local_guild:
             guilds = (ctx.guild,)
             msg = (
-                _("You haven't passed any server ID. Do you want me to leave this server?")
+                _(
+                    "You haven't passed any server ID. Do you want me to leave this server?"
+                )
                 + " (yes/no)"
             )
         else:
@@ -601,9 +598,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         for guild in guilds:
             if guild.owner.id == ctx.me.id:
                 return await ctx.send(
-                    _("I cannot leave the server `{server_name}`: I am the owner of it.").format(
-                        server_name=guild.name
-                    )
+                    _(
+                        "I cannot leave the server `{server_name}`: I am the owner of it."
+                    ).format(server_name=guild.name)
                 )
 
         for page in pagify(msg):
@@ -621,7 +618,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                 else:
                     if number > 1:
                         await ctx.send(
-                            _("Alright. Leaving {number} servers...").format(number=number)
+                            _("Alright. Leaving {number} servers...").format(
+                                number=number
+                            )
                         )
                     else:
                         await ctx.send(_("Alright. Leaving one server..."))
@@ -699,18 +698,24 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                     "The following names are not valid package names: {packs}\n"
                     "Package names cannot start with a number"
                     " and can only contain ascii numbers, letters, and underscores."
-                ).format(packs=humanize_list([inline(package) for package in invalid_pkg_names]))
+                ).format(
+                    packs=humanize_list(
+                        [inline(package) for package in invalid_pkg_names]
+                    )
+                )
             output.append(formed)
 
         if not_found := outcomes["notfound_packages"]:
             if len(not_found) == 1:
-                formed = _("The following package was not found in any cog path: {pack}.").format(
-                    pack=inline(not_found[0])
-                )
+                formed = _(
+                    "The following package was not found in any cog path: {pack}."
+                ).format(pack=inline(not_found[0]))
             else:
                 formed = _(
                     "The following packages were not found in any cog path: {packs}"
-                ).format(packs=humanize_list([inline(package) for package in not_found]))
+                ).format(
+                    packs=humanize_list([inline(package) for package in not_found])
+                )
             output.append(formed)
 
         if failed_with_reason := outcomes["failed_with_reason_packages"]:
@@ -737,7 +742,11 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                     "**WARNING**: The following repos are using shared libs"
                     " which are marked for removal in the future: {repos}.\n"
                     "You should inform maintainers of these repos about this message."
-                ).format(repos=humanize_list([inline(repo) for repo in repos_with_shared_libs]))
+                ).format(
+                    repos=humanize_list(
+                        [inline(repo) for repo in repos_with_shared_libs]
+                    )
+                )
             output.append(formed)
 
         if output:
@@ -844,18 +853,24 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                     "The following names are not valid package names: {packs}\n"
                     "Package names cannot start with a number"
                     " and can only contain ascii numbers, letters, and underscores."
-                ).format(packs=humanize_list([inline(package) for package in invalid_pkg_names]))
+                ).format(
+                    packs=humanize_list(
+                        [inline(package) for package in invalid_pkg_names]
+                    )
+                )
             output.append(formed)
 
         if not_found := outcomes["notfound_packages"]:
             if len(not_found) == 1:
-                formed = _("The following package was not found in any cog path: {pack}.").format(
-                    pack=inline(not_found[0])
-                )
+                formed = _(
+                    "The following package was not found in any cog path: {pack}."
+                ).format(pack=inline(not_found[0]))
             else:
                 formed = _(
                     "The following packages were not found in any cog path: {packs}"
-                ).format(packs=humanize_list([inline(package) for package in not_found]))
+                ).format(
+                    packs=humanize_list([inline(package) for package in not_found])
+                )
             output.append(formed)
 
         if failed_with_reason := outcomes["failed_with_reason_packages"]:
@@ -882,7 +897,11 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                     "**WARNING**: The following repos are using shared libs"
                     " which are marked for removal in the future: {repos}.\n"
                     "You should inform maintainers of these repos about this message."
-                ).format(repos=humanize_list([inline(repo) for repo in repos_with_shared_libs]))
+                ).format(
+                    repos=humanize_list(
+                        [inline(repo) for repo in repos_with_shared_libs]
+                    )
+                )
             output.append(formed)
 
         if output:
@@ -932,7 +951,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             command_list = self.bot.tree._disabled_context_menus
             key = (command_name, None, raw_type.value)
         else:
-            await ctx.send(_("Command type must be one of `slash`, `message`, or `user`."))
+            await ctx.send(
+                _("Command type must be one of `slash`, `message`, or `user`.")
+            )
             return
 
         current_settings = await self.bot.list_enabled_app_commands()
@@ -955,7 +976,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         try:
             await self.bot.enable_app_command(command_name, raw_type)
         except app_commands.CommandLimitReached:
-            await ctx.send(_("The command limit has been reached. Disable a command first."))
+            await ctx.send(
+                _("The command limit has been reached. Disable a command first.")
+            )
             return
 
         await self.bot.tree.red_check_enabled()
@@ -991,7 +1014,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         elif command_type == "user":
             raw_type = discord.AppCommandType.user
         else:
-            await ctx.send(_("Command type must be one of `slash`, `message`, or `user`."))
+            await ctx.send(
+                _("Command type must be one of `slash`, `message`, or `user`.")
+            )
             return
 
         existing = self.bot.tree.get_command(command_name, type=raw_type)
@@ -1009,7 +1034,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         current_settings = current_settings[command_type]
 
         if command_name not in current_settings:
-            await ctx.send(_("That application command is already disabled or does not exist."))
+            await ctx.send(
+                _("That application command is already disabled or does not exist.")
+            )
             return
 
         await self.bot.disable_app_command(command_name, raw_type)
@@ -1131,12 +1158,16 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         removed = []
         for name, com in self.bot.tree._global_commands.items():
             if self._is_submodule(cog_name, com.module):
-                await self.bot.disable_app_command(name, discord.AppCommandType.chat_input)
+                await self.bot.disable_app_command(
+                    name, discord.AppCommandType.chat_input
+                )
                 removed.append(name)
         for key, com in self.bot.tree._context_menus.items():
             if self._is_submodule(cog_name, com.module):
                 name, guild_id, com_type = key
-                await self.bot.disable_app_command(name, discord.AppCommandType(com_type))
+                await self.bot.disable_app_command(
+                    name, discord.AppCommandType(com_type)
+                )
                 removed.append(name)
         if not removed:
             await ctx.send(
@@ -1203,7 +1234,12 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             if "." in module:
                 module = module[: module.find(".")]
             cog_commands[module].append(
-                (command.name, command.type, True, command.extras.get("red_force_enable", False))
+                (
+                    command.name,
+                    command.type,
+                    True,
+                    command.extras.get("red_force_enable", False),
+                )
             )
             if command.type is discord.AppCommandType.message:
                 message_command_names.add(command.name)
@@ -1214,7 +1250,12 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             if "." in module:
                 module = module[: module.find(".")]
             cog_commands[module].append(
-                (command.name, command.type, False, command.extras.get("red_force_enable", False))
+                (
+                    command.name,
+                    command.type,
+                    False,
+                    command.extras.get("red_force_enable", False),
+                )
             )
 
         # Commands added with evals will come from __main__, make them unknown instead
@@ -1235,7 +1276,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         unknown_message = [
             (n, discord.AppCommandType.message, True, False) for n in unknown_message
         ]
-        unknown_user = [(n, discord.AppCommandType.user, True, False) for n in unknown_user]
+        unknown_user = [
+            (n, discord.AppCommandType.user, True, False) for n in unknown_user
+        ]
 
         cog_commands["(unknown)"].extend(unknown_slash)
         cog_commands["(unknown)"].extend(unknown_message)
@@ -1310,7 +1353,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         await ctx.send(_("Synced {count} commands.").format(count=len(commands)))
 
     @slash_sync.error
-    async def slash_sync_error(self, ctx: commands.Context, error: commands.CommandError):
+    async def slash_sync_error(
+        self, ctx: commands.Context, error: commands.CommandError
+    ):
         """Custom cooldown error message."""
         if not isinstance(error, commands.CommandOnCooldown):
             return await ctx.bot.on_command_error(ctx, error, unhandled_by_cog=True)
@@ -1369,7 +1414,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                 except aiohttp.InvalidURL:
                     return await ctx.send(_("That URL is invalid."))
                 except aiohttp.ClientError:
-                    return await ctx.send(_("Something went wrong while trying to get the image."))
+                    return await ctx.send(
+                        _("Something went wrong while trying to get the image.")
+                    )
         else:
             await ctx.send_help()
             return
@@ -1408,7 +1455,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         """Commands for setting [botname]'s status."""
 
     @_set_status.command(
-        name="streaming", aliases=["stream", "twitch"], usage="[(<streamer> <stream_title>)]"
+        name="streaming",
+        aliases=["stream", "twitch"],
+        usage="[(<streamer> <stream_title>)]",
     )
     @commands.bot_in_a_guild()
     @commands.is_owner()
@@ -1475,7 +1524,11 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             game = discord.Game(name=game)
         else:
             game = None
-        status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
+        status = (
+            ctx.bot.guilds[0].me.status
+            if len(ctx.bot.guilds) > 0
+            else discord.Status.online
+        )
         await ctx.bot.change_presence(status=status, activity=game)
         if game:
             await ctx.send(_("Status set to `Playing {game.name}`.").format(game=game))
@@ -1502,15 +1555,23 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         - `[listening]` - The text to follow `Listening to`. Leave blank to clear the current activity status.
         """
 
-        status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
+        status = (
+            ctx.bot.guilds[0].me.status
+            if len(ctx.bot.guilds) > 0
+            else discord.Status.online
+        )
         if listening:
-            activity = discord.Activity(name=listening, type=discord.ActivityType.listening)
+            activity = discord.Activity(
+                name=listening, type=discord.ActivityType.listening
+            )
         else:
             activity = None
         await ctx.bot.change_presence(status=status, activity=activity)
         if activity:
             await ctx.send(
-                _("Status set to `Listening to {listening}`.").format(listening=listening)
+                _("Status set to `Listening to {listening}`.").format(
+                    listening=listening
+                )
             )
         else:
             await ctx.send(_("Listening cleared."))
@@ -1535,14 +1596,22 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         - `[watching]` - The text to follow `Watching`. Leave blank to clear the current activity status.
         """
 
-        status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
+        status = (
+            ctx.bot.guilds[0].me.status
+            if len(ctx.bot.guilds) > 0
+            else discord.Status.online
+        )
         if watching:
-            activity = discord.Activity(name=watching, type=discord.ActivityType.watching)
+            activity = discord.Activity(
+                name=watching, type=discord.ActivityType.watching
+            )
         else:
             activity = None
         await ctx.bot.change_presence(status=status, activity=activity)
         if activity:
-            await ctx.send(_("Status set to `Watching {watching}`.").format(watching=watching))
+            await ctx.send(
+                _("Status set to `Watching {watching}`.").format(watching=watching)
+            )
         else:
             await ctx.send(_("Watching cleared."))
 
@@ -1566,15 +1635,23 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         - `[competing]` - The text to follow `Competing in`. Leave blank to clear the current activity status.
         """
 
-        status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
+        status = (
+            ctx.bot.guilds[0].me.status
+            if len(ctx.bot.guilds) > 0
+            else discord.Status.online
+        )
         if competing:
-            activity = discord.Activity(name=competing, type=discord.ActivityType.competing)
+            activity = discord.Activity(
+                name=competing, type=discord.ActivityType.competing
+            )
         else:
             activity = None
         await ctx.bot.change_presence(status=status, activity=activity)
         if activity:
             await ctx.send(
-                _("Status set to `Competing in {competing}`.").format(competing=competing)
+                _("Status set to `Competing in {competing}`.").format(
+                    competing=competing
+                )
             )
         else:
             await ctx.send(_("Competing cleared."))
@@ -1599,7 +1676,11 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         - `[text]` - The custom status text. Leave blank to clear the current activity status.
         """
 
-        status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
+        status = (
+            ctx.bot.guilds[0].me.status
+            if len(ctx.bot.guilds) > 0
+            else discord.Status.online
+        )
         if text:
             activity = discord.CustomActivity(name=text)
         else:
@@ -1679,14 +1760,20 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         """
         if service is None or tokens is None:
             view = SetApiView(default_service=service)
-            msg = await ctx.send(_("Click the button below to set your keys."), view=view)
+            msg = await ctx.send(
+                _("Click the button below to set your keys."), view=view
+            )
             await view.wait()
-            await msg.edit(content=_("This API keys setup message has expired."), view=None)
+            await msg.edit(
+                content=_("This API keys setup message has expired."), view=None
+            )
         else:
             if ctx.bot_permissions.manage_messages:
                 await ctx.message.delete()
             await ctx.bot.set_shared_api_tokens(service, **tokens)
-            await ctx.send(_("`{service}` API tokens have been set.").format(service=service))
+            await ctx.send(
+                _("`{service}` API tokens have been set.").format(service=service)
+            )
 
     @_set_api.command(name="list")
     async def _set_api_list(self, ctx: commands.Context):
@@ -1706,7 +1793,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
         sorted_services = sorted(services.keys(), key=str.lower)
 
-        joined = _("Set API services:\n") if len(services) > 1 else _("Set API service:\n")
+        joined = (
+            _("Set API services:\n") if len(services) > 1 else _("Set API service:\n")
+        )
         for service_name in sorted_services:
             joined += "+ {}\n".format(service_name)
             for key_name in services[service_name].keys():
@@ -1744,7 +1833,11 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
     # -- End Set Api Commands -- ###
 
-    @_set.command(name="prefix", aliases=["prefixes", "globalprefix", "globalprefixes"], require_var_positional=True,)
+    @_set.command(
+        name="prefix",
+        aliases=["prefixes", "globalprefix", "globalprefixes"],
+        require_var_positional=True,
+    )
     @commands.is_owner()
     async def _set_prefix(self, ctx: commands.Context, *prefixes: str):
         """Sets [botname]'s global prefix(es).
@@ -1764,7 +1857,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         """
         if any(prefix.startswith("/") for prefix in prefixes):
             await ctx.send(
-                _("Prefixes cannot start with '/', as it conflicts with Discord's slash commands.")
+                _(
+                    "Prefixes cannot start with '/', as it conflicts with Discord's slash commands."
+                )
             )
             return
         if any(len(x) > MAX_PREFIX_LENGTH for x in prefixes):
@@ -1790,10 +1885,12 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             await ctx.send(_("Prefix set."))
         else:
             await ctx.send(_("Prefixes set."))
-    
+
     @_set.command(name="serverprefix")
     @commands.has_permissions(manage_guild=True)
-    async def _server_prefix(self, ctx: commands.Context, server: Optional[discord.Guild], *prefixes: str):
+    async def _server_prefix(
+        self, ctx: commands.Context, server: Optional[discord.Guild], *prefixes: str
+    ):
         """Sets Grief's server prefix."""
         if server is None:
             server = ctx.guild
@@ -1804,7 +1901,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             return
         if any(prefix.startswith("/") for prefix in prefixes):
             await ctx.send(
-                _("Prefixes cannot start with '/', as it conflicts with Discord's slash commands.")
+                _(
+                    "Prefixes cannot start with '/', as it conflicts with Discord's slash commands."
+                )
             )
             return
         if any(len(x) > MAX_PREFIX_LENGTH for x in prefixes):
@@ -2009,7 +2108,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             await ctx.send(_("Help will filter hidden commands."))
 
     @helpset.command(name="showaliases")
-    async def helpset_showaliases(self, ctx: commands.Context, show_aliases: bool = None):
+    async def helpset_showaliases(
+        self, ctx: commands.Context, show_aliases: bool = None
+    ):
         """
         This allows the help command to show existing commands aliases if there is any.
 
@@ -2079,7 +2180,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         if verify:
             await ctx.send(_("Help will only show for commands which can be run."))
         else:
-            await ctx.send(_("Help will show up without checking if the commands can be run."))
+            await ctx.send(
+                _("Help will show up without checking if the commands can be run.")
+            )
 
     @helpset.command(name="verifyexists")
     async def helpset_verifyexists(self, ctx: commands.Context, verify: bool = None):
@@ -2136,7 +2239,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             return
 
         await ctx.bot._config.help.page_char_limit.set(limit)
-        await ctx.send(_("Done. The character limit per page has been set to {}.").format(limit))
+        await ctx.send(
+            _("Done. The character limit per page has been set to {}.").format(limit)
+        )
 
     @helpset.command(name="maxpages")
     async def helpset_maxpages(self, ctx: commands.Context, pages: int):
@@ -2195,7 +2300,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         if seconds == 0:
             await ctx.send(_("Done. Help messages will not be deleted now."))
         else:
-            await ctx.send(_("Done. The delete delay has been set to {} seconds.").format(seconds))
+            await ctx.send(
+                _("Done. The delete delay has been set to {} seconds.").format(seconds)
+            )
 
     @helpset.command(name="reacttimeout")
     async def helpset_reacttimeout(self, ctx: commands.Context, seconds: int):
@@ -2221,7 +2328,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             return
 
         await ctx.bot._config.help.react_timeout.set(seconds)
-        await ctx.send(_("Done. The reaction timeout has been set to {} seconds.").format(seconds))
+        await ctx.send(
+            _("Done. The reaction timeout has been set to {} seconds.").format(seconds)
+        )
 
     @helpset.command(name="tagline")
     async def helpset_tagline(self, ctx: commands.Context, *, tagline: str = None):
@@ -2283,7 +2392,12 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         self,
         ctx: commands.Context,
         channel: Optional[
-            Union[discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread]
+            Union[
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+                discord.Thread,
+            ]
         ] = commands.CurrentChannel,
         # avoid non-default argument following default argument by using empty param()
         member: Union[discord.Member, discord.User] = commands.param(),
@@ -2323,7 +2437,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         if isinstance(member, discord.User):
             maybe_member = channel.guild.get_member(member.id)
             if maybe_member is None:
-                await ctx.send(_("The given user is not a member of the diagnosed server."))
+                await ctx.send(
+                    _("The given user is not a member of the diagnosed server.")
+                )
                 return
             member = maybe_member
 
@@ -2348,18 +2464,26 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         pass
 
     @blacklist.command(name="add", require_var_positional=True)
-    async def blacklist_add(self, ctx: commands.Context, *member: Union[discord.Member, int]):
+    async def blacklist_add(
+        self, ctx: commands.Context, *member: Union[discord.Member, int]
+    ):
         """
         Adds users to the blacklist.
         """
         user = await self.bot.fetch_user(member.id)
-        
+
         if await ctx.bot.is_owner():
-                embed = discord.Embed(description=f"> {ctx.author.mention}: you may not blacklist another bot owner.", color=0x313338)
-                return await ctx.send(embed=embed, mention_author=False)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: you may not blacklist another bot owner.",
+                color=0x313338,
+            )
+            return await ctx.send(embed=embed, mention_author=False)
 
         await self.bot.add_to_blacklist(user)
-        embed = discord.Embed(description=f"> {ctx.author.mention}: added **{member}** to the blacklist.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: added **{member}** to the blacklist.",
+            color=0x313338,
+        )
         await ctx.send(embed=embed, mention_author=False)
 
     @blacklist.command(name="list")
@@ -2386,7 +2510,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             await ctx.send(box(page))
 
     @blacklist.command(name="remove", require_var_positional=True)
-    async def blacklist_remove(self, ctx: commands.Context, *users: Union[discord.Member, int]):
+    async def blacklist_remove(
+        self, ctx: commands.Context, *users: Union[discord.Member, int]
+    ):
         """
         Removes users from the blacklist.
         """
@@ -2412,7 +2538,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
     @commands.is_owner()
     @command_manager.command(name="defaultdisablecog")
-    async def command_default_disable_cog(self, ctx: commands.Context, *, cog: CogConverter):
+    async def command_default_disable_cog(
+        self, ctx: commands.Context, *, cog: CogConverter
+    ):
         """Set the default state for a cog as disabled.
 
         This will disable the cog for all servers by default.
@@ -2431,11 +2559,15 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         if isinstance(cog, commands.commands._RuleDropper):
             return await ctx.send(_("You can't disable this cog by default."))
         await self.bot._disabled_cog_cache.default_disable(cogname)
-        await ctx.send(_("{cogname} has been set as disabled by default.").format(cogname=cogname))
+        await ctx.send(
+            _("{cogname} has been set as disabled by default.").format(cogname=cogname)
+        )
 
     @commands.is_owner()
     @command_manager.command(name="defaultenablecog")
-    async def command_default_enable_cog(self, ctx: commands.Context, *, cog: CogConverter):
+    async def command_default_enable_cog(
+        self, ctx: commands.Context, *, cog: CogConverter
+    ):
         """Set the default state for a cog as enabled.
 
         This will re-enable the cog for all servers by default.
@@ -2452,7 +2584,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         """
         cogname = cog.qualified_name
         await self.bot._disabled_cog_cache.default_enable(cogname)
-        await ctx.send(_("{cogname} has been set as enabled by default.").format(cogname=cogname))
+        await ctx.send(
+            _("{cogname} has been set as enabled by default.").format(cogname=cogname)
+        )
 
     @command_manager.group(name="listdisabled", invoke_without_command=True)
     async def list_disabled(self, ctx: commands.Context):
@@ -2502,7 +2636,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         """
         disabled_list = await self.bot._config.guild(ctx.guild).disabled_commands()
         if not disabled_list:
-            return await ctx.send(_("There aren't any disabled commands in {}.").format(ctx.guild))
+            return await ctx.send(
+                _("There aren't any disabled commands in {}.").format(ctx.guild)
+            )
 
         if len(disabled_list) > 1:
             header = _("{} commands are disabled in {}.\n").format(
@@ -2515,7 +2651,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         await ctx.send_interactive(paged)
 
     @command_manager.group(name="disable", invoke_without_command=True)
-    async def command_disable(self, ctx: commands.Context, *, command: CommandConverter):
+    async def command_disable(
+        self, ctx: commands.Context, *, command: CommandConverter
+    ):
         """
         Disable a command.
 
@@ -2537,7 +2675,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
     @commands.is_owner()
     @command_disable.command(name="global")
-    async def command_disable_global(self, ctx: commands.Context, *, command: CommandConverter):
+    async def command_disable_global(
+        self, ctx: commands.Context, *, command: CommandConverter
+    ):
         """
         Disable a command globally.
 
@@ -2550,13 +2690,17 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         """
         if self.command_manager in command.parents or self.command_manager == command:
             await ctx.send(
-                _("The command to disable cannot be `command` or any of its subcommands.")
+                _(
+                    "The command to disable cannot be `command` or any of its subcommands."
+                )
             )
             return
 
         if isinstance(command, commands.commands._RuleDropper):
             await ctx.send(
-                _("This command is designated as being always available and cannot be disabled.")
+                _(
+                    "This command is designated as being always available and cannot be disabled."
+                )
             )
             return
 
@@ -2573,7 +2717,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
     @commands.guild_only()
     @command_disable.command(name="server", aliases=["guild"])
-    async def command_disable_guild(self, ctx: commands.Context, *, command: CommandConverter):
+    async def command_disable_guild(
+        self, ctx: commands.Context, *, command: CommandConverter
+    ):
         """
         Disable a command in this server only.
 
@@ -2586,13 +2732,17 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         """
         if self.command_manager in command.parents or self.command_manager == command:
             await ctx.send(
-                _("The command to disable cannot be `command` or any of its subcommands.")
+                _(
+                    "The command to disable cannot be `command` or any of its subcommands."
+                )
             )
             return
 
         if isinstance(command, commands.commands._RuleDropper):
             await ctx.send(
-                _("This command is designated as being always available and cannot be disabled.")
+                _(
+                    "This command is designated as being always available and cannot be disabled."
+                )
             )
             return
 
@@ -2601,7 +2751,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                 await ctx.send(_("You are not allowed to disable that command."))
                 return
 
-        async with ctx.bot._config.guild(ctx.guild).disabled_commands() as disabled_commands:
+        async with ctx.bot._config.guild(
+            ctx.guild
+        ).disabled_commands() as disabled_commands:
             if command.qualified_name not in disabled_commands:
                 disabled_commands.append(command.qualified_name)
 
@@ -2633,7 +2785,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
     @commands.is_owner()
     @command_enable.command(name="global")
-    async def command_enable_global(self, ctx: commands.Context, *, command: CommandConverter):
+    async def command_enable_global(
+        self, ctx: commands.Context, *, command: CommandConverter
+    ):
         """
         Enable a command globally.
 
@@ -2657,7 +2811,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
     @commands.guild_only()
     @command_enable.command(name="server", aliases=["guild"])
-    async def command_enable_guild(self, ctx: commands.Context, *, command: CommandConverter):
+    async def command_enable_guild(
+        self, ctx: commands.Context, *, command: CommandConverter
+    ):
         """
             Enable a command in this server.
 
@@ -2673,7 +2829,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                 await ctx.send(_("You are not allowed to enable that command."))
                 return
 
-        async with ctx.bot._config.guild(ctx.guild).disabled_commands() as disabled_commands:
+        async with ctx.bot._config.guild(
+            ctx.guild
+        ).disabled_commands() as disabled_commands:
             with contextlib.suppress(ValueError):
                 disabled_commands.remove(command.qualified_name)
 

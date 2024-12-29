@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from secrets import token_urlsafe
 from logging import getLogger
 from random import choice
+from secrets import token_urlsafe
 from typing import Any, AsyncGenerator, Literal, TypedDict
 
+import config
 from aiohttp import ClientResponse
 from aiohttp import ClientSession as _ClientSession
 from aiohttp.typedefs import StrOrURL
-
-import config
 
 log = getLogger("slut/gram")
 

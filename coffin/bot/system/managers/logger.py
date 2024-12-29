@@ -1,13 +1,14 @@
 from __future__ import annotations
-import logging
-from time import time
 
 import asyncio
+import logging
 import os
 import queue
 import sys
 import threading
-from limits import parse, strategies, storage # type: ignore
+from time import time
+
+from limits import parse, storage, strategies  # type: ignore
 from loguru import logger
 
 LOG_LEVEL = os.getenv("LOG_LEVEL") or "INFO"
@@ -41,11 +42,13 @@ class InterceptHandler(logging.Handler):
         while frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
-            try: 
+            try:
                 frame.close()
-            except Exception: 
+            except Exception:
                 pass
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
 
 
 class AsyncLogEmitter(object):
@@ -74,7 +77,9 @@ class AsyncLogEmitter(object):
 
             while self.queue.qsize() > 250:
                 if not discards:
-                    logger.warning("Queue is at max! - Supressing logging to prevent high CPU blockage.")
+                    logger.warning(
+                        "Queue is at max! - Supressing logging to prevent high CPU blockage."
+                    )
                     discards = True
                 msg = self.queue.get()
             discards = False
@@ -83,18 +88,21 @@ class AsyncLogEmitter(object):
 
     def emit(self, msg: str):
         self.queue.put(msg)
+
+
 #        self.window.close()
+
 
 def make_dask_sink(name=None, log_emitter=None):
     logger.remove()
     logging.getLogger("").disabled = True
     if log_emitter:
-#        logger.info(log_emitter)
+        #        logger.info(log_emitter)
         emitter = log_emitter
 
     else:
         _emitter = AsyncLogEmitter(name=name)
-#        logger.info(_emitter.queue)
+        #        logger.info(_emitter.queue)
         emitter = _emitter.emit
 
     logger.configure(
@@ -112,7 +120,7 @@ def make_dask_sink(name=None, log_emitter=None):
             )
         ]
     )
-    #logger.level(name="DEBUG", color="<magenta>")
+    # logger.level(name="DEBUG", color="<magenta>")
     intercept = InterceptHandler()
     logging.basicConfig(handlers=[intercept], level=LOG_LEVEL, force=True)
     logging.captureWarnings(True)
@@ -123,5 +131,8 @@ def make_dask_sink(name=None, log_emitter=None):
 
 
 def configure_logger(name: str):
-    bind = logger.bind(name = name, format="<le>{time:HH:mm:ss.SSS}</le>|<ly>{extra[name] or thread.name}</ly> |<level>{level:<7}</level>|<cyan>{name}</cyan>(<cyan>{function}</cyan>:<cyan>{line}</cyan>) <level>{message}</level>")
+    bind = logger.bind(
+        name=name,
+        format="<le>{time:HH:mm:ss.SSS}</le>|<ly>{extra[name] or thread.name}</ly> |<level>{level:<7}</level>|<cyan>{name}</cyan>(<cyan>{function}</cyan>:<cyan>{line}</cyan>) <level>{message}</level>",
+    )
     return bind

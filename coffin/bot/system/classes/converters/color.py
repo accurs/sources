@@ -1,15 +1,19 @@
-from color_processing import ColorHolder
-from system.worker import offloaded
-from discord.ext.commands import Converter, CommandError, ColourConverter, ColorConverter
-from discord import Member, User, Color
 from typing import Union
-from system.patch.context import Context
+
+from color_processing import ColorHolder
+from discord import Color, Member, User
+from discord.ext.commands import (ColorConverter, ColourConverter,
+                                  CommandError, Converter)
 from loguru import logger
+from system.patch.context import Context
+from system.worker import offloaded
 
 COLOR = ColorHolder.get_colors(offloaded)
 
+
 async def get_dominant_color(query: Union[str, Member, User]):
     return await COLOR.get_dominant_color(query)
+
 
 class ColorConv(Converter):
     async def convert(self, ctx: Context, argument: Union[Color, Member, User, str]):
@@ -38,6 +42,7 @@ class ColorConv(Converter):
                 logger.info(f"Color Converter Errored with : {e}")
                 raise CommandError("Invalid color hex given")
 
+
 class ColorInfo(Converter):
     async def convert(self, ctx: Context, argument: Union[Color, Member, User, str]):
         if argument.lower().startswith("0x"):
@@ -51,6 +56,3 @@ class ColorInfo(Converter):
             argument = await get_dominant_color(argument)
         _ = await COLOR.color_info(argument)
         return await _.to_message(ctx)
-
-
-

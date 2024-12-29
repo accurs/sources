@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional
-from aiohttp import ClientSession
 from io import BytesIO
-from discord import Message, Embed, File, Color
+from typing import Any, Dict, List, Optional
+
+from aiohttp import ClientSession
+from discord import Color, Embed, File, Message
 from pydantic import BaseModel, Field
 
 

@@ -1,13 +1,16 @@
-from aiohttp import ClientSession, TCPConnector
-from typing import Any, Literal, List, Union, Optional
-from .handlers import get_aweme_id, BogusManager, PostDetail, TikTokAPIEndpoints, BaseCrawler, UserProfile, UserPost
-from .models import TikTokUserFeedResponse, TikTokUserProfileResponse, TikTokPostResponse
-from .models.post import PlayAddrrr, BitrateInfoItem
-from random import choice
-
 import os
-import yaml
 import re
+from random import choice
+from typing import Any, List, Literal, Optional, Union
+
+import yaml
+from aiohttp import ClientSession, TCPConnector
+
+from .handlers import (BaseCrawler, BogusManager, PostDetail,
+                       TikTokAPIEndpoints, UserPost, UserProfile, get_aweme_id)
+from .models import (TikTokPostResponse, TikTokUserFeedResponse,
+                     TikTokUserProfileResponse)
+from .models.post import BitrateInfoItem, PlayAddrrr
 
 path = os.path.abspath(os.path.dirname(__file__))
 if "\\" in str(path):
@@ -26,7 +29,9 @@ class TikTok:
         self.proxies = None
 
     async def get_sid(self, username: str, headers: dict):
-        html = await self.request_url("GET", f"https://www.tiktok.com/@{username}", headers = headers, as_text=True)
+        html = await self.request_url(
+            "GET", f"https://www.tiktok.com/@{username}", headers=headers, as_text=True
+        )
         secuid_match = re.search(r'"secUid":"(.*?)"', html)
         secUid = secuid_match.group(1) if secuid_match else None
         if not secUid:
@@ -58,12 +63,20 @@ class TikTok:
             kwargs["proxies"] = PROXY
         return kwargs
 
-    async def request_url(self, method: Literal["GET", "POST", "PUT", "HEAD", "DELETE", "PATCH", "OPTIONS"], url: str, headers: dict, **kwargs: Any):
+    async def request_url(
+        self,
+        method: Literal["GET", "POST", "PUT", "HEAD", "DELETE", "PATCH", "OPTIONS"],
+        url: str,
+        headers: dict,
+        **kwargs: Any,
+    ):
         as_text = kwargs.pop("as_text", False)
         self.last_request = {"method": method, "url": url, "headers": headers, **kwargs}
         data = None
         async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
-            async with session.request(method, url, headers=headers, **kwargs) as response:
+            async with session.request(
+                method, url, headers=headers, **kwargs
+            ) as response:
                 if response.content_type == "text/plain" or as_text is True:
                     data = await response.text()
                 elif response.content_type.startswith(("image/", "video/", "audio/")):
@@ -77,17 +90,23 @@ class TikTok:
                 ):
                     data = await response.json(content_type=None)
                 else:
-                    raise AttributeError(f"Content Type `{response.content_type}` wasn't handled")
+                    raise AttributeError(
+                        f"Content Type `{response.content_type}` wasn't handled"
+                    )
         return data
-    
+
     async def get_post(self, url: str) -> TikTokPostResponse:
         kwargs = await self.get_tiktok_headers()
-        base_crawler = BaseCrawler(proxies=kwargs.get("proxies"), crawler_headers=kwargs["headers"])
+        base_crawler = BaseCrawler(
+            proxies=kwargs.get("proxies"), crawler_headers=kwargs["headers"]
+        )
         async with base_crawler as crawler:
             itemId = await get_aweme_id(url)
             params = PostDetail(itemId=itemId)
             endpoint = BogusManager.model_2_endpoint(
-                TikTokAPIEndpoints.POST_DETAIL, params.dict(), kwargs["headers"]["User-Agent"]
+                TikTokAPIEndpoints.POST_DETAIL,
+                params.dict(),
+                kwargs["headers"]["User-Agent"],
             )
             response = await crawler.fetch_get_json(endpoint)
         # try:
@@ -98,28 +117,37 @@ class TikTok:
         # except Exception as e:
         #     print(f"Error: {e}")
         return TikTokPostResponse(**response)
-    
+
     async def get_profile(self, uniqueId: str) -> TikTokUserProfileResponse:
         kwargs = await self.get_tiktok_headers()
-        base_crawler = BaseCrawler(proxies=kwargs.get("proxies"), crawler_headers=kwargs["headers"])
+        base_crawler = BaseCrawler(
+            proxies=kwargs.get("proxies"), crawler_headers=kwargs["headers"]
+        )
         secUid = await self.get_sid(uniqueId, kwargs["headers"])
         async with base_crawler as crawler:
             params = UserProfile(secUid=secUid, uniqueId=uniqueId)
             endpoint = BogusManager.model_2_endpoint(
-                TikTokAPIEndpoints.USER_DETAIL, params.dict(), kwargs["headers"]["User-Agent"]
+                TikTokAPIEndpoints.USER_DETAIL,
+                params.dict(),
+                kwargs["headers"]["User-Agent"],
             )
             response = await crawler.fetch_get_json(endpoint)
         return TikTokUserProfileResponse(**response)
-    
 
-    async def get_posts(self, uniqueId: str, cursor: int = 0, count: int = 35, coverFormat: int = 2) -> TikTokUserFeedResponse:
+    async def get_posts(
+        self, uniqueId: str, cursor: int = 0, count: int = 35, coverFormat: int = 2
+    ) -> TikTokUserFeedResponse:
         kwargs = await self.get_tiktok_headers()
         secUid = await self.get_sid(uniqueId, kwargs["headers"])
         base_crawler = BaseCrawler(proxies=None, crawler_headers=kwargs["headers"])
         async with base_crawler as crawler:
-            params = UserPost(secUid=secUid, cursor=cursor, count=count, coverFormat=coverFormat)
+            params = UserPost(
+                secUid=secUid, cursor=cursor, count=count, coverFormat=coverFormat
+            )
             endpoint = BogusManager.model_2_endpoint(
-                TikTokAPIEndpoints.USER_POST, params.dict(), kwargs["headers"]["User-Agent"]
+                TikTokAPIEndpoints.USER_POST,
+                params.dict(),
+                kwargs["headers"]["User-Agent"],
             )
             response = await crawler.fetch_get_json(endpoint)
         return TikTokUserFeedResponse(**response)

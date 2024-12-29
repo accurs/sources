@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
-from typing import Tuple, List
 from collections import namedtuple
+from datetime import datetime, timedelta
+from typing import List, Tuple
 
 __all__ = ("AntiSpam",)
 
@@ -103,7 +103,13 @@ class AntiSpam:
 
     def __interval_check(self, interval: _AntiSpamInterval):
         return (
-            len([t for t in self.__event_timestamps if (t + interval.period) > datetime.utcnow()])
+            len(
+                [
+                    t
+                    for t in self.__event_timestamps
+                    if (t + interval.period) > datetime.utcnow()
+                ]
+            )
             >= interval.frequency
         )
 
@@ -125,5 +131,7 @@ class AntiSpam:
         """
         self.__event_timestamps.append(datetime.utcnow())
         self.__event_timestamps = [
-            t for t in self.__event_timestamps if t + self.__discard_after > datetime.utcnow()
+            t
+            for t in self.__event_timestamps
+            if t + self.__discard_after > datetime.utcnow()
         ]

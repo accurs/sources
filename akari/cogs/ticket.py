@@ -1,34 +1,19 @@
-import os
 import asyncio
 import datetime
-import chat_exporter
+import os
 import secrets
 
+import chat_exporter
+from discord import (ButtonStyle, CategoryChannel, Embed, Interaction, Member,
+                     PermissionOverwrite, Role, SelectOption, TextChannel)
 from discord.abc import GuildChannel
-from discord.ui import View, Button, Select
-from discord.ext.commands import (
-    group,
-    Cog,
-    has_guild_permissions,
-    bot_has_guild_permissions,
-)
-from discord import (
-    PermissionOverwrite,
-    Member,
-    Embed,
-    Role,
-    CategoryChannel,
-    TextChannel,
-    Interaction,
-    ButtonStyle,
-    SelectOption,
-)
-
+from discord.ext.commands import (Cog, bot_has_guild_permissions, group,
+                                  has_guild_permissions)
+from discord.ui import Button, Select, View
 from tools.bot import Akari
 from tools.helpers import AkariContext
 from tools.persistent.tickets import TicketTopic, TicketView
 from tools.predicates import get_ticket, manage_ticket, ticket_exists
-import os
 
 
 class Ticket(Cog):

@@ -1,14 +1,16 @@
-from watchfiles import Change, awatch  # type: ignore
 import asyncio
 import logging
 import os
 import sys
+import typing
+from asyncio.subprocess import PIPE
 from functools import wraps
 from pathlib import Path
+from typing import List, Optional, Union
+
 import discord
-import typing
-from typing import List, Union, Optional
-from asyncio.subprocess import PIPE
+from watchfiles import Change, awatch  # type: ignore
+
 
 def decide_prefix(
     message: discord.Message, prefixes: typing.Any, default_prefix: str
@@ -35,10 +37,15 @@ logger.addHandler(logging.NullHandler())
 # prevents log events bubbling up to the parent and duplicating output
 logger.propagate = False
 
+
 async def auto_commit():
     return
-    await asyncio.create_subprocess_shell("cd .. ; git init ; git add * ; git commit -m 'auto push' ; git push", stdout = PIPE)
+    await asyncio.create_subprocess_shell(
+        "cd .. ; git init ; git add * ; git commit -m 'auto push' ; git push",
+        stdout=PIPE,
+    )
     return True
+
 
 class RebootRunner:
     """The core cogwatch class -- responsible for starting up watchers and managing cogs.
@@ -109,10 +116,10 @@ class RebootRunner:
     def get_path(self):
         if isinstance(self.path, list):
             for path in self.path:
-                if not Path(Path.cwd() / path).exists(): 
+                if not Path(Path.cwd() / path).exists():
                     return path
         if isinstance(self.path, str):
-            if not Path(Path.cwd() / self.path).exists(): 
+            if not Path(Path.cwd() / self.path).exists():
                 return self.path
 
     def get_dotted_cog_path(self, path: str, directory: Optional[str] = None) -> str:
@@ -124,7 +131,12 @@ class RebootRunner:
         # iterate over the list backwards in order to get the first occurrence in cases where a duplicate
         # name exists in the path (ie. example_proj/example_proj/commands)
         try:
-            root_index = reversed_tokens.index(directory.split("/")[0] or self.path.split("/")[0]) + 1
+            root_index = (
+                reversed_tokens.index(
+                    directory.split("/")[0] or self.path.split("/")[0]
+                )
+                + 1
+            )
         except ValueError:
             raise ValueError("Use forward-slash delimiter in your `path` parameter.")
 
@@ -155,9 +167,7 @@ class RebootRunner:
 
                         new_dir = self.get_dotted_cog_path(change_path, path)
                         cog_dir = (
-                            f"{new_dir}.{filename}"
-                            if new_dir
-                            else f"{path}.{filename}"
+                            f"{new_dir}.{filename}" if new_dir else f"{path}.{filename}"
                         )
 
                         if change_type == Change.deleted:
@@ -210,9 +220,7 @@ class RebootRunner:
             return
         while not self.dir_exists():
             if not _check:
-                logger.error(
-                    f"One of the pathes dont not exist. {self.get_path()}"
-                )
+                logger.error(f"One of the pathes dont not exist. {self.get_path()}")
                 _check = True
 
         else:

@@ -1,5 +1,3 @@
-
-
 import asyncio
 import logging
 import re
@@ -9,6 +7,7 @@ from typing import Coroutine, DefaultDict, Dict, Optional
 
 import discord
 import TagScriptEngine as tse
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.utils import AsyncIter
@@ -115,7 +114,9 @@ class DisboardReminder(commands.Cog):
             try:
                 await self.bump_check_guilds()
             except Exception as error:
-                log.exception("An exception occured in the bump restart loop.", exc_info=error)
+                log.exception(
+                    "An exception occured in the bump restart loop.", exc_info=error
+                )
             await asyncio.sleep(60)
 
     async def bump_check_guilds(self):
@@ -135,7 +136,7 @@ class DisboardReminder(commands.Cog):
         remaining = end_time - now
         if remaining > 60:
             return
-        
+
         task_name = f"bump_timer:{guild.id}-{end_time}"
         if task_name in self.bump_tasks[guild.id]:
             return
@@ -180,7 +181,9 @@ class DisboardReminder(commands.Cog):
 
     @commands.has_permissions(mention_everyone=True)
     @bumpreminder.command("pingrole")
-    async def bumpreminder_pingrole(self, ctx: commands.Context, role: FuzzyRole = None):
+    async def bumpreminder_pingrole(
+        self, ctx: commands.Context, role: FuzzyRole = None
+    ):
         """
         Set a role to ping for bump reminders.
 
@@ -309,11 +312,15 @@ class DisboardReminder(commands.Cog):
 
     @staticmethod
     async def set_my_permissions(
-        guild: discord.Guild, channel: discord.TextChannel, my_perms: discord.Permissions
+        guild: discord.Guild,
+        channel: discord.TextChannel,
+        my_perms: discord.Permissions,
     ):
         if not my_perms.send_messages:
             my_perms.update(send_messages=True)
-            await channel.set_permissions(guild.me, overwrite=my_perms, reason=LOCK_REASON)
+            await channel.set_permissions(
+                guild.me, overwrite=my_perms, reason=LOCK_REASON
+            )
 
     async def autolock_channel(
         self,
@@ -430,7 +437,11 @@ class DisboardReminder(commands.Cog):
 
         if my_perms.send_messages:
             guild_adapter = tse.GuildAdapter(guild)
-            seed = {"member": member_adapter, "guild": guild_adapter, "server": guild_adapter}
+            seed = {
+                "member": member_adapter,
+                "guild": guild_adapter,
+                "server": guild_adapter,
+            }
             kwargs = self.process_tagscript(tymessage, seed_variables=seed)
 
             if not kwargs:

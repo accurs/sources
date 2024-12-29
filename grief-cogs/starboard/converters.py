@@ -1,6 +1,7 @@
 from typing import Union
 
 import discord
+
 from grief.core import commands
 from grief.core.i18n import Translator
 
@@ -14,7 +15,9 @@ class StarboardExists(commands.Converter):
         cog = ctx.cog
         guild = ctx.guild
         if guild.id not in cog.starboards:
-            raise commands.BadArgument(_("There are no starboards setup on this server!"))
+            raise commands.BadArgument(
+                _("There are no starboards setup on this server!")
+            )
         try:
             starboard = cog.starboards[guild.id][argument.lower()]
         except KeyError:
@@ -25,7 +28,9 @@ class StarboardExists(commands.Converter):
 
 
 class RealEmoji(commands.EmojiConverter):
-    async def convert(self, ctx: commands.Context, argument: str) -> Union[discord.Emoji, str]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> Union[discord.Emoji, str]:
         try:
             emoji = await super().convert(ctx, argument)
         except commands.BadArgument:

@@ -1,5 +1,3 @@
-
-
 from typing import List
 
 from grief.core.bot import Grief

@@ -1,22 +1,14 @@
 import asyncio
-import zipfile
 import datetime
-import emoji as emoji_lib
-
-from discord.ext.commands import (
-    Cog,
-    BadArgument,
-    group,
-    has_guild_permissions,
-    command,
-    bot_has_guild_permissions,
-)
-from discord import PartialEmoji, Embed, Emoji, File, HTTPException
-
-from io import BytesIO
+import zipfile
 from collections import defaultdict
-from typing import Tuple, Union, List
+from io import BytesIO
+from typing import List, Tuple, Union
 
+import emoji as emoji_lib
+from discord import Embed, Emoji, File, HTTPException, PartialEmoji
+from discord.ext.commands import (BadArgument, Cog, bot_has_guild_permissions,
+                                  command, group, has_guild_permissions)
 from tools.bot import Akari
 from tools.helpers import AkariContext
 from tools.misc.views import DownloadAsset

@@ -1,4 +1,3 @@
-
 from .defender import Defender
 
 

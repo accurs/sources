@@ -1,11 +1,10 @@
 from asyncio import TimeoutError
 from contextlib import suppress
+from typing import List, Union
 
 from discord import ButtonStyle, Embed, HTTPException, Interaction, Message
 from discord.ext.commands import Context as DefaultContext
 from discord.ui import Button, View
-
-from typing import Union, List
 from structure.config import Paginator as pag
 
 

@@ -17,7 +17,9 @@ class MyMessageConverter(commands.MessageConverter):
         message = await super().convert(ctx, argument=argument)
         if message.author != ctx.me:
             raise commands.UserFeedbackCheckFailure(
-                _("I have to be the author of the message. You can use EmbedUtils by AAA3A to send one.")
+                _(
+                    "I have to be the author of the message. You can use EmbedUtils by AAA3A to send one."
+                )
             )
         return message
 
@@ -54,7 +56,9 @@ class UrlButtons(Cog):
         """Nothing to delete."""
         return
 
-    async def red_get_data_for_user(self, *args, **kwargs) -> typing.Dict[str, typing.Any]:
+    async def red_get_data_for_user(
+        self, *args, **kwargs
+    ) -> typing.Dict[str, typing.Any]:
         """Nothing to get."""
         return {}
 
@@ -127,12 +131,18 @@ class UrlButtons(Cog):
                 )
             )
         if not url.startswith("http"):
-            raise commands.UserFeedbackCheckFailure(_("Url must start with `https` or `http`."))
+            raise commands.UserFeedbackCheckFailure(
+                _("Url must start with `https` or `http`.")
+            )
         if emoji is None and text_button is None:
             raise commands.UserFeedbackCheckFailure(
                 _("You have to specify at least an emoji or a label.")
             )
-        if emoji is not None and ctx.interaction is None and ctx.bot_permissions.add_reactions:
+        if (
+            emoji is not None
+            and ctx.interaction is None
+            and ctx.bot_permissions.add_reactions
+        ):
             try:
                 await ctx.message.add_reaction(emoji)
             except discord.HTTPException:
@@ -144,7 +154,9 @@ class UrlButtons(Cog):
         config = await self.config.guild(ctx.guild).url_buttons.all()
         if f"{message.channel.id}-{message.id}" not in config:
             if message.components:
-                raise commands.UserFeedbackCheckFailure(_("This message already has components."))
+                raise commands.UserFeedbackCheckFailure(
+                    _("This message already has components.")
+                )
             config[f"{message.channel.id}-{message.id}"] = {}
         if len(config[f"{message.channel.id}-{message.id}"]) >= 25:
             raise commands.UserFeedbackCheckFailure(
@@ -193,7 +205,9 @@ class UrlButtons(Cog):
         config = await self.config.guild(ctx.guild).url_buttons.all()
         if f"{message.channel.id}-{message.id}" not in config:
             if message.components:
-                raise commands.UserFeedbackCheckFailure(_("This message already has components."))
+                raise commands.UserFeedbackCheckFailure(
+                    _("This message already has components.")
+                )
             config[f"{message.channel.id}-{message.id}"] = {}
         if len(config[f"{message.channel.id}-{message.id}"]) + len(url_buttons) >= 25:
             raise commands.UserFeedbackCheckFailure(
@@ -205,7 +219,9 @@ class UrlButtons(Cog):
             )
             config[f"{message.channel.id}-{message.id}"][config_identifier] = {
                 "url": url,
-                "emoji": f"{getattr(emoji, 'id', emoji)}" if emoji is not None else None,
+                "emoji": (
+                    f"{getattr(emoji, 'id', emoji)}" if emoji is not None else None
+                ),
                 "text_button": None,
             }
         view = self.get_buttons(config, message)
@@ -261,7 +277,9 @@ class UrlButtons(Cog):
 
     @commands.has_permissions(manage_messages=True)
     @urlbuttons.command()
-    async def list(self, ctx: commands.Context, message: MyMessageConverter = None) -> None:
+    async def list(
+        self, ctx: commands.Context, message: MyMessageConverter = None
+    ) -> None:
         """List all url-buttons of this server or display the settings for a specific one."""
         url_buttons = await self.config.guild(ctx.guild).url_buttons()
         for url_button in url_buttons:
@@ -279,9 +297,9 @@ class UrlButtons(Cog):
             raise commands.UserFeedbackCheckFailure(_("No url-buttons in this server."))
         embed: discord.Embed = discord.Embed(
             title=_("URL Buttons"),
-            description=_("There is {len_url_buttons} url buttons in this server.").format(
-                len_url_buttons=len(url_buttons)
-            ),
+            description=_(
+                "There is {len_url_buttons} url buttons in this server."
+            ).format(len_url_buttons=len(url_buttons)),
             color=await ctx.embed_color(),
         )
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
@@ -330,7 +348,11 @@ class UrlButtons(Cog):
                 except ValueError:
                     b = config[message][config_identifier]["emoji"]
                 else:
-                    b = str(self.bot.get_emoji(int(config[message][config_identifier]["emoji"])))
+                    b = str(
+                        self.bot.get_emoji(
+                            int(config[message][config_identifier]["emoji"])
+                        )
+                    )
             else:
                 b = None
             view.add_item(

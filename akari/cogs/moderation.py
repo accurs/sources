@@ -1,45 +1,24 @@
-import re
-import json
 import asyncio
 import datetime
-
-from discord import (
-    Member,
-    PermissionOverwrite,
-    Embed,
-    Interaction,
-    utils,
-    TextChannel,
-    User,
-    Object,
-    Role,
-    Forbidden,
-    CategoryChannel,
-    Message,
-    Thread,
-    Guild,
-)
-from discord.ext.commands import (
-    Cog,
-    hybrid_command,
-    has_guild_permissions,
-    command,
-    group,
-    CurrentChannel,
-    bot_has_guild_permissions,
-)
-from discord.abc import GuildChannel
-
-from typing import Union, Optional, Literal
+import json
+import re
 from collections import defaultdict
-from humanfriendly import format_timespan
+from typing import Literal, Optional, Union
 
+from discord import (CategoryChannel, Embed, Forbidden, Guild, Interaction,
+                     Member, Message, Object, PermissionOverwrite, Role,
+                     TextChannel, Thread, User, utils)
+from discord.abc import GuildChannel
+from discord.ext.commands import (Cog, CurrentChannel,
+                                  bot_has_guild_permissions, command, group,
+                                  has_guild_permissions, hybrid_command)
+from humanfriendly import format_timespan
 from tools.bot import Akari
+from tools.converters import HexColor, NewRoleConverter, NoStaff
 from tools.helpers import AkariContext, Invoking
-from tools.converters import NoStaff, NewRoleConverter, HexColor
-from tools.validators import ValidTime, ValidNickname, ValidMessage
-from tools.predicates import is_jail, admin_antinuke
 from tools.misc.views import BoosterMod
+from tools.predicates import admin_antinuke, is_jail
+from tools.validators import ValidMessage, ValidNickname, ValidTime
 
 
 class Moderation(Cog):

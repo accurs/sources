@@ -6,31 +6,20 @@ requirements. This includes rules which override those requirements,
 as well as custom checks which can be overridden, and some special
 checks like bot permissions checks.
 """
+
 import asyncio
 import enum
 import inspect
 from collections import ChainMap
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    ClassVar,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import (TYPE_CHECKING, Any, Awaitable, Callable, ClassVar, Dict,
+                    List, Mapping, Optional, Tuple, TypeVar, Union)
 
 import discord
-
 from discord.ext.commands import check
-from .errors import BotMissingPermissions
 
 from grief.core import utils
+
+from .errors import BotMissingPermissions
 
 if TYPE_CHECKING:
     from .commands import Command
@@ -227,7 +216,10 @@ PermStateTransitions: TransitionDict = {
     PermState.NORMAL: {
         PermState.ACTIVE_ALLOW: (True, PermState.ACTIVE_ALLOW),
         PermState.NORMAL: (None, PermState.NORMAL),
-        PermState.PASSIVE_ALLOW: (True, {True: PermState.NORMAL, False: PermState.PASSIVE_ALLOW}),
+        PermState.PASSIVE_ALLOW: (
+            True,
+            {True: PermState.NORMAL, False: PermState.PASSIVE_ALLOW},
+        ),
         PermState.CAUTIOUS_ALLOW: (True, PermState.CAUTIOUS_ALLOW),
         PermState.ACTIVE_DENY: (False, PermState.ACTIVE_DENY),
     },
@@ -373,7 +365,9 @@ class Requires:
 
         return decorator
 
-    def get_rule(self, model: Union[int, str, PermissionModel], guild_id: int) -> PermState:
+    def get_rule(
+        self, model: Union[int, str, PermissionModel], guild_id: int
+    ) -> PermState:
         """Get the rule for a particular model.
 
         Parameters
@@ -398,12 +392,16 @@ class Requires:
             model = model.id
         rules: Mapping[Union[int, str], PermState]
         if guild_id:
-            rules = ChainMap(self._global_rules, self._guild_rules.get(guild_id, _RulesDict()))
+            rules = ChainMap(
+                self._global_rules, self._guild_rules.get(guild_id, _RulesDict())
+            )
         else:
             rules = self._global_rules
         return rules.get(model, PermState.NORMAL)
 
-    def set_rule(self, model_id: Union[str, int], rule: PermState, guild_id: int) -> None:
+    def set_rule(
+        self, model_id: Union[str, int], rule: PermState, guild_id: int
+    ) -> None:
         """Set the rule for a particular model.
 
         Parameters
@@ -428,7 +426,9 @@ class Requires:
         else:
             rules[model_id] = rule
 
-    def clear_all_rules(self, guild_id: int, *, preserve_default_rule: bool = True) -> None:
+    def clear_all_rules(
+        self, guild_id: int, *, preserve_default_rule: bool = True
+    ) -> None:
         """Clear all rules of a particular scope.
 
         Parameters
@@ -508,12 +508,18 @@ class Requires:
 
     async def _verify_bot(self, ctx: "Context") -> None:
         cog = ctx.cog
-        if ctx.guild is not None and cog and await ctx.bot.cog_disabled_in_guild(cog, ctx.guild):
+        if (
+            ctx.guild is not None
+            and cog
+            and await ctx.bot.cog_disabled_in_guild(cog, ctx.guild)
+        ):
             raise discord.ext.commands.DisabledCommand()
 
         bot_perms = ctx.bot_permissions
         if not (bot_perms.administrator or bot_perms >= self.bot_perms):
-            raise BotMissingPermissions(missing=self._missing_perms(self.bot_perms, bot_perms))
+            raise BotMissingPermissions(
+                missing=self._missing_perms(self.bot_perms, bot_perms)
+            )
 
     async def _transition_state(self, ctx: "Context") -> bool:
         should_invoke, next_state = self._get_transitioned_state(ctx)
@@ -668,7 +674,9 @@ def has_guild_permissions(**perms):
     _validate_perms_dict(perms)
 
     def predicate(ctx):
-        return ctx.guild and ctx.author.guild_permissions >= discord.Permissions(**perms)
+        return ctx.guild and ctx.author.guild_permissions >= discord.Permissions(
+            **perms
+        )
 
     return permissions_check(predicate)
 
@@ -821,7 +829,9 @@ def guildowner_or_permissions(**perms: bool):
     return Requires.get_decorator(PrivilegeLevel.GUILD_OWNER, perms)
 
 
-def guildowner_or_can_manage_channel(*, allow_thread_owner: bool = False) -> Callable[[_T], _T]:
+def guildowner_or_can_manage_channel(
+    *, allow_thread_owner: bool = False
+) -> Callable[[_T], _T]:
     """Restrict the command to the guild owner or user with permissions to manage channel.
 
     This check properly resolves the permissions for `discord.Thread` as well.
@@ -855,7 +865,9 @@ def admin_or_permissions(**perms: bool):
     return Requires.get_decorator(PrivilegeLevel.ADMIN, perms)
 
 
-def admin_or_can_manage_channel(*, allow_thread_owner: bool = False) -> Callable[[_T], _T]:
+def admin_or_can_manage_channel(
+    *, allow_thread_owner: bool = False
+) -> Callable[[_T], _T]:
     """Restrict the command to users with the admin role or permissions to manage channel.
 
     This check properly resolves the permissions for `discord.Thread` as well.
@@ -889,7 +901,9 @@ def mod_or_permissions(**perms: bool):
     return Requires.get_decorator(PrivilegeLevel.MOD, perms)
 
 
-def mod_or_can_manage_channel(*, allow_thread_owner: bool = False) -> Callable[[_T], _T]:
+def mod_or_can_manage_channel(
+    *, allow_thread_owner: bool = False
+) -> Callable[[_T], _T]:
     """Restrict the command to users with the mod role or permissions to manage channel.
 
     This check properly resolves the permissions for `discord.Thread` as well.
@@ -957,4 +971,6 @@ def _validate_perms_dict(perms: Dict[str, bool]) -> None:
         if value is not True:
             # We reject any permission not specified as 'True', since this is the only value which
             # makes practical sense.
-            raise TypeError(f"Permission {perm} may only be specified as 'True', not {value}")
+            raise TypeError(
+                f"Permission {perm} may only be specified as 'True', not {value}"
+            )

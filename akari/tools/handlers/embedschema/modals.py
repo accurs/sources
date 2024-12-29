@@ -1,6 +1,6 @@
 import datetime
 
-from discord import TextStyle, Interaction, Member
+from discord import Interaction, Member, TextStyle
 from discord.ui import Modal, TextInput
 
 

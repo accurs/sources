@@ -1,10 +1,12 @@
 """Package for AutoRoom cog."""
+
 import json
 from pathlib import Path
 
 from grief.core.bot import Grief
 
 from .autoroom import AutoRoom
+
 
 async def setup(bot: Grief) -> None:
     """Load AutoRoom cog."""

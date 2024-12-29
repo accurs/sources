@@ -1,10 +1,9 @@
 import asyncio
 from typing import List, Optional, TypedDict
 
+from core.Mono import Mono
 from discord import TextChannel, Thread
 from xxhash import xxh32_hexdigest
-
-from core.Mono import Mono
 
 
 class BaseRecord(TypedDict):

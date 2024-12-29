@@ -5,13 +5,15 @@ from typing import Any, List, Optional, Union
 import discord
 from discord.ext.commands.errors import BadArgument
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.core.utils.chat_formatting import box, humanize_list, pagify
 from grief.vendored.discord.ext import menus
 
 from .abc import ReTriggerMixin
-from .converters import ChannelUserRole, MultiResponse, Trigger, TriggerResponse
+from .converters import (ChannelUserRole, MultiResponse, Trigger,
+                         TriggerResponse)
 
 try:
     import regex as re
@@ -28,7 +30,9 @@ class ExplainReTriggerPages(menus.ListPageSource):
         self.pages = pages
         self.select_options = []
         for count, page in enumerate(pages):
-            self.select_options.append(discord.SelectOption(label=f"Page {count+1}", value=count))
+            self.select_options.append(
+                discord.SelectOption(label=f"Page {count+1}", value=count)
+            )
 
     def is_paginating(self):
         return True
@@ -36,7 +40,8 @@ class ExplainReTriggerPages(menus.ListPageSource):
     async def format_page(self, view: discord.ui.View, page: str):
         if view.ctx.channel.permissions_for(view.ctx.guild.me).embed_links:
             em = discord.Embed(
-                description=page, colour=await view.cog.bot.get_embed_colour(view.ctx.channel)
+                description=page,
+                colour=await view.cog.bot.get_embed_colour(view.ctx.channel),
             )
             em.set_footer(text=f"Page {view.current_page + 1}/{self.get_max_pages()}")
             return em
@@ -118,7 +123,9 @@ class ReTriggerPages(menus.ListPageSource):
         )
         text_response: str = ""
         if trigger.ignore_commands:
-            info += _("__Ignore commands__: **{ignore}**\n").format(ignore=trigger.ignore_commands)
+            info += _("__Ignore commands__: **{ignore}**\n").format(
+                ignore=trigger.ignore_commands
+            )
         if TriggerResponse.text in trigger.response_type:
             if trigger.multi_payload:
                 text_response = "\n".join(
@@ -129,7 +136,9 @@ class ReTriggerPages(menus.ListPageSource):
             else:
                 text_response = trigger.text
             if len(text_response) < 200:
-                info += _("__Text__: ") + "**{response}**\n".format(response=text_response)
+                info += _("__Text__: ") + "**{response}**\n".format(
+                    response=text_response
+                )
         if trigger.reply is not None:
             info += _("__Replies with Notification__:") + "**{response}**\n".format(
                 response=trigger.reply
@@ -217,8 +226,12 @@ class ReTriggerPages(menus.ListPageSource):
             info += _("__Chance__: **1 in {number}**\n").format(number=trigger.chance)
         if TriggerResponse.text in trigger.response_type:
             info += _("__Mentions__:\n")
-            info += _("- Users: **{user_mention}**\n").format(user_mention=trigger.user_mention)
-            info += _("- Roles: **{role_mention}**\n").format(role_mention=trigger.role_mention)
+            info += _("- Users: **{user_mention}**\n").format(
+                user_mention=trigger.user_mention
+            )
+            info += _("- Roles: **{role_mention}**\n").format(
+                role_mention=trigger.role_mention
+            )
             info += _("- Everyone: **{everyone_mention}**\n").format(
                 everyone_mention=trigger.everyone_mention
             )
@@ -245,9 +258,13 @@ class ReTriggerPages(menus.ListPageSource):
             )
             em.set_author(name=author, icon_url=author.display_avatar)
             if trigger.created_at == 0:
-                em.set_footer(text=f"Page {view.current_page + 1}/{self.get_max_pages()}")
+                em.set_footer(
+                    text=f"Page {view.current_page + 1}/{self.get_max_pages()}"
+                )
             else:
-                em.set_footer(text=f"Page {view.current_page + 1}/{self.get_max_pages()} Created")
+                em.set_footer(
+                    text=f"Page {view.current_page + 1}/{self.get_max_pages()} Created"
+                )
                 em.timestamp = trigger.created_at
 
             first = True
@@ -264,7 +281,8 @@ class ReTriggerPages(menus.ListPageSource):
                         use_box = True
                     if use_box:
                         em.add_field(
-                            name=_("__Text__"), value=box(page.replace("```", ""), lang="text")
+                            name=_("__Text__"),
+                            value=box(page.replace("```", ""), lang="text"),
                         )
                     else:
                         em.add_field(name=_("__Text__"), value=page)
@@ -285,7 +303,9 @@ class ReTriggerPages(menus.ListPageSource):
 class ReTriggerSelectOption(discord.ui.Select):
     def __init__(self, options: List[discord.SelectOption], placeholder: str):
         self.view: ReTriggerMenu
-        super().__init__(min_values=1, max_values=1, options=options, placeholder=placeholder)
+        super().__init__(
+            min_values=1, max_values=1, options=options, placeholder=placeholder
+        )
 
     async def callback(self, interaction: discord.Interaction):
         index = int(self.values[0])
@@ -347,9 +367,7 @@ class LastItemButton(discord.ui.Button):
         self.view: Union[ReTriggerMenu, BaseMenu]
         super().__init__(style=style, row=row)
         self.style = style
-        self.emoji = (
-            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}"
-        )
+        self.emoji = "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}"
 
     async def callback(self, interaction: discord.Interaction):
         await self.view.show_page(self.view._source.get_max_pages() - 1, interaction)
@@ -364,9 +382,7 @@ class FirstItemButton(discord.ui.Button):
         self.view: Union[ReTriggerMenu, BaseMenu]
         super().__init__(style=style, row=row)
         self.style = style
-        self.emoji = (
-            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}"
-        )
+        self.emoji = "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}"
 
     async def callback(self, interaction: discord.Interaction):
         await self.view.show_page(0, interaction)
@@ -386,21 +402,27 @@ class ToggleTriggerButton(discord.ui.Button):
 
     def modify(self):
         self.style = (
-            discord.ButtonStyle.red if self.view.source.enabled else discord.ButtonStyle.green
+            discord.ButtonStyle.red
+            if self.view.source.enabled
+            else discord.ButtonStyle.green
         )
         self.emoji = (
             "\N{NEGATIVE SQUARED CROSS MARK}"
             if self.view.source.enabled
             else "\N{WHITE HEAVY CHECK MARK}"
         )
-        self.label = _("Disable Trigger") if self.view.source.enabled else _("Enable Trigger")
+        self.label = (
+            _("Disable Trigger") if self.view.source.enabled else _("Enable Trigger")
+        )
 
     async def callback(self, interaction: discord.Interaction):
         """Enables and disables triggers"""
         member = interaction.user
         trigger = self.view.source.selection
         guild = self.view.source.guild
-        if await self.view.cog.can_enable_or_disable(member, self.view.source.selection):
+        if await self.view.cog.can_enable_or_disable(
+            member, self.view.source.selection
+        ):
             trigger.toggle()
             trigger._last_modified_by = member.id
             trigger._last_modified_at = interaction.id
@@ -410,7 +432,8 @@ class ToggleTriggerButton(discord.ui.Button):
             await self.view.show_checked_page(self.view.current_page, interaction)
         else:
             await interaction.response.send_message(
-                _("You are not authorized to enable or disable this trigger."), ephemeral=True
+                _("You are not authorized to enable or disable this trigger."),
+                ephemeral=True,
             )
 
 
@@ -447,7 +470,9 @@ class ReTriggerEditModal(discord.ui.Modal):
                     style=discord.TextStyle.short,
                     label=response_type.name,
                     default="".join(
-                        str(i.response) for i in trigger.multi_payload if i.action is response_type
+                        str(i.response)
+                        for i in trigger.multi_payload
+                        if i.action is response_type
                     ),
                 )
             for ti in self.multi_inputs.values():
@@ -476,7 +501,8 @@ class ReTriggerEditModal(discord.ui.Modal):
                 re.compile(self.regex.value)
             except Exception as e:
                 await interaction.response.send_message(
-                    _("The provided regex pattern is not valid: {e}").format(e=e), ephemeral=True
+                    _("The provided regex pattern is not valid: {e}").format(e=e),
+                    ephemeral=True,
                 )
                 return
             self.trigger._raw_regex = self.regex.value
@@ -504,7 +530,9 @@ class ReTriggerEditModal(discord.ui.Modal):
                         self.trigger.multi_payload.remove(old_payload)
                     except IndexError:
                         log.error("Error removing multi payload option.")
-                self.trigger.multi_payload.append(MultiResponse(response_type, ti.value))
+                self.trigger.multi_payload.append(
+                    MultiResponse(response_type, ti.value)
+                )
                 changed_values.append(response_type.name)
                 msg += _("- {response_type}").format(response_type=response_type.name)
         if any_edits:
@@ -512,11 +540,17 @@ class ReTriggerEditModal(discord.ui.Modal):
             self.trigger._last_modified_by = interaction.user.id
             self.trigger._last_modified_at = interaction.id
             self.trigger._last_modified = humanize_list(changed_values)
-            async with self.og_button.view.cog.config.guild(guild).trigger_list() as trigger_list:
+            async with self.og_button.view.cog.config.guild(
+                guild
+            ).trigger_list() as trigger_list:
                 trigger_list[self.trigger.name] = await self.trigger.to_json()
         else:
-            await interaction.response.send_message(_("None of the values have changed."))
-        await self.og_button.view.show_checked_page(self.og_button.view.current_page, interaction)
+            await interaction.response.send_message(
+                _("None of the values have changed.")
+            )
+        await self.og_button.view.show_checked_page(
+            self.og_button.view.current_page, interaction
+        )
 
     async def on_submit(self, interaction: discord.Interaction):
         edited_text = False
@@ -537,7 +571,8 @@ class ReTriggerEditModal(discord.ui.Modal):
                 re.compile(self.regex.value)
             except Exception as e:
                 await interaction.response.send_message(
-                    _("The provided regex pattern is not valid: {e}").format(e=e), ephemeral=True
+                    _("The provided regex pattern is not valid: {e}").format(e=e),
+                    ephemeral=True,
                 )
                 return
             self.trigger._raw_regex = self.regex.value
@@ -561,11 +596,17 @@ class ReTriggerEditModal(discord.ui.Modal):
             self.trigger._last_modified_by = interaction.user.id
             self.trigger._last_modified_at = interaction.id
             self.trigger._last_modified = humanize_list(changed_values)
-            async with self.og_button.view.cog.config.guild(guild).trigger_list() as trigger_list:
+            async with self.og_button.view.cog.config.guild(
+                guild
+            ).trigger_list() as trigger_list:
                 trigger_list[self.trigger.name] = await self.trigger.to_json()
         else:
-            await interaction.response.send_message(_("None of the values have changed."))
-        await self.og_button.view.show_checked_page(self.og_button.view.current_page, interaction)
+            await interaction.response.send_message(
+                _("None of the values have changed.")
+            )
+        await self.og_button.view.show_checked_page(
+            self.og_button.view.current_page, interaction
+        )
 
     async def interaction_check(self, interaction: discord.Interaction):
         """Just extends the default reaction_check to use owner_ids"""
@@ -576,7 +617,8 @@ class ReTriggerEditModal(discord.ui.Modal):
             *interaction.client.owner_ids,
         ):
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -643,9 +685,13 @@ class DeleteTriggerButton(discord.ui.Button):
             or member.guild_permissions.administrator
         ):
             new_view = discord.ui.View()
-            approve_button = discord.ui.Button(style=discord.ButtonStyle.green, label=_("Yes"))
+            approve_button = discord.ui.Button(
+                style=discord.ButtonStyle.green, label=_("Yes")
+            )
             approve_button.callback = self.delete_trigger
-            deny_button = discord.ui.Button(style=discord.ButtonStyle.red, label=_("No"))
+            deny_button = discord.ui.Button(
+                style=discord.ButtonStyle.red, label=_("No")
+            )
             deny_button.callback = self.keep_trigger
             new_view.add_item(approve_button)
             new_view.add_item(deny_button)
@@ -739,7 +785,9 @@ class ReTriggerMenu(discord.ui.View):
             )
             self.add_item(self.select_view)
         self.message = await ctx.send(
-            **kwargs, allowed_mentions=discord.AllowedMentions(users=False, roles=False), view=self
+            **kwargs,
+            allowed_mentions=discord.AllowedMentions(users=False, roles=False),
+            view=self,
         )
         return self.message
 
@@ -756,7 +804,9 @@ class ReTriggerMenu(discord.ui.View):
             self.toggle_button.disabled = False
 
     async def _get_kwargs_from_page(self, page: int):
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         await self._update_buttons()
         if isinstance(value, dict):
             return value
@@ -765,7 +815,9 @@ class ReTriggerMenu(discord.ui.View):
         elif isinstance(value, discord.Embed):
             return {"embeds": [value], "content": None}
 
-    async def show_page(self, page_number: int, interaction: Optional[discord.Interaction]):
+    async def show_page(
+        self, page_number: int, interaction: Optional[discord.Interaction]
+    ):
         page = await self._source.get_page(page_number)
         self.current_page = page_number
         kwargs = await self._get_kwargs_from_page(page)
@@ -779,7 +831,9 @@ class ReTriggerMenu(discord.ui.View):
             self.remove_item(self.select_view)
             options = self.source.select_options[:25]
             if len(self.source.select_options) > 25 and page_number > 12:
-                options = self.source.select_options[page_number - 12 : page_number + 13]
+                options = self.source.select_options[
+                    page_number - 12 : page_number + 13
+                ]
             self.select_view = ReTriggerSelectOption(
                 options=options, placeholder=_("Pick a Trigger")
             )
@@ -789,11 +843,15 @@ class ReTriggerMenu(discord.ui.View):
             await self.message.edit(**kwargs, view=self)
             return
         if interaction.response.is_done() and self.message is not None:
-            await interaction.followup.edit_message(self.message.id, **kwargs, view=self)
+            await interaction.followup.edit_message(
+                self.message.id, **kwargs, view=self
+            )
         else:
             await interaction.response.edit_message(**kwargs, view=self)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None:
@@ -816,7 +874,8 @@ class ReTriggerMenu(discord.ui.View):
             *interaction.client.owner_ids,
         ):
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -871,7 +930,9 @@ class BaseMenu(discord.ui.View):
         self.message = await self.send_initial_message(ctx)
 
     async def _get_kwargs_from_page(self, page):
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         if isinstance(value, dict):
             return value
         elif isinstance(value, str):
@@ -903,7 +964,9 @@ class BaseMenu(discord.ui.View):
             await interaction.response.edit_message(**kwargs, view=self)
         # await self.message.edit(**kwargs)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None:
@@ -926,7 +989,8 @@ class BaseMenu(discord.ui.View):
             self.author.id,
         ):
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -966,7 +1030,9 @@ class ConfirmView(discord.ui.View):
             await self.message.edit(view=None)
 
     @discord.ui.button(label=_("Yes"), style=discord.ButtonStyle.green)
-    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def confirm_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.result = True
         self.stop()
         # respond to the interaction so the user does not see "interaction failed".
@@ -975,7 +1041,9 @@ class ConfirmView(discord.ui.View):
         await self.on_timeout()
 
     @discord.ui.button(label=_("No"), style=discord.ButtonStyle.secondary)
-    async def dismiss_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def dismiss_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.result = False
         self.stop()
         # respond to the interaction so the user does not see "interaction failed".
@@ -988,7 +1056,8 @@ class ConfirmView(discord.ui.View):
             self.message = interaction.message
         if self.author and interaction.user.id != self.author.id:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True

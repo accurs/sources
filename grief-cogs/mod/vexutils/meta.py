@@ -8,10 +8,11 @@ from typing import Literal, NamedTuple
 import aiohttp
 from red_commons.logging import RedTraceLogger
 from red_commons.logging import getLogger as red_get_logger
-from grief.core import VersionInfo, commands
-from grief.core import version_info as cur_red_version
 from rich import box as rich_box
 from rich.table import Table  # type:ignore
+
+from grief.core import VersionInfo, commands
+from grief.core import version_info as cur_red_version
 
 from .chat import no_colour_rich_markup
 from .consts import DOCS_BASE, GREEN_CIRCLE, RED_CIRCLE
@@ -38,7 +39,9 @@ def get_vex_logger(name: str) -> RedTraceLogger:
     """
     final_name = "red.vex."
     split = name.split(".")
-    if len(split) == 2 and split[0] == split[1]:  # for example make `cmdlog.cmdlog` just `cmdlog`
+    if (
+        len(split) == 2 and split[0] == split[1]
+    ):  # for example make `cmdlog.cmdlog` just `cmdlog`
         final_name += split[0]
     else:  # otherwise use full path
         final_name += name
@@ -112,7 +115,9 @@ async def format_info(
         cog_updated = current.cog >= latest.cog
         utils_updated = current.utils == latest.utils
         red_updated = current.red >= latest.red
-    except Exception:  # anything and everything, eg aiohttp error or version parsing error
+    except (
+        Exception
+    ):  # anything and everything, eg aiohttp error or version parsing error
         log.warning("Unable to parse versions.", exc_info=True)
         cog_updated, utils_updated, red_updated = "Unknown", "Unknown", "Unknown"
         latest = UnknownVers()
@@ -144,20 +149,24 @@ async def format_info(
 
     update_msg = "\n"
     if not cog_updated:
-        update_msg += f"To update this cog, use the `{ctx.clean_prefix}cog update` command.\n"
-    if not utils_updated:
         update_msg += (
-            f"To update the bundled utils, use the `{ctx.clean_prefix}cog update` command.\n"
+            f"To update this cog, use the `{ctx.clean_prefix}cog update` command.\n"
         )
+    if not utils_updated:
+        update_msg += f"To update the bundled utils, use the `{ctx.clean_prefix}cog update` command.\n"
     if not red_updated:
-        update_msg += "To update Grief, see https://docs.discord.red/en/stable/update_red.html\n"
+        update_msg += (
+            "To update Grief, see https://docs.discord.red/en/stable/update_red.html\n"
+        )
 
     extra_table = Table("Key", "Value", title="Extras", box=rich_box.MINIMAL)
 
     data = []
     if loops:
         for loop in loops:
-            extra_table.add_row(loop.friendly_name, GREEN_CIRCLE if loop.integrity else RED_CIRCLE)
+            extra_table.add_row(
+                loop.friendly_name, GREEN_CIRCLE if loop.integrity else RED_CIRCLE
+            )
 
     if extras:
         if data:
@@ -192,7 +201,8 @@ async def out_of_date_check(cogname: str, currentver: str) -> None:
             log.debug(f"{cogname} cog is up to date")
     except Exception as e:
         log.debug(
-            f"Something went wrong checking if {cogname} cog is up to date. See below.", exc_info=e
+            f"Something went wrong checking if {cogname} cog is up to date. See below.",
+            exc_info=e,
         )
         # really doesn't matter if this fails so fine with debug level
         return
@@ -215,13 +225,19 @@ class UnknownVers(NamedTuple):
 async def _get_latest_vers(cogname: str) -> Vers:
     data: dict
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://api.vexcodes.com/v2/vers/{cogname}", timeout=3) as r:
+        async with session.get(
+            f"https://api.vexcodes.com/v2/vers/{cogname}", timeout=3
+        ) as r:
             data = await r.json()
             latest_utils = data["utils"][:7]
             latest_cog = VersionInfo.from_str(data.get(cogname, "0.0.0"))
-        async with session.get("https://pypi.org/pypi/Grief-DiscordBot/json", timeout=3) as r:
+        async with session.get(
+            "https://pypi.org/pypi/Grief-DiscordBot/json", timeout=3
+        ) as r:
             data = await r.json()
-            latest_red = VersionInfo.from_str(data.get("info", {}).get("version", "0.0.0"))
+            latest_red = VersionInfo.from_str(
+                data.get("info", {}).get("version", "0.0.0")
+            )
 
     return Vers(cogname, latest_cog, latest_utils, latest_red)
 

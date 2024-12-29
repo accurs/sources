@@ -4,7 +4,8 @@ import asyncio
 import enum
 import time
 from functools import wraps
-from typing import Any, Callable, Coroutine, Generic, MutableMapping, Protocol, TypeVar
+from typing import (Any, Callable, Coroutine, Generic, MutableMapping,
+                    Protocol, TypeVar)
 
 from lru import LRU
 

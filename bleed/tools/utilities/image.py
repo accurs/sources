@@ -1,16 +1,17 @@
 import asyncio
 from io import BytesIO
 from math import sqrt
+from typing import Union
 
 import discord
 from aiohttp import ClientSession  # circular import
+from colorthief import ColorThief
+from discord import Color
 from PIL import Image
 from xxhash import xxh128_hexdigest
 from yarl import URL
+
 from .process import async_executor
-from typing import Union
-from discord import Color
-from colorthief import ColorThief
 
 
 @async_executor()

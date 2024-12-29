@@ -15,22 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import asyncio
+import logging
+from typing import Optional
+
+import discord
+
 from ...abc import MixinMeta
 from ...enums import Rank
-from .utils import strip_yaml_codeblock
+from .enums import ChecksKeys
+from .enums import Event as WDEvent
 from .rule import WardenCheck
-from .enums import Event as WDEvent, ChecksKeys
-from typing import Optional
-import logging
-import discord
-import asyncio
+from .utils import strip_yaml_codeblock
 
 log = logging.getLogger("red.x26cogs.defender")
 cog: Optional[MixinMeta] = None
 
+
 def init_api(_cog: MixinMeta):
     global cog
     cog = _cog
+
 
 async def get_check(guild, module: ChecksKeys):
     if cog is None:
@@ -42,6 +47,7 @@ async def get_check(guild, module: ChecksKeys):
         return check.raw_rule
 
     return None
+
 
 async def set_check(guild, module: ChecksKeys, conditions: str, author: discord.Member):
     if cog is None:
@@ -55,6 +61,7 @@ async def set_check(guild, module: ChecksKeys, conditions: str, author: discord.
     cog.warden_checks[guild.id][module] = wd_check
     await cog.config.guild(guild).set_raw(f"{module.value}_wdchecks", value=wd_cond)
 
+
 async def remove_check(guild, module: ChecksKeys):
     if cog is None:
         raise RuntimeError("Warden API was not initialized.")
@@ -66,15 +73,26 @@ async def remove_check(guild, module: ChecksKeys):
 
     await cog.config.guild(guild).clear_raw(f"{module.value}_wdchecks")
 
-async def eval_check(guild, module: ChecksKeys, user: Optional[discord.Member]=None, message: Optional[discord.Message]=None):
+
+async def eval_check(
+    guild,
+    module: ChecksKeys,
+    user: Optional[discord.Member] = None,
+    message: Optional[discord.Message] = None,
+):
     if cog is None:
         raise RuntimeError("Warden API was not initialized.")
 
     wd_check: WardenCheck = cog.warden_checks[guild.id].get(module, None)
-    if wd_check is None: # No check = Passed
+    if wd_check is None:  # No check = Passed
         return True
 
-    return bool(await wd_check.satisfies_conditions(rank=Rank.Rank4, cog=cog, guild=guild, user=user, message=message))
+    return bool(
+        await wd_check.satisfies_conditions(
+            rank=Rank.Rank4, cog=cog, guild=guild, user=user, message=message
+        )
+    )
+
 
 async def load_modules_checks():
     if cog is None:

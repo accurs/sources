@@ -2,15 +2,14 @@ import asyncio
 from typing import Optional, cast
 
 from asyncpg import UniqueViolationError
+from core.client.context import Context
+from core.managers.script import EmbedScript, EmbedScriptValidator
+from core.tools import (CompositeMetaClass, MixinMeta, codeblock,
+                        quietly_delete, vowel)
 from discord import Embed, HTTPException, Message, TextChannel, Thread
 from discord.ext.commands import Cog, group, has_permissions
 from discord.utils import utcnow
 from xxhash import xxh32_hexdigest
-
-from core.tools import CompositeMetaClass, MixinMeta, quietly_delete
-from core.client.context import Context
-from core.tools import codeblock, vowel
-from core.managers.script import EmbedScript, EmbedScriptValidator
 
 
 class Sticky(MixinMeta, metaclass=CompositeMetaClass):

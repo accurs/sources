@@ -1,5 +1,6 @@
 from typing import Union
-from discord import User, Member, Guild
+
+from discord import Guild, Member, User
 from discord.abc import GuildChannel
 
 

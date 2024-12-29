@@ -18,7 +18,9 @@ _ = Translator("TicketTool", __file__)
 
 class utils:
     async def get_overwrites(self, ticket):
-        config = await ticket.bot.get_cog("TicketTool").get_config(ticket.guild, ticket.profile)
+        config = await ticket.bot.get_cog("TicketTool").get_config(
+            ticket.guild, ticket.profile
+        )
         overwrites = {
             ticket.owner: discord.PermissionOverwrite(
                 view_channel=True,
@@ -185,9 +187,9 @@ class CustomModalConverter(commands.Converter):
             for arg in required_arguments:
                 if arg not in input:
                     raise commands.BadArgument(
-                        _("The argument `/{count}/{arg}` is required in the YAML.").format(
-                            count=count, arg=arg
-                        )
+                        _(
+                            "The argument `/{count}/{arg}` is required in the YAML."
+                        ).format(count=count, arg=arg)
                     )
             for arg in input:
                 if arg not in required_arguments + optional_arguments:

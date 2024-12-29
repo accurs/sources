@@ -1,25 +1,17 @@
 from typing import List
 
-import discord
-from discord import Embed, HTTPException, VoiceState, RateLimited
-from discord.ext.commands import (
-    BucketType,
-    CommandError,
-    cooldown,
-    group,
-    Cog,
-    has_permissions,
-)
-from discord.utils import format_dt
-
 import config
+import discord
+from discord import Embed, HTTPException, RateLimited, VoiceState
+from discord.ext.commands import (BucketType, Cog, CommandError, cooldown,
+                                  group, has_permissions)
+from discord.utils import format_dt
+from tools.bleed import Bleed
+from tools.client.context import Context
 from tools.converters import Bitrate, Member, Region, Role
 from tools.managers.ratelimit import ratelimiter
 
-from tools.bleed import Bleed
-
 from .interface import Interface
-from tools.client.context import Context
 
 
 class VoiceMaster(Cog):

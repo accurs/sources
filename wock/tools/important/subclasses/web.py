@@ -1,10 +1,11 @@
 import datetime
-import ujson
-from discord.ext.commands import Cog, Group, Command
-from typing import Union, Optional, List
-from aiohttp.web import Application, Request, Response, _run_app, json_response
-from prometheus_async import aio  # type: ignore
 from contextlib import suppress
+from typing import List, Optional, Union
+
+import ujson
+from aiohttp.web import Application, Request, Response, _run_app, json_response
+from discord.ext.commands import Cog, Command, Group
+from prometheus_async import aio  # type: ignore
 
 ADDRESS = {
     "host": "0.0.0.0",
@@ -84,13 +85,17 @@ class WebServer(Cog):
             return json_response(data2)
         else:
             return json_response({"error": "No data found"}, status=404)
-        
-    def get_permissions(self, command: Union[Command, Group], bot: Optional[bool] = False) -> Optional[List[str]]:
+
+    def get_permissions(
+        self, command: Union[Command, Group], bot: Optional[bool] = False
+    ) -> Optional[List[str]]:
         permissions = []
         if not bot:
             if command.permissions:
                 if isinstance(command.permissions, list):
-                    permissions.extend([c.replace("_", " ").title() for c in command.permissions])
+                    permissions.extend(
+                        [c.replace("_", " ").title() for c in command.permissions]
+                    )
                 else:
                     permissions.append(command.permissions.replace("_", " ").title())
                 if command.cog_name.title() == "Premium":
@@ -98,11 +103,14 @@ class WebServer(Cog):
         else:
             if command.bot_permissions:
                 if isinstance(command.bot_permissions, list):
-                    permissions.extend([c.replace("_", " ").title() for c in command.bot_permissions])
+                    permissions.extend(
+                        [c.replace("_", " ").title() for c in command.bot_permissions]
+                    )
                 else:
-                    permissions.append(command.bot_permissions.replace("_", " ").title())
+                    permissions.append(
+                        command.bot_permissions.replace("_", " ").title()
+                    )
         return permissions
-    
 
     async def command_dump(self, request: Request) -> Response:
         commands = []
@@ -115,7 +123,14 @@ class WebServer(Cog):
             if command.qualified_name == "help":
                 continue
             commands.append(
-                {"name": command.qualified_name, "description": command.brief, "permissions": self.get_permissions(command), "bot_permissions": self.get_permissions(command, True), "usage": command.usage, "example": command.example}
+                {
+                    "name": command.qualified_name,
+                    "description": command.brief,
+                    "permissions": self.get_permissions(command),
+                    "bot_permissions": self.get_permissions(command, True),
+                    "usage": command.usage,
+                    "example": command.example,
+                }
             )
         return json_response(commands)
 

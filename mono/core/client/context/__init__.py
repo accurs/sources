@@ -14,46 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from dataclasses import dataclass
+from types import TracebackType
+from typing import (TYPE_CHECKING, Awaitable, Callable, List, Literal,
+                    Optional, Self, Type, TypedDict, TypeVar, Union, Unpack)
+
 import config
-from typing import (
-    Optional,
-    List,
-    TypedDict,
-    Unpack,
-    Self,
-    Union,
-    Literal,
-    Callable,
-    Awaitable,
-    TYPE_CHECKING,
-    Type,
-    TypeVar,
-)
-from discord.ui import View, Button as UI_Button
+from aiomisc import PeriodicCallback
+from core.client.cache.redis import Redis
+from core.client.network.types import CoroFunc
+from core.managers.paginator import Paginator
+from discord import (ButtonStyle, Embed, File, Guild, HTTPException,
+                     Interaction, Member, Message, TextChannel, Thread,
+                     VoiceChannel)
 from discord.ext.commands import Context
 from discord.ext.commands import Context as DefaultContext
-from discord import (
-    Embed,
-    Guild,
-    Member,
-    Message,
-    ButtonStyle,
-    File,
-    Interaction,
-    HTTPException,
-)
 from discord.ext.commands import UserInputError
-from discord.ui import button
-from xxhash import xxh32_hexdigest
+from discord.ui import Button as UI_Button
+from discord.ui import View, button
 from discord.utils import cached_property, get
-import config
-from core.managers.paginator import Paginator
-from core.client.network.types import CoroFunc
-from dataclasses import dataclass
-from aiomisc import PeriodicCallback
-from discord import VoiceChannel, TextChannel, Thread
-from core.client.cache.redis import Redis
-from types import TracebackType
+from xxhash import xxh32_hexdigest
 
 BE = TypeVar("BE", bound=BaseException)
 import asyncio

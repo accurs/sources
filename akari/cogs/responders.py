@@ -1,11 +1,9 @@
-import re
 import json
+import re
 
-from discord.ext.commands import Cog, group, has_guild_permissions, Flag
-
+from discord.ext.commands import Cog, Flag, group, has_guild_permissions
 from tools.bot import Akari
-from tools.helpers import AkariContext
-from tools.helpers import AkariFlags
+from tools.helpers import AkariContext, AkariFlags
 
 
 class AutoresponderFlags(AkariFlags):

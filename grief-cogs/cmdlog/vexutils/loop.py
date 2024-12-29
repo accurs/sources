@@ -4,8 +4,9 @@ import traceback
 from typing import Optional
 
 import discord
-from grief.core.utils.chat_formatting import box, pagify
 from rich.table import Table  # type:ignore
+
+from grief.core.utils.chat_formatting import box, pagify
 
 from .chat import no_colour_rich_markup
 from .consts import CHECK, CROSS
@@ -60,7 +61,9 @@ class VexLoop:
             return 0.0
 
         raw_until_next = (self.next_iter - datetime.datetime.utcnow()).total_seconds()
-        if raw_until_next > self.expected_interval.total_seconds():  # should never happen
+        if (
+            raw_until_next > self.expected_interval.total_seconds()
+        ):  # should never happen
             return self.expected_interval.total_seconds()
         elif raw_until_next > 0.0:
             return raw_until_next
@@ -108,8 +111,12 @@ class VexLoop:
 
         if self.next_iter and self.last_iter:
             table = Table("Key", "Value")
-            table.add_row("Seconds until next", str((self.next_iter - now).total_seconds()))
-            table.add_row("Seconds since last", str((now - self.last_iter).total_seconds()))
+            table.add_row(
+                "Seconds until next", str((self.next_iter - now).total_seconds())
+            )
+            table.add_row(
+                "Seconds since last", str((now - self.last_iter).total_seconds())
+            )
             processed_table_str = no_colour_rich_markup(table)
 
         else:

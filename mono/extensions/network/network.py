@@ -1,17 +1,18 @@
+import os
+from base64 import b64decode  # Import b64decode
 from functools import wraps
 from typing import Callable
+
+import config
+import tuuid  # Ensure tuuid is installed and imported
 from aiohttp import web
 from aiohttp.abc import AbstractAccessLogger
 from aiohttp.web import BaseRequest, Request, Response, StreamResponse
-from discord.ext.commands import Cog, Command, Group
-from core.tools.logging import logger as log
-import config
+from aiohttp_cors import ResourceOptions
+from aiohttp_cors import setup as cors_setup
 from core.Mono import Mono
-from aiohttp_cors import setup as cors_setup, ResourceOptions
-from base64 import b64decode  # Import b64decode
-import tuuid  # Ensure tuuid is installed and imported
-import os
-
+from core.tools.logging import logger as log
+from discord.ext.commands import Cog, Command, Group
 
 
 class AccessLogger(AbstractAccessLogger):
@@ -188,7 +189,7 @@ class Network(Cog):
     async def decode(self: "Network", request: Request) -> Response:
         data = await request.json()
         image = data.get("image")
-        content_type = data.get('content-type')
+        content_type = data.get("content-type")
         name = data.get("name") or tuuid.tuuid()
         if not image:
             raise TypeError()
@@ -196,18 +197,35 @@ class Network(Cog):
             base64_str = image
         else:
             try:
-                content_type, base64_str = image.split(",")[0].split(":")[1].split(";")[0], image.split(",")[1]
+                content_type, base64_str = (
+                    image.split(",")[0].split(":")[1].split(";")[0],
+                    image.split(",")[1],
+                )
             except:
                 print(image)
         # Decode the Base64 string
         image_data = b64decode(base64_str)
-        self.decoded_assets[name] = [image_data, content_type]  # Use self.decoded_assets
-        return web.json_response(status=200, content={"url": f"https://cdn.rival.rocks/assets/{name}.{content_type.split('/')[1].replace('jpeg', 'jpg')}"})
+        self.decoded_assets[name] = [
+            image_data,
+            content_type,
+        ]  # Use self.decoded_assets
+        return web.json_response(
+            status=200,
+            content={
+                "url": f"https://cdn.rival.rocks/assets/{name}.{content_type.split('/')[1].replace('jpeg', 'jpg')}"
+            },
+        )
 
     @route("/assets/{file}")
     async def assets(self: "Network", request: Request, file: str) -> Response:
         fn, ext = file.split(".", 1)
         if fn in self.decoded_assets:  # Use self.decoded_assets
-            return web.Response(content=self.decoded_assets[fn][0], media_type=self.decoded_assets[fn][1], status=200)
+            return web.Response(
+                content=self.decoded_assets[fn][0],
+                media_type=self.decoded_assets[fn][1],
+                status=200,
+            )
         else:
-            return web.json_response(status=404, content={"message": "Asset unavailable"})
+            return web.json_response(
+                status=404, content={"message": "Asset unavailable"}
+            )

@@ -1,12 +1,13 @@
 import asyncio
-import logging
 import importlib.util
+import logging
+from typing import TYPE_CHECKING
+
+from discord import app_commands
+
+from grief.core.errors import CogLoadError
 
 from .say import Say
-
-from typing import TYPE_CHECKING
-from discord import app_commands
-from grief.core.errors import CogLoadError
 
 if TYPE_CHECKING:
     from grief.core.bot import Grief

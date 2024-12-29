@@ -5,6 +5,7 @@ from abc import ABC, ABCMeta, abstractmethod
 from typing import Coroutine
 
 import discord
+
 from grief.core.bot import Grief
 from grief.core.commands import CogMeta
 from grief.core.config import Config

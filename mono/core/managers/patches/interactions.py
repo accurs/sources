@@ -1,9 +1,8 @@
 from contextlib import suppress
 
+import config
 from discord import Embed, InteractionResponded, WebhookMessage
 from discord.interactions import Interaction
-
-import config
 
 
 async def neutral(

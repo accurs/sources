@@ -3,11 +3,8 @@ from re import search
 from asyncpg import UniqueViolationError
 from discord import Embed, Message
 from discord.ext.commands import Cog, group, has_permissions
-
-from tools.utilities import CompositeMetaClass, MixinMeta
 from tools.client.context import Context
-
-from tools.utilities import Plural
+from tools.utilities import CompositeMetaClass, MixinMeta, Plural
 
 from .entry import AliasEntry
 

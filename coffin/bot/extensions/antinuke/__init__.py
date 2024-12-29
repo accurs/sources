@@ -1,3 +1,2 @@
-
-from .events import AntiNukeEvents
 from .commands import Antinuke
+from .events import AntiNukeEvents

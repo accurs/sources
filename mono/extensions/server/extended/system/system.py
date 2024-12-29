@@ -2,33 +2,16 @@ from contextlib import suppress
 from itertools import groupby
 from typing import List, Optional, cast
 
-from discord import (
-    Embed,
-    HTTPException,
-    Member,
-    Message,
-    MessageType,
-    PartialMessage,
-    TextChannel,
-    Thread,
-)
+from core.client.context import Context
+from core.managers.script import EmbedScript as Script
+from core.tools import (CompositeMetaClass, FlagConverter, MixinMeta,
+                        codeblock, plural, vowel)
+from core.tools.logging import logger as log
+from discord import (Embed, HTTPException, Member, Message, MessageType,
+                     PartialMessage, TextChannel, Thread)
 from discord.ext.commands import Cog, Range, flag, group, has_permissions
 from humanfriendly import format_timespan
 from xxhash import xxh32_hexdigest
-
-from core.tools import (
-    CompositeMetaClass,
-    MixinMeta,
-    codeblock,
-    plural,
-    vowel,
-    FlagConverter,
-)
-from core.client.context import Context
-
-from core.managers.script import EmbedScript as Script
-
-from core.tools.logging import logger as log
 
 
 class Flags(FlagConverter):

@@ -1,6 +1,5 @@
 import re
 
-
 DISCORD_ID = re.compile(r"(\d+)")
 DISCORD_DISCRIMINATOR = re.compile(r"(\d{4})")
 DISCORD_USER_MENTION = re.compile(r"<@?(\d+)>")

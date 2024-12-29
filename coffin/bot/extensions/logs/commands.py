@@ -1,24 +1,11 @@
-
-from discord.ext.commands import (
-    CommandError,
-    Cog,
-    group,
-    command,
-    hybrid_group,
-    has_permissions
-)
-from system.patch.context import Context
-from discord import (
-    Client,
-    Embed,
-    File,
-    User,
-    Member,
-    Guild,
-    TextChannel,
-    Thread
-)
 from typing import Optional
+
+from discord import (Client, Embed, File, Guild, Member, TextChannel, Thread,
+                     User)
+from discord.ext.commands import (Cog, CommandError, command, group,
+                                  has_permissions, hybrid_group)
+from system.patch.context import Context
+
 
 class Logs(Cog):
     def __init__(self, bot: Client):
@@ -132,9 +119,7 @@ class Logs(Cog):
 
     @logs.command(name="role")
     @has_permissions(manage_guild=True)
-    async def logs_role(
-        self, ctx: Context, *, channel: Optional[TextChannel] = None
-    ):
+    async def logs_role(self, ctx: Context, *, channel: Optional[TextChannel] = None):
         """
         Track role related events happening in the server
         """
@@ -243,6 +228,7 @@ class Logs(Cog):
         )
 
         return await ctx.success(f"Sending message related logs to {channel.mention}")
+
 
 async def setup(bot: Client):
     await bot.add_cog(Logs(bot))

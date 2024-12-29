@@ -1,25 +1,33 @@
-from grief.core import Config, commands, checks
+import asyncio
+import json
+
+import aiohttp
 # from array import *
 import discord
-from discord import Webhook, SyncWebhook
-import aiohttp
-import asyncio
 import requests
-import json
+from discord import SyncWebhook, Webhook
+
+from grief.core import Config, checks, commands
+
 
 class Sendhook(commands.Cog):
     """Send webhooks easily."""
 
     def __init__(self):
         self.config = Config.get_conf(self, identifier=806715409318936616)
-        default_guild = {
-            "webhookAlias": {}
-        }
+        default_guild = {"webhookAlias": {}}
         self.config.register_guild(**default_guild)
 
-# Utility Commands
+    # Utility Commands
 
-    async def sendhookEngine(self, toWebhook, messageObj, webhookText=None, webhookUser=None, webhookAvatar=None):
+    async def sendhookEngine(
+        self,
+        toWebhook,
+        messageObj,
+        webhookText=None,
+        webhookUser=None,
+        webhookAvatar=None,
+    ):
         # Start webhook session
         webhook = SyncWebhook.from_url(toWebhook)
 
@@ -28,9 +36,7 @@ class Sendhook(commands.Cog):
             # Send message first if there is a message
             if webhookText is not None:
                 webhook.send(
-                    webhookText,
-                    username=webhookUser,
-                    avatar_url=webhookAvatar
+                    webhookText, username=webhookUser, avatar_url=webhookAvatar
                 )
             # Then send each attachment in separate messages
             for msgAttach in messageObj.attachments:
@@ -38,22 +44,17 @@ class Sendhook(commands.Cog):
                     webhook.send(
                         username=webhookUser,
                         avatar_url=webhookAvatar,
-                        file=await msgAttach.to_file()
+                        file=await msgAttach.to_file(),
                     )
                 except:
                     # Couldn't send, retry sending file as url only
                     webhook.send(
-                        "File: "+str(msgAttach.url), 
+                        "File: " + str(msgAttach.url),
                         username=webhookUser,
-                        avatar_url=webhookAvatar
+                        avatar_url=webhookAvatar,
                     )
         else:
-            webhook.send(
-                webhookText,
-                username=webhookUser,
-                avatar_url=webhookAvatar
-            )
-
+            webhook.send(webhookText, username=webhookUser, avatar_url=webhookAvatar)
 
     # Bot Commands
 
@@ -98,21 +99,23 @@ class Sendhook(commands.Cog):
     async def ahlist(self, ctx):
         """List all aliases for webhooks"""
         webhookAlias = await self.config.guild(ctx.guild).webhookAlias()
-        webhookData = json.dumps(webhookAlias, sort_keys=True, indent=2, separators=(',', ': '))
-        await ctx.send("```json\n"+webhookData+"```")
+        webhookData = json.dumps(
+            webhookAlias, sort_keys=True, indent=2, separators=(",", ": ")
+        )
+        await ctx.send("```json\n" + webhookData + "```")
 
     @aliashook.command(name="show")
     async def ahshow(self, ctx, alias):
         """Show the saved webhook url for an alias"""
         webhookAlias = await self.config.guild(ctx.guild).webhookAlias()
         webhookData = webhookAlias[alias]
-        await ctx.send("```"+webhookData+"```")
+        await ctx.send("```" + webhookData + "```")
 
     @commands.command()
     @commands.has_permissions(manage_webhooks=True)
     async def sendhook(self, ctx, webhookUrl, *, webhookText=None):
         """Send a webhook
-        
+
         webhookUrl can be an alias"""
 
         message = ctx.message
@@ -132,12 +135,11 @@ class Sendhook(commands.Cog):
         else:
             await ctx.message.add_reaction("✅")
 
-
     @commands.command()
     @commands.has_permissions(manage_webhooks=True)
     async def sendhookself(self, ctx, webhookUrl, *, webhookText=None):
         """Send a webhook as yourself
-        
+
         webhookUrl can be an alias"""
 
         message = ctx.message
@@ -151,25 +153,30 @@ class Sendhook(commands.Cog):
 
         # Send webhook
         try:
-            await self.sendhookEngine(toWebhook, message, webhookText, message.author.display_name, message.author.display_avatar.url)
+            await self.sendhookEngine(
+                toWebhook,
+                message,
+                webhookText,
+                message.author.display_name,
+                message.author.display_avatar.url,
+            )
         except:
             await ctx.send("Oops, an error occurred :'(")
         else:
             await ctx.message.add_reaction("✅")
 
-
     @commands.command()
     @commands.has_permissions(manage_webhooks=True)
     async def edithook(self, ctx, webhookUrl, messageId, *, webhookText):
         """Edit a message sent by a webhook
-        
+
         webhookUrl can be an alias"""
 
         # Formatting the messageId
         forgotMsgLink = "Oh no! Did you remember to include the message link to the message you want to edit?"
         if isinstance(messageId, str):
             try:
-                messageId = int(messageId.split('/')[-1])
+                messageId = int(messageId.split("/")[-1])
             except:
                 await ctx.send(forgotMsgLink)
         elif isinstance(messageId, int):
@@ -185,8 +192,8 @@ class Sendhook(commands.Cog):
             url = str(webhookUrl) + "/messages/" + str(messageId)
 
         # Formatting the payload
-        head = {"Content-Type":"application/json"}
-        payload = {"content": str(webhookText) }
+        head = {"Content-Type": "application/json"}
+        payload = {"content": str(webhookText)}
 
         try:
             requests.patch(url, json=payload, headers=head)
@@ -199,32 +206,39 @@ class Sendhook(commands.Cog):
             except:
                 await ctx.send("Webhook updated ✅")
 
-
     @commands.command()
     @commands.has_permissions(manage_webhooks=True)
-    async def newhook(self, ctx, webhookName, webhookImage, channel: discord.TextChannel=None):
+    async def newhook(
+        self, ctx, webhookName, webhookImage, channel: discord.TextChannel = None
+    ):
         """Create a webhook"""
         if channel == None:
             channel = ctx.message.channel
         await ctx.message.add_reaction("⏳")
-        await ctx.send(str(channel.mention)+" "+str(channel.id))
+        await ctx.send(str(channel.mention) + " " + str(channel.id))
         async with aiohttp.ClientSession() as session:
             async with session.get(webhookImage) as resp:
                 if resp.status != 200:
-                    return await channel.send('Could not download file...')
+                    return await channel.send("Could not download file...")
                 wimgdata = await resp.read()
                 try:
-                    thenewhook = await channel.create_webhook(name=webhookName, avatar=wimgdata)
+                    thenewhook = await channel.create_webhook(
+                        name=webhookName, avatar=wimgdata
+                    )
                 except Exception as e:
-                    await ctx.send("Could not create webhook. Do I have permissions to create webhooks?\n"+str(e)+"\n"+str(wimgdata))
+                    await ctx.send(
+                        "Could not create webhook. Do I have permissions to create webhooks?\n"
+                        + str(e)
+                        + "\n"
+                        + str(wimgdata)
+                    )
                 else:
                     await ctx.message.add_reaction("✅")
-                    await ctx.send(str(thenewhook.name)+" "+str(thenewhook.url))
+                    await ctx.send(str(thenewhook.name) + " " + str(thenewhook.url))
 
-    
     @commands.command()
     @commands.has_permissions(manage_webhooks=True)
-    async def listhooks(self, ctx, channel: discord.TextChannel=None):
+    async def listhooks(self, ctx, channel: discord.TextChannel = None):
         """List the webhooks in a channel"""
         if channel == None:
             channel = ctx.message.channel
@@ -236,10 +250,10 @@ class Sendhook(commands.Cog):
             for b in a:
                 name = str(b.name)
                 url = str(b.url)
-                returntext += name+"\n"+url+"\n\n"
+                returntext += name + "\n" + url + "\n\n"
         else:
             name = str(b.name)
             url = str(b.url)
-            returntext += name+" "+url+"\n"
+            returntext += name + " " + url + "\n"
 
         await ctx.send(returntext)

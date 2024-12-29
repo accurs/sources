@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv(verbose=True)
@@ -74,11 +75,22 @@ CONFIG = {
     },
     "support_url": "",
     "prefix": ",",
-    "owners": [352190010998390796, 1012662778974179339, 119939767231053825, 349274018307637249],
+    "owners": [
+        352190010998390796,
+        1012662778974179339,
+        119939767231053825,
+        349274018307637249,
+    ],
     "authentication": {
         "api": {"rival_api": "", "eros": ""},
         "cookies": {"instagram": "", "tiktok": ""},
-        "worker_bots": ["OTEyMjY4MzU4NDE2NzU2ODE2.GxPVhK.OxJ05Kt7FZweD63iMauWHDxjCzFpqkuqugNRmg", "OTcxMTc4NTgzNDcxMDM0NDM5.GyMA8j.d8ItR_aT50QJVp2-ITrfKO4JYtW2aPToFceXGA", "NzAwNTMxNzg2OTk1OTkwNTg5.GlE6fs.O-wEk6FFxbu5D70jtb_h_zKREmG79h-ulpPDb0", "MTA1NzI4MjU0MjA3MzU1NzA3Mg.Ganlz5.ntz2uR2D-FjAxTOphRc3NJd6ZSiRp6J2w2_qi0", "NzU5ODQ1NTg5MzQ5MDQwMTU5.GVh4Qa.DR4qsvtWuzxTzpQKkh2yNlB0oRrRASaWHz-HvM"],
+        "worker_bots": [
+            "OTEyMjY4MzU4NDE2NzU2ODE2.GxPVhK.OxJ05Kt7FZweD63iMauWHDxjCzFpqkuqugNRmg",
+            "OTcxMTc4NTgzNDcxMDM0NDM5.GyMA8j.d8ItR_aT50QJVp2-ITrfKO4JYtW2aPToFceXGA",
+            "NzAwNTMxNzg2OTk1OTkwNTg5.GlE6fs.O-wEk6FFxbu5D70jtb_h_zKREmG79h-ulpPDb0",
+            "MTA1NzI4MjU0MjA3MzU1NzA3Mg.Ganlz5.ntz2uR2D-FjAxTOphRc3NJd6ZSiRp6J2w2_qi0",
+            "NzU5ODQ1NTg5MzQ5MDQwMTU5.GVh4Qa.DR4qsvtWuzxTzpQKkh2yNlB0oRrRASaWHz-HvM",
+        ],
         "worker_users": [],
     },
     "Authorization": {

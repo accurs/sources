@@ -1,12 +1,11 @@
-
-
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Union, Optional
-
-from contextlib import suppress
-import discord
 import datetime
+from contextlib import suppress
+from typing import TYPE_CHECKING, List, Optional, Union
+
+import discord
+
 from grief.core import commands
 from grief.core.bot import Grief
 from grief.core.utils.chat_formatting import box
@@ -29,7 +28,11 @@ class BaseButton(discord.ui.Button):
         skip: bool,
         disabled: bool = False,
     ) -> None:
-        super().__init__(style=discord.ButtonStyle.grey, emoji=button_emojis[(forward, skip)], disabled=disabled)
+        super().__init__(
+            style=discord.ButtonStyle.grey,
+            emoji=button_emojis[(forward, skip)],
+            disabled=disabled,
+        )
         self.forward = forward  # If the menu should go to the next page or previous
         self.skip = skip  # If the menu should step once or go to the first/last page
         if TYPE_CHECKING:
@@ -38,7 +41,9 @@ class BaseButton(discord.ui.Button):
     async def callback(self, inter: discord.Interaction) -> None:
         page_num = 1 if self.forward else -1
         if self.skip:
-            page_num = -1 if self.forward else 0 # -1 triggers the `else` clause which sends it to the last page
+            page_num = (
+                -1 if self.forward else 0
+            )  # -1 triggers the `else` clause which sends it to the last page
         await self.view.show_checked_page(page_number=page_num)
 
 
@@ -69,7 +74,7 @@ class Page:
     async def format_page(self, page: str, view: Menu) -> Union[str, discord.Embed]:
         ctx = view.ctx
         footer = f"Page {view.current_page + 1}/{self.max_pages}"
-        if ctx and await ctx.embed_requested(): # not gonna embed unless 
+        if ctx and await ctx.embed_requested():  # not gonna embed unless
             return discord.Embed(
                 title=self.title,
                 colour=await ctx.embed_colour(),
@@ -89,7 +94,7 @@ class Menu(discord.ui.View):
         self.ctx = ctx
         self.source = source
 
-        self.msg: discord.Message = None # type:ignore
+        self.msg: discord.Message = None  # type:ignore
         self.current_page: int = 0
         self._add_buttons()
 
@@ -104,12 +109,14 @@ class Menu(discord.ui.View):
         # that I can't even do lmfao
         single_disabled = self.source.max_pages <= 1
         multi_disabled = self.source.max_pages <= 5
-        [self.add_item(i) for i in [
+        [
+            self.add_item(i)
+            for i in [
                 BaseButton(False, True),
                 BaseButton(False, False),
                 StopButton(),
                 BaseButton(True, False),
-                BaseButton(True, True)
+                BaseButton(True, True),
             ]
         ]
 

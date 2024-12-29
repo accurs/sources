@@ -1,14 +1,15 @@
-from redis.asyncio import Redis
-from .Base import BaseService, cache
-from tools import timeit
-from typing import Optional
-from aiohttp import ClientSession
-from playwright.async_api import async_playwright, Request, Response
-from playwright._impl._errors import TargetClosedError
-from contextlib import suppress
-import json
 import asyncio
+import json
+from contextlib import suppress
+from typing import Optional
 
+from aiohttp import ClientSession
+from playwright._impl._errors import TargetClosedError
+from playwright.async_api import Request, Response, async_playwright
+from redis.asyncio import Redis
+from tools import timeit
+
+from .Base import BaseService, cache
 
 try:
     from asyncio import timeout
@@ -142,7 +143,9 @@ class BlackBoxService(BaseService):
                 "userId": None,
                 "codeModelMode": True,
                 "agentMode": {},
-                "trendingAgentMode": {"mode": True, "id": expert.lower()} if expert.lower() != "" else {},
+                "trendingAgentMode": (
+                    {"mode": True, "id": expert.lower()} if expert.lower() != "" else {}
+                ),
                 "isMicMode": False,
                 "userSystemPrompt": None,
                 "maxTokens": 1024,
@@ -178,9 +181,13 @@ class BlackBoxService(BaseService):
         if "$~~~$" in ret:
             ret = ret[ret.index("$~~~$", 2) + 5 :]
         ret = ret.replace("<br>", "")
-        ret = ret.replace(", try unlimited chat https://www.blackbox.ai/", "").replace("blackbox.ai", "rival.rocks").replace("blackbox", "rival")
+        ret = (
+            ret.replace(", try unlimited chat https://www.blackbox.ai/", "")
+            .replace("blackbox.ai", "rival.rocks")
+            .replace("blackbox", "rival")
+        )
         return ret
-    
+
     async def browser_prompt(self, prompt: str, expert: str = "") -> str:
         async def execute():
             if not hasattr(self, "cookies"):
@@ -190,7 +197,9 @@ class BlackBoxService(BaseService):
             fut = loop.create_future()
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
-                context = await browser.new_context(user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+                context = await browser.new_context(
+                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+                )
                 await context.add_cookies(self.cookies)
                 page = await context.new_page()
 
@@ -206,9 +215,12 @@ class BlackBoxService(BaseService):
                         resp = await r.response()
                         with suppress(asyncio.InvalidStateError):
                             fut.set_result(await resp.text())
+
                 page.on("request", get_payload)
                 try:
-                    await page.goto("https://www.blackbox.ai/", wait_until="domcontentloaded")
+                    await page.goto(
+                        "https://www.blackbox.ai/", wait_until="domcontentloaded"
+                    )
                     async with timeout(12):
                         data = await fut
                 except TimeoutError:
@@ -222,11 +234,7 @@ class BlackBoxService(BaseService):
                     page.remove_listener("request", get_payload)
                     await cleanup()
             await p.close()
-            ret = (
-                "\n".join(data.splitlines()[2:])
-                if "Sources:" in data
-                else data
-            )
+            ret = "\n".join(data.splitlines()[2:]) if "Sources:" in data else data
 
             if "$@$" in ret:
                 ret = ret[ret.index("$@$", 2) + 3 :]
@@ -234,10 +242,14 @@ class BlackBoxService(BaseService):
             if "$~~~$" in ret:
                 ret = ret[ret.index("$~~~$", 2) + 5 :]
             ret = ret.replace("<br>", "")
-            ret = ret.replace(", try unlimited chat https://www.blackbox.ai/", "").replace("blackbox.ai", "rival.rocks").replace("blackbox", "rival")
+            ret = (
+                ret.replace(", try unlimited chat https://www.blackbox.ai/", "")
+                .replace("blackbox.ai", "rival.rocks")
+                .replace("blackbox", "rival")
+            )
             return ret
-        return await execute()
 
+        return await execute()
 
     @cache()
     async def prompt(self, prompt: str, expert: str = "") -> tuple:

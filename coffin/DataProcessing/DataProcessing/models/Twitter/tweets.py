@@ -6,7 +6,7 @@ from html import unescape
 from io import BytesIO
 from json import dumps
 from logging import getLogger
-from typing import List, Literal, Optional, Any
+from typing import Any, List, Literal, Optional
 
 from cashews import cache
 from discord import File
@@ -15,7 +15,8 @@ from pydantic import BaseModel, Field
 from typing_extensions import Self
 
 from .base import API, ClientSession
-cache.setup('mem://')
+
+cache.setup("mem://")
 from .basic import BasicUser
 
 ENDPOINT = API["graphql"]["UserTweets"]
@@ -192,11 +193,13 @@ class Tweets(BaseModel):
                                             Media(
                                                 type=media["type"],
                                                 short_url=media["url"],
-                                                url=media["media_url_https"]
-                                                if not media.get("video_info")
-                                                else media["video_info"]["variants"][0][
-                                                    "url"
-                                                ],
+                                                url=(
+                                                    media["media_url_https"]
+                                                    if not media.get("video_info")
+                                                    else media["video_info"][
+                                                        "variants"
+                                                    ][0]["url"]
+                                                ),
                                             )
                                             for media in tweet["legacy"]
                                             .get("extended_entities", {})

@@ -1,13 +1,13 @@
-import discord, datetime
+import datetime
 
+import discord
+from bot.bot import Evict
+from bot.dynamicrolebutton import DynamicRoleButton
+from bot.helpers import EvictContext
+from bot.managers.emojis import Colors, Emojis
 from discord.ext import commands
-
 from patches.permissions import Permissions
 from reposter.reposter import Reposter
-from bot.dynamicrolebutton import DynamicRoleButton
-from bot.bot import Evict
-from bot.helpers import EvictContext
-from bot.managers.emojis import Emojis, Colors
 
 
 class settings(commands.Cog):

@@ -4,11 +4,10 @@ from datetime import datetime
 from re import findall
 from typing import List, Optional
 
+from extensions.socials.models.instagram import ClientSession
 from pydantic import BaseModel
 from typing_extensions import Self
 from xxhash import xxh32_hexdigest
-
-from extensions.socials.models.instagram import ClientSession
 
 HASHTAG_PATTERN = r"(?<=[\s>])#(\d*[A-Za-z_]+\d*)\b(?!;)"
 USERNAME_PATTERN = (

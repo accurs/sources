@@ -1,23 +1,15 @@
 import asyncio
-
-from discord import Message, Member, Embed, Interaction, TextChannel, Role
-from discord.ext.commands import (
-    Cog,
-    hybrid_group,
-    hybrid_command,
-    CooldownMapping,
-    BucketType,
-    Author,
-    has_guild_permissions,
-)
-
-from typing import Optional
 from collections import defaultdict
+from typing import Optional
 
+from discord import Embed, Interaction, Member, Message, Role, TextChannel
+from discord.ext.commands import (Author, BucketType, Cog, CooldownMapping,
+                                  has_guild_permissions, hybrid_command,
+                                  hybrid_group)
 from tools.bot import Akari
+from tools.converters import LevelMember, NewRoleConverter
 from tools.helpers import AkariContext
 from tools.predicates import leveling_enabled
-from tools.converters import LevelMember, NewRoleConverter
 
 
 class Leveling(Cog):

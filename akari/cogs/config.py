@@ -1,48 +1,21 @@
 import json
 import re
-
-from discord import (
-    Embed,
-    Member,
-    Attachment,
-    Role,
-    Interaction,
-    TextChannel,
-    app_commands,
-    Emoji,
-    PartialEmoji,
-    Message,
-)
-
-from discord.ext.commands import (
-    Cog,
-    command,
-    has_guild_permissions,
-    BadArgument,
-    group,
-    hybrid_group,
-    bot_has_guild_permissions,
-    hybrid_command,
-)
-
-from tools.validators import (
-    ValidEmoji,
-    ValidPermission,
-    ValidMessage,
-    ValidCommand,
-    ValidCog,
-)
-
-from tools.converters import NewRoleConverter, HexColor
-from tools.predicates import bump_enabled, boosted_to
-from tools.helpers import AkariContext, Invoking
-from tools.misc.views import confessModal
-from tools.bot import Akari
-
 from typing import Union
 
+from discord import (Attachment, Embed, Emoji, Interaction, Member, Message,
+                     PartialEmoji, Role, TextChannel, app_commands)
+from discord.ext.commands import (BadArgument, Cog, bot_has_guild_permissions,
+                                  command, group, has_guild_permissions,
+                                  hybrid_command, hybrid_group)
+from tools.bot import Akari
+from tools.converters import HexColor, NewRoleConverter
 from tools.handlers.embedbuilder import EmbedBuilder, EmbedScript
 from tools.handlers.embedschema import EmbedBuilding
+from tools.helpers import AkariContext, Invoking
+from tools.misc.views import confessModal
+from tools.predicates import boosted_to, bump_enabled
+from tools.validators import (ValidCog, ValidCommand, ValidEmoji, ValidMessage,
+                              ValidPermission)
 
 
 class Config(Cog):

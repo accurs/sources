@@ -5,6 +5,7 @@ from typing import Dict, List, Literal, Union, cast
 import discord
 from discord.utils import snowflake_time
 from red_commons.logging import getLogger
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.i18n import Translator, cog_i18n
@@ -39,9 +40,9 @@ class StarboardEvents:
                         em.set_thumbnail(url=None)
 
                 if em.description is not None:
-                    em.description = "{}\n\n{}".format(message.system_content, em.description)[
-                        :4096
-                    ]
+                    em.description = "{}\n\n{}".format(
+                        message.system_content, em.description
+                    )[:4096]
                 else:
                     em.description = message.system_content
                 # if not author.bot:
@@ -64,7 +65,8 @@ class StarboardEvents:
                             ref_link = f"\n\n{ref_msg.jump_url}"
                             if len(ref_text + ref_link) > 1024:
                                 ref_text = (
-                                    ref_text[: len(ref_link) - 1] + "\N{HORIZONTAL ELLIPSIS}"
+                                    ref_text[: len(ref_link) - 1]
+                                    + "\N{HORIZONTAL ELLIPSIS}"
                                 )
                             ref_text += ref_link
                             em.add_field(
@@ -96,7 +98,9 @@ class StarboardEvents:
                 em.color = discord.Colour(starboard.colour)
             em.description = message.system_content
             em.set_author(
-                name=author.display_name, url=message.jump_url, icon_url=author.display_avatar
+                name=author.display_name,
+                url=message.jump_url,
+                icon_url=author.display_avatar,
             )
             if msg_ref := getattr(message, "reference", None):
                 ref_msg = getattr(msg_ref, "resolved", None)
@@ -105,7 +109,10 @@ class StarboardEvents:
                         ref_text = ref_msg.system_content
                         ref_link = f"\n\n{ref_msg.jump_url}"
                         if len(ref_text + ref_link) > 1024:
-                            ref_text = ref_text[: len(ref_link) - 1] + "\N{HORIZONTAL ELLIPSIS}"
+                            ref_text = (
+                                ref_text[: len(ref_link) - 1]
+                                + "\N{HORIZONTAL ELLIPSIS}"
+                            )
                         ref_text += ref_link
                         em.add_field(
                             name=_("Replying to {author}").format(
@@ -139,7 +146,8 @@ class StarboardEvents:
                         ("png", "jpeg", "jpg", "gif", "webp")
                     ):
                         new_em.add_field(
-                            name="Attachment", value=f"[{attachment.filename}]({attachment.url})"
+                            name="Attachment",
+                            value=f"[{attachment.filename}]({attachment.url})",
                         )
                     else:
                         new_em.set_image(url=attachment.url)
@@ -154,17 +162,23 @@ class StarboardEvents:
                 starboards[name] = await starboard.to_json()
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_add(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
         await self.ready.wait()
         await self._update_stars(payload)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_remove(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
         await self.ready.wait()
         await self._update_stars(payload)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_clear(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_clear(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
         await self.ready.wait()
         if not payload.guild_id:
             return
@@ -241,7 +255,9 @@ class StarboardEvents:
                     continue
 
                 async with starboard.lock:
-                    star_message = await self._loop_messages(payload, starboard, star_channel)
+                    star_message = await self._loop_messages(
+                        payload, starboard, star_channel
+                    )
                     if star_message is True:
                         continue
                     if msg is None:
@@ -276,7 +292,9 @@ class StarboardEvents:
                     # log.debug(f"First time {count=} {starboard.threshold=}")
                     if count < starboard.threshold:
                         if key not in starboard.messages:
-                            self.starboards[guild.id][starboard.name].messages[key] = star_message
+                            self.starboards[guild.id][starboard.name].messages[
+                                key
+                            ] = star_message
                         await self._save_starboards(guild)
                         continue
                     if not starboard.selfstar and msg.author.id == payload.user_id:
@@ -284,7 +302,9 @@ class StarboardEvents:
                         # this is here to prevent 1 threshold selfstars
                         continue
                     embeds = await self._build_embed(guild, msg, starboard)
-                    count_msg = "{emoji} **#{count}**".format(emoji=payload.emoji, count=count)
+                    count_msg = "{emoji} **#{count}**".format(
+                        emoji=payload.emoji, count=count
+                    )
                     post_msg = await star_channel.send(count_msg, embeds=embeds)
                     if starboard.autostar:
                         try:
@@ -292,13 +312,19 @@ class StarboardEvents:
                         except Exception:
                             log.exception("Error adding autostar.")
                     if key not in starboard.messages:
-                        self.starboards[guild.id][starboard.name].messages[key] = star_message
+                        self.starboards[guild.id][starboard.name].messages[
+                            key
+                        ] = star_message
                     star_message.new_message = post_msg.id
                     star_message.new_channel = star_channel.id
                     starboard.starred_messages += 1
                     index_key = f"{star_channel.id}-{post_msg.id}"
-                    self.starboards[guild.id][starboard.name].messages[key] = star_message
-                    self.starboards[guild.id][starboard.name].starboarded_messages[index_key] = key
+                    self.starboards[guild.id][starboard.name].messages[
+                        key
+                    ] = star_message
+                    self.starboards[guild.id][starboard.name].starboarded_messages[
+                        index_key
+                    ] = key
                     await self._save_starboards(guild)
 
     async def red_delete_data_for_user(
@@ -316,10 +342,12 @@ class StarboardEvents:
                     if message.author == user_id:
                         index_key = f"{message.new_channel}-{message.new_message}"
                         try:
-                            del self.starboards[guild_id][starboard].messages[message_ids]
-                            del self.starboards[guild_id][starboard].starboarded_messages[
-                                index_key
+                            del self.starboards[guild_id][starboard].messages[
+                                message_ids
                             ]
+                            del self.starboards[guild_id][
+                                starboard
+                            ].starboarded_messages[index_key]
                         except Exception:
                             pass
             async with self.config.guild_from_id(guild_id).starboards() as starboards:
@@ -361,7 +389,10 @@ class StarboardEvents:
                                         index_key = f"{message.new_channel}-{message.new_message}"
                                         to_rem_index.append(index_key)
                                 else:
-                                    if snowflake_time(message.original_message) < to_purge:
+                                    if (
+                                        snowflake_time(message.original_message)
+                                        < to_purge
+                                    ):
                                         to_rem.append(message_ids)
                             for m in to_rem:
                                 log.verbose("Removing %s", m)
@@ -380,7 +411,9 @@ class StarboardEvents:
                                     guild.id,
                                 )
                         except Exception:
-                            log.exception("Error trying to clenaup old starboard messages.")
+                            log.exception(
+                                "Error trying to clenaup old starboard messages."
+                            )
                 await self._save_starboards(guild)
             if total_pruned:
                 log.info(
@@ -445,7 +478,9 @@ class StarboardEvents:
             return True
 
         if getattr(payload, "event_type", None) == "REACTION_ADD":
-            if (user_id := getattr(payload, "user_id", 0)) not in starboard_msg.reactions:
+            if (
+                user_id := getattr(payload, "user_id", 0)
+            ) not in starboard_msg.reactions:
                 starboard_msg.reactions.append(user_id)
                 log.verbose("Adding user (%s) in _loop_messages", user_id)
                 starboard.stars_added += 1
@@ -458,7 +493,9 @@ class StarboardEvents:
         if not starboard_msg.new_message or not starboard_msg.new_channel:
             return starboard_msg
         count = len(starboard_msg.reactions)
-        log.debug("Existing count=%s starboard.threshold=%s", count, starboard.threshold)
+        log.debug(
+            "Existing count=%s starboard.threshold=%s", count, starboard.threshold
+        )
         if count < starboard.threshold:
             try:
                 index_key = f"{starboard_msg.new_channel}-{starboard_msg.new_message}"

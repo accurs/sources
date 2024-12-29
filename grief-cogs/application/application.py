@@ -1,13 +1,12 @@
 import asyncio
-import discord
 import datetime
 
+import discord
 from discord.utils import get
 
 from grief.core import Config, checks, commands
-from grief.core.utils.predicates import MessagePredicate
-
 from grief.core.bot import Grief
+from grief.core.utils.predicates import MessagePredicate
 
 
 class Application(commands.Cog):
@@ -15,7 +14,9 @@ class Application(commands.Cog):
 
     def __init__(self, bot: Grief):
         self.bot = bot
-        self.config = Config.get_conf(self, 5641654654621651651, force_registration=True)
+        self.config = Config.get_conf(
+            self, 5641654654621651651, force_registration=True
+        )
         self.config.register_guild(
             applicant_id=None,
             accepter_id=None,
@@ -35,6 +36,7 @@ class Application(commands.Cog):
                 ["Why do you want to be a member of our staff?", "Reason", 120],
             ],
         )
+
     @commands.command()
     @commands.guild_only()
     async def apply(self, ctx: commands.Context):
@@ -127,8 +129,9 @@ class Application(commands.Cog):
         try:
             await channel.send(embed=embed)
         except discord.errors.HTTPException:
-            import requests
             import json
+
+            import requests
 
             req = requests.post("https://hastebin.com/documents", data=hastebin_content)
             key = json.loads(req.content)["key"]

@@ -1,21 +1,13 @@
-from discord.ext.commands import Cog, Context, check, hybrid_group, bot_has_permissions
-from discord import (
-    AuditLogAction,
-    AuditLogEntry,
-    Member,
-    Guild,
-    User,
-    Object,
-    Role,
-    utils,
-    Embed,
-    Permissions,
-)
-from asyncio import gather, Lock
-from datetime import timedelta
+from asyncio import Lock, gather
 from collections import defaultdict
-from typing import Optional, Union
 from contextlib import suppress
+from datetime import timedelta
+from typing import Optional, Union
+
+from discord import (AuditLogAction, AuditLogEntry, Embed, Guild, Member,
+                     Object, Permissions, Role, User, utils)
+from discord.ext.commands import (Cog, Context, bot_has_permissions, check,
+                                  hybrid_group)
 from loguru import logger
 
 
@@ -496,7 +488,7 @@ class AntiNuke(Cog):
         with_app_command=True,
         example=",antinuke",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     async def antinuke(self, ctx: Context):
         if ctx.invoked_subcommand is None:
             return await ctx.send_help(ctx.command.qualified_name)
@@ -507,7 +499,7 @@ class AntiNuke(Cog):
         brief="Enable all antinuke settings with a default threshold of 0",
         example=",antinuke enable",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_enable(self, ctx: Context):
         await self.bot.db.execute(
@@ -542,7 +534,7 @@ class AntiNuke(Cog):
         brief="Disable all antinuke settings",
         example=",antinuke disable",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_disable(self, ctx: Context):
         await self.bot.db.execute(
@@ -560,7 +552,7 @@ class AntiNuke(Cog):
         brief="Set a punishment a user will recieve for breaking an antinuke rule",
         example=",antinuke punishment ban",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_punishment(self, ctx: Context, punishment: str):
         if punishment.lower() not in ["ban", "kick", "strip"]:
@@ -580,7 +572,7 @@ class AntiNuke(Cog):
         brief="Whitelist or unwhitelist a user from being punished by antinuke",
         example=",antinuke whitelist @o_5v",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_whitelist(self, ctx: Context, *, user: User | Member):
         if await self.bot.db.fetchval(
@@ -608,7 +600,7 @@ class AntiNuke(Cog):
         brief="Permit a user to use antinuke commands as an antinuke admin",
         example=",antinuke trust @o_5v",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_trust(self, ctx: Context, *, user: User | Member):
         if await self.bot.db.fetchval(
@@ -636,7 +628,7 @@ class AntiNuke(Cog):
         brief="List all users that cannot be effected by antinuke",
         example=",antinuke whitelisted",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_whitelisted(self, ctx: Context):
         if rows := await self.bot.db.fetch(
@@ -658,7 +650,7 @@ class AntiNuke(Cog):
         brief="List all users who are antinuke admins",
         example=",antinuke trusted",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_trusted(self, ctx: Context):
         if rows := await self.bot.db.fetch(
@@ -678,7 +670,7 @@ class AntiNuke(Cog):
         brief="Set the threshold until antinuke bans the user",
         example=",antinuke threshold",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_threshold(self, ctx: Context, action: str, threshold: int):
         if action not in self.modules:
@@ -739,12 +731,12 @@ class AntiNuke(Cog):
         return f"**anti [{module}](https://wock.bot/):**"
 
     @antinuke.command(
-        name="settings", 
-        aliases=["config"], 
+        name="settings",
+        aliases=["config"],
         brief="List your antinuke settings along with their thresholds",
-        example=',antinuke settings'
+        example=",antinuke settings",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_settings(self, ctx: Context):
         data = await self.bot.db.fetchrow(
@@ -821,9 +813,9 @@ class AntiNuke(Cog):
     @antinuke.command(
         name="bot_add",
         brief="Toggle the anti bot add of antinuke",
-        example=",antinuke bot_add true"
+        example=",antinuke bot_add true",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_bot_add(self, ctx: Context, state: bool):
         return await self.antinuke_toggle(ctx, "bot_add", state)
@@ -839,7 +831,7 @@ class AntiNuke(Cog):
             }
         },
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_role_update(self, ctx: Context, state: bool):
         return await self.antinuke_toggle(ctx, "role_update", state)
@@ -856,7 +848,7 @@ class AntiNuke(Cog):
             }
         },
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_channel_update(self, ctx: Context, state: bool):
         return await self.antinuke_toggle(ctx, "channel_update", state)
@@ -873,7 +865,7 @@ class AntiNuke(Cog):
             }
         },
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_webhooks(self, ctx: Context, state: bool):
         return await self.antinuke_toggle(ctx, "webhooks", state)
@@ -890,7 +882,7 @@ class AntiNuke(Cog):
             }
         },
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_guild_update(self, ctx: Context, state: bool):
         return await self.antinuke_toggle(ctx, "guild_update", state)
@@ -923,7 +915,7 @@ class AntiNuke(Cog):
             }
         },
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_kick(self, ctx: Context, state: bool):
         return await self.antinuke_toggle(ctx, "kick", state)
@@ -940,7 +932,7 @@ class AntiNuke(Cog):
             }
         },
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_ban(self, ctx: Context, state: bool):
         return await self.antinuke_toggle(ctx, "ban", state)
@@ -1030,9 +1022,12 @@ class AntiNuke(Cog):
         return await ctx.success(f"successfully **{status}** `{module}`{thres}")
 
     @antinuke.command(
-        name="modules", aliases=["features", "events"], brief="show antinuke modules", example=",antinuke modules",
+        name="modules",
+        aliases=["features", "events"],
+        brief="show antinuke modules",
+        example=",antinuke modules",
     )
-    @bot_has_permissions(administrator = True)
+    @bot_has_permissions(administrator=True)
     @trusted()
     async def antinuke_modules(self, ctx: Context):
         return await ctx.send(

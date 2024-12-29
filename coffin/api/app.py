@@ -1,24 +1,26 @@
-import orjson
-import socket
 import asyncio
-import uvicorn
-
-from fastapi import FastAPI, Request, HTTPException, UploadFile, File
-from fastapi.responses import JSONResponse, PlainTextResponse, ORJSONResponse, FileResponse, Response
-from fastapi.middleware.cors import CORSMiddleware
-from loguru import logger
-from tuuid import tuuid
+import socket
+from asyncio import ensure_future, sleep
 from base64 import b64decode
+from contextlib import asynccontextmanager
+from typing import Any, Optional
+
+import orjson
+import uvicorn
 from aiohttp import ClientSession
 from coffinredis.client import CoffinRedis
 from ext.github import GithubPushEvent
-from typing import Optional, Any
-from asyncio import ensure_future, sleep
-from contextlib import asynccontextmanager
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import (FileResponse, JSONResponse, ORJSONResponse,
+                               PlainTextResponse, Response)
+from loguru import logger
+from tuuid import tuuid
 
 WEBHOOK_ADDRESS = "http://127.0.0.1:1275"
 ADDRESS = {"host": "127.0.0.1", "port": 1274}
 DOMAIN = "coffin.bot"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,7 +31,7 @@ async def lifespan(app: FastAPI):
     app.state.redis.close()
 
 
-app = FastAPI(title = "Coffin API", lifespan = lifespan)
+app = FastAPI(title="Coffin API", lifespan=lifespan)
 
 # CORS middleware
 app.add_middleware(
@@ -46,18 +48,20 @@ REDIRECTS = {
     "server": "https://discord.gg/sore",
     "cmds": "/commands",
     "help": "/commands",
-    "invite": "https://discord.com/oauth2/authorize?client_id=606547640804704298&scope=bot+applications.commands&permissions=8"
+    "invite": "https://discord.com/oauth2/authorize?client_id=606547640804704298&scope=bot+applications.commands&permissions=8",
 }
 
 
 def get_time_image_bytes(tz: str):
-    import arrow
-    from pytz import timezone
-    from PIL import Image, ImageDraw, ImageFont
     import io
+
+    import arrow
+    from PIL import Image, ImageDraw, ImageFont
+    from pytz import timezone
+
     # Get the current time in EST
     est = timezone(tz)
-    current_time = arrow.now(est).format('h:mm A')
+    current_time = arrow.now(est).format("h:mm A")
 
     # Create an image with Pillow
     img_width, img_height = 400, 400
@@ -76,8 +80,8 @@ def get_time_image_bytes(tz: str):
 
     # Calculate text size and position it in the center
     text_bbox = draw.textbbox((0, 0), current_time, font=font)
-    text_width = text_bbox[2] - text_bbox[0]*2
-    text_height = text_bbox[3] - text_bbox[1]*2
+    text_width = text_bbox[2] - text_bbox[0] * 2
+    text_height = text_bbox[3] - text_bbox[1] * 2
     text_x = (img_width - text_width) // 2
     text_y = (img_height - text_height) // 2
 
@@ -91,6 +95,7 @@ def get_time_image_bytes(tz: str):
 
     return img_bytes.getvalue()
 
+
 def check_port_in_use(host: str, port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
@@ -100,12 +105,12 @@ def check_port_in_use(host: str, port: int) -> bool:
     return False  # Port is available
 
 
-
 async def dump_commandsXD(delay: Optional[int] = None):
     if delay:
         await sleep(delay)
     commands = orjson.loads(await app.state.redis.get("commands"))
     return commands
+
 
 @app.get("/")
 async def index():
@@ -114,11 +119,12 @@ async def index():
     ensure_future(dump_commandsXD(500))
     return JSONResponse(content=app.state._commands)
 
+
 async def forward_payload(data: Any, headers: dict):
     process = await asyncio.create_subprocess_shell(
         "cd .. ; git init ; git pull",
         stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
+        stderr=asyncio.subprocess.PIPE,
     )
 
     # Wait until the process finishes
@@ -132,12 +138,15 @@ async def forward_payload(data: Any, headers: dict):
         total_changes.extend(data.head_commit.modified)
         for change in total_changes:
             if "system" in change.lower():
-                logger.info(f"Restarting due to a new commit being added from {data.head_commit.author.name}")
+                logger.info(
+                    f"Restarting due to a new commit being added from {data.head_commit.author.name}"
+                )
                 await asyncio.create_subprocess_shell(
                     "pm2 restart rewrite",
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
+
 
 @app.post("/github")
 async def github(request: Request):
@@ -150,12 +159,13 @@ async def github(request: Request):
     logger.info(f"sent message {_}")
     return JSONResponse(content={"status": "Success"}, status_code=200)
 
+
 @app.get("/redirects/{path}")
 async def redirects(request: Request, path: str):
     if redirect := REDIRECTS.get(path):
-        return JSONResponse(content = {"url": redirect})
+        return JSONResponse(content={"url": redirect})
     else:
-        return JSONResponse(content = {"message": "Not found"}, status_code = 404)
+        return JSONResponse(content={"message": "Not found"}, status_code=404)
 
 
 async def redump_statistics(delay: Optional[int] = None):
@@ -164,6 +174,7 @@ async def redump_statistics(delay: Optional[int] = None):
     app.state.statistics = orjson.loads(await app.state.redis.get("statistics"))
     return app.state.statistics
 
+
 @app.get("/statistics")
 async def statistics_():
     if not app.state.statistics:
@@ -171,13 +182,15 @@ async def statistics_():
     ensure_future(redump_statistics(60))
     return JSONResponse(content=app.state.statistics)
 
+
 @app.get("/avatar")
 async def avatar():
     async with ClientSession() as session:
         async with session.get(f"{WEBHOOK_ADDRESS}/avatar") as response:
             data = await response.read()
             content_type = response.content_type
-    return Response(content=data, media_type=content_type) 
+    return Response(content=data, media_type=content_type)
+
 
 @app.get("/shards")
 async def shards():
@@ -186,12 +199,14 @@ async def shards():
             data = await response.json()
     return JSONResponse(content=data)
 
+
 @app.get("/status")
 async def status():
     async with ClientSession() as session:
         async with session.get(f"{WEBHOOK_ADDRESS}/status") as response:
             data = await response.json()
     return JSONResponse(content=data)
+
 
 @app.get("/logs/{identifier}")
 async def message_logs(identifier: str):
@@ -201,6 +216,7 @@ async def message_logs(identifier: str):
             status = response.status
     return JSONResponse(content=data, status_code=status)
 
+
 @app.get("/asset/{path}")
 async def asset(path: str):
     if not (entry := await app.state.redis.get(path.split(".")[0])):
@@ -208,8 +224,12 @@ async def asset(path: str):
     image_data, content_type = orjson.loads(entry)
     return Response(content=image_data, media_type=content_type)
 
+
 async def add_asset(b64_string: str, **kwargs):
-    content_type, base64_str = b64_string.split(",")[0].split(":")[1].split(";")[0], b64_string.split(",")[1]
+    content_type, base64_str = (
+        b64_string.split(",")[0].split(":")[1].split(";")[0],
+        b64_string.split(",")[1],
+    )
     image_data = b64decode(base64_str)
     name = kwargs.pop("name", tuuid())
     await app.state.redis.set(name, orjson.dumps([image_data, content_type]), ex=500)
@@ -218,12 +238,21 @@ async def add_asset(b64_string: str, **kwargs):
 
 @app.get("/timer.png")
 async def timer(timezone: Optional[str] = "US/Eastern"):
-    return Response(content = get_time_image_bytes(timezone), media_type = "image/png")
+    return Response(content=get_time_image_bytes(timezone), media_type="image/png")
+
 
 async def run():
-    config = uvicorn.Config(app, **ADDRESS, log_level = 'info', proxy_headers = True, access_log = True, workers = 10)
+    config = uvicorn.Config(
+        app,
+        **ADDRESS,
+        log_level="info",
+        proxy_headers=True,
+        access_log=True,
+        workers=10,
+    )
     server = uvicorn.Server(config)
     await server.serve()
 
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     asyncio.run(run())

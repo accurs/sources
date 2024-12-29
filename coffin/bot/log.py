@@ -1,6 +1,4 @@
 from __future__ import annotations
-import logging
-from time import time
 
 import asyncio
 import logging
@@ -9,6 +7,7 @@ import queue
 import sys
 import threading
 import time
+from time import time
 
 from limits import parse, strategies
 from loguru import logger
@@ -16,9 +15,10 @@ from loguru import logger
 LOG_LEVEL = os.getenv("LOG_LEVEL") or "INFO"
 
 LOG_LOCK = threading.Lock()
-from limits import storage
+import asyncio
 
-import coloredlogs,asyncio
+import coloredlogs
+from limits import storage
 
 
 def fitler_log(record):
@@ -47,9 +47,13 @@ class InterceptHandler(logging.Handler):
         while frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
-            try: frame.close()
-            except: pass
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+            try:
+                frame.close()
+            except:
+                pass
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
 
 
 class AsyncLogEmitter(object):
@@ -78,7 +82,9 @@ class AsyncLogEmitter(object):
 
             while self.queue.qsize() > 250:
                 if not discards:
-                    logger.warning("Queue is at max! - Supressing logging to prevent high CPU blockage.")
+                    logger.warning(
+                        "Queue is at max! - Supressing logging to prevent high CPU blockage."
+                    )
                     discards = True
                 msg = self.queue.get()
             discards = False
@@ -87,18 +93,21 @@ class AsyncLogEmitter(object):
 
     def emit(self, msg: str):
         self.queue.put(msg)
+
+
 #        self.window.close()
+
 
 def make_dask_sink(name=None, log_emitter=None):
     logger.remove()
     logging.getLogger("").disabled = True
     if log_emitter:
-#        logger.info(log_emitter)
+        #        logger.info(log_emitter)
         emitter = log_emitter
 
     else:
         _emitter = AsyncLogEmitter(name=name)
-#        logger.info(_emitter.queue)
+        #        logger.info(_emitter.queue)
         emitter = _emitter.emit
 
     logger.configure(
@@ -123,6 +132,3 @@ def make_dask_sink(name=None, log_emitter=None):
     logger.success("Logger reconfigured")
     logger.disable("distributed.utils")
     return emitter, logger
-
-
-

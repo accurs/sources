@@ -26,7 +26,9 @@ except ImportError:
 class PandasSQLiteDriver:
     """An asynchronous SQLite driver for Pandas dataframes."""
 
-    def __init__(self, bot: Grief, cog_name: str, filename: str, table: str = "main_df") -> None:
+    def __init__(
+        self, bot: Grief, cog_name: str, filename: str, table: str = "main_df"
+    ) -> None:
         """Get a driver object for interacting with a table in the given cog's datapath.
 
         Parameters
@@ -43,13 +45,17 @@ class PandasSQLiteDriver:
         self.bot = bot
         self.table = table
 
-        self.sql_executor = concurrent.futures.ThreadPoolExecutor(1, f"{cog_name.lower()}_sql")
+        self.sql_executor = concurrent.futures.ThreadPoolExecutor(
+            1, f"{cog_name.lower()}_sql"
+        )
         self.sql_path = str(cog_data_path(raw_name=cog_name) / filename)
 
     def _write(self, df: pandas.DataFrame, table: Optional[str] = None) -> None:
         connection = sqlite3.connect(self.sql_path)
         try:
-            df.to_sql(table or self.table, con=connection, if_exists="replace")  # type:ignore
+            df.to_sql(
+                table or self.table, con=connection, if_exists="replace"
+            )  # type:ignore
             connection.commit()
         finally:
             connection.close()
@@ -57,7 +63,9 @@ class PandasSQLiteDriver:
     def _append(self, df: pandas.DataFrame, table: Optional[str] = None) -> None:
         connection = sqlite3.connect(self.sql_path)
         try:
-            df.to_sql(table or self.table, con=connection, if_exists="append")  # type:ignore
+            df.to_sql(
+                table or self.table, con=connection, if_exists="append"
+            )  # type:ignore
             connection.commit()
         finally:
             connection.close()

@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-from loguru import logger
 import os
 import unicodedata
 from datetime import datetime
@@ -10,6 +9,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import CommandError
 from discord.utils import cached_property
+from loguru import logger
 
 TUPLE = ()
 SET = set()
@@ -557,7 +557,10 @@ class Context(commands.Context):
 
     async def success(self, text, **kwargs):
         emoji = ""
-        if config := await self.bot.db.fetchrow("""SELECT success_emoji, success_color FROM context WHERE guild_id = $1""", self.guild.id):
+        if config := await self.bot.db.fetchrow(
+            """SELECT success_emoji, success_color FROM context WHERE guild_id = $1""",
+            self.guild.id,
+        ):
             if config.get("success_emoji"):
                 emoji += config["success_emoji"]
             if config.get("success_color"):
@@ -588,7 +591,7 @@ class Context(commands.Context):
         return await self.send(embed=embed, delete_after=delete_after)
 
     async def currency(self, text, **kwargs):
-        color = 0x2b2d31
+        color = 0x2B2D31
         embed = discord.Embed(
             color=color,
             description=f"<a:wockpayout:1251331742720200704> {self.author.mention}: {text}",
@@ -610,10 +613,9 @@ class Context(commands.Context):
         if kwargs.get("return_embed", False) is True:
             return embed
         return await self.send(embed=embed, delete_after=delete_after)
-    
 
     async def deposit(self, text, **kwargs):
-        color = 0x2b2d31
+        color = 0x2B2D31
         embed = discord.Embed(
             color=color,
             description=f"<a:wockdeposit:1251342814386589787> {self.author.mention}: {text}",
@@ -635,9 +637,9 @@ class Context(commands.Context):
         if kwargs.get("return_embed", False) is True:
             return embed
         return await self.send(embed=embed, delete_after=delete_after)
-    
+
     async def withdraw(self, text, **kwargs):
-        color = 0x2b2d31
+        color = 0x2B2D31
         embed = discord.Embed(
             color=color,
             description=f"<:wockwithdraw:1251342886323224596> {self.author.mention}: {text}",
@@ -660,12 +662,9 @@ class Context(commands.Context):
             return embed
         return await self.send(embed=embed, delete_after=delete_after)
 
-
     async def normal(self, text, **kwargs):
         color = 0x2B2D31
-        embed = discord.Embed(
-            color=color, description=f"{self.author.mention}: {text}"
-        )
+        embed = discord.Embed(color=color, description=f"{self.author.mention}: {text}")
         if footer := kwargs.get("footer"):
             if isinstance(footer, tuple):
                 embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -686,7 +685,10 @@ class Context(commands.Context):
 
     async def fail(self, text, **kwargs):
         emoji = ""
-        if config := await self.bot.db.fetchrow("""SELECT fail_emoji, fail_color FROM context WHERE guild_id = $1""", self.guild.id):
+        if config := await self.bot.db.fetchrow(
+            """SELECT fail_emoji, fail_color FROM context WHERE guild_id = $1""",
+            self.guild.id,
+        ):
             if config.get("fail_emoji"):
                 emoji += config["fail_emoji"]
             if config.get("fail_color"):
@@ -714,7 +716,10 @@ class Context(commands.Context):
 
     async def warning(self, text, **kwargs):
         emoji = ""
-        if config := await self.bot.db.fetchrow("""SELECT warning_emoji, warning_color FROM context WHERE guild_id = $1""", self.guild.id):
+        if config := await self.bot.db.fetchrow(
+            """SELECT warning_emoji, warning_color FROM context WHERE guild_id = $1""",
+            self.guild.id,
+        ):
             if config.get("warning_emoji"):
                 emoji += config["warning_emoji"]
             else:
@@ -727,7 +732,7 @@ class Context(commands.Context):
         else:
             color = 0xFFA500
             if e := kwargs.get("emoji"):
-                emoji+= e
+                emoji += e
             else:
                 emoji = None
         embed = discord.Embed(
@@ -819,7 +824,10 @@ class Context(commands.Context):
     #         await self.send(embed=embed)
 
     async def alternative_paginate(
-        self, embeds: list, message: Optional[discord.Message] = None, invoker_lock: Optional[bool] = True
+        self,
+        embeds: list,
+        message: Optional[discord.Message] = None,
+        invoker_lock: Optional[bool] = True,
     ):
         import button_paginator as pg  # type: ignore
 
@@ -859,7 +867,7 @@ class Context(commands.Context):
                 "No Embeds Supplied to Paginator"
             )
         if message:
-            await message.edit(view = paginator, embed = embeds[0])
+            await message.edit(view=paginator, embed=embeds[0])
             paginator.page = 0
             return
         return await paginator.start()
@@ -872,4 +880,3 @@ class Context(commands.Context):
         if len(embeds) == 1:
             return await self.send(embed=embeds[0])
         return await self.alternative_paginate(embeds, message)
-

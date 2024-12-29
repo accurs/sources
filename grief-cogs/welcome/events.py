@@ -5,6 +5,7 @@ from random import choice as rand_choice
 from typing import List, Optional, Pattern, Union, cast
 
 import discord
+
 from grief import VersionInfo, version_info
 from grief.core import Config, commands
 from grief.core.bot import Grief
@@ -27,7 +28,9 @@ class Events:
         self.today_count: dict
 
     @staticmethod
-    def transform_arg(result: str, attr: str, obj: Union[discord.Guild, discord.Member]) -> str:
+    def transform_arg(
+        result: str, attr: str, obj: Union[discord.Guild, discord.Member]
+    ) -> str:
         attr = attr[1:]  # strip initial dot
         if not attr:
             return str(obj)
@@ -78,7 +81,9 @@ class Events:
                     raw_response = re.sub(rf"(?i){word}", filter_setting, raw_response)
                     if isinstance(member, list):
                         raw_response = re.sub(
-                            "|".join(m.mention for m in member), filter_setting, raw_response
+                            "|".join(m.mention for m in member),
+                            filter_setting,
+                            raw_response,
                         )
                     else:
                         raw_response = re.sub(
@@ -110,10 +115,14 @@ class Events:
         if EMBED_DATA["colour"]:
             em.colour = EMBED_DATA["colour"]
         if EMBED_DATA["title"]:
-            em.title = await self.convert_parms(member, guild, EMBED_DATA["title"], False)
+            em.title = await self.convert_parms(
+                member, guild, EMBED_DATA["title"], False
+            )
         if EMBED_DATA["footer"]:
             em.set_footer(
-                text=await self.convert_parms(member, guild, EMBED_DATA["footer"], False)
+                text=await self.convert_parms(
+                    member, guild, EMBED_DATA["footer"], False
+                )
             )
         if EMBED_DATA["thumbnail"]:
             url = EMBED_DATA["thumbnail"]
@@ -215,7 +224,11 @@ class Events:
                 )
             else:
                 log.debug(
-                    _("welcome.py: added ") + str(role) + _(" role to ") + _("bot, ") + str(member)
+                    _("welcome.py: added ")
+                    + str(role)
+                    + _(" role to ")
+                    + _("bot, ")
+                    + str(member)
                 )
         if bot_welcome:
             # finally, welcome them
@@ -229,7 +242,8 @@ class Events:
                     await channel.send(embed=em)
             else:
                 await channel.send(
-                    await self.convert_parms(member, guild, bot_welcome, False), **sanitize
+                    await self.convert_parms(member, guild, bot_welcome, False),
+                    **sanitize,
                 )
 
     async def get_welcome_channel(
@@ -243,7 +257,9 @@ class Events:
         if channel is None:  # complain even if only whisper
             if not only_whisper:
                 log.info(
-                    _("welcome.py: Channel not found. It was most likely deleted. User joined: ")
+                    _(
+                        "welcome.py: Channel not found. It was most likely deleted. User joined: "
+                    )
                     + str(member)
                 )
                 return None
@@ -382,9 +398,9 @@ class Events:
         channel = self.bot.get_channel(await self.config.guild(guild).LEAVE_CHANNEL())
         if channel is None:  # complain even if only whisper
             log.info(
-                _("welcome.py: Channel not found in {guild}. It was most likely deleted.").format(
-                    guild=guild
-                )
+                _(
+                    "welcome.py: Channel not found in {guild}. It was most likely deleted."
+                ).format(guild=guild)
             )
             return
         # we can stop here
@@ -424,7 +440,11 @@ class Events:
             await self.config.guild(guild).LAST_GOODBYE.set(save_msg.id)
 
     async def send_testing_msg(
-        self, ctx: commands.Context, bot: bool = False, msg: str = None, leave: bool = False
+        self,
+        ctx: commands.Context,
+        bot: bool = False,
+        msg: str = None,
+        leave: bool = False,
     ) -> None:
         # log.info(leave)
         default_greeting = "Welcome {0.name} to {1.name}!"
@@ -464,7 +484,8 @@ class Events:
             await ctx.send(_("`Sending a testing message to ") + "` DM", **sanitize)
         else:
             await ctx.send(
-                _("`Sending a testing message to ") + "`{0.mention}".format(channel), **sanitize
+                _("`Sending a testing message to ") + "`{0.mention}".format(channel),
+                **sanitize,
             )
         if not bot and guild_settings["WHISPER"]:
             if is_embed:
@@ -488,10 +509,14 @@ class Events:
                 if await self.config.guild(guild).EMBED_DATA.mention():
                     if guild_settings["GROUPED"]:
                         await channel.send(
-                            humanize_list([m.mention for m in member]), embed=em, delete_after=60
+                            humanize_list([m.mention for m in member]),
+                            embed=em,
+                            delete_after=60,
                         )
                     else:
-                        await channel.send(member.mention, embed=em, delete_after=60, **sanitize)
+                        await channel.send(
+                            member.mention, embed=em, delete_after=60, **sanitize
+                        )
                 else:
                     await channel.send(embed=em, delete_after=60, **sanitize)
             else:

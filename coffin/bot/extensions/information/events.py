@@ -1,27 +1,13 @@
-
-from discord.ext.commands import (
-    CommandError,
-    Cog,
-    group,
-    command,
-    has_permissions
-)
-from discord import (
-    Client,
-    Embed,
-    File,
-    User,
-    Member,
-    Guild,
-    TextChannel,
-    Thread,
-    Message
-)
+import json
 from datetime import datetime, timedelta
-from tuuid import tuuid
 from typing import List
 
-import json
+from discord import (Client, Embed, File, Guild, Member, Message, TextChannel,
+                     Thread, User)
+from discord.ext.commands import (Cog, CommandError, command, group,
+                                  has_permissions)
+from tuuid import tuuid
+
 
 class InformationEvents(Cog):
     def __init__(self, bot: Client):
@@ -41,9 +27,8 @@ class InformationEvents(Cog):
             messages[0].channel.id,
             json.dumps([message.to_dict() for message in messages]),
             datetime.now(),
-            datetime.now() + timedelta(hours=24)
+            datetime.now() + timedelta(hours=24),
         )
-                                  
 
 
 async def setup(bot: Client):

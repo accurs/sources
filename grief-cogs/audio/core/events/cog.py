@@ -2,7 +2,6 @@ import asyncio
 import datetime
 import time
 from pathlib import Path
-
 from typing import Optional
 
 import discord
@@ -34,7 +33,9 @@ class AudioEvents(MixinMeta, metaclass=CompositeMetaClass):
             player.store("autoplay_notified", False)
             await player.stop()
             await player.disconnect()
-            await self.config.guild_from_id(guild_id=guild.id).currently_auto_playing_in.set([])
+            await self.config.guild_from_id(
+                guild_id=guild.id
+            ).currently_auto_playing_in.set([])
             return
 
         track_identifier = track.track_identifier
@@ -123,7 +124,9 @@ class AudioEvents(MixinMeta, metaclass=CompositeMetaClass):
                     bot=self.bot,
                 )
             except Exception as exc:
-                log.verbose("Failed to delete daily playlist ID: %s", too_old_id, exc_info=exc)
+                log.verbose(
+                    "Failed to delete daily playlist ID: %s", too_old_id, exc_info=exc
+                )
             try:
                 await delete_playlist(
                     scope=PlaylistScope.GLOBAL.value,
@@ -135,7 +138,9 @@ class AudioEvents(MixinMeta, metaclass=CompositeMetaClass):
                 )
             except Exception as exc:
                 log.verbose(
-                    "Failed to delete global daily playlist ID: %s", too_old_id, exc_info=exc
+                    "Failed to delete global daily playlist ID: %s",
+                    too_old_id,
+                    exc_info=exc,
                 )
         persist_cache = self._persist_queue_cache.setdefault(
             guild.id, await self.config.guild(guild).persist_queue()
@@ -206,7 +211,11 @@ class AudioEvents(MixinMeta, metaclass=CompositeMetaClass):
                 return
             tries += 1
 
-        if notify_channel and has_perms and not player.fetch("autoplay_notified", False):
+        if (
+            notify_channel
+            and has_perms
+            and not player.fetch("autoplay_notified", False)
+        ):
             if (
                 len(player.node.players) < 10
                 or not player._last_resume

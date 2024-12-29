@@ -13,52 +13,21 @@ import discord
 import humanfriendly
 import speech_recognition as sr
 from asyncpg import UniqueViolationError
-from discord import (
-    Attachment,
-    CategoryChannel,
-    Colour,
-    Embed,
-    Guild,
-    Message,
-    PartialEmoji,
-    PermissionOverwrite,
-    RawReactionActionEvent,
-    Role,
-    TextChannel,
-    User,
-)
-from discord.ext.commands import (
-    ChannelNotFound,
-    Cog,
-    CurrentChannel,
-    RoleNotFound,
-    antinuke_owner,
-    group,
-    has_boost_level,
-    has_permissions,
-    hybrid_group,
-    is_booster,
-    param,
-    ticket_moderator,
-)
+from discord import (Attachment, CategoryChannel, Colour, Embed, Guild,
+                     Message, PartialEmoji, PermissionOverwrite,
+                     RawReactionActionEvent, Role, TextChannel, User)
+from discord.ext.commands import (ChannelNotFound, Cog, CurrentChannel,
+                                  RoleNotFound, antinuke_owner, group,
+                                  has_boost_level, has_permissions,
+                                  hybrid_group, is_booster, param,
+                                  ticket_moderator)
 from discord.ui import Button, View
-
-from structure.scare import Scare, ratelimiter
 from structure.managers import Context
-from structure.utilities import (
-    AssignableRole,
-    Color,
-    DiscordEmoji,
-    Giveaway,
-    GiveawayCreate,
-    ImageData,
-    Member,
-    TicketView,
-    Time,
-    ValidAlias,
-    ValidCommand,
-    ValidPermission,
-)
+from structure.scare import Scare, ratelimiter
+from structure.utilities import (AssignableRole, Color, DiscordEmoji, Giveaway,
+                                 GiveawayCreate, ImageData, Member, TicketView,
+                                 Time, ValidAlias, ValidCommand,
+                                 ValidPermission)
 
 
 class Joindm(View):

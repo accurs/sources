@@ -1,31 +1,20 @@
-
-from discord.ext.commands import (
-    CommandError,
-    Cog,
-    group,
-    command,
-    has_permissions
-)
-from discord import (
-    Client,
-    Embed,
-    File,
-    User,
-    Member,
-    Guild,
-    TextChannel,
-    Thread
-)
 from asyncio import ensure_future
-from system.patch.context import Context
-from loguru import logger
 from logging import getLogger
 
+from discord import (Client, Embed, File, Guild, Member, TextChannel, Thread,
+                     User)
+from discord.ext.commands import (Cog, CommandError, command, group,
+                                  has_permissions)
+from loguru import logger
+from system.patch.context import Context
+
 log = getLogger(__name__)
+
 
 def l(message: str):
     log.info(message)
     logger.info(message)
+
 
 class FunEvents(Cog):
     def __init__(self, bot: Client):
@@ -40,6 +29,7 @@ class FunEvents(Cog):
     async def redis_message(self, message):
         self._last_message = message
         l(f"received message from redis: {message}")
+
 
 async def setup(bot: Client):
     await bot.add_cog(FunEvents(bot))

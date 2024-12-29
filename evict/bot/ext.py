@@ -1,11 +1,12 @@
-import discord, datetime, time
+import datetime
+import time
 from datetime import datetime, timedelta
-
-from discord.ext import commands
+from math import floor, log
 from typing import Union
-from math import log, floor
 
-from bot.managers.emojis import Emojis, Colors
+import discord
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
 
 
 class Client(object):

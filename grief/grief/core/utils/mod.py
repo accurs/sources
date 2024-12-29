@@ -1,6 +1,6 @@
 import asyncio
 from datetime import timedelta
-from typing import List, Iterable, Union, TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Union
 
 import discord
 
@@ -84,7 +84,9 @@ async def slow_deletion(messages: Iterable[discord.Message]):
             pass
 
 
-def get_audit_reason(author: discord.Member, reason: str = None, *, shorten: bool = False):
+def get_audit_reason(
+    author: discord.Member, reason: str = None, *, shorten: bool = False
+):
     """Construct a reason to appear in the audit log.
 
     Parameters

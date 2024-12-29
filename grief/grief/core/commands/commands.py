@@ -3,49 +3,34 @@
 This module contains extended classes and functions which are intended to
 be used instead of those from the `discord.ext.commands` module.
 """
+
 from __future__ import annotations
 
+import functools
 import inspect
 import io
 import re
-import functools
 import weakref
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    ClassVar,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-    MutableMapping,
-    TYPE_CHECKING,
-)
+from typing import (TYPE_CHECKING, Any, Awaitable, Callable, ClassVar, Dict,
+                    List, Literal, MutableMapping, Optional, Tuple, TypeVar,
+                    Union)
 
 import discord
-from discord.ext.commands import (
-    BadArgument,
-    CommandError,
-    CheckFailure,
-    DisabledCommand,
-    command as dpy_command_deco,
-    Command as DPYCommand,
-    GroupCog as DPYGroupCog,
-    HybridCommand as DPYHybridCommand,
-    HybridGroup as DPYHybridGroup,
-    Cog as DPYCog,
-    CogMeta as DPYCogMeta,
-    Group as DPYGroup,
-    Greedy,
-)
+from discord.ext.commands import BadArgument, CheckFailure
+from discord.ext.commands import Cog as DPYCog
+from discord.ext.commands import CogMeta as DPYCogMeta
+from discord.ext.commands import Command as DPYCommand
+from discord.ext.commands import CommandError, DisabledCommand, Greedy
+from discord.ext.commands import Group as DPYGroup
+from discord.ext.commands import GroupCog as DPYGroupCog
+from discord.ext.commands import HybridCommand as DPYHybridCommand
+from discord.ext.commands import HybridGroup as DPYHybridGroup
+from discord.ext.commands import command as dpy_command_deco
 
-from .requires import PermState, PrivilegeLevel, Requires, PermStateAllowedStates
 from .. import app_commands
 from ..i18n import Translator
+from .requires import (PermState, PermStateAllowedStates, PrivilegeLevel,
+                       Requires)
 
 _T = TypeVar("_T")
 _CogT = TypeVar("_CogT", bound="Cog")
@@ -53,9 +38,10 @@ _CogT = TypeVar("_CogT", bound="Cog")
 
 if TYPE_CHECKING:
     # circular import avoidance
-    from .context import Context
-    from typing_extensions import ParamSpec, Concatenate
     from discord.ext.commands._types import ContextT, Coro
+    from typing_extensions import Concatenate, ParamSpec
+
+    from .context import Context
 
     _P = ParamSpec("_P")
 
@@ -224,7 +210,9 @@ class CogCommandMixin:
         """
         cur_rule = self.requires.get_rule(model_id, guild_id=guild_id)
         if cur_rule is PermState.PASSIVE_ALLOW:
-            self.requires.set_rule(model_id, PermState.CAUTIOUS_ALLOW, guild_id=guild_id)
+            self.requires.set_rule(
+                model_id, PermState.CAUTIOUS_ALLOW, guild_id=guild_id
+            )
         else:
             self.requires.set_rule(model_id, PermState.ACTIVE_DENY, guild_id=guild_id)
 
@@ -309,7 +297,9 @@ class Command(CogCommandMixin, DPYCommand):
     """
 
     def __init__(self, *args, **kwargs):
-        self.ignore_optional_for_conversion = kwargs.pop("ignore_optional_for_conversion", False)
+        self.ignore_optional_for_conversion = kwargs.pop(
+            "ignore_optional_for_conversion", False
+        )
         self._disabled_in: discord.utils.SnowflakeList = discord.utils.SnowflakeList([])
         self._help_override = kwargs.pop("help_override", None)
         self.translator = kwargs.pop("i18n", None)
@@ -499,7 +489,9 @@ class Command(CogCommandMixin, DPYCommand):
             raise DisabledCommand(f"{self.name} command is disabled")
 
         if not await self.can_run(ctx, change_permission_state=True):
-            raise CheckFailure(f"The check functions for command {self.qualified_name} failed.")
+            raise CheckFailure(
+                f"The check functions for command {self.qualified_name} failed."
+            )
 
         if self._max_concurrency is not None:
             await self._max_concurrency.acquire(ctx)
@@ -612,9 +604,13 @@ class Command(CogCommandMixin, DPYCommand):
         for parent in parents:
             cur_rule = parent.requires.get_rule(model_id, guild_id=guild_id)
             if cur_rule is PermState.NORMAL:
-                parent.requires.set_rule(model_id, PermState.PASSIVE_ALLOW, guild_id=guild_id)
+                parent.requires.set_rule(
+                    model_id, PermState.PASSIVE_ALLOW, guild_id=guild_id
+                )
             elif cur_rule is PermState.ACTIVE_DENY:
-                parent.requires.set_rule(model_id, PermState.CAUTIOUS_ALLOW, guild_id=guild_id)
+                parent.requires.set_rule(
+                    model_id, PermState.CAUTIOUS_ALLOW, guild_id=guild_id
+                )
 
     def clear_rule_for(
         self, model_id: Union[int, str], guild_id: int
@@ -625,7 +621,9 @@ class Command(CogCommandMixin, DPYCommand):
             if self.cog is not None:
                 parents.append(self.cog)
             for parent in parents:
-                should_continue = parent.reevaluate_rules_for(model_id, guild_id=guild_id)[1]
+                should_continue = parent.reevaluate_rules_for(
+                    model_id, guild_id=guild_id
+                )[1]
                 if not should_continue:
                     break
         return old_rule, new_rule
@@ -756,7 +754,11 @@ class CogGroupMixin:
         :meta private:
         """
         cur_rule = self.requires.get_rule(model_id, guild_id=guild_id)
-        if cur_rule not in (PermState.NORMAL, PermState.ACTIVE_ALLOW, PermState.ACTIVE_DENY):
+        if cur_rule not in (
+            PermState.NORMAL,
+            PermState.ACTIVE_ALLOW,
+            PermState.ACTIVE_DENY,
+        ):
             # The above three states are unaffected by subcommand rules
             # Remaining states can be changed if there exists no actively-allowed
             # subcommand (this includes subcommands multiple levels below)
@@ -764,7 +766,8 @@ class CogGroupMixin:
             all_commands: Dict[str, Command] = getattr(self, "all_commands", {})
 
             if any(
-                cmd.requires.get_rule(model_id, guild_id=guild_id) in PermStateAllowedStates
+                cmd.requires.get_rule(model_id, guild_id=guild_id)
+                in PermStateAllowedStates
                 for cmd in all_commands.values()
             ):
                 return cur_rule, False
@@ -772,7 +775,9 @@ class CogGroupMixin:
                 self.requires.set_rule(model_id, PermState.NORMAL, guild_id=guild_id)
                 return PermState.NORMAL, True
             elif cur_rule is PermState.CAUTIOUS_ALLOW:
-                self.requires.set_rule(model_id, PermState.ACTIVE_DENY, guild_id=guild_id)
+                self.requires.set_rule(
+                    model_id, PermState.ACTIVE_DENY, guild_id=guild_id
+                )
                 return PermState.ACTIVE_DENY, True
 
         # Default return value
@@ -835,7 +840,9 @@ class CogMixin(CogGroupMixin, CogCommandMixin):
         if doc:
             return inspect.cleandoc(translator(doc))
 
-    async def red_get_data_for_user(self, *, user_id: int) -> MutableMapping[str, io.BytesIO]:
+    async def red_get_data_for_user(
+        self, *, user_id: int
+    ) -> MutableMapping[str, io.BytesIO]:
         """
 
         .. note::
@@ -1146,11 +1153,15 @@ def hybrid_command(
     Same interface as `discord.ext.commands.hybrid_command`.
     """
 
-    def decorator(func: CommandCallback[_CogT, ContextT, _P, _T]) -> HybridCommand[_CogT, _P, _T]:
+    def decorator(
+        func: CommandCallback[_CogT, ContextT, _P, _T]
+    ) -> HybridCommand[_CogT, _P, _T]:
         if isinstance(func, Command):
             raise TypeError("callback is already a command.")
         attrs["help_override"] = attrs.pop("help", None)
-        return HybridCommand(func, name=name, with_app_command=with_app_command, **attrs)
+        return HybridCommand(
+            func, name=name, with_app_command=with_app_command, **attrs
+        )
 
     return decorator
 

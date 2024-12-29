@@ -1,10 +1,11 @@
-import discord, math
-from discord.ext import commands
+import math
 
-from patches.permissions import Permissions
+import discord
 from bot.bot import Evict
 from bot.helpers import EvictContext
-from bot.managers.emojis import Emojis, Colors
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
+from patches.permissions import Permissions
 
 
 def get_progress(xp, level):

@@ -1,11 +1,11 @@
+import contextlib
+from typing import Optional
+
 import discord
 import requests
 
 from grief.core import commands
 from grief.core.i18n import Translator, cog_i18n
-from typing import Optional
-
-import contextlib
 
 from . import constants as sub
 from .core import Core
@@ -17,9 +17,14 @@ _ = Translator("Nsfw", __file__)
 class Nsfw(Core):
     """NSFW commands."""
 
-    async def send_embed(self, ctx: commands.Context, embed: discord.Embed, user: Optional[discord.Member] = None,):
+    async def send_embed(
+        self,
+        ctx: commands.Context,
+        embed: discord.Embed,
+        user: Optional[discord.Member] = None,
+    ):
         await ctx.reply(embed=embed, mention_author=False)
-    
+
     @commands.is_nsfw()
     @commands.command()
     @commands.cooldown(1, 3, commands.BucketType.user)
@@ -104,7 +109,9 @@ class Nsfw(Core):
     @commands.is_nsfw()
     @commands.bot_has_permissions(embed_links=True)
     @commands.cooldown(1, 0.5, commands.BucketType.user)
-    @commands.command(aliases=["blackdick", "bcock", "bdick", "blackcocks", "blackdicks"])
+    @commands.command(
+        aliases=["blackdick", "bcock", "bdick", "blackcocks", "blackdicks"]
+    )
     async def blackcock(self, ctx: commands.Context):
         """Sends some blackcock images from random subreddits."""
 
@@ -122,7 +129,9 @@ class Nsfw(Core):
     @commands.is_nsfw()
     @commands.bot_has_permissions(embed_links=True)
     @commands.cooldown(1, 0.5, commands.BucketType.user)
-    @commands.command(aliases=["boob", "boobies", "tits", "titties", "breasts", "breast"])
+    @commands.command(
+        aliases=["boob", "boobies", "tits", "titties", "breasts", "breast"]
+    )
     async def boobs(self, ctx: commands.Context):
         """Sends some boobs images from random subreddits."""
 
@@ -432,16 +441,20 @@ class Nsfw(Core):
     @commands.is_nsfw()
     @commands.cooldown(1, 0.5, commands.BucketType.user)
     @commands.command()
-    async def nsfwtest(self, ctx:commands.Context):
+    async def nsfwtest(self, ctx: commands.Context):
         """Testing nsfw"""
-    
-    header = {'Authorization': 'Bearer 4f2dd5ad-7d9a-4252-bae9-9b3e33441649'}
+
+    header = {"Authorization": "Bearer 4f2dd5ad-7d9a-4252-bae9-9b3e33441649"}
 
     r = requests.get("https://undefined.rip/api/1.0/nsfw", headers=header)
     response = r.json()
 
-    print(response['url'])
+    print(response["url"])
 
 
-async def send_embed(self, ctx: commands.Context, embed: discord.Embed,):
+async def send_embed(
+    self,
+    ctx: commands.Context,
+    embed: discord.Embed,
+):
     await ctx.reply(embed=embed, mention_author=False)

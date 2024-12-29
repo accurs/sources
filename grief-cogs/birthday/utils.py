@@ -4,7 +4,9 @@ from discord import Member, Role
 from discord.abc import GuildChannel
 
 
-def format_bday_message(message: str, author: Member, new_age: int | None = None) -> str:
+def format_bday_message(
+    message: str, author: Member, new_age: int | None = None
+) -> str:
     """Format the birthday message.
 
     Parameters
@@ -21,7 +23,9 @@ def format_bday_message(message: str, author: Member, new_age: int | None = None
         Formatted message
     """
     if new_age:
-        return message.format(mention=author.mention, name=author.display_name, new_age=new_age)
+        return message.format(
+            mention=author.mention, name=author.display_name, new_age=new_age
+        )
     else:
         return message.format(mention=author.mention, name=author.display_name)
 

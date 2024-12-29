@@ -1,8 +1,8 @@
-from discord.ui import View, button, Button
 from discord import ButtonStyle, Interaction
-
+from discord.ui import Button, View, button
 from tools.helpers import AkariContext
-from .modals import BasicModal, AuthorModal, ImagesModal, FooterModal
+
+from .modals import AuthorModal, BasicModal, FooterModal, ImagesModal
 
 
 class EmbedBuilding(View):

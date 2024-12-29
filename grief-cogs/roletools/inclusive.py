@@ -1,4 +1,5 @@
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.commands import Context
 from grief.core.i18n import Translator
@@ -45,7 +46,9 @@ class RoleToolsInclusive(RoleToolsMixin):
         exclusive = await self.config.role(role).exclusive_to()
         for included_role in include:
             if included_role.id in exclusive:
-                msg = _("You cannot include a role that is already considered exclusive.")
+                msg = _(
+                    "You cannot include a role that is already considered exclusive."
+                )
                 await ctx.send(msg)
                 return
             if included_role.id not in cur_setting:
@@ -61,7 +64,9 @@ class RoleToolsInclusive(RoleToolsMixin):
 
     @inclusive.command(name="mutual", with_app_command=False)
     @commands.has_permissions(manage_roles=True)
-    async def mutual_inclusive_add(self, ctx: Context, *roles: RoleHierarchyConverter) -> None:
+    async def mutual_inclusive_add(
+        self, ctx: Context, *roles: RoleHierarchyConverter
+    ) -> None:
         """
         Allow setting roles mutually inclusive to eachother
 
@@ -81,15 +86,17 @@ class RoleToolsInclusive(RoleToolsMixin):
                         continue
                     if add_role.id in exclusive:
                         await ctx.send(
-                            _("You cannot exclude a role that is already considered exclusive.")
+                            _(
+                                "You cannot exclude a role that is already considered exclusive."
+                            )
                         )
                         return
                     if add_role.id not in inclusive_roles:
                         inclusive_roles.append(add_role.id)
         await ctx.send(
-            _("The following roles are now mutually inclusive to eachother:\n{roles}").format(
-                roles=humanize_list([r.mention for r in roles])
-            )
+            _(
+                "The following roles are now mutually inclusive to eachother:\n{roles}"
+            ).format(roles=humanize_list([r.mention for r in roles]))
         )
 
     @inclusive.command(name="remove")

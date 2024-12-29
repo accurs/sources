@@ -6,6 +6,7 @@ from sys import getsizeof
 from typing import Mapping, Optional
 
 import discord
+
 from grief.core import commands
 from grief.core.bot import Grief
 from grief.core.commands import Cog as RedCog
@@ -50,7 +51,9 @@ class EditMsg:
         self.edited_at = discord.utils.utcnow().timestamp()
         self.old_content = before.content
         self.new_content = after.content
-        self.old_attachment = before.attachments[0].proxy_url if before.attachments else None
+        self.old_attachment = (
+            before.attachments[0].proxy_url if before.attachments else None
+        )
 
 
 class ReactionMsg:
@@ -88,19 +91,25 @@ class Snipe(RedCog):
         self.edit_cache[before.channel.id].append(EditMsg(before, after))
 
     @RedCog.listener()
-    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_remove(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
         if payload.guild_id is None:
             return
         self.reaction_cache[payload.channel_id].append(ReactionMsg(payload))
 
     @staticmethod
-    async def reply(ctx: commands.Context, content: str = None, **kwargs) -> discord.Message:
+    async def reply(
+        ctx: commands.Context, content: str = None, **kwargs
+    ) -> discord.Message:
         ref = ctx.message.to_reference(fail_if_not_exists=False)
         kwargs["reference"] = ref
         return await ctx.send(content, **kwargs)
 
     @staticmethod
-    async def pre_check_perms(ctx: commands.Context, channel: discord.TextChannel) -> bool:
+    async def pre_check_perms(
+        ctx: commands.Context, channel: discord.TextChannel
+    ) -> bool:
         user_perms = channel.permissions_for(ctx.author)
         if user_perms.read_messages and user_perms.read_message_history:
             return True
@@ -132,7 +141,12 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["s"])
-    async def snipe(self, ctx: commands.Context, channel: discord.TextChannel = None, index: int = None):
+    async def snipe(
+        self,
+        ctx: commands.Context,
+        channel: discord.TextChannel = None,
+        index: int = None,
+    ):
         """Shows the last deleted messages in a channel."""
         channel = channel or ctx.channel
         pre_check = await self.pre_check_perms(ctx, channel)
@@ -182,7 +196,12 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["su"])
-    async def snipeuser(self, ctx: commands.Context, user: discord.Member, channel: discord.TextChannel = None):
+    async def snipeuser(
+        self,
+        ctx: commands.Context,
+        user: discord.Member,
+        channel: discord.TextChannel = None,
+    ):
         """Snipe a user's past deleted messages in a channel."""
         channel = channel or ctx.channel
         pre_check = await self.pre_check_perms(ctx, channel)
@@ -233,7 +252,9 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["se"])
-    async def snipeembed(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def snipeembed(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ):
         """
         Snipe all past deleted embeds in a channel.
         """
@@ -241,7 +262,9 @@ class Snipe(RedCog):
         pre_check = await self.pre_check_perms(ctx, channel)
         if not pre_check:
             return
-        if embs_obj := [msg.embed for msg in reversed(self.delete_cache[channel.id]) if msg.embed]:
+        if embs_obj := [
+            msg.embed for msg in reversed(self.delete_cache[channel.id]) if msg.embed
+        ]:
             if len(embs_obj) == 1:
                 return await self.reply(ctx, embed=embs_obj[0])
             await BaseMenu(embs_obj, timeout=120).start(ctx)
@@ -252,7 +275,9 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["bs"])
-    async def bulksnipe(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def bulksnipe(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ):
         """
         Snipe all the last deleted messages in a channel.
         """
@@ -303,13 +328,16 @@ class Snipe(RedCog):
     @staticmethod
     def get_content(content: str, limit: int = 1024):
         return content if len(content) <= limit else f"{content[:limit - 3]}..."
-    
+
     @commands.guild_only()
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["es"])
     async def editsnipe(
-        self, ctx: commands.Context, index: int = None, channel: discord.TextChannel = None
+        self,
+        ctx: commands.Context,
+        index: int = None,
+        channel: discord.TextChannel = None,
     ):
         """Shows the last deleted messages of a channel."""
         channel = channel or ctx.channel
@@ -358,7 +386,12 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["eu"])
-    async def editsnipeuser(self, ctx: commands.Context, user: discord.Member,channel: discord.TextChannel = None,):
+    async def editsnipeuser(
+        self,
+        ctx: commands.Context,
+        user: discord.Member,
+        channel: discord.TextChannel = None,
+    ):
         """Snipe a user's past edited messages in the current channel."""
         channel = channel or ctx.channel
         pre_check = await self.pre_check_perms(ctx, channel)
@@ -408,7 +441,9 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["esb"])
-    async def editsnipebulk(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def editsnipebulk(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ):
         """Snipe all the last edited messages in this channel."""
         channel = channel or ctx.channel
         pre_check = await self.pre_check_perms(ctx, channel)
@@ -455,7 +490,12 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["rs"])
-    async def reactionsnipe(self, ctx: commands.Context, channel: discord.TextChannel = None, index: int = None):
+    async def reactionsnipe(
+        self,
+        ctx: commands.Context,
+        channel: discord.TextChannel = None,
+        index: int = None,
+    ):
         """
         Snipe a removed reaction from a message.
         """
@@ -475,9 +515,13 @@ class Snipe(RedCog):
                 color=0x2F3136,
             )
             embed.set_thumbnail(url=message.emote.url)
-            embed.add_field(name="Emote:", value=f"`{str(message.emote)}`", inline=False)
             embed.add_field(
-                name="Message:", value=f"[`Jump To Message`]({message.message})", inline=False
+                name="Emote:", value=f"`{str(message.emote)}`", inline=False
+            )
+            embed.add_field(
+                name="Message:",
+                value=f"[`Jump To Message`]({message.message})",
+                inline=False,
             )
             embed.set_footer(
                 text=f"Sniped by: {str(ctx.author)}",
@@ -495,7 +539,12 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["rsu"])
-    async def reactsnipeuser(self, ctx: commands.Context, user: discord.Member, channel: discord.TextChannel = None,):
+    async def reactsnipeuser(
+        self,
+        ctx: commands.Context,
+        user: discord.Member,
+        channel: discord.TextChannel = None,
+    ):
         """Snipe a remove reaction from a message by sorting user and channel."""
         channel = channel or ctx.channel
         pre_check = await self.pre_check_perms(ctx, channel)
@@ -503,7 +552,9 @@ class Snipe(RedCog):
             return
         if self.reaction_cache[channel.id]:
             user_msgs = [
-                msg for msg in reversed(self.reaction_cache[channel.id]) if msg.reactor == user.id
+                msg
+                for msg in reversed(self.reaction_cache[channel.id])
+                if msg.reactor == user.id
             ]
             if user_msgs:
                 embeds = []
@@ -514,7 +565,9 @@ class Snipe(RedCog):
                         color=0x2F3136,
                     )
                     embed.set_thumbnail(url=message.emote.url)
-                    embed.add_field(name="Emote:", value=f"`{str(message.emote)}`", inline=False)
+                    embed.add_field(
+                        name="Emote:", value=f"`{str(message.emote)}`", inline=False
+                    )
                     embed.add_field(
                         name="Message:",
                         value=f"[`Jump To Message`]({message.message})",
@@ -539,7 +592,9 @@ class Snipe(RedCog):
     @commands.cooldown(1, 5, commands.BucketType.member)
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["rsb"])
-    async def reactsnipebulk(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def reactsnipebulk(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ):
         """Snipe message reactions on bulk"""
         channel = channel or ctx.channel
         pre_check = await self.pre_check_perms(ctx, channel)
@@ -559,9 +614,13 @@ class Snipe(RedCog):
                     color=0x2F3136,
                 )
                 embed.set_thumbnail(url=message.emote.url)
-                embed.add_field(name="Emote:", value=f"`{str(message.emote)}`", inline=True)
                 embed.add_field(
-                    name="Message:", value=f"[`Jump To Message`]({message.message})", inline=True
+                    name="Emote:", value=f"`{str(message.emote)}`", inline=True
+                )
+                embed.add_field(
+                    name="Message:",
+                    value=f"[`Jump To Message`]({message.message})",
+                    inline=True,
                 )
                 embed.set_footer(
                     text=f"Sniped by: {ctx.author}",
@@ -587,10 +646,16 @@ class Snipe(RedCog):
         reaction_size = self.recursive_getsizeof(self.reaction_cache)
         emb = discord.Embed(title="Snipe Stats", color=0x2F3136)
         emb.set_author(name=str(ctx.bot.user), icon_url=ctx.bot.user.display_avatar.url)
-        emb.add_field(name="Delete Cache Size", value=self.sizeof_fmt(del_size), inline=False)
-        emb.add_field(name="Edit Cache Size", value=self.sizeof_fmt(edit_size), inline=False)
         emb.add_field(
-            name="Reaction Cache Size", value=self.sizeof_fmt(reaction_size), inline=False
+            name="Delete Cache Size", value=self.sizeof_fmt(del_size), inline=False
+        )
+        emb.add_field(
+            name="Edit Cache Size", value=self.sizeof_fmt(edit_size), inline=False
+        )
+        emb.add_field(
+            name="Reaction Cache Size",
+            value=self.sizeof_fmt(reaction_size),
+            inline=False,
         )
         emb.add_field(
             name="Total Cache Size",

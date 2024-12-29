@@ -1,6 +1,8 @@
-from pydantic import BaseModel
-from typing import List, Optional, Any
 from datetime import datetime
+from typing import Any, List, Optional
+
+from pydantic import BaseModel
+
 
 class Channel(BaseModel):
     id: str
@@ -14,6 +16,7 @@ class Channel(BaseModel):
     view_count: Optional[int] = 0
     created_at: datetime
 
+
 class ChannelResponse(BaseModel):
     data: Optional[List[Channel]] = None
 
@@ -22,4 +25,3 @@ class ChannelResponse(BaseModel):
         if self.data:
             return self.data[0] if len(self.data) > 0 else None
         return None
-

@@ -1,6 +1,8 @@
-import datetime, discord
+import datetime
 from dataclasses import dataclass
 from typing import List, Optional
+
+import discord
 from discord.ext import commands
 
 

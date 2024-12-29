@@ -1,3 +1,2 @@
-
-from .events import LogsEvents
 from .commands import Logs
+from .events import LogsEvents

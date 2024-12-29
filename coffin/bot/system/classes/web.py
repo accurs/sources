@@ -1,31 +1,32 @@
-from sanic import Sanic, json, raw, response, file
-from discord.ext.commands import Cog, AutoShardedBot
-from discord import Client
-from sanic.request import Request
-from loguru import logger
-from discord.ext import tasks
-from ..patch.help import map_check
-from tuuid import tuuid
-from base64 import b64decode
-from ..worker import offloaded
-from typing import Iterable, Dict, FrozenSet
-from collections import defaultdict
-from sanic.router import Route
-from data.config import CONFIG
-from .github import GithubPushEvent
-from asyncio import ensure_future
-from sanic_cors import CORS
-
-import traceback
 import datetime
-import socket
 import json as jsonn
-import orjson
+import socket
+import traceback
+from asyncio import ensure_future
+from base64 import b64decode
+from collections import defaultdict
+from typing import Dict, FrozenSet, Iterable
 
+import orjson
+from data.config import CONFIG
+from discord import Client
+from discord.ext import tasks
+from discord.ext.commands import AutoShardedBot, Cog
+from loguru import logger
+from sanic import Sanic, file, json, raw, response
+from sanic.request import Request
+from sanic.router import Route
+from sanic_cors import CORS
+from tuuid import tuuid
+
+from ..patch.help import map_check
+from ..worker import offloaded
+from .github import GithubPushEvent
 
 ADDRESS = CONFIG["webserver"]
 
 DOMAIN = f"api.{CONFIG['domain']}"
+
 
 def check_port_in_use(host: str, port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -35,82 +36,111 @@ def check_port_in_use(host: str, port: int) -> bool:
             return True  # Port is in use
     return False  # Port is available
 
+
 @offloaded
 def check_port(port: int):
     EXCLUDED = ["cloudflar"]
     import subprocess
+
     result = subprocess.run(
-        ['sudo', 'lsof', '-n', f'-i:{port}'],
+        ["sudo", "lsof", "-n", f"-i:{port}"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True
+        text=True,
     )
 
     # Check and print output
     lines = result.stdout.splitlines()
     data = []
-    row_names = ['command', 'pid', 'user', 'fd', 'type', 'device', 'size/off', 'node', 'range', 'status']
-    for i, line in enumerate(lines, start = 1):
+    row_names = [
+        "command",
+        "pid",
+        "user",
+        "fd",
+        "type",
+        "device",
+        "size/off",
+        "node",
+        "range",
+        "status",
+    ]
+    for i, line in enumerate(lines, start=1):
         if i != 1:
-            rows = [m for m in line.split(" ") if m != '']
-            data.append({row_names[num-1]: value for num, value in enumerate(rows, start = 1)})
-    return [d for d in data if d.get('name') not in EXCLUDED]
+            rows = [m for m in line.split(" ") if m != ""]
+            data.append(
+                {row_names[num - 1]: value for num, value in enumerate(rows, start=1)}
+            )
+    return [d for d in data if d.get("name") not in EXCLUDED]
+
 
 @offloaded
 def kill_process(data: list):
     import subprocess
+
     killed_processes = []
     for d in data:
-        if d['pid'] in killed_processes:
+        if d["pid"] in killed_processes:
             continue
         try:
             subprocess.run(
-                [
-                    'kill',
-                    '-9',
-                    str(d['pid'])
-                ],
+                ["kill", "-9", str(d["pid"])],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
             )
-            killed_processes.append(d['pid'])
+            killed_processes.append(d["pid"])
         except Exception:
             pass
     return True
+
 
 #
 class WebServer(Cog):
     def __init__(self, bot: Client):
         self.bot = bot
-        self.app = Sanic(name = f"{self.bot.user.name.title().replace(' ', '-')}")
+        self.app = Sanic(name=f"{self.bot.user.name.title().replace(' ', '-')}")
         cors = CORS(self.app, resources={r"/*": {"origins": "*"}})  # noqa: F841
         self.server = None
         self._commands = None
         self.statistics = None
         self.domain = DOMAIN
         self.assets = {}
-        self.app.add_route(self.lastfm_token, "/lastfm", methods = ["GET", "POST", "OPTIONS"])
-        self.app.add_route(self.index, "/", methods = ["GET", "POST", "OPTIONS"])
-        self.app.add_route(self.statistics_, "/statistics", methods = ["GET", "POST", "OPTIONS"])
-        self.app.add_route(self.status, "/status", methods = ["GET", "POST", "OPTIONS"])
-        self.app.add_route(self.asset, "/asset/<path>", methods = ["GET", "OPTIONS"])
-        self.app.add_route(self.github, "/github", methods = ["POST", "PUT", "GET", "OPTIONS"])
-        self.app.add_route(self.avatar, "/avatar", methods = ["GET", "OPTIONS"])
-        self.app.add_route(self.shards, "/shards", methods = ["GET", "OPTIONS"])
-        self.app.add_route(self.message_logs, "/logs/<identifier>", methods = ["GET", "OPTIONS"])
+        self.app.add_route(
+            self.lastfm_token, "/lastfm", methods=["GET", "POST", "OPTIONS"]
+        )
+        self.app.add_route(self.index, "/", methods=["GET", "POST", "OPTIONS"])
+        self.app.add_route(
+            self.statistics_, "/statistics", methods=["GET", "POST", "OPTIONS"]
+        )
+        self.app.add_route(self.status, "/status", methods=["GET", "POST", "OPTIONS"])
+        self.app.add_route(self.asset, "/asset/<path>", methods=["GET", "OPTIONS"])
+        self.app.add_route(
+            self.github, "/github", methods=["POST", "PUT", "GET", "OPTIONS"]
+        )
+        self.app.add_route(self.avatar, "/avatar", methods=["GET", "OPTIONS"])
+        self.app.add_route(self.shards, "/shards", methods=["GET", "OPTIONS"])
+        self.app.add_route(
+            self.message_logs, "/logs/<identifier>", methods=["GET", "OPTIONS"]
+        )
 
     async def lastfm_token(self, request: Request):
         logger.info(request.url)
-        await self.bot.db.execute("""INSERT INTO lastfm_data (user_id, token) VALUES($1, $2) ON CONFLICT(user_id) DO UPDATE SET token = excluded.token""", request.url.split("?user_id=", 1)[1].split("&", 1)[0], request.url.split("&token=", 1)[1])
+        await self.bot.db.execute(
+            """INSERT INTO lastfm_data (user_id, token) VALUES($1, $2) ON CONFLICT(user_id) DO UPDATE SET token = excluded.token""",
+            request.url.split("?user_id=", 1)[1].split("&", 1)[0],
+            request.url.split("&token=", 1)[1],
+        )
         return json({"message": "Token saved"})
 
-    @tasks.loop(minutes = 1)
+    @tasks.loop(minutes=1)
     async def redump_loop(self):
         logger.info("dumping statistics and commands to the webserver")
         try:
             self._commands = await self.dump_commandsXD()
-            self.statistics = {"guilds": len(self.bot.guilds), "users": sum(self.bot.get_all_members())}
+            self.statistics = {
+                "guilds": len(self.bot.guilds),
+                "users": sum(self.bot.get_all_members()),
+            }
             await self.bot.redis.set("statistics", orjson.dumps(self.statistics))
             await self.bot.redis.set("commands", orjson.dumps(self._commands))
         except Exception as error:
@@ -118,7 +148,7 @@ class WebServer(Cog):
                 traceback.format_exception(type(error), error, error.__traceback__)
             )
             logger.error(
-                f'Unhandled exception in internal background task redump_loop. {type(error).__name__:25} > \n {error} \n {exc}'
+                f"Unhandled exception in internal background task redump_loop. {type(error).__name__:25} > \n {error} \n {exc}"
             )
 
     @Cog.listener("on_guild_remove")
@@ -134,8 +164,8 @@ class WebServer(Cog):
         await self.bot.redis.set("statistics", orjson.dumps(self.statistics))
 
     async def run(self):
-        if check_port_in_use(ADDRESS['host'], ADDRESS['port']):
-            await kill_process(await check_port(ADDRESS['port']))
+        if check_port_in_use(ADDRESS["host"], ADDRESS["port"]):
+            await kill_process(await check_port(ADDRESS["port"]))
         self.server = await self.app.create_server(
             **ADDRESS, return_asyncio_server=True
         )
@@ -148,6 +178,7 @@ class WebServer(Cog):
 
     async def dump_commandsXD(self):
         commands = {"Kick": []}
+
         def get_usage(command):
             if not command.clean_params:
                 return "None"
@@ -180,57 +211,76 @@ class WebServer(Cog):
                 else:
                     permissions = command.perms
                 if len(command.checks) > 0:
-                    permissions.extend([map_check(c).replace("`", "") for c in command.checks if map_check(c)])
+                    permissions.extend(
+                        [
+                            map_check(c).replace("`", "")
+                            for c in command.checks
+                            if map_check(c)
+                        ]
+                    )
                 permissions = list(set(permissions))
                 cog_name = command.extras.get("cog_name", cog_name)
                 commands[cog_name].append(
                     {
                         "name": command.qualified_name,
                         "help": description or "",
-                        "brief": [permissions.replace("_", " ").title()]
-                        if not isinstance(permissions, list)
-                        else [_.replace("_", " ").title() for _ in permissions],
-                        "usage": [f"{k.replace('_', ' or ')}" for k in command.clean_params.keys()] if not command.qualified_name == "help" else ["command or group"],
-                        "example": command.example or ""
+                        "brief": (
+                            [permissions.replace("_", " ").title()]
+                            if not isinstance(permissions, list)
+                            else [_.replace("_", " ").title() for _ in permissions]
+                        ),
+                        "usage": (
+                            [
+                                f"{k.replace('_', ' or ')}"
+                                for k in command.clean_params.keys()
+                            ]
+                            if not command.qualified_name == "help"
+                            else ["command or group"]
+                        ),
+                        "example": command.example or "",
                     }
                 )
         return commands
-    
+
     async def index(self, request: Request):
         if not self._commands or len(list(self._commands.keys())) == 1:
             self._commands = await self.dump_commandsXD()
         return json(self._commands)
-    
+
     async def send_update(self, data: GithubPushEvent):
         channel = self.bot.get_channel(CONFIG["updates_channel_id"])
         if not channel:
             raise TypeError("THE UPDATES CHANNEL ID IS INVALID NIGNOG")
         try:
-            _ = await channel.send(embed = data.to_embed)
+            _ = await channel.send(embed=data.to_embed)
         except Exception:
             _ = None
             pass
         self.bot.dispatch("github_commit", data)
         return _
-    
+
     async def github(self, request: Request):
         import orjson
+
         data = request.json
         data = GithubPushEvent(**data)
-        #ensure_future(self.send_update(data))
+        # ensure_future(self.send_update(data))
         self.bot.dispatch("github_commit", data)
-        return json({"status": "Success"}, status = 200)
-    
+        return json({"status": "Success"}, status=200)
+
     async def statistics_(self, request: Request):
         if not self.statistics:
-            self.statistics = {"guilds": len(self.bot.guilds), "users": sum(self.bot.get_all_members())}
+            self.statistics = {
+                "guilds": len(self.bot.guilds),
+                "users": sum(self.bot.get_all_members()),
+            }
         return json(self.statistics)
 
     async def avatar(self, request: Request):
         byte = await self.bot.user.avatar.read()
-        #return await file("/root/coffin-rewrite/bot/data/avatar.gif", mime_type="image/gif")
+        # return await file("/root/coffin-rewrite/bot/data/avatar.gif", mime_type="image/gif")
         return raw(byte, status=200, content_type="image/png")
-    
+
     async def shards(self, request: Request):
         data = {}
         for sh in self.bot.shards:
@@ -258,7 +308,7 @@ class WebServer(Cog):
             data[str(shard.id)]["uptime"] = int(self.bot.startup_time.timestamp())
             data[str(shard.id)]["guild_ids"] = shard_guilds
         return json(data)
-    
+
     async def status(self, request: Request):
         data = []
         if isinstance(self.bot, AutoShardedBot):
@@ -277,36 +327,57 @@ class WebServer(Cog):
                     }
                 )
         else:
-            data.append({"uptime": self.bot.startup_time.timestamp(), "latency": round(self.bot.latency * 1000), "servers": len(self.bot.guilds), "users": sum(self.bot.get_all_members()), "shard_id": -1})
+            data.append(
+                {
+                    "uptime": self.bot.startup_time.timestamp(),
+                    "latency": round(self.bot.latency * 1000),
+                    "servers": len(self.bot.guilds),
+                    "users": sum(self.bot.get_all_members()),
+                    "shard_id": -1,
+                }
+            )
         return json(data)
-    
+
     async def message_logs(self, request: Request, identifier: str):
         date_format = "%Y-%m-%d %H:%M:%S %Z%z"
-        if not (entry := await self.bot.db.fetchrow("""SELECT guild_id, channel_id, created_at, expires_at, messages FROM message_logs WHERE id = $1""", identifier)):
-            return json({"message": "Log entry not found"}, status = 404)
+        if not (
+            entry := await self.bot.db.fetchrow(
+                """SELECT guild_id, channel_id, created_at, expires_at, messages FROM message_logs WHERE id = $1""",
+                identifier,
+            )
+        ):
+            return json({"message": "Log entry not found"}, status=404)
         else:
             if entry.expires_at:
                 expiration = entry.expires_at.strftime(date_format)
             else:
                 expiration = None
             messages = jsonn.loads(entry.messages)
-            data = {"guild_id": entry.guild_id, "channel_id": entry.channel_id, "created_at": entry.created_at.strftime(date_format), "expires_at": expiration, "messages": messages}
-            return json(data, status = 200)
-
+            data = {
+                "guild_id": entry.guild_id,
+                "channel_id": entry.channel_id,
+                "created_at": entry.created_at.strftime(date_format),
+                "expires_at": expiration,
+                "messages": messages,
+            }
+            return json(data, status=200)
 
     async def asset(self, request: Request, path: str):
         if not (entry := self.assets.get(path.split(".")[0])):
             return json({"message": "File not found"}, status=404)
         image_data, content_type = entry
         return raw(image_data, status=200, content_type=content_type)
-    
+
     async def add_asset(self, b64_string: str, **kwargs):
-        content_type, base64_str = b64_string.split(",")[0].split(":")[1].split(";")[0], b64_string.split(",")[1]
+        content_type, base64_str = (
+            b64_string.split(",")[0].split(":")[1].split(";")[0],
+            b64_string.split(",")[1],
+        )
         image_data = b64decode(base64_str)
         name = kwargs.pop("name", tuuid())
-        await self.bot.redis.set(name, orjson.dumps([image_data, content_type]), ex = 500)
+        await self.bot.redis.set(name, orjson.dumps([image_data, content_type]), ex=500)
         return f"https://api.{self.domain}/asset/{name}"
-    
+
     async def cog_load(self):
         self.redump_loop.start()
         self.bot.loop.create_task(self.run())
@@ -314,6 +385,7 @@ class WebServer(Cog):
     async def cog_unload(self):
         self.redump_loop.stop()
         self.bot.loop.create_task(self.server.close())
+
 
 async def setup(bot: Client):
     await bot.add_cog(WebServer(bot))

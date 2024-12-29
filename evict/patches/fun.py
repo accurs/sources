@@ -1,5 +1,9 @@
-import random, discord, aiohttp, datetime
+import datetime
+import random
 from typing import List
+
+import aiohttp
+import discord
 from discord.ext import commands
 
 

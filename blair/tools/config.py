@@ -1,4 +1,5 @@
-import discord 
+import discord
+
 
 class emoji:
     agree = "<:approve:1271504934831132826>"
@@ -10,8 +11,9 @@ class emoji:
     rp2 = "<:rp2:1263447452288155661>"
     minus = "<:dash:1263447457623441450>"
 
+
 class color:
-    default = 0x123b68
+    default = 0x123B68
     warn = discord.Color.yellow()
     deny = discord.Color.red()
     agree = discord.Color.green()

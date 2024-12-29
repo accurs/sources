@@ -33,9 +33,9 @@
 # ==============================================================================
 
 
-import time
 import base64
 import hashlib
+import time
 
 
 class XBogus:
@@ -236,5 +236,3 @@ class XBogus:
         self.params = "%s&X-Bogus=%s" % (url_path, xb_)
         self.xb = xb_
         return (self.params, self.xb, self.user_agent)
-
-

@@ -5,10 +5,11 @@ from contextlib import suppress
 from datetime import timedelta
 from hashlib import sha1
 from json import JSONDecodeError, dumps, loads
-from core.tools.logging import logger as log
 from types import TracebackType
 from typing import Any, List, Literal, Optional, Union
 
+import config
+from core.tools.logging import logger as log
 from redis.asyncio import Redis as DefaultRedis
 from redis.asyncio.connection import BlockingConnectionPool
 from redis.asyncio.lock import Lock
@@ -17,9 +18,6 @@ from redis.exceptions import NoScriptError
 from redis.retry import Retry
 from redis.typing import AbsExpiryT, EncodableT, ExpiryT, FieldT, KeyT
 from xxhash import xxh32_hexdigest
-
-import config
-
 
 REDIS_URL = f"redis://{config.Redis.host}:{config.Redis.port}/{config.Redis.db}"
 INCREMENT_SCRIPT = b"""

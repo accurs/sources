@@ -3,8 +3,8 @@ import contextlib
 import json
 import time
 from pathlib import Path
-
-from typing import TYPE_CHECKING, List, Mapping, MutableMapping, Optional, Tuple, Union
+from typing import (TYPE_CHECKING, List, Mapping, MutableMapping, Optional,
+                    Tuple, Union)
 
 import aiohttp
 from red_commons.logging import getLogger
@@ -36,7 +36,11 @@ class SpotifyWrapper:
     """Wrapper for the Spotify API."""
 
     def __init__(
-        self, bot: Grief, config: Config, session: aiohttp.ClientSession, cog: Union["Audio", Cog]
+        self,
+        bot: Grief,
+        config: Config,
+        session: aiohttp.ClientSession,
+        cog: Union["Audio", Cog],
     ):
         self.bot = bot
         self.config = config
@@ -99,10 +103,14 @@ class SpotifyWrapper:
         """Make a GET request to the spotify API."""
         if params is None:
             params = {}
-        async with self.session.request("GET", url, params=params, headers=headers) as r:
+        async with self.session.request(
+            "GET", url, params=params, headers=headers
+        ) as r:
             data = await r.json(loads=json.loads)
             if r.status != 200:
-                log.verbose("Issue making GET request to %r: [%s] %r", url, r.status, data)
+                log.verbose(
+                    "Issue making GET request to %r: [%s] %r", url, r.status, data
+                )
             return data
 
     async def update_token(self, new_token: Mapping[str, str]):
@@ -136,7 +144,9 @@ class SpotifyWrapper:
 
     async def get_access_token(self) -> Optional[str]:
         """Get the access_token."""
-        if self.spotify_token and not await self.is_access_token_valid(self.spotify_token):
+        if self.spotify_token and not await self.is_access_token_valid(
+            self.spotify_token
+        ):
             return self.spotify_token["access_token"]
         token = await self.request_access_token()
         if token is None:
@@ -156,13 +166,17 @@ class SpotifyWrapper:
         async with self.session.post(url, data=payload, headers=headers) as r:
             data = await r.json(loads=json.loads)
             if r.status != 200:
-                log.verbose("Issue making POST request to %r: [%s] %r", url, r.status, data)
+                log.verbose(
+                    "Issue making POST request to %r: [%s] %r", url, r.status, data
+                )
             return data
 
     async def make_get_call(self, url: str, params: MutableMapping) -> MutableMapping:
         """Make a Get call to spotify."""
         token = await self.get_access_token()
-        return await self.get(url, params=params, headers={"Authorization": f"Bearer {token}"})
+        return await self.get(
+            url, params=params, headers={"Authorization": f"Bearer {token}"}
+        )
 
     async def get_categories(self, ctx: Context = None) -> List[MutableMapping]:
         """Get the spotify categories."""

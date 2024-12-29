@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, Union, Any
+from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -192,10 +192,10 @@ class SubtitleInfo(BaseModel):
 
 
 class ZoomCover(BaseModel):
-    field_240: Optional[str] = Field(None, alias='240')
-    field_480: Optional[str] = Field(None, alias='480')
-    field_720: Optional[str] = Field(None, alias='720')
-    field_960: Optional[str] = Field(None, alias='960')
+    field_240: Optional[str] = Field(None, alias="240")
+    field_480: Optional[str] = Field(None, alias="480")
+    field_720: Optional[str] = Field(None, alias="720")
+    field_960: Optional[str] = Field(None, alias="960")
 
 
 class Video(BaseModel):

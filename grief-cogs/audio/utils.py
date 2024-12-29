@@ -5,7 +5,6 @@ import platform
 import re
 import sys
 import time
-
 from enum import Enum, unique
 from pathlib import Path
 from typing import MutableMapping, Tuple, Union
@@ -257,7 +256,11 @@ class CacheLevel:
 
 class Notifier:
     def __init__(
-        self, ctx: commands.Context, message: discord.Message, updates: MutableMapping, **kwargs
+        self,
+        ctx: commands.Context,
+        message: discord.Message,
+        updates: MutableMapping,
+        **kwargs,
     ):
         self.context = ctx
         self.message = message
@@ -284,10 +287,14 @@ class Notifier:
             self.color = await self.context.embed_colour()
         embed2 = discord.Embed(
             colour=self.color,
-            title=self.updates.get(key, "").format(num=current, total=total, seconds=seconds),
+            title=self.updates.get(key, "").format(
+                num=current, total=total, seconds=seconds
+            ),
         )
         if seconds and seconds_key:
-            embed2.set_footer(text=self.updates.get(seconds_key, "").format(seconds=seconds))
+            embed2.set_footer(
+                text=self.updates.get(seconds_key, "").format(seconds=seconds)
+            )
         try:
             await self.message.edit(embed=embed2)
             self.last_msg_time = int(time.time())
@@ -346,5 +353,7 @@ def has_unmanaged_server():
 async def replace_p_with_prefix(bot: Grief, message: str) -> str:
     """Replaces [p] with the bot prefix"""
     prefixes = await bot.get_valid_prefixes()
-    prefix = re.sub(rf"<@!?{bot.user.id}>", f"@{bot.user.name}".replace("\\", r"\\"), prefixes[0])
+    prefix = re.sub(
+        rf"<@!?{bot.user.id}>", f"@{bot.user.name}".replace("\\", r"\\"), prefixes[0]
+    )
     return message.replace("[p]", prefix)

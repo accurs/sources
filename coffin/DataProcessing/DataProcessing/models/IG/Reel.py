@@ -184,7 +184,7 @@ class Owner3(BaseModel):
 
 
 class Node4(BaseModel):
-    field__typename: Optional[str] = Field(None, alias='__typename')
+    field__typename: Optional[str] = Field(None, alias="__typename")
     id: Optional[str] = None
     shortcode: Optional[str] = None
     edge_media_preview_like: Optional[EdgeMediaPreviewLike1] = None
@@ -227,7 +227,7 @@ class EdgeRelatedProfiles(BaseModel):
 
 
 class ShortcodeMedia(BaseModel):
-    field__typename: Optional[str] = Field(None, alias='__typename')
+    field__typename: Optional[str] = Field(None, alias="__typename")
     id: Optional[str] = None
     shortcode: Optional[str] = None
     dimensions: Optional[Dimensions] = None

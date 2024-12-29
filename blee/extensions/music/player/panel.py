@@ -1,15 +1,13 @@
 from typing import TYPE_CHECKING, Any
-from discord import Interaction, ButtonStyle
-from discord.ui import View, button, Button
 
-from discord.ui.item import Item
-from pomice import LoopMode, QueueEmpty, Track
 import config
 from config import Emoji
-
+from discord import ButtonStyle, Interaction
+from discord.ui import Button, View, button
+from discord.ui.item import Item
+from pomice import LoopMode, QueueEmpty, Track
 from tools.client.context import Context
 from tools.utilities.text import shorten
-
 
 if TYPE_CHECKING:
     from ..player import Player

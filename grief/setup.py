@@ -22,6 +22,7 @@ def get_requirements(fp):
         if line.strip() and not line.strip().startswith("#")
     ]
 
+
 with open(REQUIREMENTS_FOLDER / "base.txt", encoding="utf-8") as fp:
     install_requires = get_requirements(fp)
 

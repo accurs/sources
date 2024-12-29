@@ -1,6 +1,8 @@
-import aiohttp, humanize
 from io import BytesIO
 from typing import Optional
+
+import aiohttp
+import humanize
 
 
 class Session:

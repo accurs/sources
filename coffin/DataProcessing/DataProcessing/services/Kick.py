@@ -1,12 +1,14 @@
-from .Base import BaseService, cache
-from redis.asyncio import Redis
-from typing import Optional, Any
-from ..models.Kick.channel import KickChannel
+from asyncio import sleep
+from typing import Any, Optional
+
 from aiohttp import ClientSession
 from loguru import logger
 from orjson import JSONDecodeError
+from redis.asyncio import Redis
+
 from .._impl.exceptions import InvalidUser
-from asyncio import sleep
+from ..models.Kick.channel import KickChannel
+from .Base import BaseService, cache
 
 HEADERS = {
     "Accept": "application/json",
@@ -26,15 +28,23 @@ class KickService(BaseService):
     @cache()
     async def get_channel_raw(self: "KickService", username: str, **kwargs: Any):
         async with ClientSession() as session:
-            async with session.get(f"https://kick.com/api/v1/channels/{username}", headers = HEADERS, **kwargs) as response:
+            async with session.get(
+                f"https://kick.com/api/v1/channels/{username}",
+                headers=HEADERS,
+                **kwargs,
+            ) as response:
                 if response.status == 403:
-                    logger.info(f"Cloudflare blocked us from getting {username}'s channel data, retrying in 1 second")
+                    logger.info(
+                        f"Cloudflare blocked us from getting {username}'s channel data, retrying in 1 second"
+                    )
                     await sleep(1)
                     return await self.get_channel_raw(username, **kwargs)
                 data = await response.read()
         return data
-    
-    async def get_channel(self: "KickService", username: str, **kwargs: Any) -> Optional[KickChannel]:
+
+    async def get_channel(
+        self: "KickService", username: str, **kwargs: Any
+    ) -> Optional[KickChannel]:
         data = await self.get_channel_raw(username, **kwargs)
         try:
             if isinstance(data, bytes):
@@ -42,6 +52,7 @@ class KickService(BaseService):
             else:
                 data = KickChannel(**data)
         except JSONDecodeError:
-            raise InvalidUser(f"No **{self.__class__.__name__.replace('Service', '')} User** found under username `{username}`")
+            raise InvalidUser(
+                f"No **{self.__class__.__name__.replace('Service', '')} User** found under username `{username}`"
+            )
         return data
-

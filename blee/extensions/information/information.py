@@ -1,74 +1,39 @@
-from random import choice
-from time import time
-from typing import Optional, Annotated, List, Dict, cast, Literal, Union
-from discord import (
-    Embed,
-    Message,
-    Status,
-    File,
-    Member,
-    User,
-    Guild,
-    Color,
-    PartialEmoji,
-    RateLimited,
-    HTTPException,
-    ui,
-    ButtonStyle,
-    Interaction,
-    NotFound,
-    utils,
-    ActivityType,
-    Streaming,
-)
-from discord.ext.commands import (
-    Cog,
-    Command,
-    Group,
-    group,
-    command,
-    FlagConverter,
-    flag,
-    max_concurrency,
-    Range,
-    has_permissions,
-    cooldown,
-    BucketType,
-)
-from psutil import Process
-from discord.ui import Button, View
-
-from discord.utils import (
-    as_chunks,
-    escape_markdown,
-    escape_mentions,
-    find,
-    format_dt,
-    utcnow,
-)
-from PIL import Image
-from io import BytesIO
-from time import sleep
 import colorsys
-from discord import Emoji as DiscordEmoji
-from re import finditer, compile
 from asyncio import sleep
-import config
-from wand.image import Image as WandImage
-from humanize import ordinal
+from io import BytesIO
 from itertools import groupby
+from random import choice
+from re import compile, finditer
+from time import sleep, time
+from typing import Annotated, Dict, List, Literal, Optional, Union, cast
 
+import config
 from config import Emoji as EMOJIS
+from discord import ActivityType, ButtonStyle, Color, Embed
+from discord import Emoji as DiscordEmoji
+from discord import (File, Guild, HTTPException, Interaction, Member, Message,
+                     NotFound, PartialEmoji, RateLimited, Status, Streaming,
+                     User, ui, utils)
+from discord.ext.commands import (BucketType, Cog, Command, FlagConverter,
+                                  Group, Range, command, cooldown, flag, group,
+                                  has_permissions, max_concurrency)
+from discord.ui import Button, View
+from discord.utils import (as_chunks, escape_markdown, escape_mentions, find,
+                           format_dt, utcnow)
+from humanize import ordinal
+from PIL import Image
+from psutil import Process
 from tools import Bleed
 from tools.client.context import Context
-from tools.utilities import human_timedelta, Plural, human_join
-from tools.utilities.image import dominant
-from tools.converters.color import CustomColorConverter
-from tools.converters.basic import EmojiFinder, Emoji, ImageFinder
-from tools.utilities.shazam import Recognizer
-from tools.utilities.regex import ALL_EMOJI, DISCORD_EMOJI
 from tools.client.views import EmojiButtons
+from tools.converters.basic import Emoji, EmojiFinder, ImageFinder
+from tools.converters.color import CustomColorConverter
+from tools.utilities import Plural, human_join, human_timedelta
+from tools.utilities.image import dominant
 from tools.utilities.image import resize as resize_image
+from tools.utilities.regex import ALL_EMOJI, DISCORD_EMOJI
+from tools.utilities.shazam import Recognizer
+from wand.image import Image as WandImage
 
 
 class Information(Cog):

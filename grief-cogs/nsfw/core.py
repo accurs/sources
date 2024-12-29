@@ -6,19 +6,14 @@ from typing import List, Optional, Union
 
 import aiohttp
 import discord
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils.chat_formatting import bold, box, inline
 
-from .constants import (
-    GOOD_EXTENSIONS,
-    IMGUR_LINKS,
-    MARTINE_API_BASE_URL,
-    NOT_EMBED_DOMAINS,
-    REDDIT_BASEURL,
-    emoji,
-)
+from .constants import (GOOD_EXTENSIONS, IMGUR_LINKS, MARTINE_API_BASE_URL,
+                        NOT_EMBED_DOMAINS, REDDIT_BASEURL, emoji)
 
 _ = Translator("Nsfw", __file__)
 
@@ -41,7 +36,9 @@ class Core(commands.Cog):
                 )
             }
         )
-        self.config = Config.get_conf(self, identifier=512227974893010954, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=512227974893010954, force_registration=True
+        )
         self.config.register_global(use_reddit_api=False)
 
     def cog_unload(self):
@@ -54,7 +51,9 @@ class Core(commands.Cog):
             sub = choice(subs)
             try:
                 if await self.config.use_reddit_api():
-                    async with self.session.get(REDDIT_BASEURL.format(sub=sub)) as reddit:
+                    async with self.session.get(
+                        REDDIT_BASEURL.format(sub=sub)
+                    ) as reddit:
                         if reddit.status != 200:
                             return None, None
                         try:
@@ -86,7 +85,10 @@ class Core(commands.Cog):
                             continue
                         try:
                             data = await resp.json()
-                            return data["data"]["image_url"], data["data"]["subreddit"]["name"]
+                            return (
+                                data["data"]["image_url"],
+                                data["data"]["subreddit"]["name"],
+                            )
                         except (KeyError, json.JSONDecodeError):
                             tries += 1
                             continue
@@ -121,7 +123,9 @@ class Core(commands.Cog):
             + "(Code: {})".format(inline(str(error_code)))
         )
 
-    async def _version_msg(self, ctx: commands.Context, version: str, authors: List[str]):
+    async def _version_msg(
+        self, ctx: commands.Context, version: str, authors: List[str]
+    ):
         """Cog version message."""
         msg = box(
             _("Nsfw cog version: {version}\nAuthors: {authors}").format(
@@ -136,7 +140,9 @@ class Core(commands.Cog):
         try:
             url, subr = await asyncio.wait_for(self._get_imgs(subs=subs), 5)
         except asyncio.TimeoutError:
-            await ctx.send("Failed to get an image. Please try again later. (Timeout error)")
+            await ctx.send(
+                "Failed to get an image. Please try again later. (Timeout error)"
+            )
             return
         if not url:
             return
@@ -176,7 +182,9 @@ class Core(commands.Cog):
         try:
             data = await asyncio.wait_for(self._get_others_imgs(ctx, url=url), 5)
         except asyncio.TimeoutError:
-            await ctx.send("Failed to get an image. Please try again later. (Timeout error)")
+            await ctx.send(
+                "Failed to get an image. Please try again later. (Timeout error)"
+            )
             return
         if not data:
             return
@@ -194,7 +202,9 @@ class Core(commands.Cog):
         )
         return em
 
-    async def _maybe_embed(self, ctx: commands.Context, embed: Union[discord.Embed, str]):
+    async def _maybe_embed(
+        self, ctx: commands.Context, embed: Union[discord.Embed, str]
+    ):
         """
         Function to choose if type of the message is an embed or not
         and if not send a simple message.

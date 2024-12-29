@@ -5,8 +5,10 @@ from discord.ext.commands import CooldownMapping
 # robbed :3
 mappings: Dict[str, CooldownMapping] = {}
 
+
 def handle_bucket(key: Any) -> Any:
     return key
+
 
 def ratelimiter(bucket: str, key: Any, rate: int, per: float) -> Optional[int]:
     if not (mapping := mappings.get(bucket)):

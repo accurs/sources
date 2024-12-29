@@ -1,5 +1,6 @@
-from setuptools import setup
 import os
+
+from setuptools import setup
 
 if os.getenv("READTHEDOCS", False):
     setup(python_requires=">=3.7")

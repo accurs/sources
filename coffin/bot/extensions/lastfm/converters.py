@@ -1,9 +1,10 @@
-from discord.ext.commands import Converter, CommandError
+from typing import List
+
+from discord.ext.commands import CommandError, Converter
+from loguru import logger
+from munch import Munch
 from system.patch.context import Context
 from typing_extensions import Type
-from typing import List
-from munch import Munch
-from loguru import logger
 
 
 class Timeframe(Converter[str]):
@@ -108,19 +109,33 @@ class Artist(Converter[str]):
         lastfm = ctx.bot.get_cog("LastFM")
         if not lastfm:
             raise CommandError("No LastFM Cog Found")
-        
-        if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+
+        if (
+            not hasattr(ctx, "lastfm")
+            and not hasattr(ctx, "_LastFMlastfm")
+            and not hasattr(ctx, "_Contextlastfm")
+        ):
             await lastfm.cog_check(ctx)
-            if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+            if (
+                not hasattr(ctx, "lastfm")
+                and not hasattr(ctx, "_LastFMlastfm")
+                and not hasattr(ctx, "_Contextlastfm")
+            ):
                 logger.info(dir(ctx))
         tracks: List[Munch] = await lastfm.client.request(
             method="user.getrecenttracks",
-            username=getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', getattr(ctx, "lastfm", None))).username,
+            username=getattr(
+                ctx,
+                "_LastFMlastfm",
+                getattr(ctx, "_Contextlastfm", getattr(ctx, "lastfm", None)),
+            ).username,
             slug="recenttracks.track",
             limit=1,
         )
         if not tracks:
-            raise CommandError(f"Recent tracks aren't available for `{getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', None)).username}`!")
+            raise CommandError(
+                f"Recent tracks aren't available for `{getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', None)).username}`!"
+            )
 
         track = tracks[0]
         return track.artist["#text"]
@@ -154,19 +169,33 @@ class Album:
         lastfm = ctx.bot.get_cog("LastFM")
         if not lastfm:
             return
-        if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+        if (
+            not hasattr(ctx, "lastfm")
+            and not hasattr(ctx, "_LastFMlastfm")
+            and not hasattr(ctx, "_Contextlastfm")
+        ):
             await lastfm.cog_check(ctx)
-            if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+            if (
+                not hasattr(ctx, "lastfm")
+                and not hasattr(ctx, "_LastFMlastfm")
+                and not hasattr(ctx, "_Contextlastfm")
+            ):
                 logger.info(dir(ctx))
 
         tracks: List[Munch] = await lastfm.client.request(
             method="user.getrecenttracks",
-            username=getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', getattr(ctx, "lastfm", None))).username,
+            username=getattr(
+                ctx,
+                "_LastFMlastfm",
+                getattr(ctx, "_Contextlastfm", getattr(ctx, "lastfm", None)),
+            ).username,
             slug="recenttracks.track",
             limit=1,
         )
         if not tracks:
-            raise CommandError(f"Recent tracks aren't available for `{getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', None)).username}`!")
+            raise CommandError(
+                f"Recent tracks aren't available for `{getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', None)).username}`!"
+            )
 
         track = tracks[0]
         if not track.album:
@@ -182,9 +211,17 @@ class Album:
         lastfm = ctx.bot.get_cog("LastFM")
         if not lastfm:
             return
-        if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+        if (
+            not hasattr(ctx, "lastfm")
+            and not hasattr(ctx, "_LastFMlastfm")
+            and not hasattr(ctx, "_Contextlastfm")
+        ):
             await lastfm.cog_check(ctx)
-            if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+            if (
+                not hasattr(ctx, "lastfm")
+                and not hasattr(ctx, "_LastFMlastfm")
+                and not hasattr(ctx, "_Contextlastfm")
+            ):
                 logger.info(dir(ctx))
 
         albums: List[Munch] = await lastfm.client.request(
@@ -212,19 +249,33 @@ class Track:
         lastfm = ctx.bot.get_cog("LastFM")
         if not lastfm:
             return
-        if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+        if (
+            not hasattr(ctx, "lastfm")
+            and not hasattr(ctx, "_LastFMlastfm")
+            and not hasattr(ctx, "_Contextlastfm")
+        ):
             await lastfm.cog_check(ctx)
-            if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+            if (
+                not hasattr(ctx, "lastfm")
+                and not hasattr(ctx, "_LastFMlastfm")
+                and not hasattr(ctx, "_Contextlastfm")
+            ):
                 logger.info(dir(ctx))
 
         tracks: List[Munch] = await lastfm.client.request(
             method="user.getrecenttracks",
-            username=getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', getattr(ctx, "lastfm", None))).username,
+            username=getattr(
+                ctx,
+                "_LastFMlastfm",
+                getattr(ctx, "_Contextlastfm", getattr(ctx, "lastfm", None)),
+            ).username,
             slug="recenttracks.track",
             limit=1,
         )
         if not tracks:
-            raise CommandError(f"Recent tracks aren't available for `{getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', None)).username}`!")
+            raise CommandError(
+                f"Recent tracks aren't available for `{getattr(ctx, '_LastFMlastfm', getattr(ctx, '_Contextlastfm', None)).username}`!"
+            )
 
         track = tracks[0]
         return cls(
@@ -237,9 +288,17 @@ class Track:
         lastfm = ctx.bot.get_cog("LastFM")
         if not lastfm:
             return
-        if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+        if (
+            not hasattr(ctx, "lastfm")
+            and not hasattr(ctx, "_LastFMlastfm")
+            and not hasattr(ctx, "_Contextlastfm")
+        ):
             await lastfm.cog_check(ctx)
-            if not hasattr(ctx, "lastfm") and not hasattr(ctx, "_LastFMlastfm") and not hasattr(ctx, "_Contextlastfm"):
+            if (
+                not hasattr(ctx, "lastfm")
+                and not hasattr(ctx, "_LastFMlastfm")
+                and not hasattr(ctx, "_Contextlastfm")
+            ):
                 logger.info(dir(ctx))
 
         tracks: List[Munch] = await lastfm.client.request(

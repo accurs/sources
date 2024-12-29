@@ -3,80 +3,22 @@ import asyncio
 import glob
 import importlib
 import os
-from os import environ
-
 import time
+import traceback
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
 from datetime import datetime, timezone
+from os import environ
 from pathlib import Path
-from typing import Dict, List, Optional
-
-# Third-party imports
-from aiohttp.client_exceptions import (
-    ClientConnectorError,
-    ClientResponseError,
-    ContentTypeError,
-)
-from cashews import cache
-from discord import (
-    AllowedMentions,
-    AuditLogAction,
-    Forbidden,
-    Guild,
-    HTTPException,
-    Interaction,
-    Invite,
-    Intents,
-    Member,
-    ChannelType,
-    Message,
-    NotFound,
-    Status,
-    User,
-)
-from discord.utils import utcnow
-
-from discord.ext.commands import (
-    AutoShardedBot,
-    BadColourArgument,
-    BadFlagArgument,
-    BadInviteArgument,
-    BadLiteralArgument,
-    BadUnionArgument,
-    BucketType,
-    ChannelNotFound,
-    CheckFailure,
-    CommandError,
-    CommandInvokeError,
-    CommandNotFound,
-    CommandOnCooldown,
-    CooldownMapping,
-    DisabledCommand,
-    Flag,
-    FlagError,
-    MemberNotFound,
-    MissingFlagArgument,
-    MissingPermissions,
-    MissingRequiredArgument,
-    MissingRequiredAttachment,
-    MissingRequiredFlag,
-    NotOwner,
-    RangeError,
-    TooManyFlags,
-    UserInputError,
-    UserNotFound,
-    when_mentioned_or,
-    BotMissingPermissions,
-)
-
 from secrets import token_urlsafe
-import traceback
-from redis.asyncio import Redis
-from tornado.ioloop import IOLoop
+from typing import Dict, List, Optional
 
 # Local imports
 import config
+# Third-party imports
+from aiohttp.client_exceptions import (ClientConnectorError,
+                                       ClientResponseError, ContentTypeError)
+from cashews import cache
 from core.client import database
 from core.client.browser import BrowserHandler
 from core.client.cache.redis import Redis
@@ -84,10 +26,29 @@ from core.client.context import Context
 from core.client.database.settings import Settings
 from core.client.network import ClientSession
 from core.managers.help import MonoHelp
-
-from core.tools import Error, codeblock, human_join
 from core.managers.ratelimiter import ratelimiter
+from core.tools import Error, codeblock, human_join
 from core.tools.logging import logger as log
+from discord import (AllowedMentions, AuditLogAction, ChannelType, Forbidden,
+                     Guild, HTTPException, Intents, Interaction, Invite,
+                     Member, Message, NotFound, Status, User)
+from discord.ext.commands import (AutoShardedBot, BadColourArgument,
+                                  BadFlagArgument, BadInviteArgument,
+                                  BadLiteralArgument, BadUnionArgument,
+                                  BotMissingPermissions, BucketType,
+                                  ChannelNotFound, CheckFailure, CommandError,
+                                  CommandInvokeError, CommandNotFound,
+                                  CommandOnCooldown, CooldownMapping,
+                                  DisabledCommand, Flag, FlagError,
+                                  MemberNotFound, MissingFlagArgument,
+                                  MissingPermissions, MissingRequiredArgument,
+                                  MissingRequiredAttachment,
+                                  MissingRequiredFlag, NotOwner, RangeError,
+                                  TooManyFlags, UserInputError, UserNotFound,
+                                  when_mentioned_or)
+from discord.utils import utcnow
+from redis.asyncio import Redis
+from tornado.ioloop import IOLoop
 
 environ["JISHAKU_HIDE"] = "True"
 environ["JISHAKU_RETAIN"] = "True"
@@ -271,7 +232,9 @@ class Mono(AutoShardedBot):
                 if not ratelimiter(
                     bucket=f"{message.channel.id}", key="globalratelimit", rate=3, per=3
                 ):
-                    return await super().process_commands(message)  # Process commands in DMs
+                    return await super().process_commands(
+                        message
+                    )  # Process commands in DMs
 
     async def on_message_edit(self, before: Message, after: Message) -> None:
         if before.content == after.content:

@@ -28,6 +28,8 @@ class Admin(*BASES, Cog):
         """Nothing to delete."""
         return
 
-    async def red_get_data_for_user(self, *args, **kwargs) -> typing.Dict[str, typing.Any]:
+    async def red_get_data_for_user(
+        self, *args, **kwargs
+    ) -> typing.Dict[str, typing.Any]:
         """Nothing to get."""
         return {}

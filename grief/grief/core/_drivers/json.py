@@ -10,7 +10,7 @@ from typing import Any, AsyncIterator, Dict, Optional, Tuple
 from uuid import uuid4
 
 from .. import data_manager, errors
-from .base import BaseDriver, IdentifierData, ConfigCategory
+from .base import BaseDriver, ConfigCategory, IdentifierData
 
 __all__ = ["JsonDriver"]
 
@@ -203,7 +203,9 @@ class JsonDriver(BaseDriver):
 
         async with self._lock:
             for category, all_data in cog_data:
-                splitted_pkey = self._split_primary_key(category, custom_group_data, all_data)
+                splitted_pkey = self._split_primary_key(
+                    category, custom_group_data, all_data
+                )
                 for pkey, data in splitted_pkey:
                     ident_data = IdentifierData(
                         self.cog_name,

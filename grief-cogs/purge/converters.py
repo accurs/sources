@@ -1,8 +1,7 @@
-
-
 from typing import Annotated, Literal, Optional
 
 import discord
+
 from grief.core import commands
 
 
@@ -38,13 +37,16 @@ class PurgeFlags(commands.FlagConverter):
         description="Remove messages from this user", default=None
     )
     contains: Optional[str] = commands.flag(
-        description="Remove messages that contains this string (case sensitive)", default=None
+        description="Remove messages that contains this string (case sensitive)",
+        default=None,
     )
     prefix: Optional[str] = commands.flag(
-        description="Remove messages that start with this string (case sensitive)", default=None
+        description="Remove messages that start with this string (case sensitive)",
+        default=None,
     )
     suffix: Optional[str] = commands.flag(
-        description="Remove messages that end with this string (case sensitive)", default=None
+        description="Remove messages that end with this string (case sensitive)",
+        default=None,
     )
     after: Annotated[Optional[int], Snowflake] = commands.flag(
         description="Search for messages that come after this message ID", default=None
@@ -55,9 +57,15 @@ class PurgeFlags(commands.FlagConverter):
     bot: bool = commands.flag(
         description="Remove messages from bots (not webhooks!)", default=False
     )
-    webhooks: bool = commands.flag(description="Remove messages from webhooks", default=False)
-    embeds: bool = commands.flag(description="Remove messages that have embeds", default=False)
-    files: bool = commands.flag(description="Remove messages that have attachments", default=False)
+    webhooks: bool = commands.flag(
+        description="Remove messages from webhooks", default=False
+    )
+    embeds: bool = commands.flag(
+        description="Remove messages that have embeds", default=False
+    )
+    files: bool = commands.flag(
+        description="Remove messages that have attachments", default=False
+    )
     emoji: bool = commands.flag(
         description="Remove messages that have custom emoji", default=False
     )

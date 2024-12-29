@@ -1,9 +1,11 @@
-from system.worker import offloaded
 from io import BytesIO
-from PIL.Image import Image
 from typing import Union
-from discord import User, Member
+
 import aiohttp
+from discord import Member, User
+from PIL.Image import Image
+from system.worker import offloaded
+
 
 async def get_dominant_color(u: Union[Member, User, str]) -> str:
     @offloaded
@@ -27,13 +29,15 @@ async def get_dominant_color(u: Union[Member, User, str]) -> str:
         _ = await get(_u)
     return f"#{_}"
 
+
 @offloaded
 def get_hash(image: Union[bytes, Image, BytesIO]):
     import random
     import string
-    from PIL import Image
     from io import BytesIO
+
     import imagehash
+    from PIL import Image
 
     def unique_id(lenght: int = 6):
         return "".join(random.choices(string.ascii_letters + string.digits, k=lenght))

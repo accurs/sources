@@ -1,4 +1,5 @@
 """Module for the Sticky cog."""
+
 import asyncio
 import contextlib
 import logging
@@ -6,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional, cast
 
 import discord
+
 from grief.core import Config, checks, commands
 from grief.core.utils.menus import start_adding_reactions
 from grief.core.utils.predicates import MessagePredicate, ReactionPredicate

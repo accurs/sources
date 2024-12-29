@@ -1,6 +1,5 @@
-
-
 from discord import Webhook
+
 from grief.core.commands import BadArgument, Context, Converter
 
 from .errors import WebhookNotMatched

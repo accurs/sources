@@ -4,19 +4,19 @@ import pkgutil
 from importlib import import_module, invalidate_caches
 from importlib.machinery import ModuleSpec
 from pathlib import Path
-from typing import Union, List, Optional
+from typing import List, Optional, Union
+
+import discord
 
 import grief.cogs
 from grief.core.commands import positive_int
 from grief.core.utils import deduplicate_iterables
-import discord
 
 from . import commands
 from .config import Config
-from .i18n import Translator, cog_i18n
 from .data_manager import cog_data_path
-
-from .utils.chat_formatting import box, pagify, humanize_list, inline
+from .i18n import Translator, cog_i18n
+from .utils.chat_formatting import box, humanize_list, inline, pagify
 
 __all__ = ("CogManager", "CogManagerUI")
 
@@ -58,7 +58,9 @@ class CogManager:
 
         """
         return deduplicate_iterables(
-            [await self.install_path()], await self.user_defined_paths(), [self.CORE_PATH]
+            [await self.install_path()],
+            await self.user_defined_paths(),
+            [self.CORE_PATH],
         )
 
     async def install_path(self) -> Path:
@@ -219,7 +221,9 @@ class CogManager:
                 name=name,
             )
 
-        real_paths = list(map(str, [await self.install_path()] + await self.user_defined_paths()))
+        real_paths = list(
+            map(str, [await self.install_path()] + await self.user_defined_paths())
+        )
 
         for finder, module_name, _ in pkgutil.iter_modules(real_paths):
             if name == module_name:
@@ -349,7 +353,9 @@ class CogManagerUI(commands.Cog):
         Add a path to the list of available cog paths.
         """
         if not path.is_dir():
-            await ctx.send(_("That path does not exist or does not point to a valid directory."))
+            await ctx.send(
+                _("That path does not exist or does not point to a valid directory.")
+            )
             return
 
         try:
@@ -399,7 +405,9 @@ class CogManagerUI(commands.Cog):
 
     @commands.command(usage="<from> <to>")
     @commands.is_owner()
-    async def reorderpath(self, ctx: commands.Context, from_: positive_int, to: positive_int):
+    async def reorderpath(
+        self, ctx: commands.Context, from_: positive_int, to: positive_int
+    ):
         """
         Reorders paths internally to allow discovery of different cogs.
         """
@@ -445,7 +453,9 @@ class CogManagerUI(commands.Cog):
 
         install_path = await ctx.bot._cog_mgr.install_path()
         await ctx.send(
-            _("The bot will install new cogs to the `{}` directory.").format(install_path)
+            _("The bot will install new cogs to the `{}` directory.").format(
+                install_path
+            )
         )
 
     @commands.command()
@@ -464,8 +474,12 @@ class CogManagerUI(commands.Cog):
         unloaded = sorted(list(unloaded), key=str.lower)
 
         if await ctx.embed_requested():
-            loaded = _("**grief has {} loaded:**\n").format(len(loaded)) + ", ".join(loaded)
-            unloaded = _("**grief has {} unloaded:**\n").format(len(unloaded)) + ", ".join(unloaded)
+            loaded = _("**grief has {} loaded:**\n").format(len(loaded)) + ", ".join(
+                loaded
+            )
+            unloaded = _("**grief has {} unloaded:**\n").format(
+                len(unloaded)
+            ) + ", ".join(unloaded)
 
             for page in pagify(loaded, delims=[", ", "\n"], page_length=1800):
                 if page.startswith(", "):

@@ -1,8 +1,10 @@
-import discord
+import asyncio
 import datetime
 import typing
-import asyncio
 from collections import deque
+
+import discord
+
 from ...classes.exceptions import SnipeError
 
 
@@ -11,7 +13,9 @@ class Snipe(object):
         self.bot = bot
         self.data = {}
 
-    async def add_entry(self: "Snipe", type: str, message: typing.Union[discord.Message, tuple]):
+    async def add_entry(
+        self: "Snipe", type: str, message: typing.Union[discord.Message, tuple]
+    ):
         if isinstance(message, discord.Message):
             entry: dict = {
                 "timestamp": message.created_at.timestamp(),
@@ -43,9 +47,9 @@ class Snipe(object):
             entry: dict = {
                 "timestamp": datetime.datetime.now().timestamp(),
                 "message": message[1].message.jump_url,
-                "reaction": str(message[1])
-                if message[1].is_custom_emoji()
-                else str(message[1]),
+                "reaction": (
+                    str(message[1]) if message[1].is_custom_emoji() else str(message[1])
+                ),
                 "author": {
                     "id": message[0].id,
                     "name": message[0].name,
@@ -76,9 +80,10 @@ class Snipe(object):
             self.data[f"rs-{message.channel.id}"].insert(0, entry)
 
         return entry
-    
 
-    async def add_reaction_history(self, payload: discord.RawReactionActionEvent) -> bool:
+    async def add_reaction_history(
+        self, payload: discord.RawReactionActionEvent
+    ) -> bool:
         if payload.user_id == self.bot.user.id:
             return
         guild_id = int(payload.guild_id)
@@ -86,12 +91,20 @@ class Snipe(object):
         channel_id = int(payload.channel_id)
         emoji = str(payload.emoji)
         ts = datetime.datetime.now()
-        await self.bot.db.execute("""INSERT INTO reaction_history (guild_id, channel_id, message_id, reaction, user_id, ts) VALUES($1, $2, $3, $4, $5, $6) ON CONFLICT(guild_id, channel_id, message_id, reaction, user_id) DO UPDATE SET ts = excluded.ts""", guild_id, channel_id, message_id, emoji, int(payload.user_id), ts)
+        await self.bot.db.execute(
+            """INSERT INTO reaction_history (guild_id, channel_id, message_id, reaction, user_id, ts) VALUES($1, $2, $3, $4, $5, $6) ON CONFLICT(guild_id, channel_id, message_id, reaction, user_id) DO UPDATE SET ts = excluded.ts""",
+            guild_id,
+            channel_id,
+            message_id,
+            emoji,
+            int(payload.user_id),
+            ts,
+        )
         return True
 
-        
-
-    async def get_entry(self: "Snipe", channel: discord.TextChannel, type: str, index: int):
+    async def get_entry(
+        self: "Snipe", channel: discord.TextChannel, type: str, index: int
+    ):
         if type.lower() == "snipe":
             if data := self.data.get(f"s-{channel.id}"):
                 if len(data) < index - 1:
@@ -142,7 +155,9 @@ class Snipe(object):
                     f"There are **no reaction removals** for **{channel.mention}**"
                 )
 
-    async def delete_entry(self: "Snipe", channel: discord.TextChannel, type: str, index: int):
+    async def delete_entry(
+        self: "Snipe", channel: discord.TextChannel, type: str, index: int
+    ):
         if type.lower() == "snipe":
             if data := self.data.get(f"s-{channel.id}"):
                 self.data[f"s-{channel.id}"].remove(data[index - 1])

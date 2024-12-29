@@ -1,8 +1,7 @@
-
-
 from typing import Optional
 
 import discord
+
 from grief.core.commands import Context
 
 from .errors import InvalidWebhook
@@ -55,7 +54,9 @@ class Session:
         except InvalidWebhook:
             await self.close()
 
-    async def channel_send(self, content: str = None, **kwargs) -> Optional[discord.Message]:
+    async def channel_send(
+        self, content: str = None, **kwargs
+    ) -> Optional[discord.Message]:
         if self.channel.permissions_for(self.channel.guild.me).send_messages:
             await self.channel.send(content, **kwargs)
 

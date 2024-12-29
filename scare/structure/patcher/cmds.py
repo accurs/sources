@@ -1,5 +1,4 @@
 from discord.ext import commands
-
 from structure.managers import Context
 
 

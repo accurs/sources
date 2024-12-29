@@ -1,17 +1,17 @@
-import discord
-
-from grief.core.bot import Grief
-from grief.core import Config, commands
-from grief.core.i18n import Translator, cog_i18n
-from grief.core.utils.chat_formatting import bold, box, inline
-
-import json
 import asyncio
-import aiohttp
+import json
 from random import choice
 from typing import Optional, Union
 
-from .constants import REDDIT_BASEURL, IMGUR_LINKS, GOOD_EXTENSIONS
+import aiohttp
+import discord
+
+from grief.core import Config, commands
+from grief.core.bot import Grief
+from grief.core.i18n import Translator, cog_i18n
+from grief.core.utils.chat_formatting import bold, box, inline
+
+from .constants import GOOD_EXTENSIONS, IMGUR_LINKS, REDDIT_BASEURL
 
 _ = Translator("Image", __file__)
 
@@ -91,8 +91,8 @@ class Core(commands.Cog):
                         await ctx.send(embed=await self._nsfw_channel_check(ctx))
                         return None, None, None, None, None
                 except (KeyError, ValueError, json.decoder.JSONDecodeError):
-                    url, subr, author, title, post = await self._get_reddit_imgs_details(
-                        ctx, sub=sub
+                    url, subr, author, title, post = (
+                        await self._get_reddit_imgs_details(ctx, sub=sub)
                     )
                 if url.startswith(IMGUR_LINKS):
                     url = url + ".png"
@@ -103,8 +103,8 @@ class Core(commands.Cog):
                 elif not url.endswith(GOOD_EXTENSIONS) and not url.startswith(
                     "https://gfycat.com"
                 ):
-                    url, subr, author, title, post = await self._get_reddit_imgs_details(
-                        ctx, sub=sub
+                    url, subr, author, title, post = (
+                        await self._get_reddit_imgs_details(ctx, sub=sub)
                     )
             return url, subr, author, title, post
         except aiohttp.client_exceptions.ClientConnectionError:
@@ -157,7 +157,8 @@ class Core(commands.Cog):
         """Message for non-nsfw channels."""
         if not ctx.message.channel.is_nsfw():
             em = discord.Embed(
-                title="\N{LOCK} " + _("NSFW content in the link. Blocked in non-NSFW channel."),
+                title="\N{LOCK} "
+                + _("NSFW content in the link. Blocked in non-NSFW channel."),
                 color=0xAA0000,
             )
         return em
@@ -167,7 +168,9 @@ class Core(commands.Cog):
     ):
         """Function to make the embed for all Reddit API images."""
         try:
-            url, subr = await asyncio.wait_for(self._get_reddit_imgs_simple(ctx, sub=sub), 3)
+            url, subr = await asyncio.wait_for(
+                self._get_reddit_imgs_simple(ctx, sub=sub), 3
+            )
         except asyncio.TimeoutError:
             await ctx.send(
                 "Failed to get an image.\n"
@@ -195,7 +198,9 @@ class Core(commands.Cog):
                 _("Here is {name} gif ... ")
                 + emoji
                 + _("\n\nRequested by {req} • From {r}\n{url}")
-            ).format(name=name, req=bold(ctx.author.display_name), r=bold(subr), url=url)
+            ).format(
+                name=name, req=bold(ctx.author.display_name), r=bold(subr), url=url
+            )
         return em
 
     async def _make_embed_reddit_details(
@@ -250,7 +255,13 @@ class Core(commands.Cog):
         return em
 
     async def _make_embed_others_simple(
-        self, ctx: commands.Context, name: str, emoji: str, url: str, img_arg: str, source: str
+        self,
+        ctx: commands.Context,
+        name: str,
+        emoji: str,
+        url: str,
+        img_arg: str,
+        source: str,
     ):
         """Function to make the embed for all others APIs images."""
         data = await self._get_others_imgs(ctx, facts=False, img_url=url)
@@ -260,7 +271,9 @@ class Core(commands.Cog):
             color=await ctx.embed_colour(),
             title=(_("Here is {name} image ... ") + emoji).format(name=name),
             description=bold(
-                _("[Link if you don't see image]({url})").format(url=data["img"][img_arg]),
+                _("[Link if you don't see image]({url})").format(
+                    url=data["img"][img_arg]
+                ),
                 escape_formatting=False,
             ),
             image=data["img"][img_arg],
@@ -282,7 +295,9 @@ class Core(commands.Cog):
         source: str,
     ):
         """Function to make the embed for all others APIs images."""
-        data = await self._get_others_imgs(ctx, facts=True, img_url=img_url, facts_url=facts_url)
+        data = await self._get_others_imgs(
+            ctx, facts=True, img_url=img_url, facts_url=facts_url
+        )
         if not data:
             return
         em = await self._embed(
@@ -301,7 +316,9 @@ class Core(commands.Cog):
         )
         return em
 
-    async def _maybe_embed(self, ctx: commands.Context, embed: Union[discord.Embed, str]):
+    async def _maybe_embed(
+        self, ctx: commands.Context, embed: Union[discord.Embed, str]
+    ):
         """
         Function to choose if type of the message is an embed or not
         and if not send a simple message.
@@ -315,7 +332,12 @@ class Core(commands.Cog):
             return
 
     async def _send_reddit_msg(
-        self, ctx: commands.Context, name: str, emoji: str, sub: list, details: bool = False
+        self,
+        ctx: commands.Context,
+        name: str,
+        emoji: str,
+        sub: list,
+        details: bool = False,
     ):
         """Main function called in all Reddit API commands."""
         if details:

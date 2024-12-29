@@ -12,30 +12,17 @@ import tarfile
 import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import (
-    AsyncIterable,
-    AsyncIterator,
-    Awaitable,
-    Callable,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Union,
-    TypeVar,
-    TYPE_CHECKING,
-    Tuple,
-    cast,
-)
+from typing import (TYPE_CHECKING, AsyncIterable, AsyncIterator, Awaitable,
+                    Callable, Generator, Iterable, Iterator, List, Optional,
+                    Tuple, TypeVar, Union, cast)
 
 import aiohttp
 import discord
-from packaging.requirements import Requirement
 import rapidfuzz
+from packaging.requirements import Requirement
+from red_commons.logging import TRACE, VERBOSE
 from rich.progress import ProgressColumn
 from rich.progress_bar import ProgressBar
-from red_commons.logging import VERBOSE, TRACE
 
 from grief import VersionInfo
 from grief.core import data_manager
@@ -248,7 +235,9 @@ async def create_backup(dest: Path = Path.home()) -> Optional[Path]:
         json.dump(repo_output, fs, indent=4)
     instance_file = data_path / "instance.json"
     with instance_file.open("w") as fs:
-        json.dump({data_manager.instance_name(): data_manager.basic_config}, fs, indent=4)
+        json.dump(
+            {data_manager.instance_name(): data_manager.basic_config}, fs, indent=4
+        )
     for f in data_path.glob("**/*"):
         if not any(ex in str(f) for ex in exclusions) and f.is_file():
             to_backup.append(f)
@@ -299,7 +288,10 @@ async def send_to_owners_with_preprocessor(
                 exc_info=_exc,
             )
 
-    sends = [wrapped_send(bot, d, content, content_preprocessor, **kwargs) for d in destinations]
+    sends = [
+        wrapped_send(bot, d, content, content_preprocessor, **kwargs)
+        for d in destinations
+    ]
     await asyncio.gather(*sends)
 
 
@@ -311,14 +303,20 @@ async def send_to_owners_with_prefix_replaced(bot: Grief, content: str, **kwargs
     is replaced with a clean prefix for each specific destination.
     """
 
-    async def preprocessor(bot: Grief, destination: discord.abc.Messageable, content: str) -> str:
+    async def preprocessor(
+        bot: Grief, destination: discord.abc.Messageable, content: str
+    ) -> str:
         prefixes = await bot.get_valid_prefixes(getattr(destination, "guild", None))
         prefix = re.sub(
-            rf"<@!?{bot.user.id}>", f"@{bot.user.name}".replace("\\", r"\\"), prefixes[0]
+            rf"<@!?{bot.user.id}>",
+            f"@{bot.user.name}".replace("\\", r"\\"),
+            prefixes[0],
         )
         return content.replace("[p]", prefix)
 
-    await send_to_owners_with_preprocessor(bot, content, content_preprocessor=preprocessor)
+    await send_to_owners_with_preprocessor(
+        bot, content, content_preprocessor=preprocessor
+    )
 
 
 def expected_version(current: str, expected: str) -> bool:
@@ -326,7 +324,9 @@ def expected_version(current: str, expected: str) -> bool:
     return Requirement(f"x{expected}").specifier.contains(current, prereleases=True)
 
 
-async def fetch_latest_red_version_info() -> Tuple[Optional[VersionInfo], Optional[str]]:
+async def fetch_latest_red_version_info() -> (
+    Tuple[Optional[VersionInfo], Optional[str]]
+):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get("https://pypi.org/pypi/Red-DiscordBot/json") as r:

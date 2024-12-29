@@ -1,10 +1,11 @@
 import random
-import string
-import orjson
-from typing import Any, List, Dict, Union
-from html import unescape
-from urllib.parse import unquote
 import re
+import string
+from html import unescape
+from typing import Any, Dict, List, Union
+from urllib.parse import unquote
+
+import orjson
 
 REGEX_STRIP_TAGS = re.compile("<.*?>")
 
@@ -24,15 +25,17 @@ def _extract_vqd(html_bytes: bytes, keywords: str) -> str:
             pass
     raise Exception(f"_extract_vqd() {keywords=} Could not extract vqd.")
 
+
 def get_random_string(length: int) -> str:
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=int(length)))
+    return "".join(random.choices(string.ascii_letters + string.digits, k=int(length)))
+
 
 def json_loads(obj: Union[str, bytes]) -> Any:
     try:
         return orjson.loads(obj)
     except Exception as ex:
         raise Exception(f"{type(ex).__name__}: {ex}") from ex
-    
+
 
 def _normalize(raw_html: str) -> str:
     """Strip HTML tags from the raw_html string."""
@@ -52,5 +55,7 @@ def _text_extract_json(html_bytes: bytes, keywords: str) -> List[Dict[str, str]]
         result: list[dict[str, str]] = json_loads(data)
         return result
     except Exception as ex:
-        raise Exception(f"_text_extract_json() {keywords=} {type(ex).__name__}: {ex}") from ex
+        raise Exception(
+            f"_text_extract_json() {keywords=} {type(ex).__name__}: {ex}"
+        ) from ex
     raise Exception(f"_text_extract_json() {keywords=} return None")

@@ -1,6 +1,6 @@
 import abc
 import enum
-from typing import Tuple, Dict, Any, Union, List, AsyncIterator, Type
+from typing import Any, AsyncIterator, Dict, List, Tuple, Type, Union
 
 import rich.progress
 
@@ -151,7 +151,13 @@ class IdentifierData:
         return tuple(
             filter(
                 None,
-                (self.cog_name, self.uuid, self.category, *self.primary_key, *self.identifiers),
+                (
+                    self.cog_name,
+                    self.uuid,
+                    self.category,
+                    *self.primary_key,
+                    *self.identifiers,
+                ),
             )
         )
 
@@ -289,13 +295,17 @@ class BaseDriver(abc.ABC):
             rich.progress.TimeElapsedColumn(),
         ) as progress:
             cog_count = 0
-            tid = progress.add_task("[yellow]Migrating", completed=cog_count, total=cog_count + 1)
+            tid = progress.add_task(
+                "[yellow]Migrating", completed=cog_count, total=cog_count + 1
+            )
             async for cog_name, cog_id in cls.aiter_cogs():
                 progress.console.print(f"Working on {cog_name}...")
 
                 this_driver = cls(cog_name, cog_id)
                 other_driver = new_driver_cls(cog_name, cog_id)
-                custom_group_data = all_custom_group_data.get(cog_name, {}).get(cog_id, {})
+                custom_group_data = all_custom_group_data.get(cog_name, {}).get(
+                    cog_id, {}
+                )
                 exported_data = await this_driver.export_data(custom_group_data)
                 await other_driver.import_data(exported_data, custom_group_data)
 
@@ -373,10 +383,14 @@ class BaseDriver(abc.ABC):
         return ret
 
     async def import_data(
-        self, cog_data: List[Tuple[str, Dict[str, Any]]], custom_group_data: Dict[str, int]
+        self,
+        cog_data: List[Tuple[str, Dict[str, Any]]],
+        custom_group_data: Dict[str, int],
     ) -> None:
         for category, all_data in cog_data:
-            splitted_pkey = self._split_primary_key(category, custom_group_data, all_data)
+            splitted_pkey = self._split_primary_key(
+                category, custom_group_data, all_data
+            )
             for pkey, data in splitted_pkey:
                 ident_data = IdentifierData(
                     self.cog_name,

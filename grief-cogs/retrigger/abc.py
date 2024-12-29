@@ -9,15 +9,9 @@ if TYPE_CHECKING:
     from grief.core import Config, commands
     from grief.core.bot import Grief
 
-    from .converters import (
-        ChannelUserRole,
-        MultiResponse,
-        TimedeltaConverter,
-        Trigger,
-        TriggerExists,
-        ValidEmoji,
-        ValidRegex,
-    )
+    from .converters import (ChannelUserRole, MultiResponse,
+                             TimedeltaConverter, Trigger, TriggerExists,
+                             ValidEmoji, ValidRegex)
 
 
 class ReTriggerMixin(ABC):
@@ -40,15 +34,21 @@ class ReTriggerMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _no_trigger(self, ctx: Union[commands.Context, discord.Interaction], trigger: str):
+    async def _no_trigger(
+        self, ctx: Union[commands.Context, discord.Interaction], trigger: str
+    ):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _already_exists(self, ctx: Union[commands.Context, discord.Interaction], name: str):
+    async def _already_exists(
+        self, ctx: Union[commands.Context, discord.Interaction], name: str
+    ):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _trigger_set(self, ctx: Union[commands.Context, discord.Interaction], name: str):
+    async def _trigger_set(
+        self, ctx: Union[commands.Context, discord.Interaction], name: str
+    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -100,7 +100,9 @@ class ReTriggerMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def toggle_ocr_search(self, ctx: commands.Context, trigger: TriggerExists) -> None:
+    async def toggle_ocr_search(
+        self, ctx: commands.Context, trigger: TriggerExists
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -108,17 +110,24 @@ class ReTriggerMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def toggle_filename_search(self, ctx: commands.Context, trigger: TriggerExists) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def set_reply(
-        self, ctx: commands.Context, trigger: TriggerExists, set_to: Optional[bool] = None
+    async def toggle_filename_search(
+        self, ctx: commands.Context, trigger: TriggerExists
     ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    async def set_tts(self, ctx: commands.Context, trigger: TriggerExists, set_to: bool) -> None:
+    async def set_reply(
+        self,
+        ctx: commands.Context,
+        trigger: TriggerExists,
+        set_to: Optional[bool] = None,
+    ) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def set_tts(
+        self, ctx: commands.Context, trigger: TriggerExists, set_to: bool
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -140,11 +149,15 @@ class ReTriggerMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def toggle_check_edits(self, ctx: commands.Context, trigger: TriggerExists) -> None:
+    async def toggle_check_edits(
+        self, ctx: commands.Context, trigger: TriggerExists
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    async def edit_text(self, ctx: commands.Context, trigger: TriggerExists, *, text: str) -> None:
+    async def edit_text(
+        self, ctx: commands.Context, trigger: TriggerExists, *, text: str
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -164,7 +177,9 @@ class ReTriggerMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def edit_ignore_commands(self, ctx: commands.Context, trigger: TriggerExists) -> None:
+    async def edit_ignore_commands(
+        self, ctx: commands.Context, trigger: TriggerExists
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -175,27 +190,40 @@ class ReTriggerMixin(ABC):
 
     @abstractmethod
     async def edit_roles(
-        self, ctx: commands.Context, trigger: TriggerExists, roles: commands.Greedy[discord.Role]
+        self,
+        ctx: commands.Context,
+        trigger: TriggerExists,
+        roles: commands.Greedy[discord.Role],
     ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
     async def edit_reactions(
-        self, ctx: commands.Context, trigger: TriggerExists, emojis: commands.Greedy[ValidEmoji]
+        self,
+        ctx: commands.Context,
+        trigger: TriggerExists,
+        emojis: commands.Greedy[ValidEmoji],
     ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    async def enable_trigger(self, ctx: commands.Context, trigger: TriggerExists) -> None:
+    async def enable_trigger(
+        self, ctx: commands.Context, trigger: TriggerExists
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    async def disable_trigger(self, ctx: commands.Context, trigger: TriggerExists) -> None:
+    async def disable_trigger(
+        self, ctx: commands.Context, trigger: TriggerExists
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
     async def list(
-        self, ctx: commands.Context, guild_id: Optional[int] = None, trigger: TriggerExists = None
+        self,
+        ctx: commands.Context,
+        guild_id: Optional[int] = None,
+        trigger: TriggerExists = None,
     ) -> None:
         raise NotImplementedError()
 
@@ -224,7 +252,9 @@ class ReTriggerMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def dm(self, ctx: commands.Context, name: str, regex: ValidRegex, *, text: str) -> None:
+    async def dm(
+        self, ctx: commands.Context, name: str, regex: ValidRegex, *, text: str
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -246,7 +276,9 @@ class ReTriggerMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def randomimage(self, ctx: commands.Context, name: str, regex: ValidRegex) -> None:
+    async def randomimage(
+        self, ctx: commands.Context, name: str, regex: ValidRegex
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -277,7 +309,9 @@ class ReTriggerMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def publish(self, ctx: commands.Context, name: str, regex: ValidRegex) -> None:
+    async def publish(
+        self, ctx: commands.Context, name: str, regex: ValidRegex
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod

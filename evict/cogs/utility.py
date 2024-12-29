@@ -1,22 +1,26 @@
-import datetime, discord, os, arrow, uwuipy, humanfriendly, asyncio
-
-from discord.ext.commands import Cog
-from discord.ext import commands
-from discord import Embed, TextChannel, Member, User, Role
-from deep_translator import GoogleTranslator
-from aiogtts import aiogTTS
-from typing import Union
+import asyncio
+import datetime
+import os
 from io import BytesIO
+from typing import Union
 
-from patches.lastfm import LastFMHandler as Handler
-from patches.permissions import Permissions
-from patches.classes import Timezone, TimeConverter
-from events.tasks import is_there_a_reminder, bday_task, reminder_task
-from patches import functions
-
+import arrow
+import discord
+import humanfriendly
+import uwuipy
+from aiogtts import aiogTTS
 from bot.bot import Evict
 from bot.helpers import EvictContext
-from bot.managers.emojis import Emojis, Colors
+from bot.managers.emojis import Colors, Emojis
+from deep_translator import GoogleTranslator
+from discord import Embed, Member, Role, TextChannel, User
+from discord.ext import commands
+from discord.ext.commands import Cog
+from events.tasks import bday_task, is_there_a_reminder, reminder_task
+from patches import functions
+from patches.classes import TimeConverter, Timezone
+from patches.lastfm import LastFMHandler as Handler
+from patches.permissions import Permissions
 
 DISCORD_API_LINK = "https://discord.com/api/invite/"
 
@@ -1031,13 +1035,8 @@ class utility(commands.Cog):
                     "You already have a reminder set in this channel. Use `{ctx.clean_prefix}reminder stop` to cancel the reminder"
                 )
 
-    @commands.command(
-        description="see all the members in the server"
-    )
-    
-    async def members(
-        self, ctx: EvictContext
-    ):
+    @commands.command(description="see all the members in the server")
+    async def members(self, ctx: EvictContext):
 
         member_list = [
             f"**{member}** joined <t:{int(member.joined_at.timestamp())}:f> (<t:{int(member.joined_at.timestamp())}:R>)"
@@ -1046,6 +1045,7 @@ class utility(commands.Cog):
         ]
 
         await ctx.index(member_list, f"members [{len(ctx.guild.members[1:])}]")
+
 
 async def setup(bot: Evict):
     await bot.add_cog(utility(bot))

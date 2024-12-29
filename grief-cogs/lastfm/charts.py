@@ -3,6 +3,7 @@ from io import BytesIO
 
 import discord
 from PIL import Image, ImageDraw, ImageFile, ImageFont
+
 from grief.core import commands
 from grief.core.utils import AsyncIter
 from grief.core.utils.chat_formatting import escape
@@ -33,7 +34,8 @@ class ChartMixin(MixinMeta):
                 return img
 
     @command_fm.command(
-        name="chart", usage="[album | artist | recent | track] [timeframe] [width]x[height]"
+        name="chart",
+        usage="[album | artist | recent | track] [timeframe] [width]x[height]",
     )
     @commands.max_concurrency(1, commands.BucketType.user)
     async def command_chart(self, ctx, *args):
@@ -45,7 +47,9 @@ class ChartMixin(MixinMeta):
         conf = await self.config.user(ctx.author).all()
         self.check_if_logged_in(conf)
         arguments = self.parse_chart_arguments(args)
-        if arguments["width"] + arguments["height"] > 31:  # TODO: Figure out a reasonable value.
+        if (
+            arguments["width"] + arguments["height"] > 31
+        ):  # TODO: Figure out a reasonable value.
             return await ctx.send(
                 "Size is too big! Chart `width` + `height` total must not exceed `31`"
             )
@@ -65,7 +69,9 @@ class ChartMixin(MixinMeta):
             if arguments["method"] == "user.gettopalbums":
                 chart_type = "top album"
                 albums = data["topalbums"]["album"]
-                async for album in AsyncIter(albums[: arguments["width"] * arguments["height"]]):
+                async for album in AsyncIter(
+                    albums[: arguments["width"] * arguments["height"]]
+                ):
                     name = album["name"]
                     artist = album["artist"]["name"]
                     plays = album["playcount"]
@@ -94,11 +100,16 @@ class ChartMixin(MixinMeta):
                 artists = data["topartists"]["artist"]
                 if self.login_token:
                     scraped_images = await self.scrape_artists_for_chart(
-                        ctx, conf["lastfm_username"], arguments["period"], arguments["amount"]
+                        ctx,
+                        conf["lastfm_username"],
+                        arguments["period"],
+                        arguments["amount"],
                     )
                 else:
                     scraped_images = [NO_IMAGE_PLACEHOLDER] * arguments["amount"]
-                iterator = AsyncIter(artists[: arguments["width"] * arguments["height"]])
+                iterator = AsyncIter(
+                    artists[: arguments["width"] * arguments["height"]]
+                )
                 async for i, artist in iterator.enumerate():
                     name = artist["name"]
                     plays = artist["playcount"]
@@ -127,7 +138,9 @@ class ChartMixin(MixinMeta):
                 tracks = data["recenttracks"]["track"]
                 if isinstance(tracks, dict):
                     tracks = [tracks]
-                async for track in AsyncIter(tracks[: arguments["width"] * arguments["height"]]):
+                async for track in AsyncIter(
+                    tracks[: arguments["width"] * arguments["height"]]
+                ):
                     name = track["name"]
                     artist = track["artist"]["#text"]
                     if track["image"][3]["#text"] in self.chart_data:
@@ -153,18 +166,25 @@ class ChartMixin(MixinMeta):
                 chart_type = "top tracks"
                 tracks = data["toptracks"]["track"]
                 scraped_images = await self.scrape_artists_for_chart(
-                    ctx, conf["lastfm_username"], arguments["period"], arguments["amount"]
+                    ctx,
+                    conf["lastfm_username"],
+                    arguments["period"],
+                    arguments["amount"],
                 )
                 if isinstance(tracks, dict):
                     tracks = [tracks]
-                async for track in AsyncIter(tracks[: arguments["width"] * arguments["height"]]):
+                async for track in AsyncIter(
+                    tracks[: arguments["width"] * arguments["height"]]
+                ):
                     name = track["name"]
                     artist = track["artist"]["name"]
                     plays = track["playcount"]
                     if name in self.chart_data:
                         chart_img = self.chart_data[name]
                     else:
-                        chart_img = await self.get_img(await self.scrape_artist_image(artist, ctx))
+                        chart_img = await self.get_img(
+                            await self.scrape_artist_image(artist, ctx)
+                        )
                         self.chart_data[name] = chart_img
                     chart.append(
                         (

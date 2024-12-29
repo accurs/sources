@@ -1,12 +1,19 @@
-from discord.abc import Messageable as DefaultMessageable
-from discord import Embed, AllowedMentions, Message, HTTPException, TextChannel as DefaultTextChannel, Thread as DefaultThread
-from discord.ext.commands import UserInputError
-from typing import Any, Union
 import contextlib
-from .context import ConfirmView
-from data.config import CONFIG
+from typing import Any, Union
 
-async def confirm(self: Union[DefaultTextChannel, DefaultThread], message: str, **kwargs: Any):
+from data.config import CONFIG
+from discord import AllowedMentions, Embed, HTTPException, Message
+from discord import TextChannel as DefaultTextChannel
+from discord import Thread as DefaultThread
+from discord.abc import Messageable as DefaultMessageable
+from discord.ext.commands import UserInputError
+
+from .context import ConfirmView
+
+
+async def confirm(
+    self: Union[DefaultTextChannel, DefaultThread], message: str, **kwargs: Any
+):
     view = ConfirmView(self)
     message = await self.fail(message, view=view, **kwargs)
 
@@ -18,7 +25,10 @@ async def confirm(self: Union[DefaultTextChannel, DefaultThread], message: str, 
         raise UserInputError("Prompt was denied.")
     return view.value
 
-async def success(self: Union[DefaultTextChannel, DefaultThread], text: str, *args: Any, **kwargs: Any) -> Message:
+
+async def success(
+    self: Union[DefaultTextChannel, DefaultThread], text: str, *args: Any, **kwargs: Any
+) -> Message:
     emoji = CONFIG["emojis"]["success"]
     color = CONFIG["colors"]["success"]
     author = kwargs.pop("author", None)
@@ -26,9 +36,7 @@ async def success(self: Union[DefaultTextChannel, DefaultThread], text: str, *ar
         a = ""
     else:
         a = author.mention
-    embed = Embed(
-        color=color, description=f"{emoji} {a}: {text}"
-    )
+    embed = Embed(color=color, description=f"{emoji} {a}: {text}")
     if footer := kwargs.pop("footer", None):
         if isinstance(footer, tuple):
             embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -45,12 +53,18 @@ async def success(self: Union[DefaultTextChannel, DefaultThread], text: str, *ar
         delete_after = None
     if kwargs.get("return_embed", False) is True:
         return embed
-    return await self.send(embed=embed, delete_after=delete_after, view=kwargs.pop("view", None), **kwargs)
+    return await self.send(
+        embed=embed, delete_after=delete_after, view=kwargs.pop("view", None), **kwargs
+    )
+
 
 async def dump_history(self: Union[DefaultTextChannel, DefaultThread]):
     return [i.to_dict() async for i in self.history(limit=None)]
 
-async def fail(self: Union[DefaultTextChannel, DefaultThread], text: str, *args: Any, **kwargs: Any) -> Message:
+
+async def fail(
+    self: Union[DefaultTextChannel, DefaultThread], text: str, *args: Any, **kwargs: Any
+) -> Message:
     emoji = CONFIG["emojis"]["fail"]
     color = CONFIG["colors"]["fail"]
     author = kwargs.pop("author", None)
@@ -58,9 +72,7 @@ async def fail(self: Union[DefaultTextChannel, DefaultThread], text: str, *args:
         a = ""
     else:
         a = author.mention
-    embed = Embed(
-        color=color, description=f"{emoji} {a}: {text}"
-    )
+    embed = Embed(color=color, description=f"{emoji} {a}: {text}")
     if footer := kwargs.pop("footer", None):
         if isinstance(footer, tuple):
             embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -77,10 +89,14 @@ async def fail(self: Union[DefaultTextChannel, DefaultThread], text: str, *args:
         delete_after = None
     if kwargs.get("return_embed", False) is True:
         return embed
-    return await self.send(embed=embed, delete_after=delete_after, view=kwargs.pop("view", None), **kwargs)
+    return await self.send(
+        embed=embed, delete_after=delete_after, view=kwargs.pop("view", None), **kwargs
+    )
 
 
-async def warning(self: Union[DefaultTextChannel, DefaultThread], text: str, *args: Any, **kwargs: Any) -> Message:
+async def warning(
+    self: Union[DefaultTextChannel, DefaultThread], text: str, *args: Any, **kwargs: Any
+) -> Message:
     emoji = CONFIG["emojis"]["warning"]
     color = CONFIG["colors"]["warning"]
     author = kwargs.pop("author", None)
@@ -88,9 +104,7 @@ async def warning(self: Union[DefaultTextChannel, DefaultThread], text: str, *ar
         a = ""
     else:
         a = author.mention
-    embed = Embed(
-        color=color, description=f"{emoji} {a}: {text}"
-    )
+    embed = Embed(color=color, description=f"{emoji} {a}: {text}")
     if footer := kwargs.pop("footer", None):
         if isinstance(footer, tuple):
             embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -107,18 +121,21 @@ async def warning(self: Union[DefaultTextChannel, DefaultThread], text: str, *ar
         delete_after = None
     if kwargs.get("return_embed", False) is True:
         return embed
-    return await self.send(embed=embed, delete_after=delete_after, view=kwargs.pop("view", None), **kwargs)
+    return await self.send(
+        embed=embed, delete_after=delete_after, view=kwargs.pop("view", None), **kwargs
+    )
 
-async def normal(self: Union[DefaultTextChannel, DefaultThread], text: str, *args: Any, **kwargs: Any) -> Message:
+
+async def normal(
+    self: Union[DefaultTextChannel, DefaultThread], text: str, *args: Any, **kwargs: Any
+) -> Message:
     color = CONFIG["colors"].get("bleed", 0x2B2D31)
     author = kwargs.pop("author", None)
     if author is None:
         a = ""
     else:
         a = author.mention
-    embed = Embed(
-        color=color, description=f"{a}: {text}"
-    )
+    embed = Embed(color=color, description=f"{a}: {text}")
     if footer := kwargs.pop("footer", None):
         if isinstance(footer, tuple):
             embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -135,9 +152,14 @@ async def normal(self: Union[DefaultTextChannel, DefaultThread], text: str, *arg
         delete_after = None
     if kwargs.get("return_embed", False) is True:
         return embed
-    return await self.send(embed=embed, delete_after=delete_after, view=kwargs.pop("view", None), **kwargs)
+    return await self.send(
+        embed=embed, delete_after=delete_after, view=kwargs.pop("view", None), **kwargs
+    )
 
-async def reply(self: Union[DefaultTextChannel, DefaultThread], *args: Any, **kwargs: Any) -> Message:
+
+async def reply(
+    self: Union[DefaultTextChannel, DefaultThread], *args: Any, **kwargs: Any
+) -> Message:
     if kwargs.pop("mention", True) is False:
-        kwargs["allowed_mentions"] = AllowedMentions(replied_user = False)
+        kwargs["allowed_mentions"] = AllowedMentions(replied_user=False)
     return await super().reply(*args, **kwargs)

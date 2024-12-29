@@ -3,6 +3,7 @@ import string
 import urllib.parse
 from collections.abc import Sequence
 from typing import Union
+
 from xxhash import xxh128_hexdigest
 
 

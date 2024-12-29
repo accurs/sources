@@ -11,34 +11,18 @@ from bs4 import BeautifulSoup
 from discord import Colour
 from discord import Member as DefaultMember
 from discord import PartialEmoji, Role
-from discord.ext.commands import (
-    BadArgument,
-    ColorConverter,
-    Converter,
-    MemberConverter,
-    RoleConverter,
-    RoleNotFound,
-    TextChannelConverter,
-)
+from discord.ext.commands import (BadArgument, ColorConverter, Converter,
+                                  MemberConverter, RoleConverter, RoleNotFound,
+                                  TextChannelConverter)
 from discord.ext.commands.context import Context
 from humanfriendly import parse_timespan
 from pytz import timezone
+from structure.managers import Context
 from timezonefinder import TimezoneFinder
 
-from structure.managers import Context
-
-from .models import (
-    CashAppProfile,
-    Error,
-    RobloxUser,
-    SnapchatUser,
-    TikTokUser,
-    WeatherCondition,
-    WeatherFeelsLike,
-    WeatherModel,
-    WeatherTemperature,
-    WeatherWind,
-)
+from .models import (CashAppProfile, Error, RobloxUser, SnapchatUser,
+                     TikTokUser, WeatherCondition, WeatherFeelsLike,
+                     WeatherModel, WeatherTemperature, WeatherWind)
 
 
 class RobloxTool:

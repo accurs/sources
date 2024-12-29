@@ -1,18 +1,18 @@
-import discord
-import aiohttp
 import re
 
-from discord.ext       import commands
+import aiohttp
+import discord
+from config import color, emoji
+from discord.ext import commands
+from system.base.context import Context
 
-from system.base.context     import Context
-from config      import emoji, color
 
 class AutoMod(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-# AUTOMOD
-  
+    # AUTOMOD
+
     @commands.group(description="Filter out bad words", aliases=["am", "filter"])
     @commands.has_permissions(manage_guild=True)
     async def automod(self, ctx: commands.Context):
@@ -25,8 +25,12 @@ class AutoMod(commands.Cog):
         if word is None:
             await ctx.warn("**You're** missing text")
             return
-        
-        await self.client.pool.execute("INSERT INTO automod (guild_id, word) VALUES ($1, $2)", ctx.guild.id, word.lower())
+
+        await self.client.pool.execute(
+            "INSERT INTO automod (guild_id, word) VALUES ($1, $2)",
+            ctx.guild.id,
+            word.lower(),
+        )
         await ctx.agree(f"**Started** filtering `{word}`")
         await self.update_word_rule(ctx.guild)
 
@@ -36,13 +40,17 @@ class AutoMod(commands.Cog):
         if word is None:
             await ctx.warn("**You're** missing text")
             return
-        
-        await self.client.pool.execute("DELETE FROM automod WHERE guild_id = $1 AND word = $2", ctx.guild.id, word.lower())
+
+        await self.client.pool.execute(
+            "DELETE FROM automod WHERE guild_id = $1 AND word = $2",
+            ctx.guild.id,
+            word.lower(),
+        )
         await ctx.agree(f"**Stopped** filtering `{word}`")
         await self.update_word_rule(ctx.guild)
 
-# ANTILINK
-  
+    # ANTILINK
+
     @commands.group(description="Filter out harmful links or invites", aliases=["al"])
     @commands.has_permissions(manage_guild=True)
     async def antilink(self, ctx: commands.Context):
@@ -52,65 +60,110 @@ class AutoMod(commands.Cog):
     @antilink.command(description="Filter out discord invites")
     @commands.has_permissions(manage_guild=True)
     async def invites(self, ctx: commands.Context):
-        pattern = r'discord\.gg/'
-        await self.client.pool.execute("INSERT INTO antilink (guild_id, pattern) VALUES ($1, $2)", ctx.guild.id, pattern)
+        pattern = r"discord\.gg/"
+        await self.client.pool.execute(
+            "INSERT INTO antilink (guild_id, pattern) VALUES ($1, $2)",
+            ctx.guild.id,
+            pattern,
+        )
         await ctx.agree(f"**Started** filtering discord invites")
         await self.update_invites(ctx.guild, [pattern])
 
     @antilink.command(description="Filter out links")
     @commands.has_permissions(manage_guild=True)
     async def links(self, ctx: commands.Context):
-        pattern = r'https?://(?:www\.)?[a-zA-Z0-9./]+'
-        await self.client.pool.execute("INSERT INTO antilink (guild_id, pattern) VALUES ($1, $2)", ctx.guild.id, pattern)
+        pattern = r"https?://(?:www\.)?[a-zA-Z0-9./]+"
+        await self.client.pool.execute(
+            "INSERT INTO antilink (guild_id, pattern) VALUES ($1, $2)",
+            ctx.guild.id,
+            pattern,
+        )
         await ctx.agree(f"**Started** filtering links")
         await self.update_links(ctx.guild, [pattern])
 
-# EVENTS
-  
+    # EVENTS
+
     async def update_word_rule(self, guild: discord.Guild):
-        words = await self.client.pool.fetch("SELECT word FROM automod WHERE guild_id = $1", guild.id)
-        words = [row['word'] for row in words]
+        words = await self.client.pool.fetch(
+            "SELECT word FROM automod WHERE guild_id = $1", guild.id
+        )
+        words = [row["word"] for row in words]
         name = "Myth automod words"
         trigger_type = 1
         metadata = {"keyword_filter": words}
-        action = [{"type": 1, "metadata": {"custom_message": "Message blocked by Myth due to having a filtered word"}}]
+        action = [
+            {
+                "type": 1,
+                "metadata": {
+                    "custom_message": "Message blocked by Myth due to having a filtered word"
+                },
+            }
+        ]
         await self.update_rule(guild, name, trigger_type, metadata, action)
 
     async def update_invites(self, guild: discord.Guild, patterns: list):
         name = "Myth automod invites"
         trigger_type = 1
         metadata = {"regex_patterns": patterns}
-        action = [{"type": 1, "metadata": {"custom_message": "Message blocked by Myth due to having an invite"}}]
+        action = [
+            {
+                "type": 1,
+                "metadata": {
+                    "custom_message": "Message blocked by Myth due to having an invite"
+                },
+            }
+        ]
         await self.update_rule(guild, name, trigger_type, metadata, action)
 
     async def update_links(self, guild: discord.Guild, patterns: list):
         name = "Myth automod links"
         trigger_type = 1
         metadata = {"regex_patterns": patterns}
-        action = [{"type": 1, "metadata": {"custom_message": "Message blocked by Myth due to having a link"}}]
+        action = [
+            {
+                "type": 1,
+                "metadata": {
+                    "custom_message": "Message blocked by Myth due to having a link"
+                },
+            }
+        ]
         await self.update_rule(guild, name, trigger_type, metadata, action)
 
-    async def update_rule(self, guild: discord.Guild, rule_name: str, trigger_type: int, trigger_metadata: dict, actions: list):
+    async def update_rule(
+        self,
+        guild: discord.Guild,
+        rule_name: str,
+        trigger_type: int,
+        trigger_metadata: dict,
+        actions: list,
+    ):
         payload = {
             "name": rule_name,
             "event_type": 1,
             "trigger_type": trigger_type,
             "trigger_metadata": trigger_metadata,
             "actions": actions,
-            "enabled": True
+            "enabled": True,
         }
         headers = {
             "Authorization": f"Bot {self.client.http.token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://discord.com/api/v10/guilds/{guild.id}/auto-moderation/rules", headers=headers) as response:
+            async with session.get(
+                f"https://discord.com/api/v10/guilds/{guild.id}/auto-moderation/rules",
+                headers=headers,
+            ) as response:
                 if response.status == 200:
                     rules = await response.json()
                     for rule in rules:
-                        if rule['name'] == rule_name:
-                            async with session.patch(f"https://discord.com/api/v10/guilds/{guild.id}/auto-moderation/rules/{rule['id']}", headers=headers, json=payload) as update_response:
+                        if rule["name"] == rule_name:
+                            async with session.patch(
+                                f"https://discord.com/api/v10/guilds/{guild.id}/auto-moderation/rules/{rule['id']}",
+                                headers=headers,
+                                json=payload,
+                            ) as update_response:
                                 if update_response.status in (200, 201):
                                     return True
                                 else:
@@ -118,13 +171,18 @@ class AutoMod(commands.Cog):
                                     print(f"Failed to update rule: {error_message}")
                                     return False
 
-            async with session.post(f"https://discord.com/api/v10/guilds/{guild.id}/auto-moderation/rules", headers=headers, json=payload) as response:
+            async with session.post(
+                f"https://discord.com/api/v10/guilds/{guild.id}/auto-moderation/rules",
+                headers=headers,
+                json=payload,
+            ) as response:
                 if response.status in (200, 201):
                     return True
                 else:
                     error_message = await response.text()
                     print(f"Failed to create rule: {error_message}")
                     return False
+
 
 async def setup(client):
     await client.add_cog(AutoMod(client))

@@ -1,9 +1,9 @@
-
 import enum
 import logging
 from typing import TYPE_CHECKING, List, Optional
 
 import discord
+
 from grief.core import commands
 
 if TYPE_CHECKING:
@@ -11,9 +11,11 @@ if TYPE_CHECKING:
 
 LOG = logging.getLogger("grief.customhelp")
 
+
 class ComponentType(enum.IntEnum):
     MENU = 0
     ARROW = 1
+
 
 class MenuView(discord.ui.View):
     def __init__(self, uid, config, callback):
@@ -33,7 +35,9 @@ class MenuView(discord.ui.View):
             )
             return False
 
-    @discord.ui.button(label="Accept", emoji="✅", style=discord.ButtonStyle.success, row=2)
+    @discord.ui.button(
+        label="Accept", emoji="✅", style=discord.ButtonStyle.success, row=2
+    )
     async def accept(self, interaction, button):
         if self.values.count(None) == len(self.values):
             return await self.message.edit(content="No value selected.")
@@ -50,13 +54,16 @@ class MenuView(discord.ui.View):
 
         self.stop()
 
-    @discord.ui.button(label="Cancel", emoji="✖", style=discord.ButtonStyle.danger, row=2)
+    @discord.ui.button(
+        label="Cancel", emoji="✖", style=discord.ButtonStyle.danger, row=2
+    )
     async def cancel(self, interaction, button):
         await self.message.edit(content="Selection cancelled.", view=None)
         self.stop()
 
     async def on_timeout(self) -> None:
         await self.message.edit(content="Selection timed out.", view=None)
+
 
 class MenuPicker(discord.ui.Select):
     view: MenuView
@@ -74,6 +81,7 @@ class MenuPicker(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         self.view.values[self.menutype] = self.values[0]
         await interaction.response.defer()
+
 
 class BaseInteractionMenu(discord.ui.View):
     def __init__(self, *, hmenu):
@@ -148,7 +156,10 @@ class ReactButton(discord.ui.Button):
         self.custom_id: str
 
     async def callback(self, interaction: discord.Interaction):
-        await self.view.hmenu.category_react_action(self.view.ctx, interaction, self.custom_id)
+        await self.view.hmenu.category_react_action(
+            self.view.ctx, interaction, self.custom_id
+        )
+
 
 class SelectMenuHelpBar(discord.ui.Select):
     view: BaseInteractionMenu
@@ -163,7 +174,9 @@ class SelectMenuHelpBar(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await self.view.hmenu.category_react_action(self.view.ctx, interaction, self.values[0])
+        await self.view.hmenu.category_react_action(
+            self.view.ctx, interaction, self.values[0]
+        )
 
 
 class SelectArrowHelpBar(discord.ui.Select):
@@ -180,5 +193,7 @@ class SelectArrowHelpBar(discord.ui.Select):
     async def callback(self, interaction):
         if self.values:
             if self.values[0] == "Home":
-                await self.view.hmenu.category_react_action(self.view.ctx, interaction, "home")
+                await self.view.hmenu.category_react_action(
+                    self.view.ctx, interaction, "home"
+                )
             await self.view.hmenu.arrow_emoji_button[self.values[0]](interaction)

@@ -1,10 +1,10 @@
-
 import datetime
 from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, List, Literal, Optional
 
 import discord
 from discord.channel import TextChannel
+
 from grief.core import Config, app_commands, commands
 from grief.core.bot import Grief
 
@@ -18,11 +18,13 @@ log = get_vex_logger(__name__)
 
 class ButtonPoll(commands.Cog):
     """Create polls using buttons."""
-    
+
     def __init__(self, bot: Grief) -> None:
         self.bot = bot
 
-        self.config: Config = Config.get_conf(self, 418078199982063626, force_registration=True)
+        self.config: Config = Config.get_conf(
+            self, 418078199982063626, force_registration=True
+        )
         self.config.register_guild(
             poll_settings={},
             poll_user_choices={},
@@ -76,9 +78,13 @@ class ButtonPoll(commands.Cog):
     @commands.bot_has_permissions(embed_links=True)
     @commands.mod_or_permissions(manage_messages=True)
     @commands.hybrid_command(name="poll")
-    @app_commands.describe(chan="Optional channel. If not specified, the current channel is used.")
+    @app_commands.describe(
+        chan="Optional channel. If not specified, the current channel is used."
+    )
     @app_commands.default_permissions(manage_messages=True)
-    async def buttonpoll(self, ctx: commands.Context, chan: Optional[TextChannel] = None):
+    async def buttonpoll(
+        self, ctx: commands.Context, chan: Optional[TextChannel] = None
+    ):
         """
         Start a button-based poll
 
@@ -89,7 +95,7 @@ class ButtonPoll(commands.Cog):
         channel = chan or ctx.channel
         if TYPE_CHECKING:
             assert isinstance(channel, (TextChannel, discord.Thread))
-            assert isinstance(ctx.author, discord.Member) 
+            assert isinstance(ctx.author, discord.Member)
 
         # these two checks are untested :)
         if not channel.permissions_for(ctx.author).send_messages:

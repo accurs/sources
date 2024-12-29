@@ -3,12 +3,11 @@ import re
 from contextlib import suppress
 
 from asyncpg import UniqueViolationError
+from core.client.context import Context
+from core.tools import CompositeMetaClass, MixinMeta, quietly_delete
 from discord import Embed, HTTPException, Message, TextChannel
 from discord.ext.commands import Cog, group, has_permissions
 from xxhash import xxh32_hexdigest
-
-from core.tools import CompositeMetaClass, MixinMeta, quietly_delete
-from core.client.context import Context
 
 IMAGE_PATTERN = re.compile(
     r"(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*\.(?:png|jpe?g|gif))(?:\?([^#]*))?(?:#(.*))?"

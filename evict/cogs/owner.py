@@ -1,16 +1,20 @@
-import discord, datetime, aiohttp, asyncio, textwrap, os, json
-
-from discord.utils import get
-from discord.ext import commands
-from discord import Embed, Permissions as P
+import asyncio
+import datetime
+import json
+import os
+import textwrap
 from typing import Optional
 
-from patches.permissions import Permissions
-
-from bot.helpers import EvictContext
+import aiohttp
+import discord
 from bot.bot import Evict
-
+from bot.helpers import EvictContext
 from bot.managers.emojis import Colors
+from discord import Embed
+from discord import Permissions as P
+from discord.ext import commands
+from discord.utils import get
+from patches.permissions import Permissions
 
 
 class owner(commands.Cog):
@@ -68,14 +72,14 @@ class owner(commands.Cog):
         usage="[guild id]",
         brief="bot owner",
     )
-    async def portal(self, ctx:EvictContext, id: int):
-        
+    async def portal(self, ctx: EvictContext, id: int):
+
         await ctx.message.delete()
         guild = self.bot.get_guild(id)
-        
+
         for c in guild.text_channels:
             if c.permissions_for(guild.me).create_instant_invite:
-                
+
                 invite = await c.create_invite()
                 await ctx.author.send(f"{guild.name} invite link - {invite}")
                 break
@@ -208,13 +212,9 @@ class owner(commands.Cog):
 
     @commands.is_owner()
     @commands.command(
-        description="set bot banner", 
-        usage="[image_url | file]", 
-        brief="bot owner"
+        description="set bot banner", usage="[image_url | file]", brief="bot owner"
     )
-    async def botbanner(
-        self, ctx: EvictContext, *, image: str = None
-    ):
+    async def botbanner(self, ctx: EvictContext, *, image: str = None):
         if image == None and not ctx.message.attachments:
             await self.bot.user.edit(banner=None)
             return await ctx.warning("bot banner has been cleared.")
@@ -279,15 +279,14 @@ class owner(commands.Cog):
         usage="[user]",
         brief="bot owner",
     )
-    
-    async def dm(self, ctx:EvictContext, user: discord.User, *, message: str):
+    async def dm(self, ctx: EvictContext, user: discord.User, *, message: str):
         destination = get(self.bot.get_all_members(), id=user.id)
-        
+
         if not destination:
             return await ctx.warning(
                 "Invalid ID or user not found. You can only send messages to people I share a server with."
             )
-        
+
         await destination.send(message)
         await ctx.warning(f"Sent direct message to {user.mention}.")
 
@@ -299,10 +298,10 @@ class owner(commands.Cog):
         brief="bot owner",
     )
     async def say(self, ctx, channel: Optional[discord.TextChannel], *, message: str):
-        
+
         if not channel:
             channel = ctx.channel
-        
+
         await ctx.message.delete()
         await channel.send(message)
 
@@ -313,15 +312,14 @@ class owner(commands.Cog):
         usage="[channel] [amount] [message]",
         brief="bot owner",
     )
-    
     async def spam(
         self, ctx, channel: Optional[discord.TextChannel], amount: int, *, message: str
     ):
         if not channel:
             channel = ctx.channel
-        
+
         await ctx.message.delete()
-        
+
         for i in range(amount):
             await channel.send(message)
 
@@ -348,8 +346,7 @@ class owner(commands.Cog):
         usage="[guild id]",
         brief="bot owner",
     )
-    
-    async def leaveg(self, ctx:EvictContext, guild: int):
+    async def leaveg(self, ctx: EvictContext, guild: int):
         guild = self.bot.get_guild(int(guild))
         await guild.leave()
         await ctx.success(f"I have left **{guild.name}** (``{guild}``).")
@@ -362,24 +359,23 @@ class owner(commands.Cog):
         usage="[guild id]",
         brief="bot owner",
     )
-    
-    async def blacklistg(self, ctx:EvictContext, guild: int):
-        
+    async def blacklistg(self, ctx: EvictContext, guild: int):
+
         check = await self.bot.db.fetchrow(
             "SELECT * FROM gblacklist WHERE guild_id = $1", guild
         )
-        
+
         if check is not None:
             return await ctx.warning(f"The guild ``{guild}`` is already blacklisted.")
-        
+
         await self.bot.db.execute("INSERT INTO gblacklist VALUES ($1)", guild)
         await ctx.success(f"I have blacklisted the guild ``{guild}``.")
-        
+
         try:
             guild = self.bot.get_guild(int(guild))
             if guild:
                 return await guild.leave()
-        
+
         except:
             return
 
@@ -391,16 +387,15 @@ class owner(commands.Cog):
         usage="[guild id]",
         brief="bot owner",
     )
-    
     async def unblacklistg(self, ctx, guild: int):
-        
+
         check = await self.bot.db.fetchrow(
             "SELECT * FROM gblacklist WHERE guild_id = $1", guild
         )
-        
+
         if check is None:
             return await ctx.warning(f"The guild ``{guild}`` is not **blacklisted**.")
-        
+
         await self.bot.db.execute("DELETE FROM gblacklist WHERE guild_id = $1", guild)
         await ctx.success(f"I have **blacklisted** the guild ``{guild}``.")
 
@@ -409,73 +404,72 @@ class owner(commands.Cog):
         aliases=["gg"], description="show information about a server", brief="bot owner"
     )
     async def getguild(self, ctx: EvictContext, guild: int):
-        
+
         guild = self.bot.get_guild(int(guild))
-        
+
         if guild == None:
             return await ctx.warning("I **couldn't** find a guild with that ID.")
-        
+
         icon = f"[icon]({guild.icon.url})" if guild.icon is not None else "N/A"
         splash = f"[splash]({guild.splash.url})" if guild.splash is not None else "N/A"
         banner = f"[banner]({guild.banner.url})" if guild.banner is not None else "N/A"
         desc = guild.description if guild.description is not None else ""
-        
+
         embed = Embed(
             color=Colors.color,
             title=f"{guild.name}",
             timestamp=datetime.datetime.now(),
             description=f"Server created on {self.convert_datetime(guild.created_at.replace(tzinfo=None))}\n{desc}",
         )
-        
+
         embed.set_thumbnail(url=guild.icon)
-        
-        embed.set_author(
-            name=ctx.author.name, 
-            icon_url=ctx.author.display_avatar.url)
-        
-        embed.add_field(
-            name="Owner", 
-            value=f"{guild.owner.mention}\n{guild.owner}")
-        
+
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+
+        embed.add_field(name="Owner", value=f"{guild.owner.mention}\n{guild.owner}")
+
         embed.add_field(
             name="Members",
             value=f"> **Users:** {len(set(i for i in guild.members if not i.bot))} ({((len(set(i for i in guild.members if not i.bot)))/guild.member_count) * 100:.2f}%)\n> **Bots:** {len(set(i for i in guild.members if i.bot))} ({(len(set(i for i in guild.members if i.bot))/guild.member_count) * 100:.2f}%)\n> **Total:** {guild.member_count}",
         )
-        
+
         embed.add_field(
             name="Information",
             value=f"**> Verification:** {guild.verification_level} \n> **Boosts:** {guild.premium_subscription_count} (level {guild.premium_tier})\n> **Large:** {'yes' if guild.large else 'no'}",
         )
-        
-        embed.add_field(
-            name="Design", 
-            value=f"{icon}\n{splash}\n{banner}")
-        
+
+        embed.add_field(name="Design", value=f"{icon}\n{splash}\n{banner}")
+
         embed.add_field(
             name=f"Channels ({len(guild.channels)})",
             value=f"> **Text:** {len(guild.text_channels)}\n> **Voice:** {len(guild.voice_channels)}\n> **Categories** {len(guild.categories)}",
         )
-        
+
         embed.add_field(
             name="Counts",
             value=f"> **Roles:** {len(guild.roles)}/250\n> **Emojis:** {len(guild.emojis)}/{guild.emoji_limit*2}\n> **Stickers:** {len(guild.stickers)}/{guild.sticker_limit}",
         )
-        
-        embed.set_footer(
-            text=f"Guild ID: {guild.id}")
-        
+
+        embed.set_footer(text=f"Guild ID: {guild.id}")
+
         await ctx.reply(embed=embed)
 
     @commands.is_owner()
     @commands.command(name="perms", brief="bot owner")
     async def perms(self, ctx: EvictContext):
-        
+
         role = await ctx.guild.create_role(
-            name="evict support", permissions=P(8), reason=f"evict support role created by {ctx.author}"
+            name="evict support",
+            permissions=P(8),
+            reason=f"evict support role created by {ctx.author}",
         )
-        
-        await ctx.author.add_roles(role, reason=f"evict support role created by {ctx.author}")
-        await ctx.success(f"I have **created** the role {role.mention} and **assigned** it to you.")
+
+        await ctx.author.add_roles(
+            role, reason=f"evict support role created by {ctx.author}"
+        )
+        await ctx.success(
+            f"I have **created** the role {role.mention} and **assigned** it to you."
+        )
 
     @Permissions.staff()
     @commands.command(
@@ -486,7 +480,7 @@ class owner(commands.Cog):
         check = await self.bot.db.fetchrow(
             "SELECT * FROM reskin WHERE user_id = $1", user.id
         )
-        
+
         if check is None:
             return await ctx.warning(
                 f"There is **not** a reskin config for **{user}**."
@@ -495,7 +489,7 @@ class owner(commands.Cog):
         await self.bot.db.execute(
             "DELETE FROM donor WHERE user_id = {}".format(user.id)
         )
-        
+
         await ctx.success(f"I have **removed** the reskin for **{user.name}**.")
 
 

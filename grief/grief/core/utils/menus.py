@@ -6,7 +6,8 @@ import asyncio
 import contextlib
 import functools
 from types import MappingProxyType
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, TypeVar, Union
+from typing import (Callable, Dict, Iterable, List, Mapping, Optional, TypeVar,
+                    Union)
 
 import discord
 
@@ -26,7 +27,9 @@ __all__ = (
 _T = TypeVar("_T")
 _PageList = TypeVar("_PageList", List[str], List[discord.Embed])
 _ReactableEmoji = Union[str, discord.Emoji]
-_ControlCallable = Callable[[commands.Context, _PageList, discord.Message, int, float, str], _T]
+_ControlCallable = Callable[
+    [commands.Context, _PageList, discord.Message, int, float, str], _T
+]
 
 _active_menus: Dict[int, SimpleMenu] = {}
 
@@ -197,7 +200,9 @@ async def menu(
             return
 
     try:
-        predicates = ReactionPredicate.with_emojis(tuple(controls.keys()), message, ctx.author)
+        predicates = ReactionPredicate.with_emojis(
+            tuple(controls.keys()), message, ctx.author
+        )
         tasks = [
             asyncio.create_task(ctx.bot.wait_for("reaction_add", check=predicates)),
             asyncio.create_task(ctx.bot.wait_for("reaction_remove", check=predicates)),

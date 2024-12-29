@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple, Union
 import discord
 from discord.ext.commands import BadArgument, Converter
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.core.utils.chat_formatting import humanize_list
@@ -40,7 +41,9 @@ class RoleHierarchyConverter(commands.RoleConverter):
 
     async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
         if not ctx.guild.me.guild_permissions.manage_roles:
-            raise BadArgument(_("I require manage roles permission to use this command."))
+            raise BadArgument(
+                _("I require manage roles permission to use this command.")
+            )
         if isinstance(ctx, discord.Interaction):
             author = ctx.user
         else:
@@ -63,7 +66,10 @@ class RoleHierarchyConverter(commands.RoleConverter):
                         "The {role} role is an integration role and cannot be assigned or removed."
                     ).fromat(role=role.mention)
                 )
-            if getattr(role, "is_premium_subscriber", None) and role.is_premium_subscriber():
+            if (
+                getattr(role, "is_premium_subscriber", None)
+                and role.is_premium_subscriber()
+            ):
                 raise BadArgument(
                     _(
                         "The {role} role is a premium subscriber role and can only "
@@ -91,7 +97,9 @@ class SelfRoleConverter(commands.RoleConverter):
 
     async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
         if not ctx.guild.me.guild_permissions.manage_roles:
-            raise BadArgument(_("I require manage roles permission to use this command."))
+            raise BadArgument(
+                _("I require manage roles permission to use this command.")
+            )
         if isinstance(ctx, discord.Interaction):
             author = ctx.user
         else:
@@ -136,7 +144,9 @@ class SelfRoleConverter(commands.RoleConverter):
 
 
 class RoleEmojiConverter(Converter):
-    async def convert(self, ctx: commands.Context, argument: str) -> Tuple[discord.Role, str]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> Tuple[discord.Role, str]:
         arg_split = re.split(r";|,|\||-", argument)
         try:
             role, emoji = arg_split
@@ -149,7 +159,9 @@ class RoleEmojiConverter(Converter):
             )
         custom_emoji = None
         try:
-            custom_emoji = await commands.PartialEmojiConverter().convert(ctx, emoji.strip())
+            custom_emoji = await commands.PartialEmojiConverter().convert(
+                ctx, emoji.strip()
+            )
         except commands.BadArgument:
             pass
         if not custom_emoji:
@@ -166,17 +178,21 @@ class RoleEmojiConverter(Converter):
 
 
 class ButtonStyleConverter(Converter):
-    async def convert(self, ctx: commands.Context, argument: str) -> discord.ButtonStyle:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> discord.ButtonStyle:
         available_styles = [
-            i for i in dir(discord.ButtonStyle) if not i.startswith("_") and i != "try_value"
+            i
+            for i in dir(discord.ButtonStyle)
+            if not i.startswith("_") and i != "try_value"
         ]
         if argument.lower() in available_styles:
             return getattr(discord.ButtonStyle, argument.lower())
         else:
             raise BadArgument(
-                _("`{argument}` is not an available Style. Choose one from {styles}").format(
-                    argument=argument, styles=humanize_list(available_styles)
-                )
+                _(
+                    "`{argument}` is not an available Style. Choose one from {styles}"
+                ).format(argument=argument, styles=humanize_list(available_styles))
             )
 
 
@@ -232,7 +248,10 @@ class ButtonRoleConverter(discord.app_commands.Transformer):
         ]
         if supplied_options:
             ret.insert(
-                0, discord.app_commands.Choice(name=supplied_options, value=supplied_options)
+                0,
+                discord.app_commands.Choice(
+                    name=supplied_options, value=supplied_options
+                ),
             )
         return ret
 
@@ -261,9 +280,9 @@ class SelectOptionRoleConverter(discord.app_commands.Transformer):
                 return select_role
             else:
                 raise commands.BadArgument(
-                    _("Select Option with name `{name}` does not seem to exist.").format(
-                        name=argument.lower()
-                    )
+                    _(
+                        "Select Option with name `{name}` does not seem to exist."
+                    ).format(name=argument.lower())
                 )
 
     async def autocomplete(
@@ -288,7 +307,10 @@ class SelectOptionRoleConverter(discord.app_commands.Transformer):
         ]
         if supplied_options:
             ret.insert(
-                0, discord.app_commands.Choice(name=supplied_options, value=supplied_options)
+                0,
+                discord.app_commands.Choice(
+                    name=supplied_options, value=supplied_options
+                ),
             )
         return ret
 
@@ -336,9 +358,9 @@ class SelectRoleConverter(discord.app_commands.Transformer):
                 return sr
             else:
                 raise commands.BadArgument(
-                    _("Select Option with name `{name}` does not seem to exist.").format(
-                        name=argument.lower()
-                    )
+                    _(
+                        "Select Option with name `{name}` does not seem to exist."
+                    ).format(name=argument.lower())
                 )
 
     async def autocomplete(
@@ -364,7 +386,10 @@ class SelectRoleConverter(discord.app_commands.Transformer):
         ]
         if supplied_options:
             ret.insert(
-                0, discord.app_commands.Choice(name=supplied_options, value=supplied_options)
+                0,
+                discord.app_commands.Choice(
+                    name=supplied_options, value=supplied_options
+                ),
             )
         return ret
 
@@ -384,12 +409,20 @@ class SelectOptionFlags(commands.FlagConverter, case_insensitive=True):
     description: Optional[commands.Range[str, 0, 100]] = commands.flag(
         name="description", aliases=["desc"], default=None
     )
-    emoji: Optional[Union[discord.PartialEmoji, str]] = commands.flag(name="emoji", default=None)
+    emoji: Optional[Union[discord.PartialEmoji, str]] = commands.flag(
+        name="emoji", default=None
+    )
 
 
 class ButtonFlags(commands.FlagConverter, case_insensitive=True):
-    label: Optional[commands.Range[str, 0, 80]] = commands.flag(name="label", default=None)
-    emoji: Optional[Union[discord.PartialEmoji, str]] = commands.flag(name="emoji", default=None)
+    label: Optional[commands.Range[str, 0, 80]] = commands.flag(
+        name="label", default=None
+    )
+    emoji: Optional[Union[discord.PartialEmoji, str]] = commands.flag(
+        name="emoji", default=None
+    )
     style: discord.ButtonStyle = commands.flag(
-        name="style", default=discord.ButtonStyle.primary, converter=ButtonStyleConverter
+        name="style",
+        default=discord.ButtonStyle.primary,
+        converter=ButtonStyleConverter,
     )

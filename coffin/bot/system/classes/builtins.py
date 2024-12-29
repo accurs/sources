@@ -1,42 +1,46 @@
-from typing import Optional, Union, Any, Dict, List, Type, Callable, Sequence
-from random import uniform
-import orjson
 import asyncio
 import contextlib
 import datetime
-from discord import Embed, Colour, Client
-from contextlib import contextmanager
-from dateutil.relativedelta import relativedelta
 import traceback
-from humanize import intword
+from contextlib import contextmanager
 from logging import getLogger
+from random import uniform
+from typing import Any, Callable, Dict, List, Optional, Sequence, Type, Union
+
+import orjson
+from data.config import CONFIG
+from dateutil.relativedelta import relativedelta
+from discord import Client, Colour, Embed
+from humanize import intword
 from loguru import logger
 from system.patch.context import Context
-from data.config import CONFIG
+
 logger_ = getLogger(__name__)
 
+
 def humanize(self: int) -> str:
-	m = intword(self)
-	m = (
-		m.replace(" million", "m")
-		.replace(" billion", "b")
-		.replace(" trillion", "t")
-		.replace(" thousand", "k")
-		.replace(" hundred", "")
-	)
-	return m
+    m = intword(self)
+    m = (
+        m.replace(" million", "m")
+        .replace(" billion", "b")
+        .replace(" trillion", "t")
+        .replace(" thousand", "k")
+        .replace(" hundred", "")
+    )
+    return m
 
 
 def humanize_(self: str) -> str:
-	m = intword(int(self))
-	m = (
-		m.replace(" million", "m")
-		.replace(" billion", "b")
-		.replace(" trillion", "t")
-		.replace(" thousand", "k")
-		.replace(" hundred", "")
-	)
-	return m
+    m = intword(int(self))
+    m = (
+        m.replace(" million", "m")
+        .replace(" billion", "b")
+        .replace(" trillion", "t")
+        .replace(" thousand", "k")
+        .replace(" hundred", "")
+    )
+    return m
+
 
 def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
     size = len(seq)
@@ -127,7 +131,7 @@ def human_timedelta(
 async def suppress_error(fn: Callable, error: Type[Exception], *args, **kwargs):
     """
     Suppresses the specified error while invoking the given function or coroutine.
-    
+
     Parameters:
         fn (Callable): The function or coroutine to invoke.
         error (Type[Exception]): The error to suppress.
@@ -143,7 +147,11 @@ async def suppress_error(fn: Callable, error: Type[Exception], *args, **kwargs):
 
 
 @contextmanager
-def catch(exception_type: Optional[Exception] = Exception, raise_error: Optional[bool] = False, log_error: Optional[bool] = True):
+def catch(
+    exception_type: Optional[Exception] = Exception,
+    raise_error: Optional[bool] = False,
+    log_error: Optional[bool] = True,
+):
     try:
         yield
     except exception_type as error:
@@ -154,7 +162,6 @@ def catch(exception_type: Optional[Exception] = Exception, raise_error: Optional
             logger.info(f"error raised: {exc}")
         if raise_error:
             raise error
-    
 
 
 def get_error(exception: Exception) -> str:
@@ -170,15 +177,13 @@ def boolean_to_emoji(bot: Client, boolean: bool):
     return bot.config["emojis"]["fail"]
 
 
-
-
 class embed(Embed):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @property
     def colour(self) -> Optional[Colour]:
-        return getattr(self, '_colour', CONFIG["colors"]["bleed"])
+        return getattr(self, "_colour", CONFIG["colors"]["bleed"])
 
     @colour.setter
     def colour(self, value: Optional[Union[int, Colour]]) -> None:
@@ -189,14 +194,19 @@ class embed(Embed):
         elif isinstance(value, int):
             self._colour = Colour(value=value)
         else:
-            raise TypeError(f'Expected discord.Colour, int, or None but received {value.__class__.__name__} instead.')
-        
+            raise TypeError(
+                f"Expected discord.Colour, int, or None but received {value.__class__.__name__} instead."
+            )
+
     def style(self, ctx: Context):
-        self.set_author(name = str(ctx.author), icon_url = ctx.author.display_avatar.url)
+        self.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)
 
     color = colour
+
+
 Embed.colour = embed.colour
 Embed.style = embed.style
+
 
 def chunk_list(data: list, amount: int) -> list:
     # makes lists of a big list of values every x amount of values
@@ -204,16 +214,20 @@ def chunk_list(data: list, amount: int) -> list:
     _chunks = [list(_) for _ in list(chunks)]
     return _chunks
 
+
 def chunk(self: list, amount: int) -> list:
     chunks = zip(*[iter(self)] * amount)
     _chunks = [list(_) for _ in list(chunks)]
     return _chunks
 
+
 def number(self: list, start: int = 1, markdown: str = "`"):
-    return [f"{markdown}{i}{markdown} {row}" for i, row in enumerate(self, start = start)]
+    return [f"{markdown}{i}{markdown} {row}" for i, row in enumerate(self, start=start)]
+
 
 def codeblock(value: str, language: str = "") -> str:
     return f"```{language}\n{value}```"
+
 
 class plural:
     def __init__(self, value: int, bold: bool = False, code: bool = False):
@@ -232,7 +246,7 @@ class plural:
         else:
             value = f"{v:,}"
 
-        singular, sep, plural = format_spec.partition("|")  
+        singular, sep, plural = format_spec.partition("|")
         plural = plural or f"{singular}s"
 
         if abs(v) != 1:
@@ -251,13 +265,14 @@ class plural:
         else:
             value = f"{v:,}"
 
-        singular, sep, plural = format_spec.partition("|")  
+        singular, sep, plural = format_spec.partition("|")
         plural = plural or f"{singular}s"
 
         if abs(v) != 1:
             return f"{value} {plural}"
 
         return f"{value} {singular}"
+
 
 def shorten(value: str, length: int = 20, end: Optional[str] = ".."):
     if len(value) > length:
@@ -275,12 +290,14 @@ def maximum(self: Numeric, maximum: Numeric) -> Optional[Numeric]:
 def maximum_(self: Numeric, maximum: Numeric) -> Optional[Numeric]:
     return int(min(float(self), float(maximum)))
 
+
 def shorten__(self: str, length: int = 20, end: Optional[str] = ".."):
     if len(self) > length:
         value = self[: length - 2] + (end if len(self) > length else "").strip()
         return value
     else:
         return self
+
 
 def minimum(self: Numeric, minimum: Numeric) -> Optional[Numeric]:
     return max(float(minimum), float(self))
@@ -310,7 +327,6 @@ def hyperlink(text: str, url: str, character: Optional[str] = None) -> str:
         return f"[{character}{text}{character}]({url})"
     else:
         return f"[{text}]({url})"
-
 
 
 class ObjectTransformer(dict):

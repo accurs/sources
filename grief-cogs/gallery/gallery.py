@@ -4,6 +4,7 @@ import re
 import typing
 
 import discord
+
 from grief.core import Config, checks, commands
 from grief.core.bot import Grief
 from grief.core.utils.chat_formatting import humanize_list

@@ -1,11 +1,12 @@
-import os
 import asyncio
-import discord
 import datetime
-from discord.ext import commands
-import chat_exporter
+import os
 import secrets
+
+import chat_exporter
+import discord
 from discord import TextChannel
+from discord.ext import commands
 
 
 class TicketTopic(discord.ui.Modal, title="Add a ticket topic"):

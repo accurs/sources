@@ -1,7 +1,7 @@
-from system.worker import offloaded
+import pytz
 from discord.ext import commands
 from system.patch.context import Context
-import pytz
+from system.worker import offloaded
 
 
 @offloaded
@@ -17,6 +17,7 @@ def get_timezone(location: str) -> str:
     result = obj.timezone_at(lng=location.longitude, lat=location.latitude)
     return result
 
+
 class Timezone(commands.Converter):
     async def convert(self, ctx: Context, argument: str):
         try:
@@ -27,4 +28,6 @@ class Timezone(commands.Converter):
                 timezone = pytz.timezone(await get_timezone(argument))
                 return timezone
             except Exception:
-                raise commands.CommandError(f"No timezone found from query `{argument[:25]}`")
+                raise commands.CommandError(
+                    f"No timezone found from query `{argument[:25]}`"
+                )

@@ -1,14 +1,16 @@
-import discord, random, string, asyncio, aiohttp
+import asyncio
+import random
+import string
 
-from discord.ext import commands
-
-from patches.permissions import Permissions
-from patches.classes import Mod
-from utils.utils import EmbedScript
-from bot.helpers import EvictContext
-from patches.classes import ValidWebhookCode
-from bot.headers import Session
+import aiohttp
+import discord
 from bot.bot import Evict
+from bot.headers import Session
+from bot.helpers import EvictContext
+from discord.ext import commands
+from patches.classes import Mod, ValidWebhookCode
+from patches.permissions import Permissions
+from utils.utils import EmbedScript
 
 
 def is_detention():
@@ -462,7 +464,6 @@ class misc(commands.Cog):
         await message.unpin()
         await ctx.success(f"unpinned message.")
 
-
     @commands.command(hidden=True, name="commands", aliases=["h", "cmds"])
     async def _help(self, ctx: EvictContext, *, command: str = None):
         """
@@ -471,10 +472,10 @@ class misc(commands.Cog):
 
         if not command:
             return await ctx.send_help()
-        
+
         else:
             _command = self.bot.get_command(command)
-            
+
             if (
                 _command is None
                 or (cog := _command.cog_name)
@@ -484,6 +485,7 @@ class misc(commands.Cog):
                 return await ctx.warning(f'No command called "{command}" found.')
 
             return await ctx.send_help(_command)
+
 
 async def setup(bot: Evict) -> None:
     await bot.add_cog(misc(bot))

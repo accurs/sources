@@ -1,7 +1,8 @@
 from core.tools import CompositeMetaClass
+
 from .antinuke import AntiNuke, AntiRaid
-from .logging import Logging
 from .jail import Jail
+from .logging import Logging
 
 
 class Extended(

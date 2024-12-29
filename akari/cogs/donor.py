@@ -1,24 +1,17 @@
-import re
 import datetime
-import google.generativeai as genai
+import re
 
+import google.generativeai as genai
+from discord import AllowedMentions, Embed, Interaction, Member, User, utils
+from discord.ext import commands
+from discord.ext.commands import (Cog, bot_has_guild_permissions, command,
+                                  group, has_guild_permissions, hybrid_command,
+                                  max_concurrency)
 from tools.bot import Akari
 from tools.converters import NoStaff
 from tools.helpers import AkariContext
+from tools.predicates import create_reskin, has_perks
 from tools.validators import ValidReskinName
-from tools.predicates import has_perks, create_reskin
-
-from discord import User, utils, Embed, Member, AllowedMentions, Interaction
-from discord.ext import commands
-from discord.ext.commands import (
-    Cog,
-    command,
-    group,
-    has_guild_permissions,
-    bot_has_guild_permissions,
-    max_concurrency,
-    hybrid_command,
-)
 
 
 class Donor(Cog):
@@ -284,16 +277,21 @@ class Donor(Cog):
     async def uwulock(self, ctx: AkariContext, user: User):
         """uwulock"""
         if await self.bot.db.fetchrow(
-            "SELECT * FROM uwu_lock WHERE guild_id = $1 AND user_id = $2", ctx.guild.id, user.id
+            "SELECT * FROM uwu_lock WHERE guild_id = $1 AND user_id = $2",
+            ctx.guild.id,
+            user.id,
         ):
             await self.bot.db.execute(
-                "DELETE FROM uwu_lock WHERE guild_id = $1 AND user_id = $2", ctx.guild.id, user.id
+                "DELETE FROM uwu_lock WHERE guild_id = $1 AND user_id = $2",
+                ctx.guild.id,
+                user.id,
             )
             return await ctx.success(f"{user.mention} is no longer uwulocked")
         await self.bot.db.execute(
             "INSERT INTO uwu_lock VALUES ($1, $2)", ctx.guild.id, user.id
         )
         return await ctx.success(f"{user.mention} is now uwulocked")
+
 
 async def setup(bot: Akari) -> None:
     await bot.add_cog(Donor(bot))

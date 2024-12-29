@@ -1,20 +1,13 @@
 from __future__ import annotations
+
 import config
-from discord.ext.commands import (
-    Context,
-    Command,
-    Cog,
-    Group,
-    MinimalHelpCommand,
-    FlagConverter,
-)
-from discord.ext.commands.flags import FlagsMeta
-from discord import Embed, Interaction, SelectOption
-from discord.ui import Select, View
-from discord import Status
-from discord.utils import MISSING
-from discord.utils import oauth_url
 from core.managers.paginator import Paginator
+from discord import Embed, Interaction, SelectOption, Status
+from discord.ext.commands import (Cog, Command, Context, FlagConverter, Group,
+                                  MinimalHelpCommand)
+from discord.ext.commands.flags import FlagsMeta
+from discord.ui import Select, View
+from discord.utils import MISSING, oauth_url
 
 
 class MonoHelp(MinimalHelpCommand):

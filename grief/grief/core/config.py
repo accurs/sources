@@ -4,19 +4,8 @@ import json
 import logging
 import pickle
 import weakref
-from typing import (
-    Any,
-    AsyncContextManager,
-    Awaitable,
-    Dict,
-    Generator,
-    MutableMapping,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import (Any, AsyncContextManager, Awaitable, Dict, Generator,
+                    MutableMapping, Optional, Tuple, Type, TypeVar, Union)
 
 import discord
 
@@ -73,7 +62,9 @@ def get_latest_confs() -> Tuple["Config"]:
     return tuple(ret)
 
 
-class _ValueCtxManager(Awaitable[_T], AsyncContextManager[_T]):  # pylint: disable=duplicate-bases
+class _ValueCtxManager(
+    Awaitable[_T], AsyncContextManager[_T]
+):  # pylint: disable=duplicate-bases
     """Context manager implementation of config values.
 
     This class allows mutable config values to be both "get" and "set" from
@@ -141,7 +132,9 @@ class Value:
 
     """
 
-    def __init__(self, identifier_data: IdentifierData, default_value, driver, config: "Config"):
+    def __init__(
+        self, identifier_data: IdentifierData, default_value, driver, config: "Config"
+    ):
         self.identifier_data = identifier_data
         self.default = default_value
         self._driver = driver
@@ -187,7 +180,9 @@ class Value:
             return default if default is not ... else self.default
         return ret
 
-    def __call__(self, default=..., *, acquire_lock: bool = True) -> _ValueCtxManager[Any]:
+    def __call__(
+        self, default=..., *, acquire_lock: bool = True
+    ) -> _ValueCtxManager[Any]:
         """Get the literal value of this data element.
 
         Each `Value` object is created by the `Group.__getattr__` method. The
@@ -361,7 +356,9 @@ class Group(Value):
                 config=self._config,
             )
         elif self.force_registration:
-            raise AttributeError("'{}' is not a valid registered Group or value.".format(item))
+            raise AttributeError(
+                "'{}' is not a valid registered Group or value.".format(item)
+            )
         else:
             return Value(
                 identifier_data=new_identifiers,
@@ -656,9 +653,9 @@ class Config(metaclass=ConfigMeta):
         self._defaults = defaults or {}
 
         self.custom_groups: Dict[str, int] = {}
-        self._lock_cache: MutableMapping[
-            IdentifierData, asyncio.Lock
-        ] = weakref.WeakValueDictionary()
+        self._lock_cache: MutableMapping[IdentifierData, asyncio.Lock] = (
+            weakref.WeakValueDictionary()
+        )
 
     @property
     def defaults(self):
@@ -803,7 +800,9 @@ class Config(metaclass=ConfigMeta):
                 existing_is_dict = isinstance(_partial[k], dict)
                 if val_is_dict != existing_is_dict:
                     # != is XOR
-                    raise KeyError("You cannot register a Group and a Value under the same name.")
+                    raise KeyError(
+                        "You cannot register a Group and a Value under the same name."
+                    )
                 if val_is_dict:
                     Config._update_defaults(v, _partial=_partial[k])
                 else:
@@ -916,7 +915,9 @@ class Config(metaclass=ConfigMeta):
         """
         Initializes a custom group for usage. This method must be called first!
         """
-        if identifier_count != self.custom_groups.setdefault(group_identifier, identifier_count):
+        if identifier_count != self.custom_groups.setdefault(
+            group_identifier, identifier_count
+        ):
             raise ValueError(
                 f"Cannot change identifier count of already registered group: {group_identifier}"
             )
@@ -971,7 +972,9 @@ class Config(metaclass=ConfigMeta):
             If the given guild_id parameter is not of type int
         """
         if type(guild_id) is not int:
-            raise TypeError(f"guild_id should be of type int, not {guild_id.__class__.__name__}")
+            raise TypeError(
+                f"guild_id should be of type int, not {guild_id.__class__.__name__}"
+            )
         return self._get_base_group(self.GUILD, str(guild_id))
 
     def guild(self, guild: discord.Guild) -> Group:
@@ -1016,7 +1019,9 @@ class Config(metaclass=ConfigMeta):
             )
         return self._get_base_group(self.CHANNEL, str(channel_id))
 
-    def channel(self, channel: Union[discord.abc.GuildChannel, discord.Thread]) -> Group:
+    def channel(
+        self, channel: Union[discord.abc.GuildChannel, discord.Thread]
+    ) -> Group:
         """Returns a `Group` for the given channel.
 
         This does not discriminate between text and voice channels.
@@ -1053,7 +1058,9 @@ class Config(metaclass=ConfigMeta):
             If the given role_id parameter is not of type int
         """
         if type(role_id) is not int:
-            raise TypeError(f"role_id should be of type int, not {role_id.__class__.__name__}")
+            raise TypeError(
+                f"role_id should be of type int, not {role_id.__class__.__name__}"
+            )
         return self._get_base_group(self.ROLE, str(role_id))
 
     def role(self, role: discord.Role) -> Group:
@@ -1091,7 +1098,9 @@ class Config(metaclass=ConfigMeta):
             If the given user_id parameter is not of type int
         """
         if type(user_id) is not int:
-            raise TypeError(f"user_id should be of type int, not {user_id.__class__.__name__}")
+            raise TypeError(
+                f"user_id should be of type int, not {user_id.__class__.__name__}"
+            )
         return self._get_base_group(self.USER, str(user_id))
 
     def user(self, user: discord.abc.User) -> Group:
@@ -1131,10 +1140,14 @@ class Config(metaclass=ConfigMeta):
             If the given guild_id or member_id parameter is not of type int
         """
         if type(guild_id) is not int:
-            raise TypeError(f"guild_id should be of type int, not {guild_id.__class__.__name__}")
+            raise TypeError(
+                f"guild_id should be of type int, not {guild_id.__class__.__name__}"
+            )
 
         if type(member_id) is not int:
-            raise TypeError(f"member_id should be of type int, not {member_id.__class__.__name__}")
+            raise TypeError(
+                f"member_id should be of type int, not {member_id.__class__.__name__}"
+            )
 
         return self._get_base_group(self.MEMBER, str(guild_id), str(member_id))
 
@@ -1344,8 +1357,12 @@ class Config(metaclass=ConfigMeta):
         """
         if not scopes:
             # noinspection PyTypeChecker
-            identifier_data = IdentifierData(self.cog_name, self.unique_identifier, "", (), (), 0)
-            group = Group(identifier_data, defaults={}, driver=self._driver, config=self)
+            identifier_data = IdentifierData(
+                self.cog_name, self.unique_identifier, "", (), (), 0
+            )
+            group = Group(
+                identifier_data, defaults={}, driver=self._driver, config=self
+            )
         else:
             cat, *scopes = scopes
             group = self._get_base_group(cat, *scopes)
@@ -1515,7 +1532,9 @@ class Config(metaclass=ConfigMeta):
                 group_identifier, self.custom_groups
             )
         except KeyError:
-            raise ValueError(f"Custom group not initialized: {group_identifier}") from None
+            raise ValueError(
+                f"Custom group not initialized: {group_identifier}"
+            ) from None
         else:
             id_data = IdentifierData(
                 self.cog_name,
@@ -1529,7 +1548,9 @@ class Config(metaclass=ConfigMeta):
             return self._lock_cache.setdefault(id_data, asyncio.Lock())
 
 
-async def migrate(cur_driver_cls: Type[BaseDriver], new_driver_cls: Type[BaseDriver]) -> None:
+async def migrate(
+    cur_driver_cls: Type[BaseDriver], new_driver_cls: Type[BaseDriver]
+) -> None:
     """Migrate from one driver type to another."""
     # Get custom group data
     core_conf = Config.get_core_conf(allow_old=True)

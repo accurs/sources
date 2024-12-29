@@ -1,15 +1,16 @@
-import discord, datetime, dateutil.parser
+import datetime
 
-from discord.ext.commands import Context, Bot as Bot, command
-from discord.ext import commands
-from discord import Embed, TextChannel
-from discord.ui import Button, View
-
-from patches.classes import Time, TimeConverter
+import dateutil.parser
+import discord
 from bot.bot import Evict
 from bot.helpers import EvictContext
-from bot.managers.emojis import Emojis, Colors
-
+from bot.managers.emojis import Colors, Emojis
+from discord import Embed, TextChannel
+from discord.ext import commands
+from discord.ext.commands import Bot as Bot
+from discord.ext.commands import Context, command
+from discord.ui import Button, View
+from patches.classes import Time, TimeConverter
 
 DISCORD_API_LINK = "https://discord.com/api/invite/"
 
@@ -37,67 +38,52 @@ class information(commands.Cog):
             meridian = "PM"
         return f"{month}/{day}/{year} at {hour}:{minute} {meridian} ({discord.utils.format_dt(date, style='R')})"
 
-    @command(
-        aliases=["si"], 
-        description="show information about the server"
-    )
-    
+    @command(aliases=["si"], description="show information about the server")
     async def serverinfo(self, ctx: EvictContext):
-        
+
         guild = ctx.guild
         icon = f"[icon]({guild.icon.url})" if guild.icon is not None else "N/A"
         splash = f"[splash]({guild.splash.url})" if guild.splash is not None else "N/A"
         banner = f"[banner]({guild.banner.url})" if guild.banner is not None else "N/A"
         desc = guild.description if guild.description is not None else ""
-        
+
         embed = Embed(
             color=Colors.color,
             title=f"{guild.name}",
             timestamp=datetime.datetime.now(),
-            description=f"Server created on {self.convert_datetime(guild.created_at.replace(tzinfo=None))}\n{desc}"
+            description=f"Server created on {self.convert_datetime(guild.created_at.replace(tzinfo=None))}\n{desc}",
         )
-        
+
         embed.set_thumbnail(url=guild.icon)
-        
-        embed.set_author(
-            name=ctx.author.name, 
-            icon_url=ctx.author.display_avatar.url
-        )
-        
-        embed.add_field(
-            name="Owner", 
-            value=f"{guild.owner.mention}\n{guild.owner}"
-        )
-        
+
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+
+        embed.add_field(name="Owner", value=f"{guild.owner.mention}\n{guild.owner}")
+
         embed.add_field(
             name="Members",
             value=f"**Users:** {len(set(i for i in guild.members if not i.bot))} ({((len(set(i for i in guild.members if not i.bot)))/guild.member_count) * 100:.2f}%)\n**Bots:** {len(set(i for i in guild.members if i.bot))} ({(len(set(i for i in guild.members if i.bot))/guild.member_count) * 100:.2f}%)\n**Total:** {guild.member_count}",
         )
-        
+
         embed.add_field(
             name="Information",
             value=f"**Verification:** {guild.verification_level}\n**Boosts:** {guild.premium_subscription_count} (level {guild.premium_tier})\n**Large:** {'yes' if guild.large else 'no'}",
         )
-        
-        embed.add_field(
-            name="Design", 
-            value=f"{icon}\n{splash}\n{banner}"
-        )
+
+        embed.add_field(name="Design", value=f"{icon}\n{splash}\n{banner}")
 
         embed.add_field(
             name=f"Channels ({len(guild.channels)})",
             value=f"**Text:** {len(guild.text_channels)}\n**Voice:** {len(guild.voice_channels)}\n**Categories** {len(guild.categories)}",
         )
-        
+
         embed.add_field(
             name="Counts",
             value=f"**Roles:** {len(guild.roles)}/250\n**Emojis:** {len(guild.emojis)}/{guild.emoji_limit*2}\n**Stickers:** {len(guild.stickers)}/{guild.sticker_limit}",
         )
-        
-        embed.set_footer(
-            text=f"Guild ID: {guild.id}"
-        )
-        
+
+        embed.set_footer(text=f"Guild ID: {guild.id}")
+
         await ctx.reply(embed=embed)
 
     @command(
@@ -105,17 +91,19 @@ class information(commands.Cog):
         description="see someone's banner",
         usage="<user>",
     )
-    async def userbanner(self, ctx: EvictContext, *, member: discord.User = commands.Author):
-        
+    async def userbanner(
+        self, ctx: EvictContext, *, member: discord.User = commands.Author
+    ):
+
         user = await self.bot.fetch_user(member.id)
-        
+
         if not user.banner:
             return await ctx.warning(f"**{user}** doesn't have a banner")
-        
+
         embed = discord.Embed(
             color=Colors.color, title=f"{user.name}'s banner", url=user.banner.url
         )
-        
+
         embed.set_image(url=user.banner.url)
         return await ctx.reply(embed=embed)
 
@@ -124,8 +112,9 @@ class information(commands.Cog):
         description="see user's avatar",
         usage="<user>",
     )
-    
-    async def useravatar(self, ctx: EvictContext, *, member: discord.User = commands.Author):
+    async def useravatar(
+        self, ctx: EvictContext, *, member: discord.User = commands.Author
+    ):
 
         member = await self.bot.fetch_user(member.id)
         embed = Embed(
@@ -141,86 +130,81 @@ class information(commands.Cog):
         description="see user's server avatar",
         usage="<user>",
     )
-    async def serveravatar(self, ctx: EvictContext, *, member: discord.Member = commands.Author):
+    async def serveravatar(
+        self, ctx: EvictContext, *, member: discord.Member = commands.Author
+    ):
 
         if member.guild_avatar is None:
             return await ctx.warning(f"**{member}** doesnt have a server avatar set.")
-        
+
         embed = Embed(
             color=Colors.color,
             title=f"{member.name}'s server avatar",
-            url=member.display_avatar.url
+            url=member.display_avatar.url,
         )
-        
+
         embed.set_image(url=member.guild_avatar.url)
         await ctx.reply(embed=embed)
 
     @command(aliases=["sbanner"], description="get the server's banner")
     async def serverbanner(self, ctx: EvictContext):
-        
+
         if not ctx.guild.banner:
             return await ctx.warning("This server **doesn't** have an banner.")
-        
+
         embed = Embed(
-            color=Colors.color, title=f"{ctx.guild.name}'s banner", url=ctx.guild.banner.url
+            color=Colors.color,
+            title=f"{ctx.guild.name}'s banner",
+            url=ctx.guild.banner.url,
         )
-        
+
         embed.set_image(url=ctx.guild.banner.url)
         await ctx.reply(embed=embed)
 
-    @command(
-        aliases=["sicon", "icon"], 
-        description="get the server's icon"
-    )
-    
+    @command(aliases=["sicon", "icon"], description="get the server's icon")
     async def servericon(self, ctx: EvictContext):
 
         if not ctx.guild.icon:
             return await ctx.warning("This server **doesn't** have an icon.")
-        
+
         embed = Embed(
             color=Colors.color, title=f"{ctx.guild.name}'s icon", url=ctx.guild.icon.url
         )
-        
+
         embed.set_image(url=ctx.guild.icon.url)
         await ctx.reply(embed=embed)
 
     @command(
         aliases=["splash", "ssplash"],
-        description="get the server's invite background image"
+        description="get the server's invite background image",
     )
-    
     async def serversplash(self, ctx: EvictContext):
-        
+
         if not ctx.guild.splash:
             return await ctx.warning("This server **doesn't** have an invite splash.")
-        
+
         embed = Embed(
             color=Colors.color,
             title=f"{ctx.guild.name}'s invite background",
-            url=ctx.guild.splash.url
+            url=ctx.guild.splash.url,
         )
-        
+
         embed.set_image(url=ctx.guild.splash.url)
         await ctx.reply(embed=embed)
 
     @command(
         aliases=["gbanner"],
         description="gets the banner from a server based by invite code",
-        usage="[invite code]"
+        usage="[invite code]",
     )
-    
     async def guildbanner(self, ctx: EvictContext, *, link: str):
-        
+
         invite_code = link
         data = await self.bot.session.get_json(DISCORD_API_LINK + invite_code)
         format = ".gif" if "a_" in data["guild"]["banner"] else ".png"
-        
-        embed = Embed(
-            color=Colors.color, 
-            title=data["guild"]["name"] + "'s banner"
-        )
-        
+
+        embed = Embed(color=Colors.color, title=data["guild"]["name"] + "'s banner")
+
         embed.set_image(
             url="https://cdn.discordapp.com/banners/"
             + data["guild"]["id"]
@@ -228,25 +212,21 @@ class information(commands.Cog):
             + data["guild"]["banner"]
             + f"{format}?size=1024"
         )
-        
+
         await ctx.reply(embed=embed)
 
     @command(
         aliases=["gsplash"],
         description="gets the splash from a server based by invite code",
-        usage="[invite code]"
+        usage="[invite code]",
     )
-    
     async def guildsplash(self, ctx: EvictContext, *, link: str):
-        
+
         invite_code = link
         data = await self.bot.session.get_json(DISCORD_API_LINK + invite_code)
-        
-        embed = Embed(
-            color=Colors.color, 
-            title=data["guild"]["name"] + "'s splash"
-        )
-        
+
+        embed = Embed(color=Colors.color, title=data["guild"]["name"] + "'s splash")
+
         embed.set_image(
             url="https://cdn.discordapp.com/splashes/"
             + data["guild"]["id"]
@@ -254,30 +234,26 @@ class information(commands.Cog):
             + data["guild"]["splash"]
             + ".png?size=1024"
         )
-        
+
         if data == None:
             return await ctx.warning("This server **doesn't** have an invite splash.")
-        
+
         else:
             await ctx.reply(embed=embed)
 
     @command(
         aliases=["gicon"],
         description="gets the icon from a server based by invite code",
-        usage="[invite code]"
+        usage="[invite code]",
     )
-    
     async def guildicon(self, ctx: EvictContext, *, link: str):
-        
+
         invite_code = link
         data = await self.bot.session.get_json(DISCORD_API_LINK + invite_code)
         format = ".gif" if "a_" in data["guild"]["icon"] else ".png"
-        
-        embed = Embed(
-            color=Colors.color, 
-            title=data["guild"]["name"] + "'s icon"
-        )
-        
+
+        embed = Embed(color=Colors.color, title=data["guild"]["name"] + "'s icon")
+
         embed.set_image(
             url="https://cdn.discordapp.com/icons/"
             + data["guild"]["id"]
@@ -285,7 +261,7 @@ class information(commands.Cog):
             + data["guild"]["icon"]
             + f"{format}?size=1024"
         )
-        
+
         await ctx.reply(embed=embed)
 
     @command(description="sends a definition of a word", usage="[word]")
@@ -524,129 +500,116 @@ class information(commands.Cog):
         await ctx.reply(embed=embed)
 
     @command(
-        aliases=["pos"], 
-        description="check member join position", 
-        usage="[member]"
+        aliases=["pos"], description="check member join position", usage="[member]"
     )
-    
-    async def position(self, ctx: EvictContext, *, member: discord.Member = commands.Author):
-        
+    async def position(
+        self, ctx: EvictContext, *, member: discord.Member = commands.Author
+    ):
+
         pos = sum(
             m.joined_at < member.joined_at
             for m in ctx.guild.members
             if m.joined_at is not None
         )
-        
+
         embed = discord.Embed(
             color=Colors.color, description=f"{member.mention} is member number {pos}."
         )
         await ctx.reply(embed=embed)
 
-    @command(
-        description="shows bot information", 
-        aliases=["info", "bi"]
-    )
-    
+    @command(description="shows bot information", aliases=["info", "bi"])
     async def botinfo(self, ctx: EvictContext):
-        
+
         embed = discord.Embed(
             title=f"{ctx.author.name}",
             description="Developers: [sin](https://discordapp.com/users/598125772754124823)",
-            color=Colors.color
+            color=Colors.color,
         )
-        
+
         embed.add_field(
             name="Created",
             value=f"<t:{int(self.bot.user.created_at.timestamp())}:R>",
-            inline=True
+            inline=True,
         )
-        
+
+        embed.add_field(name="Servers", value=f"`{len(self.bot.guilds)}`", inline=True)
+
+        embed.add_field(name="Users", value=f"`{len(self.bot.users)}`", inline=True)
+
         embed.add_field(
-            name="Servers", 
-            value=f"`{len(self.bot.guilds)}`", 
-            inline=True)
-        
-        embed.add_field(
-            name="Users", 
-            value=f"`{len(self.bot.users)}`", 
-            inline=True)
-        
-        embed.add_field(
-            name="Commands", 
-            value=f"`{len(self.bot.commands)}`", 
-            inline=True
+            name="Commands", value=f"`{len(self.bot.commands)}`", inline=True
         )
-        
-        embed.add_field(
-            name="Cogs", 
-            value=f"`{len(self.bot.cogs)}`", 
-            inline=True
-        )
-        
+
+        embed.add_field(name="Cogs", value=f"`{len(self.bot.cogs)}`", inline=True)
+
         embed.add_field(
             name="Uptime",
             value=f"`{Time().format_duration(self.bot.uptime)}`",
-            inline=True
+            inline=True,
         )
-        
+
         embed.set_author(
-            name=f"{ctx.author.display_name}", 
-            icon_url=ctx.author.display_avatar
+            name=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar
         )
-        
-        embed.set_thumbnail(
-            url=self.bot.user.avatar.url
-        )
-        
+
+        embed.set_thumbnail(url=self.bot.user.avatar.url)
+
         return await ctx.reply(embed=embed)
-    
-    @command(
-            name='profile', 
-            description='return a users banner and pfp', 
-            usage="[user]")
-    
-    async def profile(self, ctx: EvictContext, *, member: discord.User = commands.Author):
-     
-     user = await self.bot.fetch_user(member.id)
-     
-     if user.banner is not None: embed1 = Embed(color=Colors.color, title=f"{user.name}'s banner", url=user.banner.url)
-     if user.avatar is not None: embed2 = Embed(color=Colors.color, title=f"{user.name}'s avatar", url=user.avatar.url)
-     
-     if user.banner is not None: embed1.set_image(url=user.banner.url)
-     if user.avatar is not None: embed2.set_image(url=user.avatar.url)
-     
-     if user.banner is not None: await ctx.send(embed=embed1)
-     if user.avatar is not None: await ctx.send(embed=embed2) 
-     
-     else: return await ctx.warning(f"**{user.name}**'s profile is **empty**.")
 
     @command(
-        name="shards",
-        description="show shard information"
+        name="profile", description="return a users banner and pfp", usage="[user]"
     )
-    
+    async def profile(
+        self, ctx: EvictContext, *, member: discord.User = commands.Author
+    ):
+
+        user = await self.bot.fetch_user(member.id)
+
+        if user.banner is not None:
+            embed1 = Embed(
+                color=Colors.color, title=f"{user.name}'s banner", url=user.banner.url
+            )
+        if user.avatar is not None:
+            embed2 = Embed(
+                color=Colors.color, title=f"{user.name}'s avatar", url=user.avatar.url
+            )
+
+        if user.banner is not None:
+            embed1.set_image(url=user.banner.url)
+        if user.avatar is not None:
+            embed2.set_image(url=user.avatar.url)
+
+        if user.banner is not None:
+            await ctx.send(embed=embed1)
+        if user.avatar is not None:
+            await ctx.send(embed=embed2)
+
+        else:
+            return await ctx.warning(f"**{user.name}**'s profile is **empty**.")
+
+    @command(name="shards", description="show shard information")
     async def shards(self, ctx: EvictContext):
         """
         Check status of each bot shard
         """
 
         embed = Embed(
-            color=Colors.color, 
-            title=f"Total shards ({self.bot.shard_count})"
+            color=Colors.color, title=f"Total shards ({self.bot.shard_count})"
         )
 
         for shard in self.bot.shards:
-            
+
             guilds = [g for g in self.bot.guilds if g.shard_id == shard]
             users = sum([g.member_count for g in guilds])
-            
+
             embed.add_field(
                 name=f"Shard {shard}",
                 value=f"**ping**: {round(self.bot.shards.get(shard).latency * 1000)}ms\n**guilds**: {len(guilds)}\n**users**: {users:,}",
-                inline=False
+                inline=False,
             )
 
         await ctx.reply(embed=embed)
+
 
 async def setup(bot: Evict):
     await bot.add_cog(information(bot))

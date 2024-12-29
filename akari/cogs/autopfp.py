@@ -1,10 +1,9 @@
-import os
 import asyncio
+import os
+from typing import Literal
 
 import discord
 from discord.ext import commands
-
-from typing import Literal
 from tools.bot import Akari
 from tools.helpers import AkariContext
 

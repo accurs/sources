@@ -1,13 +1,13 @@
-import discord, json, re
-from discord.ext import commands
+import json
+import re
 
-from utils.embed import Embed
-from patches.permissions import Permissions
-
-from bot.helpers import EvictContext
+import discord
 from bot.bot import Evict
-
-from bot.managers.emojis import Emojis, Colors
+from bot.helpers import EvictContext
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
+from patches.permissions import Permissions
+from utils.embed import Embed
 
 
 class chat(commands.Cog):
@@ -77,30 +77,32 @@ class chat(commands.Cog):
     @Permissions.has_permission(manage_guild=True)
     async def add(self, ctx: EvictContext, *, message: str):
 
-        if re.match(r'^[a-zA-Z0-9 @<>,]+$', message):
+        if re.match(r"^[a-zA-Z0-9 @<>,]+$", message):
 
             autoresponse = message.split(",", 1)
             key = await ctx.bot.db.fetch(
-            "SELECT * FROM autoresponses WHERE guild_id = $1 AND key = $2",
-            ctx.guild.id,
-            autoresponse[0],
+                "SELECT * FROM autoresponses WHERE guild_id = $1 AND key = $2",
+                ctx.guild.id,
+                autoresponse[0],
             )
             if key:
                 return await ctx.warning(
-                f"You **already** have an autoresponse for `{autoresponse[0]}`"
-            )
+                    f"You **already** have an autoresponse for `{autoresponse[0]}`"
+                )
 
             await ctx.bot.db.execute(
-            "INSERT INTO autoresponses VALUES ($1, $2, $3)",
-            ctx.guild.id,
-            autoresponse[0],
-            autoresponse[1].lstrip(),
-        )
+                "INSERT INTO autoresponses VALUES ($1, $2, $3)",
+                ctx.guild.id,
+                autoresponse[0],
+                autoresponse[1].lstrip(),
+            )
             return await ctx.success(
                 f"I have **added** the autoresponse for `{autoresponse[0].lstrip()}` with response `{autoresponse[1].lstrip()}`"
-        )
-        else: await ctx.warning("You can only use letters and numbers as the trigger, do not use unicode characters.")
-        
+            )
+        else:
+            await ctx.warning(
+                "You can only use letters and numbers as the trigger, do not use unicode characters."
+            )
 
     @autoresponder.command(
         name="variables",

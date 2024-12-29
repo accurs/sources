@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple, Union
 import discord
 from discord.ext.commands import BadArgument, Converter
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.core.utils.chat_formatting import humanize_list
@@ -37,7 +38,9 @@ class RoleHierarchyConverter(commands.RoleConverter):
 
     async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
         if not ctx.guild.me.guild_permissions.manage_roles:
-            raise BadArgument(_("I require manage roles permission to use this command."))
+            raise BadArgument(
+                _("I require manage roles permission to use this command.")
+            )
         if isinstance(ctx, discord.Interaction):
             author = ctx.user
         else:
@@ -60,7 +63,10 @@ class RoleHierarchyConverter(commands.RoleConverter):
                         "The {role} role is an integration role and cannot be assigned or removed."
                     ).fromat(role=role.mention)
                 )
-            if getattr(role, "is_premium_subscriber", None) and role.is_premium_subscriber():
+            if (
+                getattr(role, "is_premium_subscriber", None)
+                and role.is_premium_subscriber()
+            ):
                 raise BadArgument(
                     _(
                         "The {role} role is a premium subscriber role and can only "

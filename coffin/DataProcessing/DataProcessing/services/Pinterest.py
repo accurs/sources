@@ -1,15 +1,17 @@
-from .Base import cache, BaseService
-from redis.asyncio import Redis
-from typing import Optional
-from aiohttp import ClientSession
-from asyncio import to_thread
-from ..models.Pinterest import PinterestPinResponse, PinterestUserResponse
-import subprocess
-import tuuid
 import os
-import requests
 import re
+import subprocess
+from asyncio import to_thread
+from typing import Optional
+
 import orjson
+import requests
+import tuuid
+from aiohttp import ClientSession
+from redis.asyncio import Redis
+
+from ..models.Pinterest import PinterestPinResponse, PinterestUserResponse
+from .Base import BaseService, cache
 
 POST_RE = re.compile(
     r"(?x) https?://(?:[^/]+\.)?pinterest\.(?: com|fr|de|ch|jp|cl|ca|it|co\.uk|nz|ru|com\.au|at|pt|co\.kr|es|com\.mx|"
@@ -28,17 +30,17 @@ class PinterestService(BaseService):
         self.redis = redis
         self.ttl = ttl
         super().__init__("Pinterest", self.redis, self.ttl)
-    
+
     @cache()
     async def get_post(self, url: str) -> PinterestPinResponse:
         if "pin.it" in url.lower():
             async with ClientSession() as session:
-                async with session.get(url, headers = headers) as response:
+                async with session.get(url, headers=headers) as response:
                     url = str(response.url)
 
         if "url_shortener" in url:
             raise Exception("Pin was **DELETED**")
-        
+
         ident = POST_RE.match(url).group("id")
         async with ClientSession() as session:
             opt = {
@@ -55,7 +57,7 @@ class PinterestService(BaseService):
             ) as request:
                 data = await request.json()
         return PinterestPinResponse(**data)
-    
+
     @cache()
     async def get_user(self, username: str) -> PinterestUserResponse:
         headers = {

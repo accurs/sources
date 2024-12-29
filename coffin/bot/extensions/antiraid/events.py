@@ -1,52 +1,63 @@
-from discord.ext.commands import (
-    Cog, 
-    Context, 
-    command, 
-    group, 
-    CommandError, 
-    has_permissions
-)
-from typing import Optional
-from discord import (
-    Client, 
-    Embed, 
-    File, 
-    Member, 
-    User, 
-    Guild,
-    utils
-)
-from datetime import datetime, timedelta
-from system.classes.database import Record
-from collections import defaultdict
 from asyncio import Lock
+from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Optional
+
+from discord import Client, Embed, File, Guild, Member, User, utils
+from discord.ext.commands import (Cog, CommandError, Context, command, group,
+                                  has_permissions)
+from system.classes.database import Record
+
 
 class AntiRaid_Events(Cog):
     def __init__(self: "AntiRaid_Events", bot: Client):
         self.bot = bot
         self.locks = defaultdict(Lock)
 
-    async def check_member(self, member: Member, guild: Guild, config: Record, dispatch: Optional[bool] = True) -> tuple:
+    async def check_member(
+        self,
+        member: Member,
+        guild: Guild,
+        config: Record,
+        dispatch: Optional[bool] = True,
+    ) -> tuple:
         whitelist = config.whitelist or []
         if config.raid_status is True and member.id not in whitelist:
             if datetime.now() > config.raid_expires_at:
-                await self.bot.db.execute("""UPDATE antiraid SET raid_triggered_at = NULL, raid_expires_at = NULL WHERE guild_id = $1""", guild.id)
+                await self.bot.db.execute(
+                    """UPDATE antiraid SET raid_triggered_at = NULL, raid_expires_at = NULL WHERE guild_id = $1""",
+                    guild.id,
+                )
             else:
                 return True, config.join_punishment, "Raid is active"
         if member.id in whitelist:
             return False, None, None
-        if config.new_accounts is True and member.created_at < datetime.now() - timedelta(days=config.new_account_threshold):
+        if (
+            config.new_accounts is True
+            and member.created_at
+            < datetime.now() - timedelta(days=config.new_account_threshold)
+        ):
             return True, config.new_account_punishment, "New Account"
         if config.no_avatar and not member.avatar:
             return True, config.no_avatar_punishment, "No Avatar"
-        if await self.bot.object_cache.ratelimited(f"raid:{guild.id}", config.join_threshold, 60) != 0:
-            expiration = datetime.now() + timedelta(minutes = 10)
-            await self.bot.db.execute("""INSERT INTO antiraid (guild_id, raid_status, raid_triggered_at, raid_expires_at) VALUES($1, $2, $3, $4) ON CONFLICT(guild_id) DO UPDATE SET raid_status = excluded.raid_status, raid_triggered_at = excluded.raid_triggered_at, raid_expires_at = excluded.raid_expires_at""", guild.id, True, datetime.now(), expiration)
+        if (
+            await self.bot.object_cache.ratelimited(
+                f"raid:{guild.id}", config.join_threshold, 60
+            )
+            != 0
+        ):
+            expiration = datetime.now() + timedelta(minutes=10)
+            await self.bot.db.execute(
+                """INSERT INTO antiraid (guild_id, raid_status, raid_triggered_at, raid_expires_at) VALUES($1, $2, $3, $4) ON CONFLICT(guild_id) DO UPDATE SET raid_status = excluded.raid_status, raid_triggered_at = excluded.raid_triggered_at, raid_expires_at = excluded.raid_expires_at""",
+                guild.id,
+                True,
+                datetime.now(),
+                expiration,
+            )
             self.bot.dispatch("raid", member, guild, expiration)
             return True, config.join_punishment, "Mass Join"
 
         return False, None, None
-        
 
     # @Cog.listener("on_member_join")
     # async def on_new_member(self, member: Member):
@@ -81,9 +92,15 @@ class AntiRaid_Events(Cog):
     @Cog.listener("on_raid")
     async def new_raid(self, member: Member, guild: Guild, expiration: datetime):
         try:
-            await guild.owner.send(embed = Embed(title = "RAID", description = f"you're server {guild.name} (`{guild.id}`) is being raided, the raid will expire {utils.format_dt(expiration, style='R')}"))
+            await guild.owner.send(
+                embed=Embed(
+                    title="RAID",
+                    description=f"you're server {guild.name} (`{guild.id}`) is being raided, the raid will expire {utils.format_dt(expiration, style='R')}",
+                )
+            )
         except Exception:
             pass
+
 
 async def setup(bot: Client):
     await bot.add_cog(AntiRaid_Events(bot))

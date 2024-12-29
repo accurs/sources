@@ -4,17 +4,19 @@
   Discord: aiohttp
 """
 
-from typing import List, Optional, Any
-from parsel import Selector
-import re
 import json
+import re
 from asyncio import gather
+from typing import Any, List, Optional
+
 from lxml import html
+from parsel import Selector
 from playwright.async_api import async_playwright
 from redis.asyncio import Redis
-from .Base import BaseService, cache
-from ..models import BingResponse, BingImageResponse
 from unidecode_rs import decode as unidecode
+
+from ..models import BingImageResponse, BingResponse
+from .Base import BaseService, cache
 
 HEADERS = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",

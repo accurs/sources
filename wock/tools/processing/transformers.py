@@ -1,5 +1,6 @@
-from typing import Optional, Union, Dict, Any
-from discord import User, Guild, Member
+from typing import Any, Dict, Optional, Union
+
+from discord import Guild, Member, User
 from discord.ext.commands import AutoShardedBot
 from typing_extensions import Self
 

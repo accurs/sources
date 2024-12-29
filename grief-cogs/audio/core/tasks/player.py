@@ -1,7 +1,6 @@
 import asyncio
 import time
 from pathlib import Path
-
 from typing import Dict
 
 import lavalink
@@ -36,7 +35,11 @@ class PlayerTasks(MixinMeta, metaclass=CompositeMetaClass):
                         try:
                             await p.pause(False)
                         except Exception as exc:
-                            log.debug("Exception raised in Audio's unpausing %r.", p, exc_info=exc)
+                            log.debug(
+                                "Exception raised in Audio's unpausing %r.",
+                                p,
+                                exc_info=exc,
+                            )
                     pause_times.pop(server.id, None)
             servers = stop_times.copy()
             servers.update(pause_times)
@@ -56,10 +59,15 @@ class PlayerTasks(MixinMeta, metaclass=CompositeMetaClass):
                         ).currently_auto_playing_in.set([])
                     except Exception as exc:
                         log.debug(
-                            "Exception raised in Audio's emptydc_timer for %s.", sid, exc_info=exc
+                            "Exception raised in Audio's emptydc_timer for %s.",
+                            sid,
+                            exc_info=exc,
                         )
 
-                elif sid in stop_times and await self.config.guild(server_obj).emptydc_enabled():
+                elif (
+                    sid in stop_times
+                    and await self.config.guild(server_obj).emptydc_enabled()
+                ):
                     emptydc_timer = await self.config.guild(server_obj).emptydc_timer()
                     if (time.time() - stop_times[sid]) >= emptydc_timer:
                         stop_times.pop(sid)
@@ -81,9 +89,12 @@ class PlayerTasks(MixinMeta, metaclass=CompositeMetaClass):
                                 exc_info=exc,
                             )
                 elif (
-                    sid in pause_times and await self.config.guild(server_obj).emptypause_enabled()
+                    sid in pause_times
+                    and await self.config.guild(server_obj).emptypause_enabled()
                 ):
-                    emptypause_timer = await self.config.guild(server_obj).emptypause_timer()
+                    emptypause_timer = await self.config.guild(
+                        server_obj
+                    ).emptypause_timer()
                     if (time.time() - pause_times.get(sid, 0)) >= emptypause_timer:
                         try:
                             await lavalink.get_player(sid).pause()
@@ -91,6 +102,8 @@ class PlayerTasks(MixinMeta, metaclass=CompositeMetaClass):
                             if "No such player for that guild" in str(exc):
                                 pause_times.pop(sid, None)
                             log.debug(
-                                "Exception raised in Audio's pausing for %s.", sid, exc_info=exc
+                                "Exception raised in Audio's pausing for %s.",
+                                sid,
+                                exc_info=exc,
                             )
             await asyncio.sleep(5)

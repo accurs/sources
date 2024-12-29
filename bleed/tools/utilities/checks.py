@@ -1,8 +1,10 @@
-import discord
 import json
+
+import config
+import discord
 from discord.ext import commands
 from discord.ext.commands import CommandError, MissingPermissions
-import config
+
 
 def has_permissions(**permissions):
     """

@@ -45,5 +45,10 @@ async def edit_role_icon(bot, role: Role, reason=None, **fields):
             else:
                 fields["icon"] = None
 
-    r = Route("PATCH", "/guilds/{guild_id}/roles/{role_id}", guild_id=role.guild.id, role_id=role.id)
+    r = Route(
+        "PATCH",
+        "/guilds/{guild_id}/roles/{role_id}",
+        guild_id=role.guild.id,
+        role_id=role.id,
+    )
     await bot.http.request(r, json=fields, reason=reason)

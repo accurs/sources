@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord import Interaction, SelectOption, TextChannel, Thread, ui
 from discord.enums import ButtonStyle
+
 from grief.core.commands import parse_timedelta
 
 from ..poll import Poll, PollOption
@@ -33,7 +34,9 @@ class StartSetupView(discord.ui.View):
         self.cog = cog
 
     @discord.ui.button(label="Start poll", style=ButtonStyle.primary)
-    async def btn_start(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def btn_start(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.stop()
         await interaction.response.send_modal(
             SetupModal(author=self.author, channel=self.channel, cog=self.cog)
@@ -105,7 +108,9 @@ class SetupModal(ui.Modal, title="Poll setup"):
 
         str_options = str(self.options.value).split("\n")
         if len(str_options) < 2:
-            await interaction.response.send_message("You need at least 2 options.", ephemeral=True)
+            await interaction.response.send_message(
+                "You need at least 2 options.", ephemeral=True
+            )
             return
         elif len(str_options) > 5:
             await interaction.response.send_message(
@@ -193,7 +198,9 @@ class SetupYesNoView(discord.ui.View):
             ),
         ],
     )
-    async def btn_vote_change(self, interaction: discord.Interaction, select: discord.ui.Select):
+    async def btn_vote_change(
+        self, interaction: discord.Interaction, select: discord.ui.Select
+    ):
         self.vote_change = select.values[0] == "yes"
         await interaction.response.defer()
 
@@ -238,7 +245,9 @@ class SetupYesNoView(discord.ui.View):
         await interaction.response.defer()
 
     @discord.ui.button(label="Submit & start poll!", style=ButtonStyle.primary)
-    async def btn_submit(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def btn_submit(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         if self.vote_change is None:
             await interaction.response.send_message(
                 "You didn't select a vote changing option.", ephemeral=True
@@ -262,7 +271,9 @@ class SetupYesNoView(discord.ui.View):
         self.stop()
 
         unique_poll_id = (  # msg ID and first 25 chars of sanitised question
-            str(interaction.id) + "_" + "".join(c for c in self.question if c.isalnum())[:25]
+            str(interaction.id)
+            + "_"
+            + "".join(c for c in self.question if c.isalnum())[:25]
         )
         poll_finish = datetime.datetime.now(datetime.timezone.utc) + self.time
 

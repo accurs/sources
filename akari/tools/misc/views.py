@@ -1,24 +1,12 @@
-import re
 import datetime
-
+import re
 from io import BytesIO
 from typing import Union
 
-from discord import (
-    Interaction,
-    Embed,
-    ButtonStyle,
-    Button,
-    Member,
-    TextStyle,
-    PartialEmoji,
-    Sticker,
-    HTTPException,
-    File,
-    Emoji,
-)
-from discord.ui import View, button, Modal, TextInput
+from discord import (Button, ButtonStyle, Embed, Emoji, File, HTTPException,
+                     Interaction, Member, PartialEmoji, Sticker, TextStyle)
 from discord.ext.commands import Context
+from discord.ui import Modal, TextInput, View, button
 
 
 class confessModal(Modal, title="confess here"):

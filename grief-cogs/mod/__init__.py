@@ -1,4 +1,5 @@
 from grief.core.bot import Grief
+
 from .mod import Mod
 
 

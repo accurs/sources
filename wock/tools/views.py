@@ -1,14 +1,13 @@
 from contextlib import suppress
-
-from discord import ButtonStyle, HTTPException, Interaction, Member, Message
-import discord
-from loguru import logger
-import aiohttp
-from discord.ui import button, View
 from dataclasses import dataclass
-from discord import Embed
 from typing import Union
-from discord.ui import Button
+
+import aiohttp
+import discord
+from discord import (ButtonStyle, Embed, HTTPException, Interaction, Member,
+                     Message)
+from discord.ui import Button, View, button
+from loguru import logger
 
 
 class PlayModal(discord.ui.Modal, title="Play"):
@@ -29,6 +28,7 @@ class PlayModal(discord.ui.Modal, title="Play"):
             name = interaction.data["components"][0]["components"][0]["value"]
             logger.info(f"Play Modal got query {name}")
             from cogs.music import enqueue
+
             return await enqueue(self.bot, interaction, name)
 
 
@@ -88,6 +88,7 @@ class RenameModal(discord.ui.Modal, title="Rename"):
                     embed=embed, ephemeral=True
                 )
 
+
 async def reclaim(
     channel: discord.VoiceChannel,
     old_owner: Union[discord.Member, discord.User],
@@ -102,61 +103,21 @@ async def reclaim(
 # Label, Description, Value
 
 OPTIONS = [
+    ["Lock Channel", "Lock your voice channel from non admins joining", "lock"],
+    ["Unlock Channel", "Unlock your channel so anyone can join", "unlock"],
+    ["Hide Channel", "Hide your channel from users seeing it", "hide"],
+    ["Reveal Channel", "Allow users to see your channel", "reveal"],
+    ["Rename Channel", "Rename your channel", "rename"],
+    ["Claim Ownership", "Claim ownership of the current voice channel", "claim"],
+    ["Increase User Limit", "Increase the user limit of your channel", "increase"],
+    ["Decrease User Limit", "Decrease the user limit of your channel", "decrease"],
+    ["Delete Channel", "Delete your channel", "delete"],
     [
-        "Lock Channel", 
-        "Lock your voice channel from non admins joining", 
-        "lock"
+        "Show Information",
+        "Show information regarding your voice channel",
+        "information",
     ],
-    [
-        "Unlock Channel", 
-        "Unlock your channel so anyone can join", 
-        "unlock"
-    ],
-    [
-        "Hide Channel", 
-        "Hide your channel from users seeing it", 
-        "hide"
-    ],
-    [
-        "Reveal Channel", 
-        "Allow users to see your channel", 
-        "reveal"
-    ],
-    [
-        "Rename Channel", 
-        "Rename your channel", 
-        "rename"
-    ],
-    [
-        "Claim Ownership", 
-        "Claim ownership of the current voice channel", 
-        "claim"
-    ],
-    [
-        "Increase User Limit", 
-        "Increase the user limit of your channel", 
-        "increase"
-    ],
-    [
-        "Decrease User Limit", 
-        "Decrease the user limit of your channel", 
-        "decrease"
-    ],
-    [
-        "Delete Channel", 
-        "Delete your channel", 
-        "delete"
-    ],
-    [
-        "Show Information", 
-        "Show information regarding your voice channel", 
-        "information"
-    ],
-    [
-        "Play", 
-        "Play a song thru wock", 
-        "play"
-    ],
+    ["Play", "Play a song thru wock", "play"],
 ]
 
 
@@ -165,7 +126,8 @@ class VoicemasterInterface(View):
         super().__init__(timeout=None)
         self.bot = bot
         self.options = [
-            discord.SelectOption(label = _[0], description = _[1], value = _[2]) for _ in OPTIONS
+            discord.SelectOption(label=_[0], description=_[1], value=_[2])
+            for _ in OPTIONS
         ]
 
         self.add_item(VmSelectMenu(self.bot))
@@ -175,9 +137,16 @@ class VmSelectMenu(discord.ui.Select):
     def __init__(self, bot):
         self.bot = bot
         options = [
-            discord.SelectOption(label = _[0], description = _[1], value = _[2]) for _ in OPTIONS
+            discord.SelectOption(label=_[0], description=_[1], value=_[2])
+            for _ in OPTIONS
         ]
-        super().__init__(custom_id = "VM:Select", placeholder="select task...", min_values=1, max_values=1, options=options)
+        super().__init__(
+            custom_id="VM:Select",
+            placeholder="select task...",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
 
     async def lock(self, interaction: discord.Interaction):
         if not interaction.user.voice:
@@ -230,7 +199,7 @@ class VmSelectMenu(discord.ui.Select):
                 color=0x2D2B31,
             )
             return await interaction.response.send_message(embed=embed, ephemeral=True)
-        
+
     async def unlock(self, interaction: discord.Interaction):
         if not interaction.user.voice:
             embed = discord.Embed(
@@ -510,9 +479,7 @@ class VmSelectMenu(discord.ui.Select):
         except Exception as e:
             return await interaction.response.send_message(str(e), ephemeral=True)
 
-    async def increase(
-        self, interaction: discord.Interaction
-    ):
+    async def increase(self, interaction: discord.Interaction):
         if not interaction.user.voice:
             embed = discord.Embed(
                 description="> You **aren't** connected to a **voicemaster channel**",
@@ -560,9 +527,7 @@ class VmSelectMenu(discord.ui.Select):
                 ephemeral=True,
             )
 
-    async def decrease(
-        self, interaction: discord.Interaction
-    ):
+    async def decrease(self, interaction: discord.Interaction):
         if not interaction.user.voice:
             embed = discord.Embed(
                 description="> You **aren't** connected to a **voicemaster channel**",
@@ -657,10 +622,8 @@ class VmSelectMenu(discord.ui.Select):
                 color=0x2D2B31,
             )
             return await interaction.response.send_message(embed=embed, ephemeral=True)
-        
-    async def information(
-        self, interaction: discord.Interaction
-    ):
+
+    async def information(self, interaction: discord.Interaction):
         if not interaction.user.voice:
             embed = discord.Embed(
                 description="> You **aren't** connected to a **Voicemaster channel**",
@@ -703,12 +666,13 @@ class VmSelectMenu(discord.ui.Select):
             embed.set_author(name=vc.name, icon_url=owner.display_avatar)
             embed.set_thumbnail(url=owner.display_avatar)
             return await interaction.response.send_message(embed=embed, ephemeral=True)
-    
+
     async def callback(self, interaction: discord.Interaction):
         value = self.values[0]
-        await (getattr(self, value))(interaction)
+        await getattr(self, value)(interaction)
         self.values.clear()
-        return await interaction.message.edit(view = self.view)
+        return await interaction.message.edit(view=self.view)
+
 
 class GiveawayView(View):
     def __init__(self):

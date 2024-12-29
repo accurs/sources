@@ -204,7 +204,9 @@ class LoggedAppCom(Log):
             )
 
         if self.app_type == 3:  # message command
-            if not isinstance(self.target, discord.PartialMessage):  # this should never happen
+            if not isinstance(
+                self.target, discord.PartialMessage
+            ):  # this should never happen
                 return "Something really bad went wrong so I can't show this."
             if not self.guild or not self.channel:
                 return (

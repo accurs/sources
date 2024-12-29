@@ -1,45 +1,26 @@
 from contextlib import suppress
 from secrets import token_urlsafe
-from typing import Annotated, Dict, List, Literal, Optional, TypedDict, cast, overload
-from core.tools import CompositeMetaClass, MixinMeta, FlagConverter
-from discord import (
-    ActionRow,
-    AllowedMentions,
-    ButtonStyle,
-    CategoryChannel,
-    Color,
-    Embed,
-    Guild,
-    HTTPException,
-    Interaction,
-    Member,
-    Message,
-    PartialMessage,
-    PermissionOverwrite,
-    Role,
-    TextChannel,
-)
-from discord.components import Button as ButtonComponent
-from discord.ext.commands import (
-    group,
-    has_permissions,
-    Cog,
-    flag,
-    check,
-    Range,
-    cooldown,
-    BucketType,
-)
+from typing import (Annotated, Dict, List, Literal, Optional, TypedDict, cast,
+                    overload)
+
 from core.client.context import Context as OriginalContext
-from discord.ui import View, Button
-from discord.utils import find
-from core.tools.converters.discord import StrictRole, TouchableMember
-from core.managers.script import EmbedScript as Script
-from core.managers.script import EmbedScript
-from loguru import logger
-from core.tools import codeblock, vowel
 from core.managers.paginator import Paginator
+from core.managers.script import EmbedScript
+from core.managers.script import EmbedScript as Script
+from core.tools import (CompositeMetaClass, FlagConverter, MixinMeta,
+                        codeblock, vowel)
+from core.tools.converters.discord import StrictRole, TouchableMember
+from discord import (ActionRow, AllowedMentions, ButtonStyle, CategoryChannel,
+                     Color, Embed, Guild, HTTPException, Interaction, Member,
+                     Message, PartialMessage, PermissionOverwrite, Role,
+                     TextChannel)
+from discord.components import Button as ButtonComponent
 from discord.errors import Forbidden
+from discord.ext.commands import (BucketType, Cog, Range, check, cooldown,
+                                  flag, group, has_permissions)
+from discord.ui import Button, View
+from discord.utils import find
+from loguru import logger
 
 
 class Context(OriginalContext):

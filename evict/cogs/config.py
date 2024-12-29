@@ -1,26 +1,18 @@
-import json, discord, typing
-
-from discord import (
-    TextChannel,
-    ChannelType,
-    Embed,
-    Role,
-    SelectOption,
-    Interaction,
-    PartialEmoji,
-    PermissionOverwrite,
-)
-from discord.ext.commands import Cog, group, command
-from discord.ui import Select, View, Button
+import json
+import typing
 from typing import Union
-from discord.ext import commands
 
-from utils.utils import InvokeClass, EmbedScript
-from patches.permissions import Permissions
-
-from bot.helpers import EvictContext
+import discord
 from bot.bot import Evict
-from bot.managers.emojis import Emojis, Colors
+from bot.helpers import EvictContext
+from bot.managers.emojis import Colors, Emojis
+from discord import (ChannelType, Embed, Interaction, PartialEmoji,
+                     PermissionOverwrite, Role, SelectOption, TextChannel)
+from discord.ext import commands
+from discord.ext.commands import Cog, command, group
+from discord.ui import Button, Select, View
+from patches.permissions import Permissions
+from utils.utils import EmbedScript, InvokeClass
 
 poj_cache = {}
 
@@ -142,9 +134,7 @@ class config(Cog):
         )
         return await ctx.success("I have removed **all** channels from mediaonly.")
 
-    @mediaonly.command(
-        name="list", description="return a list of mediaonly channels"
-    )
+    @mediaonly.command(name="list", description="return a list of mediaonly channels")
     async def mediaonly_list(self, ctx: EvictContext):
         i = 0
         k = 1
@@ -267,9 +257,7 @@ class config(Cog):
 
         return await ctx.success("I will **not** ping new members in any channel.")
 
-    @pingonjoin.command(
-        name="list", description="get a list of pingonjoin channels"
-    )
+    @pingonjoin.command(name="list", description="get a list of pingonjoin channels")
     async def poj_list(self, ctx: EvictContext):
 
         results = await self.bot.db.fetch(
@@ -576,8 +564,7 @@ class config(Cog):
         return await ctx.paginate(number)
 
     @commands.group(
-        invoke_without_command=True,
-        description="manage custom punishment responses"
+        invoke_without_command=True, description="manage custom punishment responses"
     )
     async def invoke(self, ctx):
         await ctx.create_pages()
@@ -916,9 +903,7 @@ class config(Cog):
 
         return await ctx.success("I have **disabled** confessions for this server.")
 
-    @confessions.command(
-        name="channel", description="get the confessions channel"
-    )
+    @confessions.command(name="channel", description="get the confessions channel")
     async def confessions_channel(self, ctx: EvictContext):
 
         check = await self.bot.db.fetchrow(
@@ -962,9 +947,7 @@ class config(Cog):
             f"I have **changed** your guild prefix changed to `{prefix}`."
         )
 
-    @commands.command(
-        description="set your own prefix", usage="[prefix]"
-    )
+    @commands.command(description="set your own prefix", usage="[prefix]")
     async def selfprefix(self, ctx: EvictContext, prefix: str):
 
         if len(prefix) > 3 and prefix.lower() != "none":

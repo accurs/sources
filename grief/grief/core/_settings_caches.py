@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Union, Set, Iterable, Tuple, overload
 import asyncio
 from argparse import Namespace
 from collections import defaultdict
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union, overload
 
 import discord
 
@@ -39,11 +39,15 @@ class PrefixManager:
         return ret
 
     async def set_prefixes(
-        self, guild: Optional[discord.Guild] = None, prefixes: Optional[List[str]] = None
+        self,
+        guild: Optional[discord.Guild] = None,
+        prefixes: Optional[List[str]] = None,
     ):
         gid: Optional[int] = guild.id if guild else None
         prefixes = prefixes or []
-        if not isinstance(prefixes, list) and not all(isinstance(pfx, str) for pfx in prefixes):
+        if not isinstance(prefixes, list) and not all(
+            isinstance(pfx, str) for pfx in prefixes
+        ):
             raise TypeError("Prefixes must be a list of strings")
         if any(prefix.startswith("/") for prefix in prefixes):
             raise ValueError(
@@ -91,12 +95,10 @@ class I18nManager:
                 return out
 
     @overload
-    async def set_locale(self, guild: None, locale: str):
-        ...
+    async def set_locale(self, guild: None, locale: str): ...
 
     @overload
-    async def set_locale(self, guild: discord.Guild, locale: Union[str, None]):
-        ...
+    async def set_locale(self, guild: discord.Guild, locale: Union[str, None]): ...
 
     async def set_locale(
         self, guild: Union[discord.Guild, None], locale: Union[str, None]
@@ -112,7 +114,9 @@ class I18nManager:
         self._guild_locale[guild.id] = locale
         await self._config.guild(guild).locale.set(locale)
 
-    async def get_regional_format(self, guild: Union[discord.Guild, None]) -> Optional[str]:
+    async def get_regional_format(
+        self, guild: Union[discord.Guild, None]
+    ) -> Optional[str]:
         """Get the regional format from the cache"""
         # Ensure global locale is in the cache
         if None not in self._guild_regional_format:
@@ -285,7 +289,9 @@ class WhitelistBlacklistManager:
 
             return ret
 
-    async def add_to_whitelist(self, guild: Optional[discord.Guild], role_or_user: Iterable[int]):
+    async def add_to_whitelist(
+        self, guild: Optional[discord.Guild], role_or_user: Iterable[int]
+    ):
         async with self._access_lock:
             gid: Optional[int] = guild.id if guild else None
             role_or_user = role_or_user or []
@@ -358,7 +364,9 @@ class WhitelistBlacklistManager:
 
             return ret
 
-    async def add_to_blacklist(self, guild: Optional[discord.Guild], role_or_user: Iterable[int]):
+    async def add_to_blacklist(
+        self, guild: Optional[discord.Guild], role_or_user: Iterable[int]
+    ):
         async with self._access_lock:
             gid: Optional[int] = guild.id if guild else None
             role_or_user = role_or_user or []
@@ -435,9 +443,13 @@ class DisabledCogCache:
         if guild_id in self._disable_map[cog_name]:
             return self._disable_map[cog_name][guild_id]
 
-        gset = await self._config.custom("COG_DISABLE_SETTINGS", cog_name, guild_id).disabled()
+        gset = await self._config.custom(
+            "COG_DISABLE_SETTINGS", cog_name, guild_id
+        ).disabled()
         if gset is None:
-            gset = await self._config.custom("COG_DISABLE_SETTINGS", cog_name, 0).disabled()
+            gset = await self._config.custom(
+                "COG_DISABLE_SETTINGS", cog_name, 0
+            ).disabled()
             if gset is None:
                 gset = False
 
@@ -453,7 +465,9 @@ class DisabledCogCache:
         cog_name: str
             This should be the cog's qualified name, not necessarily the classname
         """
-        await self._config.custom("COG_DISABLE_SETTINGS", cog_name, 0).disabled.set(True)
+        await self._config.custom("COG_DISABLE_SETTINGS", cog_name, 0).disabled.set(
+            True
+        )
         self._disable_map.pop(cog_name, None)
 
     async def default_enable(self, cog_name: str):
@@ -489,7 +503,9 @@ class DisabledCogCache:
             return False
 
         self._disable_map[cog_name][guild_id] = True
-        await self._config.custom("COG_DISABLE_SETTINGS", cog_name, guild_id).disabled.set(True)
+        await self._config.custom(
+            "COG_DISABLE_SETTINGS", cog_name, guild_id
+        ).disabled.set(True)
         return True
 
     async def enable_cog_in_guild(self, cog_name: str, guild_id: int) -> bool:
@@ -513,5 +529,7 @@ class DisabledCogCache:
             return False
 
         self._disable_map[cog_name][guild_id] = False
-        await self._config.custom("COG_DISABLE_SETTINGS", cog_name, guild_id).disabled.set(False)
+        await self._config.custom(
+            "COG_DISABLE_SETTINGS", cog_name, guild_id
+        ).disabled.set(False)
         return True

@@ -1,5 +1,6 @@
 from typing import Union
 
+
 def pluralize(text: str, count: int) -> str:
     """
     Pluralize a string based on the count.

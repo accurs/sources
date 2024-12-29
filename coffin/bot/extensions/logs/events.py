@@ -1,28 +1,11 @@
-
-from discord.ext.commands import (
-    CommandError,
-    Cog,
-    group,
-    command,
-    has_permissions
-)
-from discord import (
-    Client,
-    Embed,
-    File,
-    User,
-    Member,
-    AuditLogEntry,
-    utils,
-    Message,
-    Guild,
-    TextChannel,
-    Interaction,
-    Thread,
-    ui
-)
-from typing import List
 from io import BytesIO
+from typing import List
+
+from discord import (AuditLogEntry, Client, Embed, File, Guild, Interaction,
+                     Member, Message, TextChannel, Thread, User, ui, utils)
+from discord.ext.commands import (Cog, CommandError, command, group,
+                                  has_permissions)
+
 
 class LogsView(ui.View):
     def __init__(self):
@@ -227,9 +210,7 @@ class LogsEvents(Cog):
                 ):
                     if channel := entry.guild.get_channel(channel_id):
                         embed = (
-                            Embed(
-                                color=self.bot.color, timestamp=entry.created_at
-                            )
+                            Embed(color=self.bot.color, timestamp=entry.created_at)
                             .set_author(
                                 name=str(entry.user),
                                 icon_url=entry.user.display_avatar.url,
@@ -711,6 +692,7 @@ class LogsEvents(Cog):
                         embed=embed,
                         file=File(buffer, filename=f"{message.channel}.txt"),
                     )
+
 
 async def setup(bot: Client):
     await bot.add_cog(LogsEvents(bot))

@@ -1,19 +1,14 @@
 from contextlib import asynccontextmanager
 from http.cookiejar import MozillaCookieJar
-from loguru import logger as log
 from secrets import token_urlsafe
-from typing import AsyncGenerator, Literal, Optional, List
-from anyio import CapacityLimiter
-from playwright.async_api import (
-    Browser,
-    BrowserContext,
-    Page,
-    Playwright,
-    async_playwright,
-)
-from pydantic import BaseModel
+from typing import AsyncGenerator, List, Literal, Optional
 
 import config
+from anyio import CapacityLimiter
+from loguru import logger as log
+from playwright.async_api import (Browser, BrowserContext, Page, Playwright,
+                                  async_playwright)
+from pydantic import BaseModel
 
 jar = MozillaCookieJar()
 jar.load("tools/client/browser/cookies.txt")

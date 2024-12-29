@@ -1,22 +1,25 @@
+import asyncio
 import io
 import typing
+from asyncio import Lock
+from collections import defaultdict
 from datetime import datetime
+from typing import Optional
+
 import aiohttp
-import asyncio
 import arrow
 import discord
 from discord.ext import commands
 from discord.ext.commands import Cog
-from collections import defaultdict
-from asyncio import Lock
-from typing import Optional
-from tools.important import Context, PatPatCreator  # type: ignore # type: ignore
+from tools.important import (Context,  # type: ignore # type: ignore
+                             PatPatCreator)
 
 if typing.TYPE_CHECKING:
     from tools.wock import Wock  # type: ignore
-from tools.quote import Quotes  # type: ignore
-from pydantic import BaseModel
+
 from cashews import cache
+from pydantic import BaseModel
+from tools.quote import Quotes  # type: ignore
 
 cache.setup("mem://")
 eros_key = "c9832179-59f7-477e-97ba-dca4a46d7f3f"
@@ -125,11 +128,19 @@ class Miscellaneous(Cog):
         embed = await data.to_embed(ctx)  # type: ignore  # noqa: F821
         return await ctx.send(embed=embed)
 
-    @commands.command(name="quote", brief="Quote a message sent by a user", example=",quote {as reply}")
+    @commands.command(
+        name="quote",
+        brief="Quote a message sent by a user",
+        example=",quote {as reply}",
+    )
     async def quote(self, ctx: Context, message: discord.Message = None):
         return await self.quotes.get_caption(ctx, message)
 
-    @commands.command(name="variables", brief="show all embed variables used for the bots embed creator", example=",variables")
+    @commands.command(
+        name="variables",
+        brief="show all embed variables used for the bots embed creator",
+        example=",variables",
+    )
     async def variables(self, ctx: Context):
         from tools.important.subclasses.parser import Script  # type: ignore
 
@@ -140,7 +151,11 @@ class Miscellaneous(Cog):
             ctx, discord.Embed(title="variables", color=self.bot.color), rows
         )
 
-    @commands.command(name="tts", brief="Allow the bot to speak to a user in a voice channel", example=",tts whats up little girl")
+    @commands.command(
+        name="tts",
+        brief="Allow the bot to speak to a user in a voice channel",
+        example=",tts whats up little girl",
+    )
     async def tts(self, ctx: Context, *, message: str):
         from aiogtts import aiogTTS  # type: ignore
 
@@ -187,8 +202,12 @@ class Miscellaneous(Cog):
         except:  # noqa: E722
             return await ctx.fail("couldn't uwuify that message")
 
-
-    @commands.hybrid_command(name="finger", aliases=("playwith",), exmaple=",finger @o_5v", brief="Finger another users profile picture")
+    @commands.hybrid_command(
+        name="finger",
+        aliases=("playwith",),
+        exmaple=",finger @o_5v",
+        brief="Finger another users profile picture",
+    )
     async def patpat(
         self,
         ctx: commands.Context,
@@ -201,9 +220,12 @@ class Miscellaneous(Cog):
             patpat_gif = discord.File(patpat_buffer, filename="pat.gif")
             return await ctx.send(file=patpat_gif)
 
-
-
-    @commands.command(name="snipe", aliases=["s"], example=",snipe 4", breif="Retrive a recently deleted message")
+    @commands.command(
+        name="snipe",
+        aliases=["s"],
+        example=",snipe 4",
+        breif="Retrive a recently deleted message",
+    )
     async def snipe(self, ctx: Context, index: int = 1):
         if not (
             snipe := await self.bot.snipes.get_entry(
@@ -265,7 +287,12 @@ class Miscellaneous(Cog):
 
         return await ctx.send(embed=embed)
 
-    @commands.command(name="editsnipe", aliases=["es"], example=",editsnipe 2", brief="Retrieve a messages original text before edited")
+    @commands.command(
+        name="editsnipe",
+        aliases=["es"],
+        example=",editsnipe 2",
+        brief="Retrieve a messages original text before edited",
+    )
     async def editsnipe(self, ctx: Context, index: int = 1):
         if not (
             snipe := await self.bot.snipes.get_entry(
@@ -324,7 +351,12 @@ class Miscellaneous(Cog):
 
         return await ctx.send(embed=embed)
 
-    @commands.command(name="reactionsnipe", aliases=["reactsnipe", "rs"], brief="Retrieve a deleted reaction from a message", example=",reactionsipe 2")
+    @commands.command(
+        name="reactionsnipe",
+        aliases=["reactsnipe", "rs"],
+        brief="Retrieve a deleted reaction from a message",
+        example=",reactionsipe 2",
+    )
     async def reactionsnipe(self, ctx: Context, index: int = 1):
         if not (
             snipe := await self.bot.snipes.get_entry(
@@ -345,7 +377,12 @@ class Miscellaneous(Cog):
 
         return await ctx.send(embed=embed)
 
-    @commands.command(name="clearsnipe", aliases=["cs"], brief="Clear all deleted messages from wock", example=",clearsnipe")
+    @commands.command(
+        name="clearsnipe",
+        aliases=["cs"],
+        brief="Clear all deleted messages from wock",
+        example=",clearsnipe",
+    )
     @commands.has_permissions(manage_messages=True)
     async def clearsnipes(self, ctx: Context):
         await self.bot.snipes.clear_entries(ctx.channel)
@@ -377,7 +414,7 @@ class Miscellaneous(Cog):
     @birthday.command(
         name="set",
         brief="Set your birthday through wock",
-        example=",birthday set december 31"
+        example=",birthday set december 31",
     )
     async def birthday_set(self, ctx: Context, *, bday: str):
         bdays = bday.split()
@@ -410,9 +447,7 @@ class Miscellaneous(Cog):
         )
 
     @birthday.command(
-        name="reset",
-        brief="Clear your set birthday",
-        example="birthday reset"
+        name="reset", brief="Clear your set birthday", example="birthday reset"
     )
     async def birthday_clear(self, ctx: Context):
         bday = await self.bot.db.fetchval(
@@ -427,8 +462,12 @@ class Miscellaneous(Cog):
         )
         return await ctx.success("**reset** your **birthday settings**")
 
-    @commands.command(name='selfpurge', example=',selfpurge 100', brief='Clear your messages from a chat')
-    @commands.bot_has_permissions(manage_messages = True)
+    @commands.command(
+        name="selfpurge",
+        example=",selfpurge 100",
+        brief="Clear your messages from a chat",
+    )
+    @commands.bot_has_permissions(manage_messages=True)
     async def selfpurge(self, ctx, amount: int):
         amount = amount + 1
 

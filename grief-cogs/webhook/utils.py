@@ -1,8 +1,7 @@
-
-
 import re
 
 import discord
+
 from grief.core.commands import Context
 
 USER_MENTIONS = discord.AllowedMentions.none()
@@ -13,7 +12,9 @@ WEBHOOK_RE = re.compile(
 )
 
 
-async def _monkeypatch_send(ctx: Context, content: str = None, **kwargs) -> discord.Message:
+async def _monkeypatch_send(
+    ctx: Context, content: str = None, **kwargs
+) -> discord.Message:
     self = ctx.bot.get_cog("Webhook")
     original_kwargs = kwargs.copy()
     try:

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import loguru
 import asyncio
 from types import TracebackType
-from typing import Any, Optional, Protocol, Union
-from typing import Iterable, Sequence
+from typing import Any, Iterable, Optional, Protocol, Sequence, Union
+
+import loguru
 import ujson
-from asyncpg import Connection, Pool, Record as DefaultRecord, create_pool
+from asyncpg import Connection, Pool
+from asyncpg import Record as DefaultRecord
+from asyncpg import create_pool
 from discord.ext.commands import Context, check
 
 log: loguru.logger = loguru.logger
@@ -105,7 +107,7 @@ class Database:
                 data = await conn.fetch(sql, *args)
                 await self.add_to_cache(data, "fetch", sql, args)
                 return data
-            
+
     async def fetchiter(self, sql: str, *args):
         output = await self.fetch(sql, *args)
         for row in output:

@@ -25,7 +25,9 @@ from ..cog_utils import CompositeMetaClass, DataReader
 
 log = getLogger("red.cogs.Audio.cog.Utilities.miscellaneous")
 _ = Translator("Audio", Path(__file__))
-_RE_TIME_CONVERTER: Final[Pattern] = re.compile(r"(?:(\d+):)?([0-5]?[0-9]):([0-5][0-9])")
+_RE_TIME_CONVERTER: Final[Pattern] = re.compile(
+    r"(?:(\d+):)?([0-5]?[0-9]):([0-5][0-9])"
+)
 _prefer_lyrics_cache = {}
 
 
@@ -39,7 +41,11 @@ class MiscellaneousUtilities(MixinMeta, metaclass=CompositeMetaClass):
     async def send_embed_msg(
         self, ctx: commands.Context, author: Mapping[str, str] = None, **kwargs
     ) -> discord.Message:
-        colour = kwargs.get("colour") or kwargs.get("color") or await self.bot.get_embed_color(ctx)
+        colour = (
+            kwargs.get("colour")
+            or kwargs.get("color")
+            or await self.bot.get_embed_color(ctx)
+        )
         title = kwargs.get("title") or None
         _type = kwargs.get("type", "rich") or "rich"
         url = kwargs.get("url") or None
@@ -78,11 +84,16 @@ class MiscellaneousUtilities(MixinMeta, metaclass=CompositeMetaClass):
     def _has_notify_perms(
         self,
         channel: Union[
-            discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.Thread,
         ],
     ) -> bool:
         perms = channel.permissions_for(channel.guild.me)
-        return all((can_user_send_messages_in(channel.guild.me, channel), perms.embed_links))
+        return all(
+            (can_user_send_messages_in(channel.guild.me, channel), perms.embed_links)
+        )
 
     async def maybe_run_pending_db_tasks(self, ctx: commands.Context) -> None:
         if self.api_interface is not None:
@@ -131,7 +142,9 @@ class MiscellaneousUtilities(MixinMeta, metaclass=CompositeMetaClass):
         with contextlib.suppress(discord.HTTPException):
             await message.remove_reaction(react_emoji, react_user)
 
-    async def clear_react(self, message: discord.Message, emoji: MutableMapping = None) -> None:
+    async def clear_react(
+        self, message: discord.Message, emoji: MutableMapping = None
+    ) -> None:
         try:
             await message.clear_reactions()
         except discord.Forbidden:
@@ -192,7 +205,9 @@ class MiscellaneousUtilities(MixinMeta, metaclass=CompositeMetaClass):
         player = lavalink.get_player(ctx.guild.id)
         dur = [
             i.length
-            async for i in AsyncIter(player.queue, steps=50).filter(lambda x: not x.is_stream)
+            async for i in AsyncIter(player.queue, steps=50).filter(
+                lambda x: not x.is_stream
+            )
         ]
         queue_dur = sum(dur)
         if not player.queue:
@@ -285,11 +300,20 @@ class MiscellaneousUtilities(MixinMeta, metaclass=CompositeMetaClass):
                         async for t in AsyncIter(tracks_in_playlist):
                             uri = t.get("info", {}).get("uri")
                             if uri:
-                                t = {"loadType": "V2_COMPAT", "tracks": [t], "query": uri}
+                                t = {
+                                    "loadType": "V2_COMPAT",
+                                    "tracks": [t],
+                                    "query": uri,
+                                }
                                 data = json.dumps(t)
                                 if all(
                                     k in data
-                                    for k in ["loadType", "playlistInfo", "isSeekable", "isStream"]
+                                    for k in [
+                                        "loadType",
+                                        "playlistInfo",
+                                        "isSeekable",
+                                        "isStream",
+                                    ]
                                 ):
                                     database_entries.append(
                                         {
@@ -330,10 +354,14 @@ class MiscellaneousUtilities(MixinMeta, metaclass=CompositeMetaClass):
             logging_data = global_data.get("yaml", {}).get("logging", {})
             max_history = logging_data.get("file", {}).pop("max_history", ...)
             if max_history is not ...:
-                await self.config.yaml.logging.logback.rollingpolicy.max_history.set(max_history)
+                await self.config.yaml.logging.logback.rollingpolicy.max_history.set(
+                    max_history
+                )
             max_size = logging_data.get("file", {}).pop("max_size", ...)
             if max_size is not ...:
-                await self.config.yaml.logging.logback.rollingpolicy.max_size.set(max_size)
+                await self.config.yaml.logging.logback.rollingpolicy.max_size.set(
+                    max_size
+                )
             path = logging_data.pop("path", ...)
             if path is not ...:
                 await self.config.yaml.logging.file.path.set(path)

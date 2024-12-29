@@ -1,23 +1,27 @@
-import discord, asyncpg, typing, time, os, discord_ios, pomice, asyncio, json, datetime
-
+import asyncio
+import datetime
+import json
+import os
+import time
+import typing
 from typing import List, Union
-from humanfriendly import format_timespan
 
-from discord.ext import commands, ipc
-from discord.ext.ipc.server import Server
-from discord.ext.ipc.objects import ClientPayload
-
-from bot.helpers import StartUp
-from bot.helpers import EvictContext, HelpCommand
-from bot.ext import Client
+import asyncpg
+import discord
+import discord_ios
+import pomice
 from bot.database import create_db
-from bot.headers import Session
 from bot.dynamicrolebutton import DynamicRoleButton
-
-from cogs.voicemaster import vmbuttons
-from cogs.ticket import CreateTicket, DeleteTicket
+from bot.ext import Client
+from bot.headers import Session
+from bot.helpers import EvictContext, HelpCommand, StartUp
 from cogs.giveaway import GiveawayView
-
+from cogs.ticket import CreateTicket, DeleteTicket
+from cogs.voicemaster import vmbuttons
+from discord.ext import commands, ipc
+from discord.ext.ipc.objects import ClientPayload
+from discord.ext.ipc.server import Server
+from humanfriendly import format_timespan
 from redis.asyncio import StrictRedis as AsyncStrictRedis
 from redis.asyncio.connection import BlockingConnectionPool
 from redis.backoff import EqualJitterBackoff
@@ -120,7 +124,12 @@ class Evict(commands.AutoShardedBot):
             activity=discord.CustomActivity(name="🔗 evict.cc"),
         )
 
-        self.ipc = ipc.Server(bot=self, secret_key="Ng\\_3QEVfjN)U/1=FQz`58c%B4m3|&", standard_port=6060, do_multicast=False)
+        self.ipc = ipc.Server(
+            bot=self,
+            secret_key="Ng\\_3QEVfjN)U/1=FQz`58c%B4m3|&",
+            standard_port=6060,
+            do_multicast=False,
+        )
 
         self.db = db
 
@@ -152,18 +161,18 @@ class Evict(commands.AutoShardedBot):
 
     @Server.route(name="status")
     async def ipc_status(self, payload: ClientPayload):
-       return {
-           "shards": [
-               {
-                   "guilds": f"{len([guild for guild in self.guilds if guild.shard_id == shard.id])}",
-                   "users": f"{len([user for guild in self.guilds for user in guild.members if guild.shard_id == shard.id])}",
-                   "ping": f"{(shard.latency * 1000):.2f}ms",
-                   "uptime": f"{int(self.uptime)}",
-                   "id": f"{shard.id}",
-               }
-               for shard in self.shards.values()
-           ]
-       }
+        return {
+            "shards": [
+                {
+                    "guilds": f"{len([guild for guild in self.guilds if guild.shard_id == shard.id])}",
+                    "users": f"{len([user for guild in self.guilds for user in guild.members if guild.shard_id == shard.id])}",
+                    "ping": f"{(shard.latency * 1000):.2f}ms",
+                    "uptime": f"{int(self.uptime)}",
+                    "id": f"{shard.id}",
+                }
+                for shard in self.shards.values()
+            ]
+        }
 
     async def create_db_pool(self):
         self.db = await asyncpg.create_pool(

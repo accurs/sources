@@ -1,17 +1,19 @@
-import discord, asyncio, io, re, aiohttp
-
-from discord.ext import commands
-from zipfile import ZipFile
-from typing import Union, Optional, List
-from io import BytesIO
-from patches.permissions import Permissions
-from itertools import zip_longest
+import asyncio
+import io
+import re
 from dataclasses import dataclass
+from io import BytesIO
+from itertools import zip_longest
+from typing import List, Optional, Union
+from zipfile import ZipFile
 
+import aiohttp
+import discord
 from bot.bot import Evict
 from bot.helpers import EvictContext
-from bot.managers.emojis import Emojis, Colors
-
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
+from patches.permissions import Permissions
 
 IMAGE_TYPES = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 STICKER_KB = 512
@@ -475,23 +477,18 @@ class emoji(commands.Cog):
                     filename="emoji.png",
                 )
             )
-        
+
     @Permissions.has_permission(manage_expressions=True)
-    @commands.command(
-        description="send all emojis to a zip file"
-    )
-    
-    async def zipemojis(
-        self, ctx: EvictContext
-    ):
+    @commands.command(description="send all emojis to a zip file")
+    async def zipemojis(self, ctx: EvictContext):
         emojis = ctx.guild.emojis
-    
+
         if not emojis:
             await ctx.warning("This server has no custom emojis.")
             return
 
         zip_buffer = BytesIO()
-        with ZipFile(zip_buffer, 'w') as zip_file:
+        with ZipFile(zip_buffer, "w") as zip_file:
             async with aiohttp.ClientSession() as session:
                 for emoji in emojis:
                     async with session.get(emoji.url) as response:
@@ -500,7 +497,10 @@ class emoji(commands.Cog):
                         zip_file.writestr(f"{emoji.name}.png", image_data)
 
         zip_buffer.seek(0)
-        await ctx.send("Here are all the emojis as a ZIP file:", file=discord.File(zip_buffer, "emojis.zip"))
+        await ctx.send(
+            "Here are all the emojis as a ZIP file:",
+            file=discord.File(zip_buffer, "emojis.zip"),
+        )
 
     @commands.command(aliases=["ei"], description="show emoji info", usage="[emoji]")
     async def emojiinfo(

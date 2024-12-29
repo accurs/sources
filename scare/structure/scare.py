@@ -9,63 +9,27 @@ from copy import copy
 import humanize
 import parsedatetime as pdt
 from bs4 import BeautifulSoup
-from discord import (
-    Activity,
-    ActivityType,
-    AllowedMentions,
-    CustomActivity,
-    Embed,
-    File,
-    Guild,
-    Intents,
-    Interaction,
-    Member,
-    Message,
-    Permissions,
-    Status,
-    User,
-)
+from discord import (Activity, ActivityType, AllowedMentions, CustomActivity,
+                     Embed, File, Guild, Intents, Interaction, Member, Message,
+                     Permissions, Status, User)
 from discord.app_commands.errors import CommandInvokeError
 from discord.ext import tasks
-from discord.ext.commands import (
-    AutoShardedBot,
-    BadArgument,
-    BadLiteralArgument,
-    CheckFailure,
-    CommandError,
-    CommandNotFound,
-    CommandOnCooldown,
-    MissingPermissions,
-    MissingRequiredArgument,
-    MissingRequiredAttachment,
-    MissingRequiredFlag,
-    NotOwner,
-    UserInputError,
-    when_mentioned_or,
-)
-
+from discord.ext.commands import (AutoShardedBot, BadArgument,
+                                  BadLiteralArgument, CheckFailure,
+                                  CommandError, CommandNotFound,
+                                  CommandOnCooldown, MissingPermissions,
+                                  MissingRequiredArgument,
+                                  MissingRequiredAttachment,
+                                  MissingRequiredFlag, NotOwner,
+                                  UserInputError, when_mentioned_or)
 from structure.config import API, SCARE, ShardStatus
-from structure.managers import (
-    Cache,
-    ClientSession,
-    Context,
-    Help,
-    Workers,
-    database,
-    getLogger,
-    ratelimiter,
-)
+from structure.managers import (Cache, ClientSession, Context, Help, Workers,
+                                database, getLogger, ratelimiter)
 from structure.patcher import cmds, guild, interaction, member
 from structure.utilities import Afk, ApplicationInfo, ApplicationLegal
 from structure.utilities import Embed as ScriptedEmbed
-from structure.utilities import (
-    Error,
-    Giveaway,
-    Proxy,
-    TicketClose,
-    TicketView,
-    VoiceMasterView,
-)
+from structure.utilities import (Error, Giveaway, Proxy, TicketClose,
+                                 TicketView, VoiceMasterView)
 
 logger = getLogger(__name__)
 
@@ -150,10 +114,10 @@ class Scare(AutoShardedBot):
         self.invite_regex = r"(https?://)?(www.|canary.|ptb.)?(discord.gg|discordapp.com/invite|discord.com/invite)/?[a-zA-Z0-9]+/?"
 
     async def close(self):
-        #await self.browser.close()
-        #await self.session.close()
+        # await self.browser.close()
+        # await self.session.close()
 
-        #for file in os.listdir("./screenshots"):
+        # for file in os.listdir("./screenshots"):
         #    os.remove(f"./screenshots/{file}")
 
         return await super().close()
@@ -233,10 +197,7 @@ class Scare(AutoShardedBot):
             if not self.browser:
                 self.browser = await launch(
                     headless=True,
-                    args=[
-                        "--no-sandbox", 
-                        f"--proxy-server={proxy.host}:{proxy.port}"
-                    ],
+                    args=["--no-sandbox", f"--proxy-server={proxy.host}:{proxy.port}"],
                     defaultViewport=viewport,
                 )
 

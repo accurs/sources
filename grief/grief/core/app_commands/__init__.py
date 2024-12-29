@@ -6,59 +6,62 @@
 ################################################
 
 ### DEP-WARN: Check this *every* discord.py update
-from discord.app_commands import (
-    AllChannels as AllChannels,
-    AppCommand as AppCommand,
-    AppCommandChannel as AppCommandChannel,
-    AppCommandError as AppCommandError,
-    AppCommandGroup as AppCommandGroup,
-    AppCommandPermissions as AppCommandPermissions,
-    AppCommandThread as AppCommandThread,
-    Argument as Argument,
-    BotMissingPermissions as BotMissingPermissions,
-    Command as Command,
-    CommandAlreadyRegistered as CommandAlreadyRegistered,
-    CommandInvokeError as CommandInvokeError,
-    CommandLimitReached as CommandLimitReached,
-    CommandNotFound as CommandNotFound,
-    CommandOnCooldown as CommandOnCooldown,
-    CommandSignatureMismatch as CommandSignatureMismatch,
-    CommandSyncFailure as CommandSyncFailure,
-    CommandTree as CommandTree,
-    ContextMenu as ContextMenu,
-    Cooldown as Cooldown,
-    Group as Group,
-    GuildAppCommandPermissions as GuildAppCommandPermissions,
-    MissingAnyRole as MissingAnyRole,
-    MissingApplicationID as MissingApplicationID,
-    MissingPermissions as MissingPermissions,
-    MissingRole as MissingRole,
-    Namespace as Namespace,
-    NoPrivateMessage as NoPrivateMessage,
-    Parameter as Parameter,
-    Range as Range,
-    Transform as Transform,
-    Transformer as Transformer,
-    TransformerError as TransformerError,
-    TranslationContext as TranslationContext,
-    TranslationContextLocation as TranslationContextLocation,
-    TranslationContextTypes as TranslationContextTypes,
-    TranslationError as TranslationError,
-    Translator as Translator,
-    autocomplete as autocomplete,
-    check as check,
-    CheckFailure as CheckFailure,
-    Choice as Choice,
-    choices as choices,
-    command as command,
-    context_menu as context_menu,
-    default_permissions as default_permissions,
-    describe as describe,
-    guild_only as guild_only,
-    guilds as guilds,
-    locale_str as locale_str,
-    rename as rename,
-)
+from discord.app_commands import AllChannels as AllChannels
+from discord.app_commands import AppCommand as AppCommand
+from discord.app_commands import AppCommandChannel as AppCommandChannel
+from discord.app_commands import AppCommandError as AppCommandError
+from discord.app_commands import AppCommandGroup as AppCommandGroup
+from discord.app_commands import AppCommandPermissions as AppCommandPermissions
+from discord.app_commands import AppCommandThread as AppCommandThread
+from discord.app_commands import Argument as Argument
+from discord.app_commands import BotMissingPermissions as BotMissingPermissions
+from discord.app_commands import CheckFailure as CheckFailure
+from discord.app_commands import Choice as Choice
+from discord.app_commands import Command as Command
+from discord.app_commands import \
+    CommandAlreadyRegistered as CommandAlreadyRegistered
+from discord.app_commands import CommandInvokeError as CommandInvokeError
+from discord.app_commands import CommandLimitReached as CommandLimitReached
+from discord.app_commands import CommandNotFound as CommandNotFound
+from discord.app_commands import CommandOnCooldown as CommandOnCooldown
+from discord.app_commands import \
+    CommandSignatureMismatch as CommandSignatureMismatch
+from discord.app_commands import CommandSyncFailure as CommandSyncFailure
+from discord.app_commands import CommandTree as CommandTree
+from discord.app_commands import ContextMenu as ContextMenu
+from discord.app_commands import Cooldown as Cooldown
+from discord.app_commands import Group as Group
+from discord.app_commands import \
+    GuildAppCommandPermissions as GuildAppCommandPermissions
+from discord.app_commands import MissingAnyRole as MissingAnyRole
+from discord.app_commands import MissingApplicationID as MissingApplicationID
+from discord.app_commands import MissingPermissions as MissingPermissions
+from discord.app_commands import MissingRole as MissingRole
+from discord.app_commands import Namespace as Namespace
+from discord.app_commands import NoPrivateMessage as NoPrivateMessage
+from discord.app_commands import Parameter as Parameter
+from discord.app_commands import Range as Range
+from discord.app_commands import Transform as Transform
+from discord.app_commands import Transformer as Transformer
+from discord.app_commands import TransformerError as TransformerError
+from discord.app_commands import TranslationContext as TranslationContext
+from discord.app_commands import \
+    TranslationContextLocation as TranslationContextLocation
+from discord.app_commands import \
+    TranslationContextTypes as TranslationContextTypes
+from discord.app_commands import TranslationError as TranslationError
+from discord.app_commands import Translator as Translator
+from discord.app_commands import autocomplete as autocomplete
+from discord.app_commands import check as check
+from discord.app_commands import choices as choices
+from discord.app_commands import command as command
+from discord.app_commands import context_menu as context_menu
+from discord.app_commands import default_permissions as default_permissions
+from discord.app_commands import describe as describe
+from discord.app_commands import guild_only as guild_only
+from discord.app_commands import guilds as guilds
+from discord.app_commands import locale_str as locale_str
+from discord.app_commands import rename as rename
 
 from . import checks as checks
 

@@ -14,28 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    Coroutine,
-    Dict,
-    List,
-    TypeVar,
-    Union,
-    Optional,
-    Coroutine,
-)
+from typing import (TYPE_CHECKING, Any, Awaitable, Callable, Coroutine, Dict,
+                    List, Optional, TypeVar, Union)
 
 if TYPE_CHECKING:
-    from discord.ext.commands import (
-        Bot,
-        AutoShardedBot,
-        Context,
-        Cog,
-        CommandError,
-    )
+    from discord.ext.commands import (AutoShardedBot, Bot, Cog, CommandError,
+                                      Context)
 
 T = TypeVar("T")
 

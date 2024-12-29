@@ -1,4 +1,5 @@
 import re
+
 from discord import AllowedMentions
 
 _ID_REGEX = re.compile(r"([0-9]{15,20})$")
@@ -20,23 +21,30 @@ PERCENTAGE = re.compile(r"(?P<percentage>\d+)%")
 BITRATE = re.compile(r"(?P<bitrate>\d+)kbps")
 COLORHEX = re.compile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
 
+
 class position:
     HH_MM_SS = re.compile(r"(?P<h>\d{1,2}):(?P<m>\d{1,2}):(?P<s>\d{1,2})")
     MM_SS = re.compile(r"(?P<m>\d{1,2}):(?P<s>\d{1,2})")
     HUMAN = re.compile(r"(?:(?P<m>\d+)\s*m\s*)?(?P<s>\d+)\s*[sm]")
     OFFSET = re.compile(r"(?P<s>(?:\-|\+)\d+)\s*s")
 
+
 AUTO_RESPONDER_COOLDOWN = (1, 5)
 AUTO_REACTION_COOLDOWN = (1, 5)
 STICKY_MESSAGE_COOLDOWN = (3, 5)
-MESSAGE_EVENT_ALLOWED_MENTIONS = AllowedMentions(replied_user = False, users = True, roles = False, everyone = False)
+MESSAGE_EVENT_ALLOWED_MENTIONS = AllowedMentions(
+    replied_user=False, users=True, roles=False, everyone=False
+)
 HEX_COOLDOWN = (2, 3)
 TRANSCRIBE_COOLDOWN = (1, 3)
 TRACKER_COOLDOWN = (4, 5)
 FILTER_COOLDOWN = (10, 20)
 PERCENTAGE = re.compile(r"(?P<percentage>\d+)%")
-INSTAGRAM_POST = re.compile(r"(?:http\:|https\:)?\/\/(?:www\.)?instagram\.com\/(?:p|tv|reel)/[^\s]+")
-YOUTUBE_WILDCARD = re.compile(r"""
+INSTAGRAM_POST = re.compile(
+    r"(?:http\:|https\:)?\/\/(?:www\.)?instagram\.com\/(?:p|tv|reel)/[^\s]+"
+)
+YOUTUBE_WILDCARD = re.compile(
+    r"""
     (?x)                                                        # verbose mode
     (?:\s*)                                                    # optional whitespace before the URL
     (?:https?:\/\/)?                                           # optional scheme
@@ -46,7 +54,9 @@ YOUTUBE_WILDCARD = re.compile(r"""
     (?:[&?][\w=]*)*                                             # optional query parameters
     (?:[#\/]?|$)                                                # optional anchor or end of line
     (?:\s*)                                                    # optional whitespace after the URL
-""", re.IGNORECASE | re.MULTILINE)
+""",
+    re.IGNORECASE | re.MULTILINE,
+)
 
 dangerous_permissions = [
     "administrator",
@@ -346,4 +356,3 @@ colors = {
     "yellowgreen": "#9acd32",
 }
 # BLEED COLOR VARIABLES
-

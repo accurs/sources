@@ -3,29 +3,32 @@ from abc import ABC
 from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
+
 try:
     from emoji import UNICODE_EMOJI_ENGLISH as EMOJI_DATA  # emoji<2.0.0
 except ImportError:
     from emoji import EMOJI_DATA  # emoji>=2.0.0
+
 import discord
+from AAA3A_utils import Cog, CogsUtils, Menu
 from red_commons.logging import getLogger
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.commands import Context
+from grief.core.converters.converters import (RawUserIds,
+                                              RoleHierarchyConverter,
+                                              SelfRoleConverter)
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils import AsyncIter, bounded_gather
-from grief.core.utils.chat_formatting import humanize_list
+from grief.core.utils.chat_formatting import box, humanize_list, pagify
 
 from .abc import RoleToolsMixin
-from grief.core.converters.converters import RawUserIds, RoleHierarchyConverter, SelfRoleConverter
 from .events import RoleToolsEvents
 from .exclusive import RoleToolsExclusive
 from .inclusive import RoleToolsInclusive
 from .menus import BaseMenu, ConfirmView, RolePages
 from .settings import RoleToolsSettings
-
-from AAA3A_utils import Cog, CogsUtils, Menu 
-from grief.core.utils.chat_formatting import box, pagify
 
 roletools = RoleToolsMixin.roletools
 
@@ -36,30 +39,30 @@ from colorsys import rgb_to_hsv
 from typing import Dict, Generator, List, Optional, Sequence, Tuple
 
 import discord
+from TagScriptEngine import (Interpreter, LooseVariableGetterBlock,
+                             MemberAdapter)
+
 from grief.core import commands
 from grief.core.utils.chat_formatting import humanize_number as hn
 from grief.core.utils.chat_formatting import pagify, text_to_file
 from grief.core.utils.mod import get_audit_reason
-from TagScriptEngine import Interpreter, LooseVariableGetterBlock, MemberAdapter
 
 from .abcc import CompositeMetaClass, MixinMeta
-from .converters import FuzzyRole, RoleArgumentConverter, StrictRole, TargeterArgs, TouchableMember
-from .utils import (
-    can_run_command,
-    guild_roughly_chunked,
-    humanize_roles,
-    is_allowed_by_role_hierarchy,
-)
+from .converters import (FuzzyRole, RoleArgumentConverter, StrictRole,
+                         TargeterArgs, TouchableMember)
+from .utils import (can_run_command, guild_roughly_chunked, humanize_roles,
+                    is_allowed_by_role_hierarchy)
 
 log = getLogger("grief.roletools")
 _ = Translator("RoleTools", __file__)
 
+
 class EmojiOrUrlConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         try:
-            return await discord.ext.commands.converter.CONVERTER_MAPPING[discord.Emoji]().convert(
-                ctx, argument
-            )
+            return await discord.ext.commands.converter.CONVERTER_MAPPING[
+                discord.Emoji
+            ]().convert(ctx, argument)
         except commands.BadArgument:
             pass
         if argument.startswith("<") and argument.endswith(">"):
@@ -88,15 +91,19 @@ class PositionConverter(commands.Converter):
 class PermissionConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str) -> str:
         permissions = [
-            key for key, value in dict(discord.Permissions.all_channel()).items() if value
+            key
+            for key, value in dict(discord.Permissions.all_channel()).items()
+            if value
         ]
         if argument not in permissions:
             raise commands.BadArgument(_("This permission is invalid."))
         return argument
 
+
 ERROR_MESSAGE = _(
     "I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}"
 )
+
 
 def targeter_cog(ctx: commands.Context):
     cog = ctx.bot.get_cog("Targeter")
@@ -154,7 +161,9 @@ class RoleTools(
 
     def __init__(self, bot: Grief):
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=218773382617890828, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=218773382617890828, force_registration=True
+        )
         self.config.register_global(
             version="0.0.0",
             atomic=True,
@@ -245,7 +254,9 @@ class RoleTools(
                     role = guild.get_role(role_id)
                     if role:
                         await self.config.role(role).sticky.set(True)
-            auto_role_config = Config.get_conf(None, identifier=45463543548, cog_name="Autorole")
+            auto_role_config = Config.get_conf(
+                None, identifier=45463543548, cog_name="Autorole"
+            )
             auto_settings = await auto_role_config.all_guilds()
             for guild_id, data in auto_settings.items():
                 guild = self.bot.get_guild(guild_id)
@@ -285,7 +296,9 @@ class RoleTools(
     async def confirm_selfassignable(
         self, ctx: commands.Context, roles: List[discord.Role]
     ) -> None:
-        not_assignable = [r for r in roles if not await self.config.role(r).selfassignable()]
+        not_assignable = [
+            r for r in roles if not await self.config.role(r).selfassignable()
+        ]
         if not_assignable:
             role_list = "\n".join(f"- {role.mention}" for role in not_assignable)
             msg_str = _(
@@ -296,7 +309,9 @@ class RoleTools(
             )
             pred = ConfirmView(ctx.author)
             pred.message = await ctx.send(
-                msg_str, view=pred, allowed_mentions=discord.AllowedMentions(roles=False)
+                msg_str,
+                view=pred,
+                allowed_mentions=discord.AllowedMentions(roles=False),
             )
             await pred.wait()
             if pred.result:
@@ -310,9 +325,9 @@ class RoleTools(
                 )
             else:
                 await ctx.channel.send(
-                    _("Okay I won't make the following rolesself assignable:\n{roles}").format(
-                        roles=role_list
-                    )
+                    _(
+                        "Okay I won't make the following rolesself assignable:\n{roles}"
+                    ).format(roles=role_list)
                 )
 
     @roletools.command(cooldown_after_parsing=True, with_app_command=False)
@@ -358,13 +373,17 @@ class RoleTools(
         async with ctx.typing():
             members = []
             for entity in who:
-                if isinstance(entity, discord.TextChannel) or isinstance(entity, discord.Role):
+                if isinstance(entity, discord.TextChannel) or isinstance(
+                    entity, discord.Role
+                ):
                     members += entity.members
                 elif isinstance(entity, discord.Member):
                     members.append(entity)
                 else:
                     if entity not in ["everyone", "here", "bots", "humans"]:
-                        msg = _("`{who}` cannot have roles assigned to them.").format(who=entity)
+                        msg = _("`{who}` cannot have roles assigned to them.").format(
+                            who=entity
+                        )
                         await ctx.send(msg)
                         ctx.command.reset_cooldown(ctx)
                         return
@@ -379,11 +398,15 @@ class RoleTools(
                         ]
                     elif entity == "bots":
                         members += [
-                            m async for m in AsyncIter(ctx.guild.members, steps=500) if m.bot
+                            m
+                            async for m in AsyncIter(ctx.guild.members, steps=500)
+                            if m.bot
                         ]
                     elif entity == "humans":
                         members += [
-                            m async for m in AsyncIter(ctx.guild.members, steps=500) if not m.bot
+                            m
+                            async for m in AsyncIter(ctx.guild.members, steps=500)
+                            if not m.bot
                         ]
             members = list(set(members))
             tasks = []
@@ -393,7 +416,11 @@ class RoleTools(
                 # tasks.append(m.add_roles(role, reason=_("Roletools Giverole command")))
                 tasks.append(
                     self.give_roles(
-                        m, [role], _("Roletools Giverole command"), check_cost=False, atomic=False
+                        m,
+                        [role],
+                        _("Roletools Giverole command"),
+                        check_cost=False,
+                        atomic=False,
                     )
                 )
             await bounded_gather(*tasks)
@@ -442,13 +469,17 @@ class RoleTools(
         async with ctx.typing():
             members = []
             for entity in who:
-                if isinstance(entity, discord.TextChannel) or isinstance(entity, discord.Role):
+                if isinstance(entity, discord.TextChannel) or isinstance(
+                    entity, discord.Role
+                ):
                     members += entity.members
                 elif isinstance(entity, discord.Member):
                     members.append(entity)
                 else:
                     if entity not in ["everyone", "here", "bots", "humans"]:
-                        msg = _("`{who}` cannot have roles removed from them.").format(who=entity)
+                        msg = _("`{who}` cannot have roles removed from them.").format(
+                            who=entity
+                        )
                         await ctx.send(msg)
                         ctx.command.reset_cooldown(ctx)
                         return
@@ -463,11 +494,15 @@ class RoleTools(
                         ]
                     elif entity == "bots":
                         members += [
-                            m async for m in AsyncIter(ctx.guild.members, steps=500) if m.bot
+                            m
+                            async for m in AsyncIter(ctx.guild.members, steps=500)
+                            if m.bot
                         ]
                     elif entity == "humans":
                         members += [
-                            m async for m in AsyncIter(ctx.guild.members, steps=500) if not m.bot
+                            m
+                            async for m in AsyncIter(ctx.guild.members, steps=500)
+                            if not m.bot
                         ]
             members = list(set(members))
             tasks = []
@@ -476,7 +511,9 @@ class RoleTools(
                     continue
                 # tasks.append(m.add_roles(role, reason=_("Roletools Giverole command")))
                 tasks.append(
-                    self.remove_roles(m, [role], _("Roletools Removerole command"), atomic=False)
+                    self.remove_roles(
+                        m, [role], _("Roletools Removerole command"), atomic=False
+                    )
                 )
             await bounded_gather(*tasks)
         removed_from = humanize_list([getattr(en, "name", en) for en in who])
@@ -521,9 +558,9 @@ class RoleTools(
                     await self.give_roles(user, [role], reason=_("Forced Sticky Role"))
                 except discord.HTTPException:
                     errors.append(
-                        _("There was an error force applying the role to {user}.\n").format(
-                            user=user
-                        )
+                        _(
+                            "There was an error force applying the role to {user}.\n"
+                        ).format(user=user)
                     )
         msg = _("{users} will have the role {role} force applied to them.").format(
             users=humanize_list(users), role=role.name
@@ -565,12 +602,14 @@ class RoleTools(
                     if role.id in setting:
                         setting.append(role.id)
                 try:
-                    await self.remove_roles(user, [role], reason=_("Force removed sticky role"))
+                    await self.remove_roles(
+                        user, [role], reason=_("Force removed sticky role")
+                    )
                 except discord.HTTPException:
                     errors.append(
-                        _("There was an error force removing the role from {user}.\n").format(
-                            user=user
-                        )
+                        _(
+                            "There was an error force removing the role from {user}.\n"
+                        ).format(user=user)
                     )
         msg = _("{users} will have the role {role} force removed from them.").format(
             users=humanize_list(users), role=role.name
@@ -580,9 +619,13 @@ class RoleTools(
             await ctx.channel.send("".join([e for e in errors]))
 
     @roletools.command(aliases=["viewrole"])
-    @commands.bot_has_permissions(read_message_history=True, add_reactions=True, embed_links=True)
+    @commands.bot_has_permissions(
+        read_message_history=True, add_reactions=True, embed_links=True
+    )
     @commands.cooldown(1, 3, commands.BucketType.guild)
-    async def viewroles(self, ctx: Context, *, role: Optional[discord.Role] = None) -> None:
+    async def viewroles(
+        self, ctx: Context, *, role: Optional[discord.Role] = None
+    ) -> None:
         """
         View current roletools setup for each role in the server
 
@@ -623,12 +666,16 @@ class RoleTools(
         else:
             self.bot.tree.remove_command("role-tools")
 
-###### roleutils
+    ###### roleutils
     @commands.guild_only()
     @commands.group(invoke_without_command=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     async def role(
-        self, ctx: commands.Context, member: TouchableMember(False), *, role: StrictRole(False)
+        self,
+        ctx: commands.Context,
+        member: TouchableMember(False),
+        *,
+        role: StrictRole(False),
     ):
         """Base command for modifying roles.
 
@@ -663,16 +710,28 @@ class RoleTools(
     @commands.has_guild_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command("create")
-    async def role_create(self, ctx: commands.Context, color: Optional[discord.Color] = discord.Color.default(), hoist: Optional[bool] = False, *, name: Optional[str] = None,):
+    async def role_create(
+        self,
+        ctx: commands.Context,
+        color: Optional[discord.Color] = discord.Color.default(),
+        hoist: Optional[bool] = False,
+        *,
+        name: Optional[str] = None,
+    ):
         """
         Creates a role.
         Color and whether it is hoisted can be specified.
         """
         if len(ctx.guild.roles) >= 250:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: this server has 250 roles, delete one to make a new one..", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: this server has 250 roles, delete one to make a new one..",
+                color=0x313338,
+            )
             return await ctx.reply(embed=embed, mention_author=False)
         role = await ctx.guild.create_role(name=name, colour=color, hoist=hoist)
-        embed = discord.Embed(description=f"> {ctx.author.mention}: **{role}** created.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: **{role}** created.", color=0x313338
+        )
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
@@ -680,36 +739,62 @@ class RoleTools(
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command("color", aliases=["colour"])
     async def role_color(
-        self, ctx: commands.Context, role: StrictRole(check_integrated=False), color: discord.Color):
+        self,
+        ctx: commands.Context,
+        role: StrictRole(check_integrated=False),
+        color: discord.Color,
+    ):
         """Change a role's color."""
         await role.edit(color=color)
-        embed = discord.Embed(description=f"> {ctx.author.mention}: **{role}** color changed to **{color}**.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: **{role}** color changed to **{color}**.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command("hoist")
-    async def role_hoist(self, ctx: commands.Context, role: StrictRole(check_integrated=False), hoisted: Optional[bool] = None,):
+    async def role_hoist(
+        self,
+        ctx: commands.Context,
+        role: StrictRole(check_integrated=False),
+        hoisted: Optional[bool] = None,
+    ):
         """Toggle whether a role should appear seperate from other roles."""
         hoisted = hoisted if hoisted is not None else not role.hoist
         await role.edit(hoist=hoisted)
         now = "now" if hoisted else "no longer"
-        embed = discord.Embed(description=f"> {ctx.author.mention}: **{role}** is {now} hoisted.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: **{role}** is {now} hoisted.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
 
     @role.command(name="displayicon", aliases=["icon"])
     @commands.has_guild_permissions(manage_roles=True)
     @commands.cooldown(1, 10, commands.BucketType.guild)
-    async def role_display_icon(self, ctx: commands.Context, role: RoleHierarchyConverter, display_icon: EmojiOrUrlConverter = None,) -> None:
+    async def role_display_icon(
+        self,
+        ctx: commands.Context,
+        role: RoleHierarchyConverter,
+        display_icon: EmojiOrUrlConverter = None,
+    ) -> None:
         """Edit role display icon.
 
         `display_icon` can be an Unicode emoji, a custom emoji or an url. You can also upload an attachment.
         """
         if "ROLE_ICONS" not in ctx.guild.features:
-            raise commands.UserFeedbackCheckFailure(_("This server doesn't have the `ROLE_ICONS` feature. This server needs more boosts to perform this action."))
+            raise commands.UserFeedbackCheckFailure(
+                _(
+                    "This server doesn't have the `ROLE_ICONS` feature. This server needs more boosts to perform this action."
+                )
+            )
         if len(ctx.message.attachments) > 0:
-            display_icon = await ctx.message.attachments[0].read()  # Read an optional attachment.
+            display_icon = await ctx.message.attachments[
+                0
+            ].read()  # Read an optional attachment.
         elif display_icon is not None:
             if isinstance(display_icon, discord.Emoji):
                 # emoji_url = f"https://cdn.discordapp.com/emojis/{display_icon.id}.png"
@@ -728,74 +813,124 @@ class RoleTools(
                     except aiohttp.InvalidURL:
                         return await ctx.send("That URL is invalid.")
                     except aiohttp.ClientError:
-                        return await ctx.send("Something went wrong while trying to get the image.")
+                        return await ctx.send(
+                            "Something went wrong while trying to get the image."
+                        )
         else:
-            await role.edit(display_icon=None, reason=f"{ctx.author} ({ctx.author.id}) has edited the role {role.name} ({role.id}).")
-            embed = discord.Embed(description=f"> {ctx.author.mention}: Cleared **{role}** role icon.", color=0x313338)
+            await role.edit(
+                display_icon=None,
+                reason=f"{ctx.author} ({ctx.author.id}) has edited the role {role.name} ({role.id}).",
+            )
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: Cleared **{role}** role icon.",
+                color=0x313338,
+            )
             return await ctx.reply(embed=embed, mention_author=False)
         try:
-            await role.edit(display_icon=display_icon,reason=f"{ctx.author} ({ctx.author.id}) has edited the role {role.name} ({role.id}).",)
-            embed = discord.Embed(description=f"> {ctx.author.mention}: Updated **{role}** role icon.", color=0x313338)
+            await role.edit(
+                display_icon=display_icon,
+                reason=f"{ctx.author} ({ctx.author.id}) has edited the role {role.name} ({role.id}).",
+            )
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: Updated **{role}** role icon.",
+                color=0x313338,
+            )
             return await ctx.reply(embed=embed, mention_author=False)
         except discord.HTTPException as e:
-            raise commands.UserFeedbackCheckFailure(_(ERROR_MESSAGE).format(error=box(e, lang="py")))
+            raise commands.UserFeedbackCheckFailure(
+                _(ERROR_MESSAGE).format(error=box(e, lang="py"))
+            )
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command("name")
-    async def role_name(self, ctx: commands.Context, role: StrictRole(check_integrated=False), *, name: str):
+    async def role_name(
+        self,
+        ctx: commands.Context,
+        role: StrictRole(check_integrated=False),
+        *,
+        name: str,
+    ):
         """Change a role's name."""
         old_name = role.name
         await role.edit(name=name)
-        embed = discord.Embed(description=f"> {ctx.author.mention}: Changed role name **{old_name}** to **{name}**.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: Changed role name **{old_name}** to **{name}**.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
-    
+
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @role.command("delete")
-    async def role_delete(self, ctx: commands.Context, role: StrictRole(check_integrated=True),):
+    async def role_delete(
+        self,
+        ctx: commands.Context,
+        role: StrictRole(check_integrated=True),
+    ):
         """Delete a role."""
         await role.delete()
-        embed = discord.Embed(description=f"> {ctx.author.mention}: Deleted the role **{role.name}**", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: Deleted the role **{role.name}**",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @role.command("add")
-    async def role_add(self, ctx: commands.Context, member: TouchableMember, *, role: StrictRole):
+    async def role_add(
+        self, ctx: commands.Context, member: TouchableMember, *, role: StrictRole
+    ):
         """Add a role to a member."""
         if role in member.roles:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: **{member}** already has the role **{role}**. Maybe try removing it instead.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: **{member}** already has the role **{role}**. Maybe try removing it instead.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
         reason = get_audit_reason(ctx.author)
         await member.add_roles(role, reason=reason)
-        embed = discord.Embed(description=f"> {ctx.author.mention}: Added **{role.name}** to **{member}**.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: Added **{role.name}** to **{member}**.",
+            color=0x313338,
+        )
         return await ctx.reply(embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command("remove")
-    async def role_remove(self, ctx: commands.Context, member: TouchableMember, *, role: StrictRole):
+    async def role_remove(
+        self, ctx: commands.Context, member: TouchableMember, *, role: StrictRole
+    ):
         """Remove a role from a member."""
         if role not in member.roles:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: **{member}** doesn't have the role **{role}**.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: **{member}** doesn't have the role **{role}**.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
         reason = get_audit_reason(ctx.author)
         await member.remove_roles(role, reason=reason)
-        embed = discord.Embed(description=f"> {ctx.author.mention}: Removed **{role.name}** from **{member}**.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: Removed **{role.name}** from **{member}**.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command(require_var_positional=True)
-    async def addmulti(self, ctx: commands.Context, role: StrictRole, *members: TouchableMember):
+    async def addmulti(
+        self, ctx: commands.Context, role: StrictRole, *members: TouchableMember
+    ):
         """Add a role to multiple members."""
         reason = get_audit_reason(ctx.author)
         already_members = []
@@ -808,16 +943,24 @@ class RoleTools(
                 already_members.append(member)
         msg = []
         if success_members:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: Added **{role}** to {humanize_roles(success_members)}.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: Added **{role}** to {humanize_roles(success_members)}.",
+                color=0x313338,
+            )
         if already_members:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: {humanize_roles(already_members)} already had **{role}**.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: {humanize_roles(already_members)} already had **{role}**.",
+                color=0x313338,
+            )
         await ctx.reply("\n".join(msg), embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command(require_var_positional=True)
-    async def removemulti(self, ctx: commands.Context, role: StrictRole, *members: TouchableMember):
+    async def removemulti(
+        self, ctx: commands.Context, role: StrictRole, *members: TouchableMember
+    ):
         """Remove a role from multiple members."""
         reason = get_audit_reason(ctx.author)
         already_members = []
@@ -830,22 +973,32 @@ class RoleTools(
                 already_members.append(member)
         msg = []
         if success_members:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: Removed **{role}** from {humanize_roles(success_members)}.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: Removed **{role}** from {humanize_roles(success_members)}.",
+                color=0x313338,
+            )
         if already_members:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: {humanize_roles(already_members)} didn't have **{role}**.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: {humanize_roles(already_members)} didn't have **{role}**.",
+                color=0x313338,
+            )
         await ctx.reply("\n".join(msg), embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @commands.group(invoke_without_command=True, require_var_positional=True)
-    async def multirole(self, ctx: commands.Context, member: TouchableMember, *roles: StrictRole):
+    async def multirole(
+        self, ctx: commands.Context, member: TouchableMember, *roles: StrictRole
+    ):
         """Add multiple roles to a member."""
         not_allowed = []
         already_added = []
         to_add = []
         for role in roles:
-            allowed = await is_allowed_by_role_hierarchy(self.bot, ctx.me, ctx.author, role)
+            allowed = await is_allowed_by_role_hierarchy(
+                self.bot, ctx.me, ctx.author, role
+            )
             if not allowed[0]:
                 not_allowed.append(role)
             elif role in member.roles:
@@ -856,24 +1009,37 @@ class RoleTools(
         msg = []
         if to_add:
             await member.add_roles(*to_add, reason=reason)
-            embed = discord.Embed(description=f"> {ctx.author.mention}: Added {humanize_roles(to_add)} to **{member}**.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: Added {humanize_roles(to_add)} to **{member}**.",
+                color=0x313338,
+            )
         if already_added:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: **{member}** already had {humanize_roles(already_added)}.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: **{member}** already had {humanize_roles(already_added)}.",
+                color=0x313338,
+            )
         if not_allowed:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: You do not have permission to assign the roles {humanize_roles(not_allowed)}.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: You do not have permission to assign the roles {humanize_roles(not_allowed)}.",
+                color=0x313338,
+            )
         await ctx.reply("\n".join(msg), embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @multirole.command("remove", require_var_positional=True)
-    async def multirole_remove(self, ctx: commands.Context, member: TouchableMember, *roles: StrictRole):
+    async def multirole_remove(
+        self, ctx: commands.Context, member: TouchableMember, *roles: StrictRole
+    ):
         """Remove multiple roles from a member."""
         not_allowed = []
         not_added = []
         to_rm = []
         for role in roles:
-            allowed = await is_allowed_by_role_hierarchy(self.bot, ctx.me, ctx.author, role)
+            allowed = await is_allowed_by_role_hierarchy(
+                self.bot, ctx.me, ctx.author, role
+            )
             if not allowed[0]:
                 not_allowed.append(role)
             elif role not in member.roles:
@@ -884,11 +1050,20 @@ class RoleTools(
         msg = []
         if to_rm:
             await member.remove_roles(*to_rm, reason=reason)
-            embed = discord.Embed(description=f"> {ctx.author.mention}: Removed {humanize_roles(to_rm)} from **{member}**.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: Removed {humanize_roles(to_rm)} from **{member}**.",
+                color=0x313338,
+            )
         if not_added:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: **{member}** didn't have {humanize_roles(not_added)}.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: **{member}** didn't have {humanize_roles(not_added)}.",
+                color=0x313338,
+            )
         if not_allowed:
-            embed = discord.Embed(description=f"> {ctx.author.mention}: You do not have permission to assign the roles {humanize_roles(not_allowed)}.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: You do not have permission to assign the roles {humanize_roles(not_allowed)}.",
+                color=0x313338,
+            )
         await ctx.reply("\n".join(msg), embed=embed, mention_author=False)
 
     @commands.has_guild_permissions(manage_roles=True)
@@ -906,7 +1081,9 @@ class RoleTools(
     async def rall(self, ctx: commands.Context, *, role: StrictRole):
         """Remove a role from all members of the server."""
         member_list = self.get_member_list(ctx.guild.members, role, False)
-        await self.super_massrole(ctx, member_list, role, "No one on the server has this role.", False)
+        await self.super_massrole(
+            ctx, member_list, role, "No one on the server has this role.", False
+        )
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
@@ -914,7 +1091,12 @@ class RoleTools(
     @role.command()
     async def humans(self, ctx: commands.Context, *, role: StrictRole):
         """Add a role to all humans (non-bots) in the server."""
-        await self.super_massrole(ctx, [member for member in ctx.guild.members if not member.bot], role, "Every human in the server has this role.",)
+        await self.super_massrole(
+            ctx,
+            [member for member in ctx.guild.members if not member.bot],
+            role,
+            "Every human in the server has this role.",
+        )
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
@@ -922,7 +1104,13 @@ class RoleTools(
     @role.command()
     async def rhumans(self, ctx: commands.Context, *, role: StrictRole):
         """Remove a role from all humans (non-bots) in the server."""
-        await self.super_massrole(ctx, [member for member in ctx.guild.members if not member.bot], role, "None of the humans in the server have this role.", False,)
+        await self.super_massrole(
+            ctx,
+            [member for member in ctx.guild.members if not member.bot],
+            role,
+            "None of the humans in the server have this role.",
+            False,
+        )
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
@@ -930,7 +1118,12 @@ class RoleTools(
     @role.command()
     async def bots(self, ctx: commands.Context, *, role: StrictRole):
         """Add a role to all bots in the server."""
-        await self.super_massrole(ctx, [member for member in ctx.guild.members if member.bot], role, "Every bot in the server has this role.",)
+        await self.super_massrole(
+            ctx,
+            [member for member in ctx.guild.members if member.bot],
+            role,
+            "Every bot in the server has this role.",
+        )
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
@@ -938,23 +1131,44 @@ class RoleTools(
     @role.command()
     async def rbots(self, ctx: commands.Context, *, role: StrictRole):
         """Remove a role from all bots in the server."""
-        await self.super_massrole(ctx, [member for member in ctx.guild.members if member.bot], role, "None of the bots in the server have this role.", False,)
+        await self.super_massrole(
+            ctx,
+            [member for member in ctx.guild.members if member.bot],
+            role,
+            "None of the bots in the server have this role.",
+            False,
+        )
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command("in")
-    async def role_in(self, ctx: commands.Context, target_role: FuzzyRole, *, add_role: StrictRole):
+    async def role_in(
+        self, ctx: commands.Context, target_role: FuzzyRole, *, add_role: StrictRole
+    ):
         """Add a role to all members of a another role."""
-        await self.super_massrole(ctx, [member for member in target_role.members], add_role, f"Every member of **{target_role}** has this role.",)
+        await self.super_massrole(
+            ctx,
+            [member for member in target_role.members],
+            add_role,
+            f"Every member of **{target_role}** has this role.",
+        )
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @role.command("rin")
-    async def role_rin(self, ctx: commands.Context, target_role: FuzzyRole, *, remove_role: StrictRole):
+    async def role_rin(
+        self, ctx: commands.Context, target_role: FuzzyRole, *, remove_role: StrictRole
+    ):
         """Remove a role from all members of a another role."""
-        await self.super_massrole(ctx, [member for member in target_role.members], remove_role, f"No one in **{target_role}** has this role.", False,)
+        await self.super_massrole(
+            ctx,
+            [member for member in target_role.members],
+            remove_role,
+            f"No one in **{target_role}** has this role.",
+            False,
+        )
 
     @commands.check(targeter_cog)
     @commands.has_guild_permissions(manage_roles=True)
@@ -969,7 +1183,9 @@ class RoleTools(
         """
 
     @target.command("add")
-    async def target_add(self, ctx: commands.Context, role: StrictRole, *, args: TargeterArgs):
+    async def target_add(
+        self, ctx: commands.Context, role: StrictRole, *, args: TargeterArgs
+    ):
         """
         Add a role to members using targeting args.
 
@@ -983,7 +1199,9 @@ class RoleTools(
         )
 
     @target.command("remove")
-    async def target_remove(self, ctx: commands.Context, role: StrictRole, *, args: TargeterArgs):
+    async def target_remove(
+        self, ctx: commands.Context, role: StrictRole, *, args: TargeterArgs
+    ):
         """
         Remove a role from members using targeting args.
 
@@ -997,7 +1215,14 @@ class RoleTools(
             False,
         )
 
-    async def super_massrole(self, ctx: commands.Context, members: list, role: discord.Role, fail_message: str = "Everyone in the server has this role.", adding: bool = True,) -> None:
+    async def super_massrole(
+        self,
+        ctx: commands.Context,
+        members: list,
+        role: discord.Role,
+        fail_message: str = "Everyone in the server has this role.",
+        adding: bool = True,
+    ) -> None:
         if guild_roughly_chunked(ctx.guild) is False and self.bot.intents.members:
             await ctx.guild.chunk()
         member_list = self.get_member_list(members, role, adding)
@@ -1006,10 +1231,18 @@ class RoleTools(
             return
         verb = "add" if adding else "remove"
         word = "to" if adding else "from"
-        embed = discord.Embed(description=f"> {ctx.author.mention}: Beginning to {verb} **{role.name}** {word} **{len(member_list)}** members.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: Beginning to {verb} **{role.name}** {word} **{len(member_list)}** members.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
         await self.massrole(member_list, [role], get_audit_reason(ctx.author), adding)
-        await ctx.send(embed = discord.Embed(description=f"> {ctx.author.mention}: {verb.title()[:5]}ed **{role.name}** {word} **{len(member_list)}** members.", color=0x313338))
+        await ctx.send(
+            embed=discord.Embed(
+                description=f"> {ctx.author.mention}: {verb.title()[:5]}ed **{role.name}** {word} **{len(member_list)}** members.",
+                color=0x313338,
+            )
+        )
 
     def get_member_list(
         self, members: List[discord.Member], role: discord.Role, adding: bool = True
@@ -1050,7 +1283,9 @@ class RoleTools(
                         await member.remove_roles(*to_remove, reason=reason)
                     except Exception as e:
                         failed.append(member)
-                        log.exception(f"Failed to remove roles from {member}", exc_info=e)
+                        log.exception(
+                            f"Failed to remove roles from {member}", exc_info=e
+                        )
                     else:
                         completed.append(member)
                 else:
@@ -1070,7 +1305,9 @@ class RoleTools(
         """
         roles_length = len(roles)
         if roles_length == 1:
-            raise commands.UserFeedbackCheckFailure("You must provide at least 2 roles.")
+            raise commands.UserFeedbackCheckFailure(
+                "You must provide at least 2 roles."
+            )
         if not ctx.guild.chunked:
             await ctx.guild.chunk()
         color = roles[0].color
@@ -1079,7 +1316,9 @@ class RoleTools(
         for role in roles:
             unique_members.update(role.members)
             description.append(f"{role.mention}: {self.format_members(role.members)}")
-        description.insert(0, f"**Unique members**: {self.format_members(unique_members)}")
+        description.insert(
+            0, f"**Unique members**: {self.format_members(unique_members)}"
+        )
         e = discord.Embed(
             color=color,
             title=f"Unique members between {roles_length} roles",

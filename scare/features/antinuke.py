@@ -6,9 +6,8 @@ from typing import List, Literal, Optional, Union
 import discord
 import humanize
 from discord.ext import commands
-
-from structure.scare import Scare
 from structure.managers import Context
+from structure.scare import Scare
 
 
 class Antinuke(commands.Cog):

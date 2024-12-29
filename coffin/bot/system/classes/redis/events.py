@@ -1,12 +1,7 @@
 import asyncio
 import traceback
 from logging import Logger
-from typing import (
-    Dict,
-    Callable,
-    Coroutine,
-    Any,
-)
+from typing import Any, Callable, Coroutine, Dict
 
 
 class Events:
@@ -48,18 +43,18 @@ class Events:
             ...
 
         try:
-            coro = getattr(self, f'on_{name}')
+            coro = getattr(self, f"on_{name}")
         except AttributeError:
             pass
         else:
-            self._schedule_event(coro, f'on_{name}', *args, **kwargs)
+            self._schedule_event(coro, f"on_{name}", *args, **kwargs)
 
     def _schedule_event(
-            self,
-            coro: Callable[..., Coroutine[Any, Any, Any]],
-            event_name: str,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        coro: Callable[..., Coroutine[Any, Any, Any]],
+        event_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> asyncio.Task:
         """
 
@@ -74,14 +69,14 @@ class Events:
         """
         wrapped = self._run_event(coro, event_name, *args, **kwargs)
         # Schedules the task
-        return asyncio.create_task(wrapped, name=f'ipc: {event_name}')
+        return asyncio.create_task(wrapped, name=f"ipc: {event_name}")
 
     async def _run_event(
-            self,
-            coro: Callable[..., Coroutine[Any, Any, Any]],
-            name: str,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        coro: Callable[..., Coroutine[Any, Any, Any]],
+        name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         try:
             await coro(*args, **kwargs)

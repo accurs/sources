@@ -11,7 +11,8 @@ import discord
 from babel.lists import format_list as babel_list
 from babel.numbers import format_decimal
 
-from grief.core.i18n import Translator, get_babel_locale, get_babel_regional_format
+from grief.core.i18n import (Translator, get_babel_locale,
+                             get_babel_regional_format)
 
 __all__ = (
     "error",
@@ -317,7 +318,9 @@ class pagify(Iterator[str]):
         while (end - start) > page_length:
             stop = start + page_length
             if escape_mass_mentions:
-                stop -= text.count("@here", start, stop) + text.count("@everyone", start, stop)
+                stop -= text.count("@here", start, stop) + text.count(
+                    "@everyone", start, stop
+                )
             closest_delim_it = (text.rfind(d, start + 1, stop) for d in self._delims)
             if self._priority:
                 closest_delim = next((x for x in closest_delim_it if x > 0), -1)
@@ -519,7 +522,9 @@ def format_perms_list(perms: discord.Permissions) -> str:
 
 
 def humanize_timedelta(
-    *, timedelta: Optional[datetime.timedelta] = None, seconds: Optional[SupportsInt] = None
+    *,
+    timedelta: Optional[datetime.timedelta] = None,
+    seconds: Optional[SupportsInt] = None,
 ) -> str:
     """
     Get a locale aware human timedelta representation.
@@ -594,7 +599,11 @@ def humanize_number(val: Union[int, float], override_locale=None) -> str:
 
 
 def text_to_file(
-    text: str, filename: str = "file.txt", *, spoiler: bool = False, encoding: str = "utf-8"
+    text: str,
+    filename: str = "file.txt",
+    *,
+    spoiler: bool = False,
+    encoding: str = "utf-8",
 ):
     """Prepares text to be sent as a file on Discord, without character limit.
 

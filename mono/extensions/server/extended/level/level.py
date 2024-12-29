@@ -4,16 +4,16 @@ from random import uniform
 from typing import Annotated, List, Optional, cast
 
 from asyncpg import UniqueViolationError
-from discord import Embed, HTTPException, Member, Message, Role, TextChannel, Thread
-from discord.ext.commands import BucketType, Cog, cooldown, group, has_permissions
-from pydantic import BaseModel
-from typing_extensions import Self
-
+from core.client.context import Context
+from core.managers.script import EmbedScript as Script
 from core.tools import CompositeMetaClass, MixinMeta, plural
 from core.tools.converters.discord import StrictRole
-from core.client.context import Context
-
-from core.managers.script import EmbedScript as Script
+from discord import (Embed, HTTPException, Member, Message, Role, TextChannel,
+                     Thread)
+from discord.ext.commands import (BucketType, Cog, cooldown, group,
+                                  has_permissions)
+from pydantic import BaseModel
+from typing_extensions import Self
 
 
 class LevelConfig(BaseModel):

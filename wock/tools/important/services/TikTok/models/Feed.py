@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, RootModel # type: ignore
+from pydantic import BaseModel, Field, RootModel  # type: ignore
 
 
 class Author(BaseModel):
@@ -93,10 +93,10 @@ class VolumeInfo(BaseModel):
 
 
 class ZoomCover(BaseModel):
-    field_240: Optional[str] = Field(None, alias='240')
-    field_480: Optional[str] = Field(None, alias='480')
-    field_720: Optional[str] = Field(None, alias='720')
-    field_960: Optional[str] = Field(None, alias='960')
+    field_240: Optional[str] = Field(None, alias="240")
+    field_480: Optional[str] = Field(None, alias="480")
+    field_720: Optional[str] = Field(None, alias="720")
+    field_960: Optional[str] = Field(None, alias="960")
 
 
 class SubtitleInfo(BaseModel):
@@ -184,7 +184,7 @@ class Anchor(BaseModel):
     id: Optional[str] = None
     keyword: Optional[str] = None
     logExtra: Optional[str] = None
-    schema_: Optional[str] = Field(None, alias='schema')
+    schema_: Optional[str] = Field(None, alias="schema")
     thumbnail: Optional[Thumbnail] = None
     type: Optional[int] = None
 

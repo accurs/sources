@@ -5,28 +5,23 @@ This module contains useful functions and classes for command argument conversio
 
 Some of the converters within are included provisionally and are marked as such.
 """
+
 import functools
 import math
 import re
 from datetime import timedelta
-from dateutil.relativedelta import relativedelta
-from typing import (
-    TYPE_CHECKING,
-    Optional,
-    Optional as NoParseOptional,
-    Tuple,
-    List,
-    Dict,
-    Type,
-    TypeVar,
-    Union as UserInputOptional,
-)
+from typing import TYPE_CHECKING, Dict, List
+from typing import Optional
+from typing import Optional as NoParseOptional
+from typing import Tuple, Type, TypeVar
+from typing import Union as UserInputOptional
 
+from dateutil.relativedelta import relativedelta
 from discord.ext import commands as dpy_commands
 from discord.ext.commands import BadArgument
 
 from ..i18n import Translator
-from ..utils.chat_formatting import humanize_timedelta, humanize_list
+from ..utils.chat_formatting import humanize_list, humanize_timedelta
 
 if TYPE_CHECKING:
     from .context import Context
@@ -71,7 +66,9 @@ TIME_RE_STRING = r"\s?".join(
 TIME_RE = re.compile(TIME_RE_STRING, re.I)
 
 
-def _parse_and_match(string_to_match: str, allowed_units: List[str]) -> Optional[Dict[str, int]]:
+def _parse_and_match(
+    string_to_match: str, allowed_units: List[str]
+) -> Optional[Dict[str, int]]:
     """
     Local utility function to match TIME_RE string above to user input for both parse_timedelta and parse_relativedelta
     """
@@ -81,7 +78,9 @@ def _parse_and_match(string_to_match: str, allowed_units: List[str]) -> Optional
         for k in params.keys():
             if k not in allowed_units:
                 raise BadArgument(
-                    _("`{unit}` is not a valid unit of time for this command").format(unit=k)
+                    _("`{unit}` is not a valid unit of time for this command").format(
+                        unit=k
+                    )
                 )
         return params
     return None
@@ -137,7 +136,9 @@ def parse_timedelta(
             delta = timedelta(**params)
         except OverflowError:
             raise BadArgument(
-                _("The time set is way too high, consider setting something reasonable.")
+                _(
+                    "The time set is way too high, consider setting something reasonable."
+                )
             )
         if maximum and maximum < delta:
             raise BadArgument(
@@ -199,7 +200,9 @@ def parse_relativedelta(
             delta = relativedelta(**params)
         except OverflowError:
             raise BadArgument(
-                _("The time set is way too high, consider setting something reasonable.")
+                _(
+                    "The time set is way too high, consider setting something reasonable."
+                )
             )
         return delta
     return None
@@ -228,7 +231,9 @@ class RawUserIdConverter(dpy_commands.Converter):
         if match := ID_REGEX.match(argument) or USER_MENTION_REGEX.match(argument):
             return int(match.group(1))
 
-        raise BadArgument(_("'{input}' doesn't look like a valid user ID.").format(input=argument))
+        raise BadArgument(
+            _("'{input}' doesn't look like a valid user ID.").format(input=argument)
+        )
 
 
 # Below this line are a lot of lies for mypy about things that *end up* correct when
@@ -291,12 +296,15 @@ else:
 
 if TYPE_CHECKING:
 
-    def get_dict_converter(*expected_keys: str, delims: Optional[List[str]] = None) -> Type[dict]:
-        ...
+    def get_dict_converter(
+        *expected_keys: str, delims: Optional[List[str]] = None
+    ) -> Type[dict]: ...
 
 else:
 
-    def get_dict_converter(*expected_keys: str, delims: Optional[List[str]] = None) -> Type[dict]:
+    def get_dict_converter(
+        *expected_keys: str, delims: Optional[List[str]] = None
+    ) -> Type[dict]:
         """
         Returns a typechecking safe `DictConverter` suitable for use with discord.py
         """
@@ -340,7 +348,9 @@ else:
             apply.
         """
 
-        def __init__(self, *, minimum=None, maximum=None, allowed_units=None, default_unit=None):
+        def __init__(
+            self, *, minimum=None, maximum=None, allowed_units=None, default_unit=None
+        ):
             self.allowed_units = allowed_units
             self.default_unit = default_unit
             self.minimum = minimum
@@ -370,8 +380,7 @@ if TYPE_CHECKING:
         maximum: Optional[timedelta] = None,
         minimum: Optional[timedelta] = None,
         allowed_units: Optional[List[str]] = None,
-    ) -> Type[timedelta]:
-        ...
+    ) -> Type[timedelta]: ...
 
 else:
 

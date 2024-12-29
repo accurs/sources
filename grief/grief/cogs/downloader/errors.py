@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from .repo_manager import Candidate
@@ -142,7 +142,9 @@ class AmbiguousRevision(GitException):
     Thrown when specified revision is ambiguous.
     """
 
-    def __init__(self, message: str, git_command: str, candidates: List[Candidate]) -> None:
+    def __init__(
+        self, message: str, git_command: str, candidates: List[Candidate]
+    ) -> None:
         super().__init__(message, git_command)
         self.candidates = candidates
 

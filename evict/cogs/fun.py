@@ -1,15 +1,19 @@
-import discord, random, json, asyncio, aiohttp
-from discord.ext import commands
-from random import randrange
+import asyncio
+import json
+import random
 from io import BytesIO
+from random import randrange
 
-from patches.permissions import Permissions
-from kureAPI import API
-from bot.headers import Session
-from patches.fun import RockPaperScissors, BlackTea, TicTacToe, Pack
+import aiohttp
+import discord
 from bot.bot import Evict
+from bot.headers import Session
 from bot.helpers import EvictContext
-from bot.managers.emojis import Emojis, Colors
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
+from kureAPI import API
+from patches.fun import BlackTea, Pack, RockPaperScissors, TicTacToe
+from patches.permissions import Permissions
 
 api = API("0cfD&erb1KAjSj7UcGk0")
 
@@ -46,12 +50,15 @@ class fun(commands.Cog):
         await message.add_reaction("👍")
         await message.add_reaction("👎")
 
-    @commands.command(description="flip a coin", )
+    @commands.command(
+        description="flip a coin",
+    )
     async def coinflip(self, ctx: EvictContext):
         await ctx.reply(random.choice(["heads", "tails"]))
 
     @commands.command(
-        aliases=["rps"], description="play rock paper scissors with the bot", 
+        aliases=["rps"],
+        description="play rock paper scissors with the bot",
     )
     async def rockpaperscisssors(self, ctx: EvictContext):
         view = RockPaperScissors(ctx)
@@ -194,7 +201,9 @@ class fun(commands.Cog):
             )
         await ctx.reply(embed=embed)
 
-    @commands.command(description="send a random bird image", )
+    @commands.command(
+        description="send a random bird image",
+    )
     async def bird(self, ctx):
         data = await self.bot.session.json("https://api.alexflipnote.dev/birb")
         await ctx.reply(
@@ -204,7 +213,9 @@ class fun(commands.Cog):
             )
         )
 
-    @commands.command(description="send a random dog image", )
+    @commands.command(
+        description="send a random dog image",
+    )
     async def dog(self, ctx):
         data = await self.bot.session.json("https://random.dog/woof.json")
         await ctx.reply(
@@ -214,7 +225,9 @@ class fun(commands.Cog):
             )
         )
 
-    @commands.command(description="send a random cat image", )
+    @commands.command(
+        description="send a random cat image",
+    )
     async def cat(self, ctx):
         data = (
             await self.bot.session.json("https://api.thecatapi.com/v1/images/search")
@@ -225,7 +238,9 @@ class fun(commands.Cog):
             )
         )
 
-    @commands.command(description="send a random capybara image", )
+    @commands.command(
+        description="send a random capybara image",
+    )
     async def capybara(self, ctx):
         data = await self.bot.session.json("https://api.capy.lol/v1/capybara?json=true")
         await ctx.reply(
@@ -235,9 +250,7 @@ class fun(commands.Cog):
             )
         )
 
-    @commands.command(
-        description="return an useless fact", aliases=["fact", "uf"]
-    )
+    @commands.command(description="return an useless fact", aliases=["fact", "uf"])
     async def uselessfact(self, ctx):
         data = (
             await self.bot.session.json(
@@ -264,7 +277,8 @@ class fun(commands.Cog):
             return await ctx.warning(f"This site **does not** appear to be valid.")
 
     @commands.command(
-        description="grab info on a snapchat profile", usage="[username]", 
+        description="grab info on a snapchat profile",
+        usage="[username]",
     )
     async def snapchat(self, ctx: EvictContext, *, username: str):
         try:
@@ -318,9 +332,7 @@ class fun(commands.Cog):
             except:
                 pass
 
-    @commands.command(
-        description="grab info on a roblox profile", usage="[username]"
-    )
+    @commands.command(description="grab info on a roblox profile", usage="[username]")
     async def roblox(self, ctx: EvictContext, profile: str):
         try:
             data = await api.get_roblox_user(f"{profile}")
@@ -343,7 +355,8 @@ class fun(commands.Cog):
             return await ctx.warning(f"{profile} **does not** appear to be valid.")
 
     @commands.command(
-        description="grab info on a snapchat profile", usage="[username]", 
+        description="grab info on a snapchat profile",
+        usage="[username]",
     )
     async def snapchatuser(self, ctx: EvictContext, profile: str):
         try:
@@ -360,7 +373,8 @@ class fun(commands.Cog):
             return await ctx.warning(f"{profile} **does not** appear to be valid.")
 
     @commands.command(
-        description="grab info on a tiktok profile", usage="[username]", 
+        description="grab info on a tiktok profile",
+        usage="[username]",
     )
     async def tiktok(self, ctx: EvictContext, profile: str):
         try:
@@ -390,7 +404,8 @@ class fun(commands.Cog):
             return await ctx.warning(f"{profile} **does not** appear to be valid.")
 
     @commands.command(
-        description="grab info on a instagram profile", usage="[username]", 
+        description="grab info on a instagram profile",
+        usage="[username]",
     )
     async def instagram(self, ctx: EvictContext, profile: str):
         try:
@@ -415,7 +430,10 @@ class fun(commands.Cog):
         except Exception:
             return await ctx.warning(f"{profile} **does not** appear to be valid.")
 
-    @commands.command(description="ask chatgpt a question", usage="text", )
+    @commands.command(
+        description="ask chatgpt a question",
+        usage="text",
+    )
     async def chatgpt(self, ctx: EvictContext, *, text: str):
         data = await api.ask_chatgpt(f"{text}")
         await ctx.reply(data)
@@ -428,7 +446,9 @@ class fun(commands.Cog):
             f"**{ctx.author.name}** 💞 **{member.name}** = **{randrange(101)}%**"
         )
 
-    @commands.command(description="sends a random advice", )
+    @commands.command(
+        description="sends a random advice",
+    )
     async def advice(self, ctx: EvictContext):
         byte = await self.bot.session.read("https://api.adviceslip.com/advice")
         data = str(byte, "utf-8")
@@ -467,49 +487,48 @@ class fun(commands.Cog):
             allowed_mentions=discord.AllowedMentions(users=[member]),
         )
 
-    @commands.command(description="play blacktea with your friends", )
+    @commands.command(
+        description="play blacktea with your friends",
+    )
     async def blacktea(self, ctx: EvictContext):
-        
+
         try:
             if BlackTea.MatchStart[ctx.guild.id] is True:
-                return await ctx.warning(
-                    "There is already a blacktea match going on."
-                )
-        
+                return await ctx.warning("There is already a blacktea match going on.")
+
         except KeyError:
             pass
 
         BlackTea.MatchStart[ctx.guild.id] = True
-        
+
         embed = discord.Embed(
             color=Colors.color,
             title="BlackTea Matchmaking",
             description=f"⏰ Waiting for players to join. To join react with 🍵.\nThe game will begin in **20 seconds**",
         )
-        
+
         embed.add_field(
             name="goal",
             value="You have **10 seconds** to say a word containing the given group of **3 letters.**\nIf failed to do so, you will lose a life. Each player has **2 lifes**",
         )
-        
+
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
         mes = await ctx.send(embed=embed)
-        
+
         await mes.add_reaction("🍵")
         await asyncio.sleep(20)
-        
-        try: 
+
+        try:
             me = await ctx.channel.fetch_message(mes.id)
-        
+
         except:
             BlackTea.MatchStart.remove(ctx.guild.id)
             return await ctx.reply("The blacktea message was deleted")
-        
+
         players = [user.id async for user in me.reactions[0].users()]
         leaderboard = []
         players.remove(self.bot.user.id)
 
-        
         if len(players) < 2:
             BlackTea.MatchStart[ctx.guild.id] = False
             return await ctx.send(
@@ -519,7 +538,6 @@ class fun(commands.Cog):
                 allowed_mentions=discord.AllowedMentions(users=True),
             )
 
-        
         while len(players) > 1:
             for player in players:
                 strin = await BlackTea.get_string()

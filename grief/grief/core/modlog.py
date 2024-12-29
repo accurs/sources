@@ -3,22 +3,18 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Literal, Union, Optional, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Literal, Optional, Union, cast
 
 import discord
 
 from grief.core import Config
-from .utils import AsyncIter
-from .utils.common_filters import (
-    filter_invites,
-    filter_mass_mentions,
-    filter_urls,
-    escape_spoilers,
-)
-from .utils.chat_formatting import bold, pagify
-from .i18n import Translator, set_contextual_locales_from_guild
 
 from .generic_casetypes import all_generics
+from .i18n import Translator, set_contextual_locales_from_guild
+from .utils import AsyncIter
+from .utils.chat_formatting import bold, pagify
+from .utils.common_filters import (escape_spoilers, filter_invites,
+                                   filter_mass_mentions, filter_urls)
 
 if TYPE_CHECKING:
     from grief.core.bot import Red
@@ -55,7 +51,9 @@ _ = Translator("ModLog", __file__)
 
 
 async def _process_data_deletion(
-    *, requester: Literal["discord_deleted_user", "owner", "user", "user_strict"], user_id: int
+    *,
+    requester: Literal["discord_deleted_user", "owner", "user", "user_strict"],
+    user_id: int,
 ):
     if requester != "discord_deleted_user":
         return
@@ -95,7 +93,9 @@ async def _init(bot: Red):
     _config.init_custom(_CASES, 2)
     _config.register_custom(_CASETYPES)
     _config.register_custom(_CASES)
-    await _migrate_config(from_version=await _config.schema_version(), to_version=_SCHEMA_VERSION)
+    await _migrate_config(
+        from_version=await _config.schema_version(), to_version=_SCHEMA_VERSION
+    )
     await register_casetypes(all_generics)
 
     async def on_member_ban(guild: discord.Guild, member: discord.Member):
@@ -110,7 +110,9 @@ async def _init(bot: Red):
         when = datetime.now(timezone.utc)
         before = when + timedelta(minutes=1)
         after = when - timedelta(minutes=1)
-        await asyncio.sleep(10)  # prevent small delays from causing a 5 minute delay on entry
+        await asyncio.sleep(
+            10
+        )  # prevent small delays from causing a 5 minute delay on entry
 
         attempts = 0
         # wait up to an hour to find a matching case
@@ -118,7 +120,8 @@ async def _init(bot: Red):
             attempts += 1
             try:
                 entry = await discord.utils.find(
-                    lambda e: e.target.id == member.id and after < e.created_at < before,
+                    lambda e: e.target.id == member.id
+                    and after < e.created_at < before,
                     guild.audit_logs(
                         action=discord.AuditLogAction.ban, before=before, after=after
                     ),
@@ -133,7 +136,9 @@ async def _init(bot: Red):
                         # Don't create modlog entires for the bot's own bans, cogs do this.
                         mod, reason = entry.user, entry.reason
                         date = entry.created_at
-                        await create_case(_bot_ref, guild, date, "ban", member, mod, reason)
+                        await create_case(
+                            _bot_ref, guild, date, "ban", member, mod, reason
+                        )
                     return
 
             await asyncio.sleep(300)
@@ -150,7 +155,9 @@ async def _init(bot: Red):
         when = datetime.now(timezone.utc)
         before = when + timedelta(minutes=1)
         after = when - timedelta(minutes=1)
-        await asyncio.sleep(10)  # prevent small delays from causing a 5 minute delay on entry
+        await asyncio.sleep(
+            10
+        )  # prevent small delays from causing a 5 minute delay on entry
 
         attempts = 0
         # wait up to an hour to find a matching case
@@ -173,7 +180,9 @@ async def _init(bot: Red):
                         # Don't create modlog entires for the bot's own unbans, cogs do this.
                         mod, reason = entry.user, entry.reason
                         date = entry.created_at
-                        await create_case(_bot_ref, guild, date, "unban", user, mod, reason)
+                        await create_case(
+                            _bot_ref, guild, date, "unban", user, mod, reason
+                        )
                     return
 
             await asyncio.sleep(300)
@@ -189,7 +198,9 @@ async def handle_auditype_key():
             for inner_key, inner_value in casetype_data.items()
             if inner_key != "audit_type"
         }
-        for casetype_name, casetype_data in (await _config.custom(_CASETYPES).all()).items()
+        for casetype_name, casetype_data in (
+            await _config.custom(_CASETYPES).all()
+        ).items()
     }
     await _config.custom(_CASETYPES).set(all_casetypes)
 
@@ -219,9 +230,9 @@ async def _migrate_config(from_version: int, to_version: int):
         # migration done, now let's delete all the old stuff
         await _config.clear_raw("casetypes")
         for guild_id in all_guild_data:
-            await _config.guild(cast(discord.Guild, discord.Object(id=guild_id))).clear_raw(
-                "cases"
-            )
+            await _config.guild(
+                cast(discord.Guild, discord.Object(id=guild_id))
+            ).clear_raw("cases")
 
     if from_version < 3 <= to_version:
         await handle_auditype_key()
@@ -352,7 +363,9 @@ class Case:
         self.message = message
 
     @property
-    def parent_channel(self) -> Optional[Union[discord.TextChannel, discord.ForumChannel]]:
+    def parent_channel(
+        self,
+    ) -> Optional[Union[discord.TextChannel, discord.ForumChannel]]:
         """
         The parent text/forum channel of the thread in `channel`.
 
@@ -368,7 +381,9 @@ class Case:
         # in order to avoid making an API request to "edit" the message with changes.
         # In all other cases, edit() is correct method.
         self.message = message
-        await _config.custom(_CASES, str(self.guild.id), str(self.case_number)).set(self.to_json())
+        await _config.custom(_CASES, str(self.guild.id), str(self.case_number)).set(
+            self.to_json()
+        )
 
     async def edit(self, data: dict):
         """
@@ -386,7 +401,9 @@ class Case:
         data.pop("last_known_username", None)
         for item, value in data.items():
             if item == "channel" and isinstance(value, discord.PartialMessageable):
-                raise TypeError("Can't use PartialMessageable as the channel for a modlog case.")
+                raise TypeError(
+                    "Can't use PartialMessageable as the channel for a modlog case."
+                )
             if isinstance(value, discord.Object):
                 # probably expensive to call but meh should capture all cases
                 setattr(self, item, value.id)
@@ -400,7 +417,9 @@ class Case:
         if isinstance(self.channel, discord.Thread):
             self.parent_channel_id = self.channel.parent_id
 
-        await _config.custom(_CASES, str(self.guild.id), str(self.case_number)).set(self.to_json())
+        await _config.custom(_CASES, str(self.guild.id), str(self.case_number)).set(
+            self.to_json()
+        )
         self.bot.dispatch("modlog_case_edit", self)
         if not self.message:
             return
@@ -452,7 +471,9 @@ class Case:
         """
         casetype = await get_casetype(self.action_type)
         title = "{}".format(
-            _("Case #{} | {} {}").format(self.case_number, casetype.case_str, casetype.image)
+            _("Case #{} | {} {}").format(
+                self.case_number, casetype.case_str, casetype.image
+            )
         )
         reason = _("**Reason:** Use the `reason` command to add it")
 
@@ -507,7 +528,10 @@ class Case:
             elif self.last_known_username.endswith("#0"):
                 user = f"{self.last_known_username[:-2]} ({self.user})"
             # New usernames can't contain `#` and old usernames couldn't either.
-            elif len(self.last_known_username) <= 5 or self.last_known_username[-5] != "#":
+            elif (
+                len(self.last_known_username) <= 5
+                or self.last_known_username[-5] != "#"
+            ):
                 user = f"{self.last_known_username} ({self.user})"
             # Last known user handle is a legacy username with a discriminator
             else:
@@ -539,11 +563,13 @@ class Case:
                         "Deleted or archived thread ({thread_id}) in {channel_name}"
                     ).format(thread_id=self.channel, channel_name=parent_channel)
                 else:
-                    channel_value = _("Thread {thread_id} in {channel_id} (deleted)").format(
-                        thread_id=self.channel, channel_id=self.parent_channel_id
-                    )
+                    channel_value = _(
+                        "Thread {thread_id} in {channel_id} (deleted)"
+                    ).format(thread_id=self.channel, channel_id=self.parent_channel_id)
             else:
-                channel_value = _("{channel_id} (deleted)").format(channel_id=self.channel)
+                channel_value = _("{channel_id} (deleted)").format(
+                    channel_id=self.channel
+                )
         elif self.channel is not None:
             channel_value = self.channel.name
             if self.parent_channel_id is not None:
@@ -552,7 +578,9 @@ class Case:
                         thread_name=self.channel, channel_name=parent_channel
                     )
                 else:
-                    channel_value = _("Thread {thread_name} in {channel_id} (deleted)").format(
+                    channel_value = _(
+                        "Thread {thread_name} in {channel_id} (deleted)"
+                    ).format(
                         thread_name=self.channel, channel_id=self.parent_channel_id
                     )
 
@@ -598,14 +626,18 @@ class Case:
                         )
                         + "..."
                     )
-            user = filter_mass_mentions(filter_urls(user))  # Further sanitization outside embeds
+            user = filter_mass_mentions(
+                filter_urls(user)
+            )  # Further sanitization outside embeds
             case_text = ""
             case_text += "{}\n".format(title)
             case_text += f"{bold(_('User:'))} {user}\n"
             case_text += f"{bold(_('Moderator:'))} {moderator}\n"
             case_text += "{}\n".format(reason)
             if until and duration:
-                case_text += f"{bold(_('Until:'))} {until}\n{bold(_('Duration:'))} {duration}\n"
+                case_text += (
+                    f"{bold(_('Until:'))} {until}\n{bold(_('Duration:'))} {duration}\n"
+                )
             if self.channel:
                 if isinstance(self.channel, int):
                     case_text += f"{bold(_('Channel:'))} {channel_value}\n"
@@ -659,7 +691,9 @@ class Case:
     @classmethod
     async def from_json(
         cls,
-        mod_channel: Union[discord.TextChannel, discord.VoiceChannel, discord.StageChannel],
+        mod_channel: Union[
+            discord.TextChannel, discord.VoiceChannel, discord.StageChannel
+        ],
         bot: Red,
         case_number: int,
         data: dict,
@@ -781,7 +815,9 @@ class CaseType:
                 "Got outdated key in casetype: audit_type"
             )
         if kwargs:
-            log.warning("Got unexpected key(s) in casetype: %s", ",".join(kwargs.keys()))
+            log.warning(
+                "Got unexpected key(s) in casetype: %s", ",".join(kwargs.keys())
+            )
 
     async def to_json(self):
         """Transforms the case type into a dict and saves it"""
@@ -931,7 +967,11 @@ async def get_all_cases(guild: discord.Guild, bot: Red) -> List[Case]:
 
 
 async def get_cases_for_member(
-    guild: discord.Guild, bot: Red, *, member: discord.Member = None, member_id: int = None
+    guild: discord.Guild,
+    bot: Red,
+    *,
+    member: discord.Member = None,
+    member_id: int = None,
 ) -> List[Case]:
     """
     Gets all cases for the specified member or member id in a guild.
@@ -979,7 +1019,9 @@ async def get_cases_for_member(
         modlog_channel = None
 
     cases = [
-        await Case.from_json(modlog_channel, bot, case_number, case_data, user=member, guild=guild)
+        await Case.from_json(
+            modlog_channel, bot, case_number, case_data, user=member, guild=guild
+        )
         for case_number, case_data in cases.items()
         if case_data["user"] == member_id
     ]
@@ -1054,9 +1096,13 @@ async def create_case(
         raise RuntimeError("The bot itself can not be the target of a modlog entry.")
 
     if isinstance(channel, discord.PartialMessageable):
-        raise TypeError("Can't use PartialMessageable as the channel for a modlog case.")
+        raise TypeError(
+            "Can't use PartialMessageable as the channel for a modlog case."
+        )
 
-    parent_channel_id = channel.parent_id if isinstance(channel, discord.Thread) else None
+    parent_channel_id = (
+        channel.parent_id if isinstance(channel, discord.Thread) else None
+    )
 
     async with _config.guild(guild).latest_case_number.get_lock():
         # We're getting the case number from config, incrementing it, awaiting something, then
@@ -1080,7 +1126,9 @@ async def create_case(
             message=None,
             last_known_username=last_known_username,
         )
-        await _config.custom(_CASES, str(guild.id), str(next_case_number)).set(case.to_json())
+        await _config.custom(_CASES, str(guild.id), str(next_case_number)).set(
+            case.to_json()
+        )
         await _config.guild(guild).latest_case_number.set(next_case_number)
 
     await set_contextual_locales_from_guild(bot, guild)
@@ -1111,7 +1159,9 @@ async def create_case(
     return case
 
 
-async def get_casetype(name: str, guild: Optional[discord.Guild] = None) -> Optional[CaseType]:
+async def get_casetype(
+    name: str, guild: Optional[discord.Guild] = None
+) -> Optional[CaseType]:
     """
     Gets the case type
 
@@ -1294,7 +1344,9 @@ async def get_modlog_channel(
 
 async def set_modlog_channel(
     guild: discord.Guild,
-    channel: Union[discord.TextChannel, discord.VoiceChannel, discord.StageChannel, None],
+    channel: Union[
+        discord.TextChannel, discord.VoiceChannel, discord.StageChannel, None
+    ],
 ) -> bool:
     """
     Changes the modlog channel
@@ -1312,7 +1364,9 @@ async def set_modlog_channel(
         `True` if successful
 
     """
-    await _config.guild(guild).mod_log.set(channel.id if hasattr(channel, "id") else None)
+    await _config.guild(guild).mod_log.set(
+        channel.id if hasattr(channel, "id") else None
+    )
     return True
 
 

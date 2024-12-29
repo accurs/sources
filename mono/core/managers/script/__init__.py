@@ -2,21 +2,17 @@ import random
 import urllib
 
 import dateparser
-from discord import ButtonStyle, Color, Embed, Member, Message, TextChannel, Webhook
+from core.client.context import Context
+from core.managers.script.color import colors
+from core.tools import tagscript
+from core.tools.human import comma, ordinal
+from core.tools.regex import IMAGE_URL, URL
+from core.tools.text import hidden
+from discord import (ButtonStyle, Color, Embed, Member, Message, TextChannel,
+                     Webhook)
 from discord.ext.commands import CommandError, Converter
 from discord.ui import Button, View  # type: ignore
 from discord.utils import escape_markdown, utcnow
-
-from core.tools import tagscript
-from core.managers.script.color import colors
-
-from core.client.context import Context
-
-from core.tools.regex import IMAGE_URL, URL
-
-from core.tools.human import comma, ordinal
-
-from core.tools.text import hidden
 
 
 class LinkButton(Button):

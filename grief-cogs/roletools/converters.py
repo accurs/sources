@@ -1,21 +1,23 @@
-
-
 import shlex
 from typing import Dict, List, NamedTuple, Tuple, Union
 
 import discord
 from rapidfuzz import process
-from grief.core import commands
 from unidecode import unidecode
 
-from .utils import NoExitParser, is_allowed_by_hierarchy, is_allowed_by_role_hierarchy
+from grief.core import commands
+
+from .utils import (NoExitParser, is_allowed_by_hierarchy,
+                    is_allowed_by_role_hierarchy)
 
 
 class RoleArgumentConverter(NamedTuple):
     parsed: Dict[str, List[discord.Role]]
 
     @classmethod
-    async def convert(cls, ctx: commands.Context, argument: str) -> "RoleArgumentConverter":
+    async def convert(
+        cls, ctx: commands.Context, argument: str
+    ) -> "RoleArgumentConverter":
         parser = NoExitParser(
             description="Role utils syntax help", add_help=False, allow_abbrev=True
         )
@@ -28,7 +30,9 @@ class RoleArgumentConverter(NamedTuple):
         if not vals["add"] and not vals["remove"]:
             raise commands.BadArgument("Must provide at least one or more actions.")
         for attr in ("add", "remove"):
-            vals[attr] = [await commands.RoleConverter().convert(ctx, r) for r in vals[attr]]
+            vals[attr] = [
+                await commands.RoleConverter().convert(ctx, r) for r in vals[attr]
+            ]
         return cls(vals)
 
 
@@ -66,7 +70,9 @@ class FuzzyRole(commands.RoleConverter):
             )
         ]
         if not result:
-            raise commands.BadArgument(f'Role "{argument}" not found.' if self.response else None)
+            raise commands.BadArgument(
+                f'Role "{argument}" not found.' if self.response else None
+            )
 
         sorted_result = sorted(result, key=lambda r: r[1], reverse=True)
         return sorted_result[0][0]
@@ -86,7 +92,9 @@ class StrictRole(FuzzyRole):
                 if self.response
                 else None
             )
-        allowed, message = await is_allowed_by_role_hierarchy(ctx.bot, ctx.me, ctx.author, role)
+        allowed, message = await is_allowed_by_role_hierarchy(
+            ctx.bot, ctx.me, ctx.author, role
+        )
         if not allowed:
             raise commands.BadArgument(message if self.response else None)
         return role
@@ -110,7 +118,9 @@ class TouchableMember(commands.MemberConverter):
 
 
 class RealEmojiConverter(commands.EmojiConverter):
-    async def convert(self, ctx: commands.Context, argument: str) -> Union[discord.Emoji, str]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> Union[discord.Emoji, str]:
         try:
             emoji = await super().convert(ctx, argument)
         except commands.BadArgument:
@@ -144,7 +154,9 @@ class ObjectConverter(commands.IDConverter[discord.Object]):
 
 
 class TargeterArgs(commands.Converter[List[discord.Member]]):
-    async def convert(self, ctx: commands.Context, argument: str) -> List[discord.Member]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> List[discord.Member]:
         members = await ctx.bot.get_cog("Targeter").args_to_list(ctx, argument)
         if not members:
             raise commands.BadArgument(

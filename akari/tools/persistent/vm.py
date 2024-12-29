@@ -1,21 +1,11 @@
 import datetime
 
-from discord.interactions import Interaction
-
-from tools.exceptions import RenameRateLimit
-
-from discord import (
-    Embed,
-    Interaction,
-    TextStyle,
-    SelectOption,
-    ButtonStyle,
-    Guild,
-    utils,
-    VoiceChannel,
-)
-from discord.ui import Modal, Button, View, TextInput, Select
+from discord import (ButtonStyle, Embed, Guild, Interaction, SelectOption,
+                     TextStyle, VoiceChannel, utils)
 from discord.ext.commands import AutoShardedBot, CommandError
+from discord.interactions import Interaction
+from discord.ui import Button, Modal, Select, TextInput, View
+from tools.exceptions import RenameRateLimit
 
 
 async def rename_vc_bucket(bot: AutoShardedBot, channel: VoiceChannel):

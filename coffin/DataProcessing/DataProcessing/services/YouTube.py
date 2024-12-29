@@ -1,8 +1,11 @@
-from redis.asyncio import Redis
-from .Base import BaseService, cache
 from typing import Optional
-from ..models.YouTube import YouTubeChannel, YouTubeFeed
+
+from redis.asyncio import Redis
+
 from .._impl.exceptions import InvalidUser
+from ..models.YouTube import YouTubeChannel, YouTubeFeed
+from .Base import BaseService, cache
+
 
 class YouTubeService(BaseService):
     def __init__(self: "YouTubeService", redis: Redis, ttl: Optional[int] = None):
@@ -23,7 +26,6 @@ class YouTubeService(BaseService):
                 return await YouTubeChannel.from_id(url)
             except Exception:
                 raise InvalidUser(f"No YouTube Channel found for `{url}`")
-        
 
     async def get_feed(self, youtube_id: str) -> YouTubeFeed:
         feed = await YouTubeFeed.from_id(youtube_id)

@@ -1,10 +1,20 @@
-from discord import Message, Attachment
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
+from discord import Attachment, Message
 
 
 class DiscordAttachment(Attachment):
     def to_dict(self: Attachment) -> Optional[Dict[str, Any]]:
-        return {"url": self.url, "proxy_url": self.url, "size": self.size, "height": self.height, "width": self.width, "type": self.content_type, "filename": self.filename}
+        return {
+            "url": self.url,
+            "proxy_url": self.url,
+            "size": self.size,
+            "height": self.height,
+            "width": self.width,
+            "type": self.content_type,
+            "filename": self.filename,
+        }
+
 
 class DiscordMessage(Message):
     def to_dict(self: Message) -> Optional[Dict[str, Any]]:
@@ -27,6 +37,7 @@ class DiscordMessage(Message):
             "attachments": [attachment.to_dict() for attachment in self.attachments],
             "embeds": [i.to_dict() for i in self.embeds],
         }
+
 
 Message.to_dict = DiscordMessage.to_dict
 Attachment.to_dict = DiscordAttachment.to_dict

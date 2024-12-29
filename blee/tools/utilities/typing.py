@@ -1,10 +1,4 @@
-from asyncio import (
-    AbstractEventLoop,
-    CancelledError,
-    Future,
-    Task,
-    sleep,
-)
+from asyncio import AbstractEventLoop, CancelledError, Future, Task, sleep
 from contextlib import suppress
 
 from discord import Guild, Member, Message, TextChannel

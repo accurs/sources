@@ -1,9 +1,15 @@
-from .channels import TextChannelConverter, ThreadChannelConverter, GuildChannelConverter, CategoryChannelConverter, VoiceChannelConverter
-from .snowflakes import UserConverter, MemberConverter, SafeMemberConverter, Emoji
-from .roles import AssignedRole, Role, MultipleRoles, FakePermission
-from .custom import Boolean, CommandConverter, Timeframe, EmbedConverter, GuildConv, GuildConverter, GConverter, Expiration, AntinukeAction #, YouTubeChannelConverter,
-from .color import ColorConv, ColorInfo
 from discord.ext import commands
+
+from .channels import (CategoryChannelConverter, GuildChannelConverter,
+                       TextChannelConverter, ThreadChannelConverter,
+                       VoiceChannelConverter)
+from .color import ColorConv, ColorInfo
+from .custom import (AntinukeAction, Boolean,  # , YouTubeChannelConverter,
+                     CommandConverter, EmbedConverter, Expiration, GConverter,
+                     GuildConv, GuildConverter, Timeframe)
+from .roles import AssignedRole, FakePermission, MultipleRoles, Role
+from .snowflakes import (Emoji, MemberConverter, SafeMemberConverter,
+                         UserConverter)
 
 commands.TextChannelConverter = TextChannelConverter
 commands.ThreadConverter = ThreadChannelConverter
@@ -23,7 +29,7 @@ commands.Boolean = Boolean
 commands.ColourConverter = ColorConv
 commands.ColorConverter = ColorConv
 commands.ColorInfo = ColorInfo
-#commands.YouTubeChannelConverter = YouTubeChannelConverter
+# commands.YouTubeChannelConverter = YouTubeChannelConverter
 commands.CommandConverter = CommandConverter
 commands.Timeframe = Timeframe
 commands.EmbedConverter = EmbedConverter

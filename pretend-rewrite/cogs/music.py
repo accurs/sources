@@ -1,9 +1,11 @@
 import asyncio
+from typing import Literal
+
+import async_timeout
 import discord
 import pomice
-import async_timeout
-from typing import Literal
 from discord.ext import commands
+
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -22,21 +24,36 @@ class Music(commands.Cog):
             secure=False,
             spotify_client_id="38e4713253e147359a8c049425cdfff1",
             spotify_client_secret="c82c5d45ec4741f58b780b3a13cd8b44",
-            apple_music=True
+            apple_music=True,
         )
 
     async def music_send(self, ctx: commands.Context, message: str) -> discord.Message:
-        return await ctx.send(embed=discord.Embed(color=self.bot.color, description=f"{self.music} {ctx.author.mention}: {message}"))
+        return await ctx.send(
+            embed=discord.Embed(
+                color=self.bot.color,
+                description=f"{self.music} {ctx.author.mention}: {message}",
+            )
+        )
 
     @commands.Cog.listener()
-    async def on_pomice_track_end(self, player: pomice.Player, track: pomice.Track, reason: str):
+    async def on_pomice_track_end(
+        self, player: pomice.Player, track: pomice.Track, reason: str
+    ):
         await player.next()
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
         if member.id != self.bot.user.id:
             return
-        if not hasattr(self.bot, "node") or (player := self.bot.node.get_player(member.guild.id)) is None:
+        if (
+            not hasattr(self.bot, "node")
+            or (player := self.bot.node.get_player(member.guild.id)) is None
+        ):
             return
         if not after.channel:
             await player.teardown()
@@ -48,7 +65,10 @@ class Music(commands.Cog):
         if not ctx.author.voice:
             await self.music_send(ctx, "You're not **connected** to a voice channel")
             return None
-        if ctx.guild.me.voice and ctx.guild.me.voice.channel != ctx.author.voice.channel:
+        if (
+            ctx.guild.me.voice
+            and ctx.guild.me.voice.channel != ctx.author.voice.channel
+        ):
             await self.music_send(ctx, "I'm **already** connected to a voice channel")
             return None
         player = self.bot.node.get_player(ctx.guild.id)
@@ -79,7 +99,9 @@ class Music(commands.Cog):
             track = result[0]
             await player.insert(track)
             if player.is_playing:
-                await self.music_send(ctx, f"Added [{track.title}]({track.uri}) to the queue")
+                await self.music_send(
+                    ctx, f"Added [{track.title}]({track.uri}) to the queue"
+                )
         if not player.is_playing:
             await player.next()
 
@@ -94,8 +116,14 @@ class Music(commands.Cog):
         else:
             await ctx.send_warning("There isn't a track playing")
 
-    @commands.command(description="set a loop for the track", help="music", usage="[type]\ntypes: off, track, queue")
-    async def loop(self, ctx: commands.Context, option: Literal["track", "queue", "off"]):
+    @commands.command(
+        description="set a loop for the track",
+        help="music",
+        usage="[type]\ntypes: off, track, queue",
+    )
+    async def loop(
+        self, ctx: commands.Context, option: Literal["track", "queue", "off"]
+    ):
         player: Player = await self.get_player(ctx, connect=False)
         if not player:
             return
@@ -148,8 +176,10 @@ class Music(commands.Cog):
         await player.teardown()
         await self.music_send(ctx, "Stopped the player")
 
+
 async def setup(bot):
     await bot.add_cog(Music(bot))
+
 
 class Player(pomice.Player):
     def __init__(self, *args, **kwargs):
@@ -186,8 +216,13 @@ class Player(pomice.Player):
         await self.play(track)
         self.track = track
         self.waiting = False
-        if (channel := self.guild.get_channel(self.invoke_id)):
-            await channel.send(embed=discord.Embed(color=self.bot.color, description=f"<:music:1261736621032870054> {track.requester.mention}: Now Playing [{track.title}]({track.uri})"))
+        if channel := self.guild.get_channel(self.invoke_id):
+            await channel.send(
+                embed=discord.Embed(
+                    color=self.bot.color,
+                    description=f"<:music:1261736621032870054> {track.requester.mention}: Now Playing [{track.title}]({track.uri})",
+                )
+            )
         return track
 
     async def skip(self):
@@ -206,4 +241,3 @@ class Player(pomice.Player):
             await self.destroy()
         except Exception as e:
             print(f"Error during teardown: {e}")
-

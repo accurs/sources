@@ -1,9 +1,8 @@
-
-
 from string import Template
 from typing import List, Optional, Union
 
 import discord
+
 from grief.core.config import Config, Group
 
 

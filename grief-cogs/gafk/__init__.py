@@ -4,6 +4,7 @@ import datetime
 from typing import Any, Dict, Optional
 
 import discord
+
 from grief.core import Config as RedDB
 from grief.core import commands
 from grief.core.bot import Grief
@@ -18,12 +19,13 @@ DEFAULT_USER: Dict[str, Any] = {
 
 
 class AwayFromKeyboard(RedCog):
-    """Let your friends know when you are afk, grief will add an autoresponder.
-    """
+    """Let your friends know when you are afk, grief will add an autoresponder."""
 
     def __init__(self, bot: Grief):
         self.bot: Grief = bot
-        self.db: RedDB = RedDB.get_conf(self, identifier=126875360, force_registration=True)
+        self.db: RedDB = RedDB.get_conf(
+            self, identifier=126875360, force_registration=True
+        )
         self.db.register_user(**DEFAULT_USER)
 
     @commands.command(aliases=["away"])
@@ -34,7 +36,9 @@ class AwayFromKeyboard(RedCog):
         async with self.db.user(ctx.author).all() as data:
             data["afk"] = True
             data["reason"] = reason if reason else "No reason provided."
-            data["timestamp"] = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+            data["timestamp"] = int(
+                datetime.datetime.now(datetime.timezone.utc).timestamp()
+            )
         embed = discord.Embed()
         embed.color = 0x2F3136
         embed.description = "> You are now AFK."
@@ -56,9 +60,9 @@ class AwayFromKeyboard(RedCog):
                 humanize_timedelta(
                     timedelta=(
                         datetime.datetime.now(datetime.timezone.utc)
-                        - datetime.datetime.utcfromtimestamp(adata["timestamp"]).replace(
-                            tzinfo=datetime.timezone.utc
-                        )
+                        - datetime.datetime.utcfromtimestamp(
+                            adata["timestamp"]
+                        ).replace(tzinfo=datetime.timezone.utc)
                     )
                 ),
             )

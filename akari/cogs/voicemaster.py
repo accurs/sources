@@ -1,28 +1,15 @@
 import asyncio
-
 from collections import defaultdict
 
+from discord import (CategoryChannel, Embed, Member, PermissionOverwrite,
+                     VoiceChannel, VoiceState)
+from discord.ext.commands import (Cog, bot_has_guild_permissions, command,
+                                  has_guild_permissions, hybrid_group)
 from tools.bot import Akari
-from tools.helpers import AkariContext
 from tools.handlers.embedbuilder import EmbedBuilder
-from tools.persistent.vm import VoiceMasterView, ButtonScript
-from tools.predicates import is_vm, check_vc_owner, rename_cooldown
-
-from discord import (
-    Member,
-    VoiceState,
-    VoiceChannel,
-    Embed,
-    PermissionOverwrite,
-    CategoryChannel,
-)
-from discord.ext.commands import (
-    Cog,
-    hybrid_group,
-    has_guild_permissions,
-    command,
-    bot_has_guild_permissions,
-)
+from tools.helpers import AkariContext
+from tools.persistent.vm import ButtonScript, VoiceMasterView
+from tools.predicates import check_vc_owner, is_vm, rename_cooldown
 
 
 class Voicemaster(Cog):

@@ -1,10 +1,12 @@
-from inspect import iscoroutinefunction as iscoro, isfunction as isfunc
-from typing import Optional, Iterable
-import discord
-from discord.ext.commands import Context
-import config
-from core.tools.logging import logger as log
 import random
+from inspect import iscoroutinefunction as iscoro
+from inspect import isfunction as isfunc
+from typing import Iterable, Optional
+
+import config
+import discord
+from core.tools.logging import logger as log
+from discord.ext.commands import Context
 
 
 class GotoModal(discord.ui.Modal, title="Pagination"):

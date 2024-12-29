@@ -7,6 +7,7 @@ import arrow
 import discord
 import tabulate
 from bs4 import BeautifulSoup
+
 from grief.core.utils.chat_formatting import box
 
 from ..abc import *
@@ -38,7 +39,9 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
         data = await self.fetch(ctx, url, handling="text")
         soup = BeautifulSoup(data, "html.parser")
         try:
-            albumsdiv, tracksdiv, _ = soup.findAll("tbody", {"data-playlisting-add-entries": ""})
+            albumsdiv, tracksdiv, _ = soup.findAll(
+                "tbody", {"data-playlisting-add-entries": ""}
+            )
         except ValueError:
             if period == "overall":
                 return await ctx.send(f"You have never listened to **{artistname}**!")
@@ -49,7 +52,9 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
         for container, destination in zip([albumsdiv, tracksdiv], [albums, tracks]):
             items = container.findAll("tr", {"class": "chartlist-row"})
             for item in items:
-                name = item.find("td", {"class": "chartlist-name"}).find("a").get("title")
+                name = (
+                    item.find("td", {"class": "chartlist-name"}).find("a").get("title")
+                )
                 playcount = (
                     item.find("span", {"class": "chartlist-count-bar-value"})
                     .text.replace("scrobbles", "")
@@ -69,7 +74,9 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
             .find("img")
             .get("src")
             .replace("avatar70s", "avatar300s"),
-            "formatted_name": soup.find("h2", {"class": "library-header-title"}).text.strip(),
+            "formatted_name": soup.find(
+                "h2", {"class": "library-header-title"}
+            ).text.strip(),
         }
 
         similar = [a["name"] for a in artistinfo["artist"]["similar"]["artist"]]
@@ -98,7 +105,9 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
         else:
             stats = [[str(metadata[0]), str(metadata[1]), str(metadata[2])]]
             headers = ["Scrobbles", "Albums", "Tracks"]
-        content.description = box(tabulate.tabulate(stats, headers=headers), lang="prolog")
+        content.description = box(
+            tabulate.tabulate(stats, headers=headers), lang="prolog"
+        )
 
         content.add_field(
             name="Top albums",
@@ -117,7 +126,9 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
             inline=True,
         )
         if similar:
-            content.add_field(name="Similar artists", value=", ".join(similar), inline=False)
+            content.add_field(
+                name="Similar artists", value=", ".join(similar), inline=False
+            )
         await ctx.send(embed=content)
 
     async def get_userinfo_embed(self, ctx, user, username):
@@ -137,7 +148,9 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
         content = discord.Embed(
             title=f"\N{OPTICAL DISC} {username}", color=await ctx.embed_color()
         )
-        content.add_field(name="Last.fm profile", value=f"[Link]({profile_url})", inline=True)
+        content.add_field(
+            name="Last.fm profile", value=f"[Link]({profile_url})", inline=True
+        )
         content.add_field(
             name="Registered",
             value=f"{exact_time}\n({relative_time})",
@@ -211,7 +224,9 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
             name="Total scrobbles", value=f"{scrobbles_total} Scrobbles", inline=False
         )
         content.add_field(
-            name="Avg. daily scrobbles", value=f"{scrobbles_average} Scrobbles", inline=False
+            name="Avg. daily scrobbles",
+            value=f"{scrobbles_average} Scrobbles",
+            inline=False,
         )
         await ctx.send(embed=content)
 
@@ -293,9 +308,13 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
             await ctx.send(embed=embed)
             raise SilentDeAuthorizedError
 
-    async def get_playcount_track(self, ctx, username, artist, track, period, reference=None):
+    async def get_playcount_track(
+        self, ctx, username, artist, track, period, reference=None
+    ):
         if period != "overall":
-            return await self.get_playcount_track_scraper(ctx, username, artist, track, period)
+            return await self.get_playcount_track_scraper(
+                ctx, username, artist, track, period
+            )
 
         try:
             data = await self.api_request(
@@ -332,9 +351,13 @@ class UtilsMixin(APIMixin, ConvertersMixin, ScrapingMixin):
         else:
             return count, reference, (artistname, trackname, image_url)
 
-    async def get_playcount_album(self, ctx, username, artist, album, period, reference=None):
+    async def get_playcount_album(
+        self, ctx, username, artist, album, period, reference=None
+    ):
         if period != "overall":
-            return await self.get_playcount_album_scraper(ctx, username, artist, album, period)
+            return await self.get_playcount_album_scraper(
+                ctx, username, artist, album, period
+            )
         try:
             data = await self.api_request(
                 ctx,

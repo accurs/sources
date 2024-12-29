@@ -1,13 +1,15 @@
-from watchfiles import Change, awatch  # type: ignore
 import asyncio
 import logging
 import os
 import sys
-from functools import wraps
-from pathlib import Path
-import discord
 import typing
 from asyncio.subprocess import PIPE
+from functools import wraps
+from pathlib import Path
+
+import discord
+from watchfiles import Change, awatch  # type: ignore
+
 
 def decide_prefix(
     message: discord.Message, prefixes: typing.Any, default_prefix: str
@@ -198,7 +200,9 @@ class RebootRunner:
         self.started = True
 
     async def commit(self) -> str:
-        process = await asyncio.create_subprocess_shell("git add * ; git commit -m 'auto commit'; git push --force", stderr = PIPE)
+        process = await asyncio.create_subprocess_shell(
+            "git add * ; git commit -m 'auto commit'; git push --force", stderr=PIPE
+        )
         output = await process.communicate()
         _ = [i for i in output if i is not None]
         return _[0]

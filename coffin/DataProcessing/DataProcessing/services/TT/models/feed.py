@@ -125,10 +125,11 @@ class StatsV2(BaseModel):
 
 
 class ZoomCover(BaseModel):
-    field_240: Optional[str] = Field(None, alias='240')
-    field_480: Optional[str] = Field(None, alias='480')
-    field_720: Optional[str] = Field(None, alias='720')
-    field_960: Optional[str] = Field(None, alias='960')
+    field_240: Optional[str] = Field(None, alias="240")
+    field_480: Optional[str] = Field(None, alias="480")
+    field_720: Optional[str] = Field(None, alias="720")
+    field_960: Optional[str] = Field(None, alias="960")
+
 
 class VolumeInfo(BaseModel):
     Loudness: Optional[float] = None
@@ -184,6 +185,7 @@ class ClaInfo(BaseModel):
     hasOriginalAudio: Optional[bool] = None
     originalLanguageInfo: Optional[OriginalLanguageInfo] = None
 
+
 class SubtitleInfo(BaseModel):
     Format: Optional[str] = None
     LanguageCodeName: Optional[str] = None
@@ -193,6 +195,7 @@ class SubtitleInfo(BaseModel):
     Url: Optional[str] = None
     UrlExpire: Optional[int] = None
     Version: Optional[str] = None
+
 
 class Video(BaseModel):
     cover: Optional[str] = None

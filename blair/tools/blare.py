@@ -1,24 +1,24 @@
-import discord
-import asyncpg
-import jishaku
-import random
-import discord_ios
-import time
 import os
-
-from discord import Message 
-from discord.ext import commands, tasks
-from asyncpg import Pool
+import random
+import time
 from datetime import datetime, timedelta
 
-from tools.context import Context
+import asyncpg
+import discord
+import discord_ios
+import jishaku
+from asyncpg import Pool
+from discord import Message
+from discord.ext import commands, tasks
 from tools.config import color, emoji
+from tools.context import Context
 
 intents = discord.Intents().default()
 intents.members = True
 intents.message_content = True
 intents.messages = True
 intents.dm_messages = True
+
 
 class Blare(commands.AutoShardedBot):
     def __init__(self, token):
@@ -30,14 +30,14 @@ class Blare(commands.AutoShardedBot):
                 394152799799345152,  # physic
                 255841984470712330,  # solix
                 111646804658921472,  # imtotallysolix
-                236957169302372352   # solix.holder
+                236957169302372352,  # solix.holder
             ],
         )
         self.start_time = time.time()
         self.statuses = [
             "🔗 discord.gg/blare",
             "✨ Brand new revamp..",
-            "🔎 Updated a lot.."
+            "🔎 Updated a lot..",
         ]
         self.pool = None
         self.message_cache = {}
@@ -46,8 +46,8 @@ class Blare(commands.AutoShardedBot):
 
     async def load(self, directory):
         for filename in os.listdir(directory):
-            if filename.endswith('.py'):
-                await self.load_extension(f'{directory}.{filename[:-3]}')
+            if filename.endswith(".py"):
+                await self.load_extension(f"{directory}.{filename[:-3]}")
 
     def uptime(self):
         current_time = time.time()
@@ -59,8 +59,10 @@ class Blare(commands.AutoShardedBot):
         total_lines = 0
         for root, _, files in os.walk("."):
             for filename in files:
-                if filename.endswith(".py"): 
-                    with open(os.path.join(root, filename), "r", encoding="utf-8") as file:
+                if filename.endswith(".py"):
+                    with open(
+                        os.path.join(root, filename), "r", encoding="utf-8"
+                    ) as file:
                         lines = file.readlines()
                         total_lines += len(lines)
         return total_lines
@@ -68,24 +70,27 @@ class Blare(commands.AutoShardedBot):
     async def get_prefix(self, message: Message):
         await self.wait_until_ready()
 
-        result = await self.pool.fetchval( # type: ignore
-            """
+        result = (
+            await self.pool.fetchval(  # type: ignore
+                """
             SELECT prefix FROM prefixes
             WHERE user_id = $1
             """,
-            message.author.id
-        ) or "-"
+                message.author.id,
+            )
+            or "-"
+        )
 
         return result
 
     async def setup_hook(self):
-        await self.load_extension('jishaku')
+        await self.load_extension("jishaku")
         await self.load("cogs")
         self.pool = await self._load_database()
         if not self.rotate.is_running():
             self.rotate.start()
         print(f"[ + ] {self.user} is ready")
- 
+
     async def get_context(self, origin, cls=Context):
         return await super().get_context(origin, cls=cls)
 
@@ -98,14 +103,16 @@ class Blare(commands.AutoShardedBot):
         if message.author.bot:
             return
 
-        if not hasattr(self, 'message_cache'):
+        if not hasattr(self, "message_cache"):
             self.message_cache = {}
 
-        if not hasattr(self, 'cache_expiry_seconds'):
+        if not hasattr(self, "cache_expiry_seconds"):
             self.cache_expiry_seconds = 60
 
         author_id_str = str(message.author.id)
-        check = await self.pool.fetchrow("SELECT * FROM blacklist WHERE user_id = $1", author_id_str)
+        check = await self.pool.fetchrow(
+            "SELECT * FROM blacklist WHERE user_id = $1", author_id_str
+        )
         if check:
             return
 
@@ -120,13 +127,19 @@ class Blare(commands.AutoShardedBot):
             self.message_cache[author_id] = []
 
         self.message_cache[author_id] = [
-            timestamp for timestamp in self.message_cache[author_id]
+            timestamp
+            for timestamp in self.message_cache[author_id]
             if now - timestamp < self.cache_expiry_seconds
         ]
 
         if len(self.message_cache[author_id]) >= 10:
-            await self.pool.execute("INSERT INTO blacklist (user_id) VALUES ($1)", author_id_str)
-            embed = discord.Embed(description=f"> {emoji.deny} {message.author.mention}: **You got blacklisted,** if you think is by accident join the [support server](https://discord.gg/blare)", color=color.deny)
+            await self.pool.execute(
+                "INSERT INTO blacklist (user_id) VALUES ($1)", author_id_str
+            )
+            embed = discord.Embed(
+                description=f"> {emoji.deny} {message.author.mention}: **You got blacklisted,** if you think is by accident join the [support server](https://discord.gg/blare)",
+                color=color.deny,
+            )
             await message.channel.send(embed=embed)
         else:
             self.message_cache[author_id].append(now)
@@ -135,22 +148,27 @@ class Blare(commands.AutoShardedBot):
     async def _load_database(self) -> Pool:
         try:
             pool = await asyncpg.create_pool(
-                **{var: os.environ[f'DATABASE_{var.upper()}' if var != 'database' else 'DATABASE'] for var in ['database', 'user', 'password', 'host']},
+                **{
+                    var: os.environ[
+                        f"DATABASE_{var.upper()}" if var != "database" else "DATABASE"
+                    ]
+                    for var in ["database", "user", "password", "host"]
+                },
                 max_size=30,
                 min_size=10,
             )
-            print('Database connection established')
+            print("Database connection established")
 
-            with open('tools/schema/schema.sql', 'r') as file:
+            with open("tools/schema/schema.sql", "r") as file:
                 schema = file.read()
                 if schema.strip():
                     await pool.execute(schema)
-                    print('Database schema loaded')
+                    print("Database schema loaded")
                 else:
-                    print('Database schema file is empty')
+                    print("Database schema file is empty")
                 file.close()
 
             return pool
         except Exception as e:
-            print(f'Error loading database: {e}')
+            print(f"Error loading database: {e}")
             raise e

@@ -1,8 +1,14 @@
 import re
+
 from aiohttp import ClientSession
 
-TIKTOK_URL_PATTERN = re.compile(r"https:\/\/(?:www\.)?tiktok\.com\/@.*?\/(?:video|photo)?\/(\d+)")
-TIKTOK_MOBILE_PATTERN = re.compile(r"https:\/\/(?:www\.)?tiktok\.com\/t\/([a-zA-Z0-9]+)(?:\/)?")
+TIKTOK_URL_PATTERN = re.compile(
+    r"https:\/\/(?:www\.)?tiktok\.com\/@.*?\/(?:video|photo)?\/(\d+)"
+)
+TIKTOK_MOBILE_PATTERN = re.compile(
+    r"https:\/\/(?:www\.)?tiktok\.com\/t\/([a-zA-Z0-9]+)(?:\/)?"
+)
+
 
 async def get_aweme_id(url: str):
     RETURN = None
@@ -35,4 +41,3 @@ async def get_aweme_id(url: str):
                 return str(RETURN[0])
         else:
             return str(RETURN)
-

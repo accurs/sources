@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import os
 from types import ModuleType
-from typing import Optional, List
+from typing import List, Optional
+
 from loguru import logger
+
 
 def get_files(directory: str) -> Optional[List[str]]:
     _ = []
@@ -13,11 +15,13 @@ def get_files(directory: str) -> Optional[List[str]]:
                 _.append(os.path.join(root, file))
     return _
 
+
 def reload_all():
     cogs = get_files("cogs/")
     tools = get_files("tools/")
     for c in cogs:
         reload(module)
+
 
 def _reload(module: ModuleType, reload_all, reloaded) -> None:
     from importlib import import_module, reload
@@ -27,7 +31,9 @@ def _reload(module: ModuleType, reload_all, reloaded) -> None:
     elif isinstance(module, str):
         module_name, module = module, import_module(module)
     else:
-        msg = f"'module' must be either a module or str; got: {module.__class__.__name__}"
+        msg = (
+            f"'module' must be either a module or str; got: {module.__class__.__name__}"
+        )
         raise TypeError(msg)
 
     for attr_name in dir(module):
@@ -62,6 +68,3 @@ def deepreload(module: ModuleType, reload_external_modules: bool = False) -> Non
 
     """
     _reload(module, reload_external_modules, set())
-
-
-

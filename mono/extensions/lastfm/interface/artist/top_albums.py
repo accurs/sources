@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, ValidationError
-
 from extensions.lastfm import http
+from pydantic import BaseModel, Field, ValidationError
 
 
 class Artist(BaseModel):

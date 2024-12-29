@@ -1,43 +1,37 @@
+import re
 from datetime import datetime, timedelta
+from io import BytesIO
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, List, Optional, TypedDict
+from urllib.parse import urlparse
 
 import aiohttp
+import config
 import dateparser
 import discord
 import humanize
-from discord import Emoji, Member, User, TextChannel, Guild
-from discord.ext.commands import (
-    BadArgument,
-    CommandError,
-    Converter,
-    MemberConverter,
-    MemberNotFound,
-    MessageConverter,
-    MessageNotFound,
-    RoleConverter,
-    RoleNotFound,
-)
-from orjson import dumps
-import config
-from core.managers.script.color import get_color
-from core.tools import regex
 from core.client.context import Context
+from core.managers.script.color import get_color
+from core.managers.script.regex import (DISCORD_FILE_PATTERN,
+                                        URL_VALIDATION_PATTERN)
+from core.tools import regex
 from core.tools.text import human_join
-from core.managers.script.regex import URL_VALIDATION_PATTERN, DISCORD_FILE_PATTERN
-from yarl import URL
-import re
+from core.tools.tools import Error
 from core.tools.utils import NSFW_FILTERS
-from typing import TYPE_CHECKING, Any, List, Optional, TypedDict
+from discord import Emoji, Guild, Member, TextChannel, User
+from discord.ext.commands import (BadArgument, CommandError, Converter,
+                                  MemberConverter, MemberNotFound,
+                                  MessageConverter, MessageNotFound,
+                                  RoleConverter, RoleNotFound)
 from discord.state import ConnectionState
 from discord.types.snowflake import Snowflake
-from typing_extensions import NotRequired, Type
 from discord.utils import get
-from io import BytesIO
-from pathlib import Path
-from urllib.parse import urlparse
+from orjson import dumps
 from tornado.escape import url_unescape
-from .mime_table import mimes
+from typing_extensions import NotRequired, Type
+from yarl import URL
 
-from core.tools.tools import Error
+from .mime_table import mimes
 
 
 def url_to_mime(url: str) -> tuple[Optional[str], str]:

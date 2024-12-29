@@ -1,8 +1,11 @@
-import os, dotenv, logging, discord
-from discord.ext import commands
+import logging
+import os
 
+import discord
+import dotenv
 from bot.bot import Evict
 from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
 
 logging.basicConfig(
     level=logging.INFO,

@@ -1,12 +1,13 @@
 from contextlib import suppress
+from typing import Literal, Optional
+
 import discord
-from discord.ext import commands
-from discord import Embed, utils
-from patches.classes import Player
-from typing import Optional, Literal
-from discord.ext.commands import Context
 import pomice
-from bot.managers.emojis import Emojis, Colors
+from bot.managers.emojis import Colors, Emojis
+from discord import Embed, utils
+from discord.ext import commands
+from discord.ext.commands import Context
+from patches.classes import Player
 
 
 class plural:

@@ -1,6 +1,8 @@
 import discord
+
 from grief.core import commands
 from grief.core.i18n import Translator
+
 from .installable import InstalledModule
 
 _ = Translator("Koala", __file__)

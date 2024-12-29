@@ -2,8 +2,10 @@ import datetime
 from io import StringIO
 from typing import Any, Literal, Sequence, Union
 
-from grief.core.utils.chat_formatting import box, humanize_list, humanize_number, inline
 from rich.console import Console
+
+from grief.core.utils.chat_formatting import (box, humanize_list,
+                                              humanize_number, inline)
 
 TimestampFormat = Literal["f", "F", "d", "D", "t", "T", "R"]
 

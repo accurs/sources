@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import Optional, cast
 
 from asyncspotify import Client, SimpleArtist
-from pydantic import BaseModel
-
 from core.tools import duration
+from pydantic import BaseModel
 
 
 class SpotifyTrack(BaseModel):

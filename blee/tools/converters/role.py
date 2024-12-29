@@ -1,9 +1,7 @@
 from discord import Role
 from discord.ext.commands import CommandError, RoleConverter, RoleNotFound
 from discord.utils import find
-
 from tools.client.context import Context
-
 from tools.utilities.regex import DISCORD_ID, DISCORD_ROLE_MENTION
 
 DANGEROUS_PERMISSIONS = [

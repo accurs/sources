@@ -1,4 +1,5 @@
 import discord
+
 from grief.core.utils.menus import DEFAULT_CONTROLS, menu
 
 from .abc import MixinMeta
@@ -43,7 +44,9 @@ class LoveMixin(MixinMeta):
                 if trackname == "" or artistname == "":
                     raise ValueError
             except ValueError:
-                return await ctx.send("\N{WARNING SIGN} Incorrect format! use `track | artist`")
+                return await ctx.send(
+                    "\N{WARNING SIGN} Incorrect format! use `track | artist`"
+                )
         else:
             trackname, artistname, albumname, imageurl = await self.get_current_track(
                 ctx, conf["lastfm_username"]
@@ -65,7 +68,10 @@ class LoveMixin(MixinMeta):
             )
 
         result = await self.love_or_unlove_song(
-            data["track"]["name"], data["track"]["artist"]["name"], True, conf["session_key"]
+            data["track"]["name"],
+            data["track"]["artist"]["name"],
+            True,
+            conf["session_key"],
         )
         await self.maybe_send_403_msg(ctx, result)
         await ctx.send(f"Loved **{trackname[:50]}** by **{artistname[:50]}**")
@@ -87,7 +93,9 @@ class LoveMixin(MixinMeta):
                 if trackname == "" or artistname == "":
                     raise ValueError
             except ValueError:
-                return await ctx.send("\N{WARNING SIGN} Incorrect format! use `track | artist`")
+                return await ctx.send(
+                    "\N{WARNING SIGN} Incorrect format! use `track | artist`"
+                )
         else:
             trackname, artistname, albumname, imageurl = await self.get_current_track(
                 ctx, conf["lastfm_username"]
@@ -109,7 +117,10 @@ class LoveMixin(MixinMeta):
             )
 
         result = await self.love_or_unlove_song(
-            data["track"]["name"], data["track"]["artist"]["name"], False, conf["session_key"]
+            data["track"]["name"],
+            data["track"]["artist"]["name"],
+            False,
+            conf["session_key"],
         )
         await self.maybe_send_403_msg(ctx, result)
         await ctx.send(f"Unloved **{trackname[:50]}** by **{artistname[:50]}**")
@@ -134,7 +145,9 @@ class LoveMixin(MixinMeta):
         if not tracks:
             return await ctx.send("You have not loved anything yet!")
         tracks = [f"{x['name']} by {x['artist']['name']}\n" for x in tracks]
-        content = discord.Embed(color=await ctx.embed_color(), title=f"{user.name}'s loved tracks")
+        content = discord.Embed(
+            color=await ctx.embed_color(), title=f"{user.name}'s loved tracks"
+        )
 
         pages = await self.create_pages(content, tracks)
         for i, page in enumerate(pages):

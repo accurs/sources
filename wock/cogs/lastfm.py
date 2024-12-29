@@ -1,11 +1,10 @@
 import asyncio
-from typing import Generator, List
+from typing import Any, Generator, List, Union
 
 import aiohttp
 import discord
 import orjson
 from discord.ext import commands, menus
-from typing import Any, Union
 from tools.important import Context  # type: ignore
 from tools.wock import Wock  # type: ignore
 
@@ -277,8 +276,8 @@ class LastFM(commands.Cog):
         aliases=["fm", "lf"],
         invoke_without_command=True,
         with_app_command=True,
-        brief='List of commands for lastfm',
-        example=',lastfm'
+        brief="List of commands for lastfm",
+        example=",lastfm",
     )
     async def lastfm(self, ctx):  # type: ignore
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
@@ -286,7 +285,10 @@ class LastFM(commands.Cog):
         return await ctx.send_help(ctx.command)
 
     @lastfm.command(
-        name="set", aliases=["link"], brief="Link a LastFM account to your user", example=',lastfm set ante_dev'
+        name="set",
+        aliases=["link"],
+        brief="Link a LastFM account to your user",
+        example=",lastfm set ante_dev",
     )
     async def set(self, ctx: Context, *, username: str):
         if await self.bot.redis.get(f"lfindex:{ctx.author.id}"):
@@ -332,7 +334,9 @@ class LastFM(commands.Cog):
             )
         return await ctx.success(f"**last.fm username** set to `{username}`")
 
-    @lastfm.command(name="refresh", brief="Refresh your lastFM data", example=',lastfm refresh')
+    @lastfm.command(
+        name="refresh", brief="Refresh your lastFM data", example=",lastfm refresh"
+    )
     async def lastfm_refresh(self, ctx: Context):
         if not (
             conf := await self.bot.db.fetchrow(
@@ -405,13 +409,11 @@ class LastFM(commands.Cog):
             )
         return await ctx.success("**Refreshed** your last.fm data")
 
-
-
     @lastfm.command(
         name="nowplaying",
         aliases=["np"],
         brief="Show what song is currently playing through your linked LastFM account",
-        example=',lastfm nowplaying'
+        example=",lastfm nowplaying",
     )
     async def nowplaying(self, ctx: Context, *, user: discord.Member = None):
         if user is None:
@@ -555,7 +557,7 @@ class LastFM(commands.Cog):
         name="reaction",
         aliases=["react", "reacts"],
         brief="Set a Custom reaction like and dislike for your LastFM embed",
-        example=',lastfm reaction :thumbsup::skin-tone-2: :thumbsdown::skin-tone-2: '
+        example=",lastfm reaction :thumbsup::skin-tone-2: :thumbsdown::skin-tone-2: ",
     )
     async def lastfm_react(self, ctx: Context, up: str = None, down: str = None):
         if up is None and down is None or up.lower() in ["reset", "clear", "disable"]:
@@ -578,7 +580,9 @@ class LastFM(commands.Cog):
             )
 
     @lastfm.command(
-        name="variables", brief="View all of the LastFM custom embed variables", example=',lastfm variables'
+        name="variables",
+        brief="View all of the LastFM custom embed variables",
+        example=",lastfm variables",
     )
     async def lastfm_vars(self, ctx: Context):
         embeds = []
@@ -607,7 +611,7 @@ class LastFM(commands.Cog):
         aliases=["customembed"],
         invoke_without_command=True,
         brief="Create a custom embed for your lastfm now playing command",
-        example=',lastfm embed {embed code}'
+        example=",lastfm embed {embed code}",
     )
     async def lastfm_embed(self, ctx: Context, *, code: str) -> discord.Embed:
         if not await self.bot.db.fetchrow(
@@ -642,7 +646,7 @@ class LastFM(commands.Cog):
         name="view",
         aliases=["current", "show"],
         brief="View your lastfm custom embed code",
-        example=',lastfm embed view'
+        example=",lastfm embed view",
     )
     async def lastfm_embed_view(self, ctx: Context):
         if embed_code := await self.bot.db.fetchval(
@@ -655,7 +659,7 @@ class LastFM(commands.Cog):
         name="customcommand",
         aliases=["cc", "custom"],
         brief="Set a custom command for your lastfm command",
-        example=',lastfm customcommand ante'
+        example=",lastfm customcommand ante",
     )
     async def lastfm_customcommand(self, ctx: Context, *, command: str):
         if not await self.bot.db.fetchrow(
@@ -682,7 +686,7 @@ class LastFM(commands.Cog):
         name="artist",
         aliases=["a"],
         brief="View information on a music artist through lastfm",
-        example=',lastfm artist Juice Wrld'
+        example=",lastfm artist Juice Wrld",
     )
     async def lastfm_artist(self, ctx: Context, *, artist: str = None):
         if not (
@@ -724,7 +728,10 @@ class LastFM(commands.Cog):
             return user.global_name or user.name
 
     @lastfm.command(
-        name="steal", aliases=["swipe"], brief="steal someone elses custom embed code", example=',lastfm steal @o_5v'
+        name="steal",
+        aliases=["swipe"],
+        brief="steal someone elses custom embed code",
+        example=",lastfm steal @o_5v",
     )
     async def lastfm_steal(self, ctx: Context, user: discord.Member = commands.Author):
         if not (
@@ -774,7 +781,9 @@ class LastFM(commands.Cog):
         return rows
 
     @lastfm.command(
-        name="recents", brief="View what songs were recently listened to in the server", example=',lastfm recents'
+        name="recents",
+        brief="View what songs were recently listened to in the server",
+        example=",lastfm recents",
     )
     async def lastfm_recents(self, ctx: Context):
         configs = await self.bot.db.fetch(
@@ -790,8 +799,11 @@ class LastFM(commands.Cog):
         )
         return await self.bot.dummy_paginator(ctx, embed, rows, 10)
 
-
-    @lastfm.command(name="mostcrowns", brief="View users with the most crowns", example=',lastfm mostcrowns')
+    @lastfm.command(
+        name="mostcrowns",
+        brief="View users with the most crowns",
+        example=",lastfm mostcrowns",
+    )
     async def lastfm_mostcrowns(self, ctx: Context):
         data = await self.bot.db.fetch(
             """SELECT guild_id, user_id, artist, count(*) as plays FROM lastfm_crowns  WHERE guild_id = $1 AND user_id = any($2::bigint[]) GROUP BY guild_id, user_id, artist ORDER BY plays DESC""",
@@ -823,7 +835,7 @@ class LastFM(commands.Cog):
         "whoknows",
         brief="Shows what other users listen to the current track in your server",
         aliases=["similar", "wk"],
-        example=',lastfm whoknows Juice Wrld'
+        example=",lastfm whoknows Juice Wrld",
     )
     async def lastfm_crowns(self, ctx: Context, *, artist_name: str = None):
         if not (

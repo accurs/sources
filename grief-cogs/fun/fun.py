@@ -1,41 +1,35 @@
-import msgpack
+import asyncio
+import datetime
+import itertools
 import logging
 import random
-import datetime
+import textwrap
 import time
-from enum import Enum
-from random import randint, choice
-from typing import Final
+import typing
 import urllib.parse
+from enum import Enum
+from random import choice, randint
+from typing import Any, Dict, Final, Optional
+
 import aiohttp
 import discord
-from grief.core import commands
+import msgpack
+from pydantic import BaseModel
+from red_commons.logging import getLogger
+from uwuipy import uwuipy
+
+from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.i18n import Translator, cog_i18n
-from grief.core.utils.menus import menu
-from grief.core.utils.chat_formatting import (
-    bold,
-    escape,
-    italics,
-    humanize_number,
-    humanize_timedelta,
-    pagify,
-)
-from typing import Any, Dict, Optional
-import typing
+from grief.core.utils.chat_formatting import (bold, escape, humanize_number,
+                                              humanize_timedelta, italics,
+                                              pagify)
+from grief.core.utils.menus import DEFAULT_CONTROLS, menu
+
 from . import constants as sub
 from .core import Core
-from uwuipy import uwuipy
-import textwrap
-import asyncio
-from grief.core.utils.menus import DEFAULT_CONTROLS, menu
-from red_commons.logging import getLogger
-from grief.core import Config, commands
-from pydantic import BaseModel
-import itertools
 
 log = getLogger("grief.fun")
-
 
 
 _ = T_ = Translator("General", __file__)
@@ -46,11 +40,11 @@ DEFAULT_USER: Dict[str, Any] = {
     "timestamp": None,
 }
 
+
 class RPS(Enum):
     rock = "\N{MOYAI}"
     paper = "\N{PAGE FACING UP}"
     scissors = "\N{BLACK SCISSORS}\N{VARIATION SELECTOR-16}"
-
 
 
 class RPSParser:
@@ -65,11 +59,13 @@ class RPSParser:
         else:
             self.choice = None
 
+
 class UserSettings(BaseModel):
     custom_prefix: Optional[str]
 
+
 def get_case_values(chars: str) -> tuple:
-        return tuple(map("".join, itertools.product(*zip(chars.upper(), chars.lower()))))
+    return tuple(map("".join, itertools.product(*zip(chars.upper(), chars.lower()))))
 
 
 MAX_ROLL: Final[int] = 2**64 - 1
@@ -107,14 +103,15 @@ class Fun(commands.Cog):
 
     class Fun(commands.Cog):
         """Purge messages."""
-    
+
     def __init__(self, bot: Grief) -> None:
         super().__init__()
         self.bot = bot
         self.stopwatches = {}
         self.lmgtfy_endpoint = "https://cog-creators.github.io"
-        self.config = Config.get_conf(self, identifier=12039492, force_registration=True)
-
+        self.config = Config.get_conf(
+            self, identifier=12039492, force_registration=True
+        )
 
     @commands.command(usage="<first> <second> [others...]")
     async def choose(self, ctx, *choices):
@@ -148,7 +145,9 @@ class Fun(commands.Cog):
                 )
             )
         elif number <= 1:
-            await ctx.send(_("{author.mention} Maybe higher than 1? ;P").format(author=author))
+            await ctx.send(
+                _("{author.mention} Maybe higher than 1? ;P").format(author=author)
+            )
         else:
             await ctx.send(
                 _("{author.mention} Max allowed number is {maxamount}.").format(
@@ -166,7 +165,9 @@ class Fun(commands.Cog):
             msg = ""
             if user.id == ctx.bot.user.id:
                 user = ctx.author
-                msg = _("Nice try. You think this is funny?\n How about *this* instead:\n\n")
+                msg = _(
+                    "Nice try. You think this is funny?\n How about *this* instead:\n\n"
+                )
             char = "abcdefghijklmnopqrstuvwxyz"
             tran = "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz"
             table = str.maketrans(char, tran)
@@ -177,7 +178,9 @@ class Fun(commands.Cog):
             name = name.translate(table)
             await ctx.send(msg + "(╯°□°）╯︵ " + name[::-1])
         else:
-            await ctx.send(_("*flips a coin and... ") + choice([_("HEADS!*"), _("TAILS!*")]))
+            await ctx.send(
+                _("*flips a coin and... ") + choice([_("HEADS!*"), _("TAILS!*")])
+            )
 
     @commands.command()
     async def rps(self, ctx, your_choice: RPSParser):
@@ -246,7 +249,8 @@ class Fun(commands.Cog):
             tmp = abs(self.stopwatches[author.id] - int(time.perf_counter()))
             tmp = str(datetime.timedelta(seconds=tmp))
             await ctx.send(
-                author.mention + _(" Stopwatch stopped! Time: **{seconds}**").format(seconds=tmp)
+                author.mention
+                + _(" Stopwatch stopped! Time: **{seconds}**").format(seconds=tmp)
             )
             self.stopwatches.pop(author.id, None)
 
@@ -275,7 +279,9 @@ class Fun(commands.Cog):
                     data = await response.json()
 
         except aiohttp.ClientError:
-            await ctx.send("No Urban Dictionary entries were found, or there was an error in the process.")
+            await ctx.send(
+                "No Urban Dictionary entries were found, or there was an error in the process."
+            )
             return
 
         if data.get("error") != 404:
@@ -292,26 +298,45 @@ class Fun(commands.Cog):
                     embed.title = title
                     embed.url = ud["permalink"]
 
-                    description = ("{definition}\n\n**Example:** {example}").format(**ud)
+                    description = ("{definition}\n\n**Example:** {example}").format(
+                        **ud
+                    )
                     if len(description) > 2048:
                         description = f"{description[:2045]}..."
                     embed.description = description
 
-                    embed.set_footer(text=("{thumbs_down} Down / {thumbs_up} Up, Powered by Urban Dictionary.").format(**ud))
+                    embed.set_footer(
+                        text=(
+                            "{thumbs_down} Down / {thumbs_up} Up, Powered by Urban Dictionary."
+                        ).format(**ud)
+                    )
                     embeds.append(embed)
 
                 if embeds is not None and embeds:
-                    await menu(ctx, pages=embeds, controls=DEFAULT_CONTROLS, message=None, page=0, timeout=30)
+                    await menu(
+                        ctx,
+                        pages=embeds,
+                        controls=DEFAULT_CONTROLS,
+                        message=None,
+                        page=0,
+                        timeout=30,
+                    )
             else:
                 messages = []
                 for ud in data["list"]:
                     ud.setdefault("example", "N/A")
                     message = (
                         "<{permalink}>\n {word} by {author}\n\n{description}\n\n{thumbs_down} Down / {thumbs_up} Up, Powered by Urban Dictionary."
-                    ).format(word=ud.pop("word").capitalize(), description="{description}", **ud)
+                    ).format(
+                        word=ud.pop("word").capitalize(),
+                        description="{description}",
+                        **ud,
+                    )
                     max_desc_len = 2000 - len(message)
 
-                    description = ("{definition}\n\n**Example:** {example}").format(**ud)
+                    description = ("{definition}\n\n**Example:** {example}").format(
+                        **ud
+                    )
                     if len(description) > max_desc_len:
                         description = f"{description[: max_desc_len - 3]}..."
 
@@ -319,22 +344,33 @@ class Fun(commands.Cog):
                     messages.append(message)
 
                 if messages is not None and messages:
-                    await menu(ctx, pages=messages, controls=DEFAULT_CONTROLS, message=None, page=0, timeout=30)
+                    await menu(
+                        ctx,
+                        pages=messages,
+                        controls=DEFAULT_CONTROLS,
+                        message=None,
+                        page=0,
+                        timeout=30,
+                    )
         else:
-            await ctx.send("No Urban Dictionary entries were found, or there was an error in the process.")
+            await ctx.send(
+                "No Urban Dictionary entries were found, or there was an error in the process."
+            )
 
     @commands.command()
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def uwu(self, ctx: commands.Context, *, message):
-      """Uwuify a message."""
-      if message == None:
-            embed = discord.Embed(description=f"{ctx.author.mention} what do you want me to uwuify?", color = 0x313338)
+        """Uwuify a message."""
+        if message == None:
+            embed = discord.Embed(
+                description=f"{ctx.author.mention} what do you want me to uwuify?",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
-      else:
+        else:
             uwu = uwuipy()
             uwu_message = uwu.uwuify(message)
             await ctx.reply(uwu_message, mention_author=False)
-            
 
     @commands.command()
     async def penis(self, ctx, *users: discord.Member):
@@ -376,4 +412,9 @@ class Fun(commands.Cog):
         """Ping everyone. Individually."""
         guild: discord.Guild = ctx.guild
         mentions = " ".join(m.mention for m in guild.members if not m.bot)
-        await asyncio.gather(*[ctx.send(chunk, delete_after=3) for chunk in textwrap.wrap(mentions, 1950)])
+        await asyncio.gather(
+            *[
+                ctx.send(chunk, delete_after=3)
+                for chunk in textwrap.wrap(mentions, 1950)
+            ]
+        )

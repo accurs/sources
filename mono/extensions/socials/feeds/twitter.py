@@ -6,12 +6,12 @@ from logging import getLogger
 from random import uniform
 from typing import Dict, List, Optional, cast
 
-from discord import AllowedMentions, Color, Embed, HTTPException, TextChannel, Thread
-from discord.utils import get, utcnow
-
-from extensions.socials.models.twitter.tweets import BasicUser, Tweet, Tweets
-from core.Mono import Mono
 from core.managers.parser import Script
+from core.Mono import Mono
+from discord import (AllowedMentions, Color, Embed, HTTPException, TextChannel,
+                     Thread)
+from discord.utils import get, utcnow
+from extensions.socials.models.twitter.tweets import BasicUser, Tweet, Tweets
 
 from .base import BaseRecord, Feed
 

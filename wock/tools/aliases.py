@@ -1,8 +1,9 @@
-from fast_string_match import closest_match
-from discord.ext.commands import Context, Command, Group
-from discord.ext.commands.errors import CommandError
+from typing import List, Optional, Union
+
+from discord.ext.commands import Command, Context, Group
 from discord.ext.commands.converter import Converter
-from typing import Optional, Union, List
+from discord.ext.commands.errors import CommandError
+from fast_string_match import closest_match
 
 
 class CommandAlias(object):

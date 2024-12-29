@@ -1,4 +1,5 @@
 from grief.core.bot import Grief
+
 from .nsfw import Nsfw
 
 __red_end_user_data_statement__ = (

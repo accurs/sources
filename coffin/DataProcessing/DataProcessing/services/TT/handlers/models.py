@@ -1,6 +1,7 @@
 from typing import Any
-from pydantic import BaseModel
 from urllib.parse import quote, unquote
+
+from pydantic import BaseModel
 
 from .token import TokenManager
 from .utils import get_timestamp

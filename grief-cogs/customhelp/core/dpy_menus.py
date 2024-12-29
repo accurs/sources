@@ -1,14 +1,13 @@
-
 from __future__ import annotations
 
 import asyncio
 from typing import Any, List, Optional, Union
 
+import customhelp.core.base_help as base_help
 import discord
+
 from grief.core.bot import Grief
 from grief.vendored.discord.ext import menus
-
-import customhelp.core.base_help as base_help
 
 from . import ARROWS, GLOBAL_CATEGORIES
 
@@ -31,9 +30,7 @@ class BaseMenu(menus.Menu):
         page = self.hmenu.pages[0]
         kwargs = self.hmenu._get_kwargs_from_page(page)
         if self.use_reply:
-            kwargs["reference"] = ctx.message.to_reference(
-                fail_if_not_exists=False
-            )
+            kwargs["reference"] = ctx.message.to_reference(fail_if_not_exists=False)
         return await ctx.send(**kwargs, view=self.hmenu.menus[1])
 
     async def start(self, ctx, channel=None, wait=False):
@@ -44,14 +41,19 @@ class BaseMenu(menus.Menu):
         """Just extends the default reaction_check to use owner_ids"""
         if payload.message_id != self.message.id:
             return False
-        if self.bot.owner_ids and payload.user_id not in (*self.bot.owner_ids, self._author_id):
+        if self.bot.owner_ids and payload.user_id not in (
+            *self.bot.owner_ids,
+            self._author_id,
+        ):
             return False
         return payload.emoji in self.buttons
 
 
 async def react_page(category_obj, pages):
     async def action(menu: BaseMenu, payload):
-        await menu.hmenu.category_react_action(menu.ctx, menu.message, category_obj.name)
+        await menu.hmenu.category_react_action(
+            menu.ctx, menu.message, category_obj.name
+        )
 
     return menus.Button(category_obj.reaction, action)
 

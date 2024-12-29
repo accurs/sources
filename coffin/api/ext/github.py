@@ -3,20 +3,21 @@
 #   timestamp: 2024-10-25T23:27:20+00:00
 #
 from __future__ import annotations
-from loguru import logger
-from typing import Any, Dict, List, Optional
-from discord import Embed
-from datetime import datetime
-from pydantic import BaseModel
-from data.config import CONFIG
-from discord.http import HTTPClient, handle_message_parameters
+
 import asyncio
 import socket
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import aiohttp
 import orjson
+from data.config import CONFIG
+from discord import Embed
 from discord.gateway import DiscordClientWebSocketResponse
+from discord.http import HTTPClient, handle_message_parameters
 from discord.utils import MISSING
-
+from loguru import logger
+from pydantic import BaseModel
 
 
 class Owner(BaseModel):
@@ -242,12 +243,26 @@ class GithubPushEvent(BaseModel):
         modified_count = len(self.head_commit.modified)
 
         # Construct each part of the message based on conditions
-        added_message = f"+ Added {added_count} {'files' if added_count > 1 else 'file'}" if added_count > 0 else ""
-        deleted_message = f"- Deleted {deleted_count} {'files' if deleted_count > 1 else 'file'}" if deleted_count > 0 else ""
-        modified_message = f"! Modified {modified_count} {'files' if modified_count > 1 else 'file'}" if modified_count > 0 else ""
+        added_message = (
+            f"+ Added {added_count} {'files' if added_count > 1 else 'file'}"
+            if added_count > 0
+            else ""
+        )
+        deleted_message = (
+            f"- Deleted {deleted_count} {'files' if deleted_count > 1 else 'file'}"
+            if deleted_count > 0
+            else ""
+        )
+        modified_message = (
+            f"! Modified {modified_count} {'files' if modified_count > 1 else 'file'}"
+            if modified_count > 0
+            else ""
+        )
 
         # Combine non-empty parts with newlines, formatted for Discord
-        change_message = "\n".join(filter(None, [added_message, deleted_message, modified_message]))
+        change_message = "\n".join(
+            filter(None, [added_message, deleted_message, modified_message])
+        )
 
         # Create description with code block formatting
         commit_count = len(self.commits)
@@ -263,7 +278,7 @@ class GithubPushEvent(BaseModel):
             description=(
                 f">>> There has been **{commit_count}** {'commit' if commit_count == 1 else 'commits'} "
                 f"to [`{self.repository.full_name}`](https://github.com/{self.repository.full_name})\n{description}"
-            )
+            ),
         )
         send = True
         for commit in self.commits:
@@ -271,15 +286,23 @@ class GithubPushEvent(BaseModel):
                 send = False
             else:
                 send = True
-            embed.add_field(name=f"`{commit.id[:6]}`", value = f"```fix\n{commit.message}\n```", inline = False) # Commit message block
+            embed.add_field(
+                name=f"`{commit.id[:6]}`",
+                value=f"```fix\n{commit.message}\n```",
+                inline=False,
+            )  # Commit message block
         if send is False:
             return None
 
-        embed.set_author(name=str(self.sender.login), icon_url=str(self.sender.avatar_url), url=self.sender.html_url)
+        embed.set_author(
+            name=str(self.sender.login),
+            icon_url=str(self.sender.avatar_url),
+            url=self.sender.html_url,
+        )
         embed.timestamp = datetime.now()
 
         return embed
-    
+
     async def send_message(self):
         if not (embed := self.to_embed):
             return
@@ -288,9 +311,14 @@ class GithubPushEvent(BaseModel):
         token = CONFIG["token"]  # noqa: F841
         channel_id = CONFIG["updates_channel_id"]
         for i in range(5):
-            with handle_message_parameters(embed = embed) as parameters:
+            with handle_message_parameters(embed=embed) as parameters:
                 logger.info(parameters)
-                kwargs = {"headers": {"Content-Type": "application/json", "Authorization": f"Bot {CONFIG['token']}"}}
+                kwargs = {
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bot {CONFIG['token']}",
+                    }
+                }
                 kwargs["json"] = {"embeds": [embed.to_dict()]}
 
                 async with aiohttp.ClientSession() as session:

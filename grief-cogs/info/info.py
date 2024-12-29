@@ -1,83 +1,62 @@
-
-
-from grief.core import commands
-from grief.core.bot import Grief
-from grief import VersionInfo, version_info
-from grief.core.utils import AsyncIter
-import distro
-import aiohttp
-import os
-import platform
-import psutil
-import cpuinfo
 import asyncio
 import datetime
-from time import perf_counter
-import discord
 import inspect
 import itertools
 import logging
+import os
+import platform
 import re
-import yarl
 import sys
-import requests
-from uwuipy import uwuipy
 import typing as t
-
-from discord.ui import Button, View
-from discord.ext import tasks
-from discord import Embed, File, TextChannel, Member, User, Role 
-from contextlib import suppress as sps
-from tabulate import tabulate
-from typing import Optional
-from time import perf_counter
-
-from grief.core import checks, commands
-from grief.core.utils import chat_formatting as cf
-from grief.core.utils.common_filters import filter_invites
-from grief.core.utils.menus import menu, DEFAULT_CONTROLS, close_menu
-from grief.core.utils.chat_formatting import (
-    bold,
-    box,
-    escape,
-    humanize_list,
-    humanize_number,
-    humanize_timedelta,
-    pagify,
-    text_to_file,
-)
-
-from .views import URLView
-from discord.ui import View, Button
-from grief.core.commands import GuildContext
-
-from .converters import GuildConverter, MultiGuildConverter, PermissionConverter, FuzzyMember
-
 from asyncio import TimeoutError as AsyncTimeoutError
+from contextlib import suppress as sps
+from datetime import datetime, timedelta
 from textwrap import shorten
+from time import perf_counter
 from types import SimpleNamespace
 from typing import Optional, Union
-from datetime import datetime, timedelta
 
+import aiohttp
+import cpuinfo
+import discord
+import distro
+import psutil
+import requests
+import yarl
+from discord import Embed, File, Member, Role, TextChannel, User
+from discord.ext import tasks
+from discord.ui import Button, View
 from fixcogsutils.dpy_future import TimestampStyle, get_markdown_timestamp
 from fixcogsutils.formatting import bool_emojify
+from tabulate import tabulate
+from uwuipy import uwuipy
 
-from .common_variables import CHANNEL_TYPE_EMOJIS, GUILD_FEATURES, KNOWN_CHANNEL_TYPES
-from .embeds import emoji_embed, spotify_embed
-from .menus import ActivityPager, BaseMenu, ChannelsMenu, ChannelsPager, EmojiPager, PagePager, AvatarPages, BaseView, GuildPages, ListPages, Spotify
-from .utils import _
-
-from grief.core import commands
+from grief import VersionInfo, version_info
+from grief.core import checks, commands
+from grief.core.bot import Grief
+from grief.core.commands import GuildContext
 from grief.core.i18n import cog_i18n
+from grief.core.utils import AsyncIter
+from grief.core.utils import chat_formatting as cf
 from grief.core.utils import chat_formatting as chat
+from grief.core.utils.chat_formatting import (bold, box, escape, humanize_list,
+                                              humanize_number,
+                                              humanize_timedelta, italics,
+                                              pagify, text_to_file)
+from grief.core.utils.common_filters import filter_invites
+from grief.core.utils.menus import DEFAULT_CONTROLS, close_menu, menu
 from grief.core.utils.predicates import ReactionPredicate
-from grief.core.utils.chat_formatting import (
-    bold,
-    escape,
-    italics,
-    humanize_number,
-    humanize_timedelta,
-)
+
+from .common_variables import (CHANNEL_TYPE_EMOJIS, GUILD_FEATURES,
+                               KNOWN_CHANNEL_TYPES)
+from .converters import (FuzzyMember, GuildConverter, MultiGuildConverter,
+                         PermissionConverter)
+from .embeds import emoji_embed, spotify_embed
+from .menus import (ActivityPager, AvatarPages, BaseMenu, BaseView,
+                    ChannelsMenu, ChannelsPager, EmojiPager, GuildPages,
+                    ListPages, PagePager, Spotify)
+from .utils import _
+from .views import URLView
 
 
 async def wait_reply(ctx: commands.Context, timeout: int = 60):
@@ -114,6 +93,7 @@ def get_attachments(message: discord.Message) -> t.List[discord.Attachment]:
             pass
     return attachments
 
+
 class Info(commands.Cog):
     """Suite of tools to grab banners, icons, etc."""
 
@@ -148,21 +128,30 @@ class Info(commands.Cog):
         bar = fill * round(ratio * width) + space * round(width - (ratio * width))
         return f"{bar} {round(100 * ratio, 1)}%"
 
-    
     @commands.command(aliases=["av", "pfp"])
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def avatar(self, ctx: commands.Context, *,member: discord.User = None):
+    async def avatar(self, ctx: commands.Context, *, member: discord.User = None):
         """Fetch someone's pfp."""
-        if member == None:member = ctx.author
+        if member == None:
+            member = ctx.author
         user = await self.bot.fetch_user(member.id)
         if user.avatar == None:
-            em = discord.Embed(color=0x313338,description=f"{ctx.author.mention}: **{member}** doesn't have a pfp set.")
+            em = discord.Embed(
+                color=0x313338,
+                description=f"{ctx.author.mention}: **{member}** doesn't have a pfp set.",
+            )
             await ctx.reply(embed=em, mention_author=False)
         else:
             avatar_url = user.avatar.url
-            button1 = Button(emoji="<:info:1202073815140810772>", label="avatar", url=avatar_url)
+            button1 = Button(
+                emoji="<:info:1202073815140810772>", label="avatar", url=avatar_url
+            )
             e = discord.Embed(color=0x313338, url=user.avatar.url)
-            e.set_author(name=f"{member.display_name}'s avatar", icon_url=f"{member.avatar}", url=f"https://discord.com/users/{member.id}")
+            e.set_author(
+                name=f"{member.display_name}'s avatar",
+                icon_url=f"{member.avatar}",
+                url=f"https://discord.com/users/{member.id}",
+            )
             e.set_image(url=avatar_url)
             view = View()
             view.add_item(button1)
@@ -175,27 +164,47 @@ class Info(commands.Cog):
             user = ctx.author
         gld_avatar = user.guild_avatar
         if gld_avatar is None:
-            embed = discord.Embed(description=f"{ctx.author.mention}: **{user}** doesn't have a server avatar set.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: **{user}** doesn't have a server avatar set.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
         else:
             gld_avatar_url = gld_avatar.url
             embed = discord.Embed(colour=0x313338)
-            embed.set_author(name=f"{user.display_name}'s server avatar", icon_url=f"{user.guild_avatar}", url=f"https://discord.com/users/{user.id}")
+            embed.set_author(
+                name=f"{user.display_name}'s server avatar",
+                icon_url=f"{user.guild_avatar}",
+                url=f"https://discord.com/users/{user.id}",
+            )
             embed.set_image(url=gld_avatar_url)
             await ctx.reply(embed=embed, mention_author=False)
-    
+
     @commands.command(aliases=["sicon", "si", "sico", "savi"])
-    @commands.cooldown(1, 3, commands.BucketType.user, )
+    @commands.cooldown(
+        1,
+        3,
+        commands.BucketType.user,
+    )
     async def servericon(self, ctx):
         """Fetch the server icon."""
         if ctx.guild.icon is None:
-            embed = discord.Embed(description=f"{ctx.author.mention}: **{ctx.guild.name}** doesn't have a icon set.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: **{ctx.guild.name}** doesn't have a icon set.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
         e = discord.Embed(color=0x313338)
-        e.set_author(name=f"{ctx.guild.name}'s server icon", icon_url=f"{ctx.guild.icon.url}")
+        e.set_author(
+            name=f"{ctx.guild.name}'s server icon", icon_url=f"{ctx.guild.icon.url}"
+        )
         e.set_image(url=f"{ctx.guild.icon.url}")
-        avatar = Button(emoji="<:info:1202073815140810772>", label="server icon", url=f"{ctx.guild.icon.url}")
+        avatar = Button(
+            emoji="<:info:1202073815140810772>",
+            label="server icon",
+            url=f"{ctx.guild.icon.url}",
+        )
         view = View()
         view.add_item(avatar)
         await ctx.reply(embed=e, view=view, mention_author=False)
@@ -205,13 +214,23 @@ class Info(commands.Cog):
     async def serverbanner(self, ctx):
         """Fetch the server banner."""
         if ctx.guild.banner is None:
-            embed = discord.Embed(description=f"{ctx.author.mention}: **{ctx.guild.name}** doesn't have a banner set.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: **{ctx.guild.name}** doesn't have a banner set.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
         e = discord.Embed(color=0x313338)
-        e.set_author(name=f"**{ctx.guild.name}'s server banner**", icon_url=f"{ctx.guild.icon.url}")
+        e.set_author(
+            name=f"**{ctx.guild.name}'s server banner**",
+            icon_url=f"{ctx.guild.icon.url}",
+        )
         e.set_image(url=f"{ctx.guild.banner.url}")
-        button = Button(emoji="<:info:1202073815140810772>", label="server banner", url=f"{ctx.guild.banner.url}")
+        button = Button(
+            emoji="<:info:1202073815140810772>",
+            label="server banner",
+            url=f"{ctx.guild.banner.url}",
+        )
         view = View()
         view.add_item(button)
         await ctx.reply(view=view, embed=e, mention_author=False)
@@ -221,11 +240,18 @@ class Info(commands.Cog):
     async def invitesplash(self, ctx: commands.Context):
         """Fetch a servers invite splash."""
         if ctx.guild.splash == None:
-            embed = discord.Embed(description=f"{ctx.author.mention}: **{ctx.guild.name}** doesn't have a invite splash set.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: **{ctx.guild.name}** doesn't have a invite splash set.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
         else:
             invsplash_url = ctx.guild.splash
-            button1 = Button(emoji="<:info:1202073815140810772>", label="invite splash", url=ctx.guild.splash.url)
+            button1 = Button(
+                emoji="<:info:1202073815140810772>",
+                label="invite splash",
+                url=ctx.guild.splash.url,
+            )
             e = discord.Embed(color=0x313338)
             e.set_author(name=f"{ctx.guild.name}'s server invite splash")
             e.set_image(url=invsplash_url)
@@ -237,21 +263,27 @@ class Info(commands.Cog):
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def banner(self, ctx: commands.Context, *, member: discord.User = None):
         """Fetch a users banner."""
-        if member == None:member = ctx.author
+        if member == None:
+            member = ctx.author
         user = await self.bot.fetch_user(member.id)
         if user.banner == None:
-            embed = discord.Embed(description=f"{ctx.author.mention}: **{member}** doesn't have a banner set.", color=0x313338)
+            embed = discord.Embed(
+                description=f"{ctx.author.mention}: **{member}** doesn't have a banner set.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
         else:
             banner_url = user.banner.url
-            button1 = Button(emoji="<:info:1202073815140810772>", label="banner", url=banner_url)
+            button1 = Button(
+                emoji="<:info:1202073815140810772>", label="banner", url=banner_url
+            )
             e = discord.Embed(color=0x313338)
             e.set_image(url=banner_url)
             e.title = f"{user.display_name}'s banner"
             view = View()
             view.add_item(button1)
             await ctx.reply(embed=e, view=view, mention_author=False)
-    
+
     @commands.guild_only()
     @commands.command(aliases=["mc"])
     async def membercount(self, ctx: GuildContext) -> None:
@@ -280,37 +312,35 @@ class Info(commands.Cog):
                 f"**Humans:** {human_count}\n"
                 f"**Bots:** {bot_count}"
             )
-    
+
     @commands.guild_only()
     @commands.command()
-    async def devices(self, ctx, *, member: discord.Member=None):
+    async def devices(self, ctx, *, member: discord.Member = None):
         """Show what devices a member is using."""
         if member is None:
             member = ctx.author
         d = str(member.desktop_status)
         m = str(member.mobile_status)
         w = str(member.web_status)
-		#because it isn't supported in d.py, manually override if streaming
+        # because it isn't supported in d.py, manually override if streaming
         if any([isinstance(a, discord.Streaming) for a in member.activities]):
-            d = d if d == 'offline' else 'streaming'
-            m = m if m == 'offline' else 'streaming'
-            w = w if w == 'offline' else 'streaming'
+            d = d if d == "offline" else "streaming"
+            m = m if m == "offline" else "streaming"
+            w = w if w == "offline" else "streaming"
         status = {
-			'online': '\U0001f7e2',
-			'idle': '\U0001f7e0',
-			'dnd': '\N{LARGE RED CIRCLE}',
-			'offline': '\N{MEDIUM WHITE CIRCLE}',
-			'streaming': '\U0001f7e3'
-		}
+            "online": "\U0001f7e2",
+            "idle": "\U0001f7e0",
+            "dnd": "\N{LARGE RED CIRCLE}",
+            "offline": "\N{MEDIUM WHITE CIRCLE}",
+            "streaming": "\U0001f7e3",
+        }
         embed = discord.Embed(
-			title=f'**{member.display_name}\'s devices:**',
-			description=(
-				f'{status[d]} Desktop\n'
-				f'{status[m]} Mobile\n'
-				f'{status[w]} Web'
-			),
-			color=0x313338
-		)
+            title=f"**{member.display_name}'s devices:**",
+            description=(
+                f"{status[d]} Desktop\n" f"{status[m]} Mobile\n" f"{status[w]} Web"
+            ),
+            color=0x313338,
+        )
         if discord.version_info.major == 1:
             embed.set_thumbnail(url=member.avatar_url)
         else:
@@ -319,12 +349,12 @@ class Info(commands.Cog):
             await ctx.reply(embed=embed, mention_author=False)
         except discord.errors.Forbidden:
             await ctx.send(
-				f'{member.display_name}\'s devices:\n'
-				f'{status[d]} Desktop\n'
-				f'{status[m]} Mobile\n'
-				f'{status[w]} Web'
-			)
-    
+                f"{member.display_name}'s devices:\n"
+                f"{status[d]} Desktop\n"
+                f"{status[m]} Mobile\n"
+                f"{status[w]} Web"
+            )
+
     @commands.guild_only()
     @commands.command()
     @commands.has_permissions(manage_roles=True)
@@ -389,7 +419,9 @@ class Info(commands.Cog):
         elif len(rolename) in [17, 18, 19] and rolename.isdigit():
             role = discord.utils.get(ctx.guild.roles, id=int(rolename))
         else:
-            role = discord.utils.find(lambda r: r.name.lower() == rolename.lower(), guild.roles)
+            role = discord.utils.find(
+                lambda r: r.name.lower() == rolename.lower(), guild.roles
+            )
 
         if role is None:
             roles = []
@@ -417,7 +449,9 @@ class Info(commands.Cog):
                         return True
 
                 try:
-                    response = await self.bot.wait_for("message", check=check, timeout=25)
+                    response = await self.bot.wait_for(
+                        "message", check=check, timeout=25
+                    )
                 except asyncio.TimeoutError:
                     await m1.delete()
                     return
@@ -434,7 +468,9 @@ class Info(commands.Cog):
                 else:
                     role = roles[response - 1]
 
-        users_in_role = "\n".join(sorted(m.display_name for m in guild.members if role in m.roles))
+        users_in_role = "\n".join(
+            sorted(m.display_name for m in guild.members if role in m.roles)
+        )
         if len(users_in_role) == 0:
             if ctx.channel.permissions_for(ctx.guild.me).embed_links:
                 embed = discord.Embed(
@@ -443,14 +479,18 @@ class Info(commands.Cog):
                 )
                 return await ctx.reply(embed=embed, mention_author=False)
             else:
-                return await ctx.send(cf.bold(f"0 users found in the {role.name} role."))
+                return await ctx.send(
+                    cf.bold(f"0 users found in the {role.name} role.")
+                )
 
         embed_list = []
         role_len = len([m for m in guild.members if role in m.roles])
         if ctx.channel.permissions_for(ctx.guild.me).embed_links:
             for page in cf.pagify(users_in_role, delims=["\n"], page_length=200):
                 embed = discord.Embed(
-                    description=cf.bold(f"{role_len} users found in the {role.name} role.\n"),
+                    description=cf.bold(
+                        f"{role_len} users found in the {role.name} role.\n"
+                    ),
                     colour=await ctx.embed_colour(),
                 )
                 embed.add_field(name="Users", value=page)
@@ -520,7 +560,13 @@ class Info(commands.Cog):
         form = "`{rpos:0{zpadding}}` - `{rid}` - `{rcolor}` - {rment} "
         max_zpadding = max([len(str(r.position)) for r in ctx.guild.roles])
         rolelist = [
-            form.format(rpos=r.position, zpadding=max_zpadding, rid=r.id, rment=r.mention, rcolor=r.color)
+            form.format(
+                rpos=r.position,
+                zpadding=max_zpadding,
+                rid=r.id,
+                rment=r.mention,
+                rcolor=r.color,
+            )
             for r in ctx.guild.roles
         ]
         rolelist = sorted(rolelist, reverse=True)
@@ -549,12 +595,14 @@ class Info(commands.Cog):
 
         mutual_guilds = user.mutual_guilds
         data = f"[Guilds]:     {len(mutual_guilds)} shared\n"
-        shared_servers = sorted([g.name for g in mutual_guilds], key=lambda v: (v.upper(), v[0].islower()))
+        shared_servers = sorted(
+            [g.name for g in mutual_guilds], key=lambda v: (v.upper(), v[0].islower())
+        )
         data += f"[In Guilds]:  {cf.humanize_list(shared_servers, style='unit')}"
 
         for page in cf.pagify(data, ["\n"], page_length=1800):
             await ctx.send(cf.box(data, lang="ini"))
-    
+
     @commands.command()
     @commands.has_permissions(read_message_history=True)
     async def firstmessage(
@@ -573,11 +621,15 @@ class Info(commands.Cog):
         Provide a link to the first message in current or provided channel.
         """
         try:
-            messages = [message async for message in channel.history(limit=1, oldest_first=True)]
+            messages = [
+                message async for message in channel.history(limit=1, oldest_first=True)
+            ]
 
             chan = (
                 f"<@{channel.id}>"
-                if isinstance(channel, discord.DMChannel | discord.User | discord.Member)
+                if isinstance(
+                    channel, discord.DMChannel | discord.User | discord.Member
+                )
                 else f"<#{channel.id}>"
             )
 
@@ -588,18 +640,21 @@ class Info(commands.Cog):
             )
             embed.set_author(
                 name=messages[0].author.display_name,
-                icon_url=messages[0].author.avatar.url
-                if messages[0].author.avatar
-                else messages[0].author.display_avatar.url,
+                icon_url=(
+                    messages[0].author.avatar.url
+                    if messages[0].author.avatar
+                    else messages[0].author.display_avatar.url
+                ),
             )
 
         except (discord.Forbidden, discord.HTTPException, IndexError, AttributeError):
-            return await ctx.maybe_send_embed("Unable to read message history for that channel.")
+            return await ctx.maybe_send_embed(
+                "Unable to read message history for that channel."
+            )
 
         view = URLView(label="Jump to message", jump_url=messages[0].jump_url)
 
         await ctx.reply(embed=embed, view=view, mention_author=False)
-
 
     @staticmethod
     def count_months(days):
@@ -681,7 +736,9 @@ class Info(commands.Cog):
         return user.joined_at
 
     async def message_from_message_link(self, ctx: commands.Context, message_link: str):
-        bad_link_msg = "That doesn't look like a message link, I can't reach that message, "
+        bad_link_msg = (
+            "That doesn't look like a message link, I can't reach that message, "
+        )
         bad_link_msg += "or you didn't attach a sticker to the command message."
         no_guild_msg = "You aren't in that guild."
         no_channel_msg = "You can't view that channel."
@@ -727,7 +784,9 @@ class Info(commands.Cog):
             role_id = int(re.search(r"<@&(.{17,19})>$", rolename)[1])
             role = guild.get_role(role_id)
         else:
-            role = discord.utils.find(lambda r: r.name.lower() == str(rolename).lower(), roles)
+            role = discord.utils.find(
+                lambda r: r.name.lower() == str(rolename).lower(), roles
+            )
         return role
 
     def sort_channels(self, channels):
@@ -746,11 +805,14 @@ class Info(commands.Cog):
                 temp[c.category].append(c)
 
         category_channels = sorted(
-            [(cat, sorted(chans, key=lambda c: c.position)) for cat, chans in temp.items()],
+            [
+                (cat, sorted(chans, key=lambda c: c.position))
+                for cat, chans in temp.items()
+            ],
             key=lambda t: t[0].position,
         )
         return channels, category_channels
-    
+
     @commands.command(aliases=["activity"])
     @commands.guild_only()
     async def status(self, ctx, *, member: discord.Member = None):
@@ -761,17 +823,21 @@ class Info(commands.Cog):
             await ctx.send(chat.info(_("Right now this user is doing nothing")))
             return
         await BaseMenu(ActivityPager(activities)).start(ctx)
-        
+
     @commands.command()
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
-    async def invites(self, ctx: commands.Context, *, server: commands.GuildConverter = None):
+    async def invites(
+        self, ctx: commands.Context, *, server: commands.GuildConverter = None
+    ):
         """Get invites from server by id"""
         if server is None or not await self.bot.is_owner(ctx.author):
             server = ctx.guild
         if not server.me.guild_permissions.manage_guild:
             await ctx.send(
-                _('I need permission "Manage Server" to access list of invites on server')
+                _(
+                    'I need permission "Manage Server" to access list of invites on server'
+                )
             )
             return
         invites = await server.invites()
@@ -780,7 +846,7 @@ class Info(commands.Cog):
             await BaseMenu(PagePager(list(chat.pagify(inviteslist)))).start(ctx)
         else:
             await ctx.send(_("There is no invites for this server"))
-            
+
     @commands.command()
     @commands.guild_only()
     @commands.has_permissions(manage_channels=True)
@@ -801,7 +867,7 @@ class Info(commands.Cog):
         """Get info about role"""
         em = discord.Embed(
             title=chat.escape(role.name, formatting=True),
-            color= 0x313338,
+            color=0x313338,
         )
         em.add_field(name=_("ID"), value=role.id)
         em.add_field(
@@ -818,9 +884,16 @@ class Info(commands.Cog):
         em.add_field(name=_("Members"), value=str(len(role.members)))
         em.add_field(name=_("Position"), value=role.position)
         em.add_field(name=_("Managed"), value=bool_emojify(role.managed))
-        em.add_field(name=_("Managed by bot"), value=bool_emojify(role.is_bot_managed()))
-        em.add_field(name=_("Managed by boosts"), value=bool_emojify(role.is_premium_subscriber()))
-        em.add_field(name=_("Managed by integration"), value=bool_emojify(role.is_integration()))
+        em.add_field(
+            name=_("Managed by bot"), value=bool_emojify(role.is_bot_managed())
+        )
+        em.add_field(
+            name=_("Managed by boosts"),
+            value=bool_emojify(role.is_premium_subscriber()),
+        )
+        em.add_field(
+            name=_("Managed by integration"), value=bool_emojify(role.is_integration())
+        )
         em.add_field(name=_("Hoist"), value=bool_emojify(role.hoist))
         em.add_field(name=_("Mentionable"), value=bool_emojify(role.mentionable))
         em.add_field(name=_("Mention"), value=role.mention + "\n`" + role.mention + "`")
@@ -854,7 +927,11 @@ class Info(commands.Cog):
             "{}\n{}".format(
                 chat.inline(str(perms.value)),
                 chat.box(
-                    chat.format_perms_list(perms) if perms.value else _("No permissions"),
+                    (
+                        chat.format_perms_list(perms)
+                        if perms.value
+                        else _("No permissions")
+                    ),
                     lang="py",
                 ),
             )
@@ -934,7 +1011,8 @@ class Info(commands.Cog):
                 _(" • Bots: "): lambda x: x.bot,
                 "\N{LARGE GREEN CIRCLE}": lambda x: x.status is discord.Status.online,
                 "\N{LARGE ORANGE CIRCLE}": lambda x: x.status is discord.Status.idle,
-                "\N{LARGE RED CIRCLE}": lambda x: x.status is discord.Status.do_not_disturb,
+                "\N{LARGE RED CIRCLE}": lambda x: x.status
+                is discord.Status.do_not_disturb,
                 "\N{MEDIUM WHITE CIRCLE}\N{VARIATION SELECTOR-16}": lambda x: (
                     x.status is discord.Status.offline
                 ),
@@ -972,20 +1050,27 @@ class Info(commands.Cog):
             ).format(
                 bot_name=ctx.bot.user.name,
                 bot_join=guild.me.joined_at.strftime("%d %b %Y %H:%M:%S"),
-                since_join=humanize_number((ctx.message.created_at - guild.me.joined_at).days),
+                since_join=humanize_number(
+                    (ctx.message.created_at - guild.me.joined_at).days
+                ),
             )
 
             data = discord.Embed(
-                description=(f"{guild.description}\n\n" if guild.description else "") + created_at,
+                description=(f"{guild.description}\n\n" if guild.description else "")
+                + created_at,
                 colour=0x313338,
             )
             data.set_author(
                 name=guild.name,
-                icon_url="https://cdn.discordapp.com/emojis/457879292152381443.png"
-                if "VERIFIED" in guild.features
-                else "https://cdn.discordapp.com/emojis/508929941610430464.png"
-                if "PARTNERED" in guild.features
-                else None,
+                icon_url=(
+                    "https://cdn.discordapp.com/emojis/457879292152381443.png"
+                    if "VERIFIED" in guild.features
+                    else (
+                        "https://cdn.discordapp.com/emojis/508929941610430464.png"
+                        if "PARTNERED" in guild.features
+                        else None
+                    )
+                ),
             )
             if guild.icon:
                 data.set_thumbnail(url=guild.icon)
@@ -1019,9 +1104,11 @@ class Info(commands.Cog):
                 value=_(
                     "AFK channel: {afk_chan}\nAFK timeout: {afk_timeout}\nCustom emojis: {emoji_count}\nRoles: {role_count}"
                 ).format(
-                    afk_chan=bold(str(guild.afk_channel))
-                    if guild.afk_channel
-                    else bold(_("Not set")),
+                    afk_chan=(
+                        bold(str(guild.afk_channel))
+                        if guild.afk_channel
+                        else bold(_("Not set"))
+                    ),
                     afk_timeout=bold(humanize_timedelta(seconds=guild.afk_timeout)),
                     emoji_count=bold(humanize_number(len(guild.emojis))),
                     role_count=bold(humanize_number(len(guild.roles))),
@@ -1048,7 +1135,9 @@ class Info(commands.Cog):
             if "COMMUNITY" in features:
                 features.remove("NEWS")
             feature_names = [
-                custom_feature_names.get(feature, " ".join(feature.split("_")).capitalize())
+                custom_feature_names.get(
+                    feature, " ".join(feature.split("_")).capitalize()
+                )
                 for feature in features
                 if feature not in excluded_features
             ]
@@ -1056,7 +1145,8 @@ class Info(commands.Cog):
                 data.add_field(
                     name=_("Server features:"),
                     value="\n".join(
-                        f"\N{WHITE HEAVY CHECK MARK} {feature}" for feature in feature_names
+                        f"\N{WHITE HEAVY CHECK MARK} {feature}"
+                        for feature in feature_names
                     ),
                 )
 
@@ -1068,7 +1158,9 @@ class Info(commands.Cog):
                     "VCs max bitrate: {bitrate}"
                 ).format(
                     boostlevel=bold(str(guild.premium_tier)),
-                    nitroboosters=bold(humanize_number(guild.premium_subscription_count)),
+                    nitroboosters=bold(
+                        humanize_number(guild.premium_subscription_count)
+                    ),
                     filelimit=bold(_size(guild.filesize_limit)),
                     emojis_limit=bold(str(guild.emoji_limit)),
                     bitrate=bold(_bitsize(guild.bitrate_limit)),
@@ -1079,7 +1171,7 @@ class Info(commands.Cog):
             data.set_footer(text=joined_on)
 
         await ctx.reply(embed=data, mention_author=False)
-        
+
     @commands.command()
     async def botstats(self, ctx: commands.Context) -> None:
         """Display stats about the bot"""
@@ -1100,7 +1192,7 @@ class Info(commands.Cog):
                 passed=passed,
             )
             em = discord.Embed(
-                description=msg, colour= 0x313338, timestamp=ctx.message.created_at
+                description=msg, colour=0x313338, timestamp=ctx.message.created_at
             )
             if ctx.guild:
                 em.set_author(
@@ -1167,7 +1259,9 @@ class Info(commands.Cog):
             count += 1
             emoji_embeds.append(em)
         if len(emoji_embeds) == 0:
-            await ctx.send(_("There are no emojis on {guild}.").format(guild=guild.name))
+            await ctx.send(
+                _("There are no emojis on {guild}.").format(guild=guild.name)
+            )
         else:
             await BaseView(
                 source=ListPages(pages=emoji_embeds),
@@ -1188,7 +1282,9 @@ class Info(commands.Cog):
                 except AttributeError:
                     member = await self.bot.get_user_info(user_id)
                 except discord.errors.NotFound:
-                    await ctx.send(str(user_id) + _(" doesn't seem to be a discord user."))
+                    await ctx.send(
+                        str(user_id) + _(" doesn't seem to be a discord user.")
+                    )
                     return
             else:
                 member = user_id
@@ -1225,9 +1321,7 @@ class Info(commands.Cog):
                     if m.nick:
                         nick = f"`{m.nick}` in"
                     msg += f"{is_owner}{nick} __[{m.guild.name}]({guild_url})__ {guild_join}\n\n"
-                    embed_msg += (
-                        f"{is_owner}{nick} __[{m.guild.name}]({guild_url})__ {guild_join}\n\n"
-                    )
+                    embed_msg += f"{is_owner}{nick} __[{m.guild.name}]({guild_url})__ {guild_join}\n\n"
                 if ctx.channel.permissions_for(ctx.me).embed_links:
                     for em in pagify(embed_msg, ["\n"], page_length=1024):
                         embed = discord.Embed()
@@ -1253,7 +1347,8 @@ class Info(commands.Cog):
                         embed.set_thumbnail(url=member.display_avatar)
                         embed.colour = 0x313338
                         embed.set_author(
-                            name=f"{member} ({member.id}) {robot}", icon_url=member.display_avatar
+                            name=f"{member} ({member.id}) {robot}",
+                            icon_url=member.display_avatar,
                         )
                         embed.add_field(name=_("Shared Servers"), value=em)
                         embed_list.append(embed)
@@ -1268,10 +1363,14 @@ class Info(commands.Cog):
                     public_flags = ""
                     if version_info >= VersionInfo.from_str("3.4.0"):
                         public_flags = "\n".join(
-                            bold(i.replace("_", " ").title()) for i, v in member.public_flags if v
+                            bold(i.replace("_", " ").title())
+                            for i, v in member.public_flags
+                            if v
                         )
                     created_on = _(
-                        "Joined Discord on {user_created}\n" "({since_created})\n" "{public_flags}"
+                        "Joined Discord on {user_created}\n"
+                        "({since_created})\n"
+                        "{public_flags}"
                     ).format(
                         user_created=user_created,
                         since_created=since_created,
@@ -1281,11 +1380,14 @@ class Info(commands.Cog):
                     embed.set_thumbnail(url=member.display_avatar)
                     embed.colour = discord.Colour.dark_theme()
                     embed.set_author(
-                        name=f"{member} ({member.id}) {robot}", icon_url=member.display_avatar
+                        name=f"{member} ({member.id}) {robot}",
+                        icon_url=member.display_avatar,
                     )
                     embed_list.append(embed)
                 else:
-                    msg = f"**{member}** ({member.id}) " + _("is not in any shared servers!")
+                    msg = f"**{member}** ({member.id}) " + _(
+                        "is not in any shared servers!"
+                    )
                     embed_list.append(msg)
             await BaseView(
                 source=ListPages(pages=embed_list),
@@ -1301,12 +1403,25 @@ class Info(commands.Cog):
         try:
             invite = await ctx.bot.fetch_invite(code)
         except discord.NotFound:
-            return await ctx.send(embed=discord.Embed(description="That was an invalid invite.", color=0x313338))
+            return await ctx.send(
+                embed=discord.Embed(
+                    description="That was an invalid invite.", color=0x313338
+                )
+            )
         members_total = f"{invite.approximate_member_count:,}"
         members_online_total = f"{invite.approximate_presence_count:,}"
         embed = discord.Embed(title=f"Invite Info: {invite.guild}")
-        owner_string = f"**Owner:** {guild.owner}\n**Owner ID:** {guild.owner_id}\n" if (guild := self.bot.get_guild(invite.guild.id)) else ""
-        ratio_string = round(invite.approximate_presence_count / invite.approximate_member_count, 2) * 100
+        owner_string = (
+            f"**Owner:** {guild.owner}\n**Owner ID:** {guild.owner_id}\n"
+            if (guild := self.bot.get_guild(invite.guild.id))
+            else ""
+        )
+        ratio_string = (
+            round(
+                invite.approximate_presence_count / invite.approximate_member_count, 2
+            )
+            * 100
+        )
         embed.description = f"**ID:** `{invite.guild.id}`\n**Created:** <t:{str(invite.guild.created_at.timestamp()).split('.')[0]}> (<t:{str(invite.guild.created_at.timestamp()).split('.')[0]}:R>)\n{owner_string}**Members:** {members_total}\n**Members Online:** {members_online_total}\n**Online Percent:** {ratio_string}\n**Verification Level:** {str(invite.guild.verification_level).title()}\n\n**Channel Name:** {invite.channel} (`{invite.channel.type}`)\n**Channel ID:** `{invite.channel.id}`\n**Invite Created:**<t:{str(invite.channel.created_at.timestamp()).split('.')[0]}> (<t:{str(invite.channel.created_at.timestamp()).split('.')[0]}:R>)\n"
         urls = ""
 
@@ -1321,7 +1436,7 @@ class Info(commands.Cog):
             if "a_" in banner_url.path:
                 banner_url = str(banner_url).replace("webp", "gif")
             urls += f"[**banner**]({banner_url}), "
-            lookup = (str(invite.guild.banner.url))
+            lookup = str(invite.guild.banner.url)
             if lookup:
                 embed.color = 0x313338
             embed.set_image(url=str(banner_url))
@@ -1337,7 +1452,11 @@ class Info(commands.Cog):
     async def oldestchannels(self, ctx, amount: int = 10):
         """See which channel is the oldest"""
         async with ctx.typing():
-            channels = [c for c in ctx.guild.channels if not isinstance(c, discord.CategoryChannel)]
+            channels = [
+                c
+                for c in ctx.guild.channels
+                if not isinstance(c, discord.CategoryChannel)
+            ]
             c_sort = sorted(channels, key=lambda x: x.created_at)
             txt = "\n".join(
                 [
@@ -1413,7 +1532,7 @@ class Info(commands.Cog):
             for p in pagify(txt, page_length=4000):
                 em = discord.Embed(description=p, color=ctx.author.color)
                 await ctx.reply(embed=em, mention_author=False)
-    
+
     @commands.command(aliases=["sp"])
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def spotify(self, ctx, user: discord.Member = None):
@@ -1427,21 +1546,38 @@ class Info(commands.Cog):
                     if str(activity).lower() == "spotify":
                         embed = discord.Embed(color=0x2B2D31)
                         embed.add_field(
-                            name="**Song**", value=f"**[{activity.title}](https://open.spotify.com/track/{activity.track_id})**", inline=True)
+                            name="**Song**",
+                            value=f"**[{activity.title}](https://open.spotify.com/track/{activity.track_id})**",
+                            inline=True,
+                        )
                         embed.add_field(
-                            name="**Artist**", value=f"**[{activity.artist}](https://open.spotify.com/track/{activity.track_id})**", inline=True)
+                            name="**Artist**",
+                            value=f"**[{activity.artist}](https://open.spotify.com/track/{activity.track_id})**",
+                            inline=True,
+                        )
                         embed.set_thumbnail(url=activity.album_cover_url)
                         embed.set_author(
-                            name=ctx.message.author.name, icon_url=ctx.message.author.avatar)
+                            name=ctx.message.author.name,
+                            icon_url=ctx.message.author.avatar,
+                        )
                         embed.set_footer(
-                            text=f"Album: {activity.album}", icon_url=activity.album_cover_url)
-                        button1 = discord.ui.Button(emoji="<:Spotifywhite:1208018664868286525>", label="Listen on Spotify", style=discord.ButtonStyle.url, url=f"https://open.spotify.com/track/{activity.track_id}")
+                            text=f"Album: {activity.album}",
+                            icon_url=activity.album_cover_url,
+                        )
+                        button1 = discord.ui.Button(
+                            emoji="<:Spotifywhite:1208018664868286525>",
+                            label="Listen on Spotify",
+                            style=discord.ButtonStyle.url,
+                            url=f"https://open.spotify.com/track/{activity.track_id}",
+                        )
                         view = discord.ui.View()
                         view.add_item(button1)
                         await ctx.reply(embed=embed, view=view, mention_author=False)
                         return
             embed = discord.Embed(
-                description=f"{ctx.message.author.mention}: **{user}** is not listening to Spotify", colour=0x313338)
+                description=f"{ctx.message.author.mention}: **{user}** is not listening to Spotify",
+                colour=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
             return
         except Exception as e:
@@ -1455,15 +1591,38 @@ class Info(commands.Cog):
         sys_uptime = humanize_timedelta(timedelta=td)
         async with ctx.typing():
             embed = discord.Embed(color=0x2B2D31, title=f"About")
-        embed.add_field(name="Stats", value=f"Developer: [sin](https://slit.sh)\nUsers: {len(self.bot.users)}\nServers: {len(self.bot.guilds)}", inline=False)
-        embed.add_field(name="Backend:", value=f"Latency: {round(self.bot.latency * 1000)}ms\nLibrary: discord.py\nCPU Usage: {psutil.cpu_percent(interval=0)}%\nMemory Usage: {psutil.virtual_memory().percent}%", inline=False)
-        embed.add_field(name="System:", value=f"CPU: AMD Ryzen 5 3600\nRam: 62.7GB\nDisk: 435.8GB", inline=False)
-        embed.set_footer(text="grief", icon_url="https://cdn.discordapp.com/emojis/886356428116357120.gif")
+        embed.add_field(
+            name="Stats",
+            value=f"Developer: [sin](https://slit.sh)\nUsers: {len(self.bot.users)}\nServers: {len(self.bot.guilds)}",
+            inline=False,
+        )
+        embed.add_field(
+            name="Backend:",
+            value=f"Latency: {round(self.bot.latency * 1000)}ms\nLibrary: discord.py\nCPU Usage: {psutil.cpu_percent(interval=0)}%\nMemory Usage: {psutil.virtual_memory().percent}%",
+            inline=False,
+        )
+        embed.add_field(
+            name="System:",
+            value=f"CPU: AMD Ryzen 5 3600\nRam: 62.7GB\nDisk: 435.8GB",
+            inline=False,
+        )
+        embed.set_footer(
+            text="grief",
+            icon_url="https://cdn.discordapp.com/emojis/886356428116357120.gif",
+        )
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         # embed.add_field(name="Shard", value=f"This ShardID: {ctx.guild.shard_id}\nShardLatency: {self.bot.get_shard(ctx.guild.shard_id).latency} ms", inline=False)
         # embed.add_field(name="System:", value=f"`Latency:` `{round(self.bot.latency * 1000)}ms`\n`Language:` `Python`\n`System`: `{my_system.system}`\n`CPU Usage:` `{psutil.cpu_percent(interval=0.6)}%`\n`Memory Usage:` `{psutil.virtual_memory().percent}%`", inline=True
-        button1 = discord.ui.Button(label="Invite", style=discord.ButtonStyle.url, url="https://discord.com/api/oauth2/authorize?client_id=716939297009434656&permissions=8&scope=bot%20applications.commands")
-        button2 = discord.ui.Button(label="Support", style=discord.ButtonStyle.url, url="https://discord.gg/seer")
+        button1 = discord.ui.Button(
+            label="Invite",
+            style=discord.ButtonStyle.url,
+            url="https://discord.com/api/oauth2/authorize?client_id=716939297009434656&permissions=8&scope=bot%20applications.commands",
+        )
+        button2 = discord.ui.Button(
+            label="Support",
+            style=discord.ButtonStyle.url,
+            url="https://discord.gg/seer",
+        )
         view = discord.ui.View()
         view.add_item(button1)
         view.add_item(button2)

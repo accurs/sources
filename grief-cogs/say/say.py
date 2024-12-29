@@ -1,11 +1,10 @@
-import discord
 import asyncio
 import logging
 import re
-
-from discord import app_commands
-
 from typing import TYPE_CHECKING, Optional
+
+import discord
+from discord import app_commands
 
 from grief.core import checks, commands
 from grief.core.i18n import Translator, cog_i18n
@@ -55,14 +54,17 @@ class Say(commands.Cog):
                     delete_after=2,
                 )
             else:
-                await author.send(_("I am not allowed to send messages in ") + channel.mention)
+                await author.send(
+                    _("I am not allowed to send messages in ") + channel.mention
+                )
                 # If this fails then fuck the command author
             return
 
         if files and not channel.permissions_for(guild.me).attach_files:
             try:
                 await ctx.send(
-                    _("I am not allowed to upload files in ") + channel.mention, delete_after=2
+                    _("I am not allowed to upload files in ") + channel.mention,
+                    delete_after=2,
                 )
             except discord.errors.Forbidden:
                 await author.send(
@@ -72,7 +74,9 @@ class Say(commands.Cog):
             return
 
         try:
-            await channel.send(text, files=files, allowed_mentions=mentions, delete_after=delete)
+            await channel.send(
+                text, files=files, allowed_mentions=mentions, delete_after=delete
+            )
         except discord.errors.HTTPException:
             try:
                 await ctx.send("An error occured when sending the message.")
@@ -83,7 +87,11 @@ class Say(commands.Cog):
     @commands.command(name="say")
     @commands.has_permissions(administrator=True, manage_guild=True)
     async def _say(
-        self, ctx: commands.Context, channel: Optional[discord.TextChannel], *, text: str = ""
+        self,
+        ctx: commands.Context,
+        channel: Optional[discord.TextChannel],
+        *,
+        text: str = "",
     ):
         """
         Make the bot say what you want in the desired channel.
@@ -119,7 +127,11 @@ class Say(commands.Cog):
     @commands.command(name="sayd", aliases=["sd"])
     @commands.has_permissions(administrator=True, manage_guild=True)
     async def _saydelete(
-        self, ctx: commands.Context, channel: Optional[discord.TextChannel], *, text: str = ""
+        self,
+        ctx: commands.Context,
+        channel: Optional[discord.TextChannel],
+        *,
+        text: str = "",
     ):
         """
         Same as say command, except it deletes your message.
@@ -135,16 +147,24 @@ class Say(commands.Cog):
             await ctx.message.delete()
         except discord.errors.Forbidden:
             try:
-                await ctx.send(_("Not enough permissions to delete messages."), delete_after=2)
+                await ctx.send(
+                    _("Not enough permissions to delete messages."), delete_after=2
+                )
             except discord.errors.Forbidden:
-                await author.send(_("Not enough permissions to delete messages."), delete_after=15)
+                await author.send(
+                    _("Not enough permissions to delete messages."), delete_after=15
+                )
 
         await self.say(ctx, channel, text, files)
 
     @commands.command(name="saym", aliases=["sm"])
     @commands.has_permissions(administrator=True, manage_guild=True)
     async def _saymention(
-        self, ctx: commands.Context, channel: Optional[discord.TextChannel], *, text: str = ""
+        self,
+        ctx: commands.Context,
+        channel: Optional[discord.TextChannel],
+        *,
+        text: str = "",
     ):
         """
         Same as say command, except role and mass mentions are enabled.
@@ -157,7 +177,10 @@ class Say(commands.Cog):
         role_mentions = list(
             filter(
                 None,
-                (ctx.guild.get_role(int(x)) for x in ROLE_MENTION_REGEX.findall(message.content)),
+                (
+                    ctx.guild.get_role(int(x))
+                    for x in ROLE_MENTION_REGEX.findall(message.content)
+                ),
             )
         )
         mention_everyone = "@everyone" in message.content or "@here" in message.content
@@ -188,10 +211,16 @@ class Say(commands.Cog):
                 )
                 return
             if mention_everyone:
-                await ctx.send(_("You don't have the permission yourself to do mass mentions."))
+                await ctx.send(
+                    _("You don't have the permission yourself to do mass mentions.")
+                )
                 return
         await self.say(
-            ctx, channel, text, files, mentions=discord.AllowedMentions(everyone=True, roles=True)
+            ctx,
+            channel,
+            text,
+            files,
+            mentions=discord.AllowedMentions(everyone=True, roles=True),
         )
 
     # ----- Slash commands -----

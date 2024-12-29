@@ -1,3 +1,2 @@
-
-from .events import InformationEvents
 from .commands import Information
+from .events import InformationEvents

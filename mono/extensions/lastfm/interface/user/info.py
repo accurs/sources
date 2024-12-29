@@ -4,9 +4,8 @@ from typing import List
 
 from cashews import cache
 from discord.ext.commands import CommandError
-from pydantic import BaseModel, Field
-
 from extensions.lastfm import http
+from pydantic import BaseModel, Field
 
 
 class ImageItem(BaseModel):

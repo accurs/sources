@@ -27,7 +27,9 @@ class YouTubeCacheFetchResult:
 
     def __post_init__(self):
         if isinstance(self.last_updated, int):
-            self.updated_on: datetime.datetime = datetime.datetime.fromtimestamp(self.last_updated)
+            self.updated_on: datetime.datetime = datetime.datetime.fromtimestamp(
+                self.last_updated
+            )
 
 
 @dataclass
@@ -37,7 +39,9 @@ class SpotifyCacheFetchResult:
 
     def __post_init__(self):
         if isinstance(self.last_updated, int):
-            self.updated_on: datetime.datetime = datetime.datetime.fromtimestamp(self.last_updated)
+            self.updated_on: datetime.datetime = datetime.datetime.fromtimestamp(
+                self.last_updated
+            )
 
 
 @dataclass
@@ -47,7 +51,9 @@ class LavalinkCacheFetchResult:
 
     def __post_init__(self):
         if isinstance(self.last_updated, int):
-            self.updated_on: datetime.datetime = datetime.datetime.fromtimestamp(self.last_updated)
+            self.updated_on: datetime.datetime = datetime.datetime.fromtimestamp(
+                self.last_updated
+            )
 
         if isinstance(self.query, str):
             self.query = json.loads(self.query)

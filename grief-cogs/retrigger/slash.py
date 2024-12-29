@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 from discord import app_commands
+
 from grief.core import Config
 from grief.core.i18n import Translator
 
@@ -30,7 +31,9 @@ class PartialEmojiTransformer(app_commands.Transformer):
 
 
 class TimeDeltaTransformer(app_commands.Transformer):
-    async def transform(self, interaction: discord.Interaction, value: int) -> timedelta:
+    async def transform(
+        self, interaction: discord.Interaction, value: int
+    ) -> timedelta:
         return timedelta(seconds=value)
 
 
@@ -40,12 +43,16 @@ class SnowflakeTransformer(app_commands.Transformer):
 
 
 class RegexTransformer(app_commands.Transformer):
-    async def transform(self, interaction: discord.Interaction, value: str) -> Optional[str]:
+    async def transform(
+        self, interaction: discord.Interaction, value: str
+    ) -> Optional[str]:
         try:
             re.compile(value)
         except Exception as e:
             log.error("Retrigger conversion error")
-            err_msg = _("`{arg}` is not a valid regex pattern. {e}").format(arg=value, e=e)
+            err_msg = _("`{arg}` is not a valid regex pattern. {e}").format(
+                arg=value, e=e
+            )
             await interaction.response.send_message(err_msg)
             return
         return value
@@ -58,9 +65,9 @@ class TriggerTransformer(app_commands.Transformer):
 
     async def autocomplete(self, interaction: discord.Interaction, value: str):
         guild_id = interaction.guild.id
-        if getattr(interaction.namespace, "guild_id") and await interaction.client.is_owner(
-            interaction.user
-        ):
+        if getattr(
+            interaction.namespace, "guild_id"
+        ) and await interaction.client.is_owner(interaction.user):
             guild_id = int(interaction.namespace.guild_id)
         triggers = interaction.client.get_cog("ReTrigger").triggers
         if guild_id in triggers:
@@ -70,7 +77,9 @@ class TriggerTransformer(app_commands.Transformer):
                 if value in t.name
             ]
         else:
-            choices = [app_commands.Choice(name="No Triggers set", value="No Triggers set")]
+            choices = [
+                app_commands.Choice(name="No Triggers set", value="No Triggers set")
+            ]
         return choices[:25]
 
 
@@ -158,7 +167,9 @@ class ReTriggerSlash(ReTriggerMixin):
             )
             return
         ctx = await interaction.client.get_context(interaction)
-        await self.whitelist_add(ctx, trigger, [i for i in channel_user_role if i is not None])
+        await self.whitelist_add(
+            ctx, trigger, [i for i in channel_user_role if i is not None]
+        )
 
     @allowlist.command(name="remove")
     @app_commands.checks.has_permissions(manage_messages=True)
@@ -178,7 +189,9 @@ class ReTriggerSlash(ReTriggerMixin):
             )
             return
         ctx = await interaction.client.get_context(interaction)
-        await self.whitelist_remove(ctx, trigger, [i for i in channel_user_role if i is not None])
+        await self.whitelist_remove(
+            ctx, trigger, [i for i in channel_user_role if i is not None]
+        )
 
     @blocklist.command(name="add")
     @app_commands.checks.has_permissions(manage_messages=True)
@@ -198,7 +211,9 @@ class ReTriggerSlash(ReTriggerMixin):
             )
             return
         ctx = await interaction.client.get_context(interaction)
-        await self.blacklist_add(ctx, trigger, [i for i in channel_user_role if i is not None])
+        await self.blacklist_add(
+            ctx, trigger, [i for i in channel_user_role if i is not None]
+        )
 
     @blocklist.command(name="remove")
     @app_commands.checks.has_permissions(manage_messages=True)
@@ -218,7 +233,9 @@ class ReTriggerSlash(ReTriggerMixin):
             )
             return
         ctx = await interaction.client.get_context(interaction)
-        await self.blacklist_remove(ctx, trigger, [i for i in channel_user_role if i is not None])
+        await self.blacklist_remove(
+            ctx, trigger, [i for i in channel_user_role if i is not None]
+        )
 
     @edit_slash.command(name="cooldown")
     async def cooldown_slash(
@@ -614,7 +631,10 @@ class ReTriggerSlash(ReTriggerMixin):
         await self.removerole(ctx, name, regex, [role])
 
     async def on_error(
-        self, interaction: discord.Interaction, command: discord.app_commands.Command, error
+        self,
+        interaction: discord.Interaction,
+        command: discord.app_commands.Command,
+        error,
     ):
         if (
             isinstance(error, discord.app_commands.CheckFailure)

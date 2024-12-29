@@ -1,23 +1,24 @@
+import asyncio
+import math
+import pickle
+import re
+from io import BytesIO
+from itertools import chain
+from typing import Any, List, Optional, Tuple, Union
+
+import aiohttp
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import webcolors
+from discord import Color, Embed, File, Member, User
 from discord.ext import commands
 from discord.ext.commands import Context
-from discord import Color, Member, User, File, Embed
 from fast_string_match import closest_match_distance as cmd
-import aiohttp
-import asyncio
-import pickle
-import math
-import re
-import seaborn as sns
-import matplotlib.colors as mcolors
 from loguru import logger
-from itertools import chain
-from typing import Union, List, Tuple, Any, Optional
-from rival_tools import thread  # type: ignore
-import matplotlib.pyplot as plt
-import webcolors
-from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
-import numpy as np
+from rival_tools import thread  # type: ignore
 
 
 @thread

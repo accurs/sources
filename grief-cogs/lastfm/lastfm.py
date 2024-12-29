@@ -4,6 +4,7 @@ from operator import itemgetter
 
 import aiohttp
 import discord
+
 from grief.core import Config, commands
 from grief.core.data_manager import bundled_data_path
 from grief.core.utils.chat_formatting import escape, pagify
@@ -56,8 +57,15 @@ class LastFM(
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=95932766180343808, force_registration=True)
-        defaults = {"lastfm_username": None, "session_key": None, "scrobbles": 0, "scrobble": True}
+        self.config = Config.get_conf(
+            self, identifier=95932766180343808, force_registration=True
+        )
+        defaults = {
+            "lastfm_username": None,
+            "session_key": None,
+            "scrobbles": 0,
+            "scrobble": True,
+        }
         self.config.register_global(version=1)
         self.config.register_user(**defaults)
         self.config.register_guild(crowns={})
@@ -158,7 +166,9 @@ class LastFM(
 
         rows = []
         for artist, playcount in sorted(crownartists, key=itemgetter(1), reverse=True):
-            rows.append(f"**{artist}** with **{playcount}** {self.format_plays(playcount)}")
+            rows.append(
+                f"**{artist}** with **{playcount}** {self.format_plays(playcount)}"
+            )
 
         content = discord.Embed(
             title=f"Artist crowns for {user.name} — Total {len(crownartists)} crowns",
@@ -209,7 +219,9 @@ class LastFM(
         else:
             return await ctx.send_help()
 
-        artist, data = await self.artist_top(ctx, period, artistname, datatype, username)
+        artist, data = await self.artist_top(
+            ctx, period, artistname, datatype, username
+        )
         if artist is None or not data:
             artistname = escape(artistname)
             if period == "overall":
@@ -267,9 +279,7 @@ class LastFM(
                 ctx, conf["lastfm_username"]
             )
 
-            title = (
-                f"**{escape(artist, formatting=True)}** — ***{escape(track, formatting=True)} ***"
-            )
+            title = f"**{escape(artist, formatting=True)}** — ***{escape(track, formatting=True)} ***"
 
             results, songtitle = await self.lyrics_musixmatch(f"{artist} {track}")
             if results is None:
@@ -325,7 +335,11 @@ class LastFM(
         self.check_if_logged_in(conf, user == ctx.author)
         data = await self.api_request(
             ctx,
-            {"user": conf["lastfm_username"], "method": "user.getrecenttracks", "limit": 200},
+            {
+                "user": conf["lastfm_username"],
+                "method": "user.getrecenttracks",
+                "limit": 200,
+            },
         )
         tracks = data["recenttracks"]["track"]
         if not tracks or not isinstance(tracks, list):
@@ -359,11 +373,14 @@ class LastFM(
 
         if track_streak[1] == 1 and artist_streak[1] == 1 and album_streak[1] == 1:
             return await ctx.send("You have not listened to anything in a row.")
-        embed = discord.Embed(color=await ctx.embed_color(), title=f"{user.name}'s streaks")
+        embed = discord.Embed(
+            color=await ctx.embed_color(), title=f"{user.name}'s streaks"
+        )
         embed.set_thumbnail(url=tracks[0]["image"][3]["#text"])
         if track_streak[1] > 1:
             embed.add_field(
-                name="Track", value=f"{track_streak[1]} times in a row \n({track_streak[0][:50]})"
+                name="Track",
+                value=f"{track_streak[1]} times in a row \n({track_streak[0][:50]})",
             )
         if artist_streak[1] > 1:
             embed.add_field(
@@ -372,7 +389,8 @@ class LastFM(
             )
         if album_streak[1] > 1:
             embed.add_field(
-                name="Album", value=f"{album_streak[1]} times in a row \n({album_streak[0][:50]})"
+                name="Album",
+                value=f"{album_streak[1]} times in a row \n({album_streak[0][:50]})",
             )
 
         await ctx.send(embed=embed)

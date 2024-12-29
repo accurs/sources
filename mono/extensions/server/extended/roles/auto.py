@@ -3,14 +3,12 @@ from logging import getLogger
 from random import uniform
 from typing import Annotated, List, Literal, cast
 
+from core.client.context import Context
+from core.tools import CompositeMetaClass, FlagConverter, MixinMeta, plural
+from core.tools.converters.discord import StrictRole
 from discord import Embed, Guild, HTTPException, Member, Message, Role
 from discord.ext.commands import Cog, Range, flag, group, has_permissions
 from humanfriendly import format_timespan
-
-from core.tools import CompositeMetaClass, MixinMeta
-from core.client.context import Context
-from core.tools.converters.discord import StrictRole
-from core.tools import plural, FlagConverter
 
 log = getLogger("swag/roles")
 

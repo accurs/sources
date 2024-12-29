@@ -25,7 +25,12 @@ __all__ = (
 
 ban = {"name": "ban", "default_setting": True, "image": "\N{HAMMER}", "case_str": "Ban"}
 
-kick = {"name": "kick", "default_setting": True, "image": "\N{WOMANS BOOTS}", "case_str": "Kick"}
+kick = {
+    "name": "kick",
+    "default_setting": True,
+    "image": "\N{WOMANS BOOTS}",
+    "case_str": "Kick",
+}
 
 hackban = {
     "name": "hackban",

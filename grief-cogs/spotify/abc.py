@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, Optional, Tuple, Union
+from typing import (TYPE_CHECKING, Dict, List, Literal, Mapping, Optional,
+                    Tuple, Union)
 
 import discord
 import tekore
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 
@@ -16,7 +18,6 @@ if TYPE_CHECKING:
 
 
 class SpotifyMixin(ABC):
-
     """
     Base class for well behaved type hint detection with composite class.
 
@@ -154,7 +155,9 @@ class SpotifyMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def guild_delete_message_after(self, ctx: commands.Context, delete_after: bool):
+    async def guild_delete_message_after(
+        self, ctx: commands.Context, delete_after: bool
+    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -166,7 +169,9 @@ class SpotifyMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def spotify_emojis(self, ctx: commands.Context, *, new_emojis: ActionConverter):
+    async def spotify_emojis(
+        self, ctx: commands.Context, *, new_emojis: ActionConverter
+    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -272,7 +277,9 @@ class SpotifyMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def spotify_queue_add(self, ctx: commands.Context, *, songs: SpotifyURIConverter):
+    async def spotify_queue_add(
+        self, ctx: commands.Context, *, songs: SpotifyURIConverter
+    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -280,7 +287,9 @@ class SpotifyMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def spotify_shuffle(self, ctx: commands.Context, state: Optional[bool] = None):
+    async def spotify_shuffle(
+        self, ctx: commands.Context, state: Optional[bool] = None
+    ):
         raise NotImplementedError()
 
     @abstractmethod

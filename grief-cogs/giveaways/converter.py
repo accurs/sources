@@ -2,7 +2,9 @@ import argparse
 from datetime import datetime, timezone
 
 import dateparser
-from discord.ext.commands.converter import EmojiConverter, RoleConverter, TextChannelConverter
+from discord.ext.commands.converter import (EmojiConverter, RoleConverter,
+                                            TextChannelConverter)
+
 from grief.core.commands import BadArgument, Converter
 from grief.core.commands.converter import TimedeltaConverter
 
@@ -27,14 +29,26 @@ class Args(Converter):
 
         # Optional Arguments
         parser.add_argument("--channel", dest="channel", default=None, nargs="?")
-        parser.add_argument("--roles", "--r", "--restrict", dest="roles", nargs="*", default=[])
+        parser.add_argument(
+            "--roles", "--r", "--restrict", dest="roles", nargs="*", default=[]
+        )
         parser.add_argument("--server", dest="server", default=None, nargs="*")
-        parser.add_argument("--multiplier", "--m", dest="multi", default=None, type=int, nargs="?")
-        parser.add_argument("--multi-roles", "--mr", nargs="*", dest="multi-roles", default=[])
-        parser.add_argument("--joined", dest="joined", default=None, type=int, nargs="?")
-        parser.add_argument("--created", dest="created", default=None, type=int, nargs="?")
+        parser.add_argument(
+            "--multiplier", "--m", dest="multi", default=None, type=int, nargs="?"
+        )
+        parser.add_argument(
+            "--multi-roles", "--mr", nargs="*", dest="multi-roles", default=[]
+        )
+        parser.add_argument(
+            "--joined", dest="joined", default=None, type=int, nargs="?"
+        )
+        parser.add_argument(
+            "--created", dest="created", default=None, type=int, nargs="?"
+        )
         parser.add_argument("--blacklist", dest="blacklist", nargs="*", default=[])
-        parser.add_argument("--winners", dest="winners", default=None, type=int, nargs="?")
+        parser.add_argument(
+            "--winners", dest="winners", default=None, type=int, nargs="?"
+        )
         parser.add_argument("--mentions", dest="mentions", nargs="*", default=[])
         parser.add_argument("--description", dest="description", default=[], nargs="*")
         parser.add_argument("--emoji", dest="emoji", default=None, nargs="*")
@@ -100,11 +114,15 @@ class Args(Converter):
 
         if vals["channel"]:
             try:
-                vals["channel"] = await TextChannelConverter().convert(ctx, vals["channel"])
+                vals["channel"] = await TextChannelConverter().convert(
+                    ctx, vals["channel"]
+                )
             except BadArgument:
                 raise BadArgument("Invalid channel.")
 
-        if (vals["multi"] or vals["multi-roles"]) and not (vals["multi"] and vals["multi-roles"]):
+        if (vals["multi"] or vals["multi-roles"]) and not (
+            vals["multi"] and vals["multi-roles"]
+        ):
             raise BadArgument(
                 "You must specify a multiplier and roles. Use `--multiplier` or `-m` and `--multi-roles` or `-mr`"
             )
@@ -130,7 +148,9 @@ class Args(Converter):
                 vals["emoji"] = await EmojiConverter().convert(ctx, vals["emoji"])
                 custom = True
             except Exception:
-                vals["emoji"] = str(vals["emoji"]).replace("\N{VARIATION SELECTOR-16}", "")
+                vals["emoji"] = str(vals["emoji"]).replace(
+                    "\N{VARIATION SELECTOR-16}", ""
+                )
             try:
                 await ctx.message.add_reaction(vals["emoji"])
                 await ctx.message.remove_reaction(vals["emoji"], ctx.me)
@@ -160,7 +180,9 @@ class Args(Converter):
                 time = time - datetime.now(timezone.utc)
                 vals["duration"] = time
                 if time.total_seconds() < 60:
-                    raise BadArgument("End date must be at least 1 minute in the future.")
+                    raise BadArgument(
+                        "End date must be at least 1 minute in the future."
+                    )
             except Exception:
                 raise BadArgument(
                     "Invalid end date. Use `--end` or `-e`. Ensure to pass a timezone, otherwise it defaults to UTC."

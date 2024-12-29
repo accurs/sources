@@ -1,6 +1,7 @@
 """
 This is a red-like recursive menu for dpy2
 """
+
 import asyncio
 import functools
 from typing import List, Union
@@ -8,6 +9,7 @@ from typing import List, Union
 import discord
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, View
+
 from grief.core import commands
 
 color_map = {

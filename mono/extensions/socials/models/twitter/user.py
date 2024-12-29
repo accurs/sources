@@ -3,12 +3,11 @@ from json import dumps
 from typing import Optional
 
 from cashews import cache
+from core.client.context import Context
 from discord.ext.commands import CommandError
+from extensions.socials.models.twitter import API, ClientSession
 from pydantic import BaseModel
 from typing_extensions import Self
-
-from extensions.socials.models.twitter import API, ClientSession
-from core.client.context import Context
 
 ENDPOINT = API["graphql"]["UserByScreenName"]
 

@@ -1,24 +1,25 @@
-from tools.wock import Wock  # type: ignore
-from humanize import naturaldelta
-from datetime import timedelta
-from typing import Optional, Union, Literal  # type: ignore
-from tools import expressions as regex
-import discord
-import pomice
 import asyncio
-import async_timeout
 import random
-import orjson
 import traceback
-from discord.ext import tasks, commands
-from discord.ext.commands.errors import CommandError
-from discord.ext.commands import Context
-from tuuid import tuuid
 from contextlib import suppress
+from datetime import timedelta
+from typing import Literal, Optional, Union  # type: ignore
+
+import async_timeout
+import discord
+import orjson
+import pomice
+from discord.ext import commands, tasks
+from discord.ext.commands import Context
+from discord.ext.commands.errors import CommandError
+from humanize import naturaldelta
 #
 #
 #
 from loguru import logger
+from tools import expressions as regex
+from tools.wock import Wock  # type: ignore
+from tuuid import tuuid
 
 play_emoji = "<:wock_play:1207661064096063599>"
 skip_emoji = "<:wock_skip:1207661069938589716>"
@@ -36,7 +37,12 @@ queue_emoji = "<:wock_queue:1207661066620764192>"
 def fmtseconds(seconds: Union[int, float], unit: str = "microseconds") -> str:
     return naturaldelta(timedelta(seconds=seconds), minimum_unit=unit)
 
-async def get_player(interaction: discord.Interaction, *, connect: bool = True, check_connected: bool = True
+
+async def get_player(
+    interaction: discord.Interaction,
+    *,
+    connect: bool = True,
+    check_connected: bool = True,
 ):
     if not hasattr(interaction.client, "node"):
         raise commands.CommandError(
@@ -75,6 +81,7 @@ async def get_player(interaction: discord.Interaction, *, connect: bool = True, 
 
     return player
 
+
 async def enqueue(bot: Wock, interaction: discord.Interaction, query: str):
     try:
         player = await get_player(interaction)
@@ -108,9 +115,7 @@ async def enqueue(bot: Wock, interaction: discord.Interaction, query: str):
                 return await interaction.fail("No **results** were found")
             elif isinstance(result, pomice.Playlist):
                 for track in result.tracks:
-                    await player.insert(
-                        track, filter=False, bump=False
-                    )
+                    await player.insert(track, filter=False, bump=False)
                 return await interaction.success(
                     f"Added ** {plural(result.track_count): track} ** from [**{result.name}**]({result.uri}) to the queue",
                     emoji="<a:wock_music:1207661059989831681>",
@@ -124,11 +129,17 @@ async def enqueue(bot: Wock, interaction: discord.Interaction, query: str):
                         emoji="<a:wock_music:1207661059989831681>",
                     )
                 await player.next_track()
-                return await interaction.success(f"**Now playing** [**{track.title}**]({track.uri})", emoji="<a:wock_playing:1207661065496825967>")
+                return await interaction.success(
+                    f"**Now playing** [**{track.title}**]({track.uri})",
+                    emoji="<a:wock_playing:1207661065496825967>",
+                )
         else:
-            return await interaction.fail("you are not in the voice channel with the bot")
+            return await interaction.fail(
+                "you are not in the voice channel with the bot"
+            )
     else:
         return await interaction.fail("no voice client found")
+
 
 async def play(bot: Wock, interaction: discord.Interaction):
     if player := bot.node.get_player(interaction.guild.id):
@@ -313,23 +324,27 @@ class Player(pomice.Player):
 
     def _format_socket_channel(self):
         return {
-            "voice": {
-                "id": self.channel.id,
-                "name": self.channel.name,
-                "members": [
-                    {
-                        "id": member.id,
-                        "name": str(member),
-                        "avatar": (
-                            member.display_avatar.url if member.display_avatar else None
-                        ),
-                    }
-                    for member in self.channel.members
-                    if not member.bot
-                ],
-            }
-            if self.channel
-            else None,
+            "voice": (
+                {
+                    "id": self.channel.id,
+                    "name": self.channel.name,
+                    "members": [
+                        {
+                            "id": member.id,
+                            "name": str(member),
+                            "avatar": (
+                                member.display_avatar.url
+                                if member.display_avatar
+                                else None
+                            ),
+                        }
+                        for member in self.channel.members
+                        if not member.bot
+                    ],
+                }
+                if self.channel
+                else None
+            ),
             "text": {"id": self.bound_channel.id, "name": self.bound_channel.name},
         }
 
@@ -359,9 +374,17 @@ class Player(pomice.Player):
         #        if track not in self.queue._queue: self.queue._queue.insert(0, track)
         await super().play(track)
 
-    async def get_tracks(self, query: str, *, ctx: Optional[commands.Context] = None, search_type: Optional[pomice.SearchType] = None):
+    async def get_tracks(
+        self,
+        query: str,
+        *,
+        ctx: Optional[commands.Context] = None,
+        search_type: Optional[pomice.SearchType] = None,
+    ):
         if search_type:
-            return await super().get_tracks(query = query, ctx = ctx, search_type = search_type)
+            return await super().get_tracks(
+                query=query, ctx=ctx, search_type=search_type
+            )
 
         try:
             _ = await super().get_tracks(query=query, ctx=ctx)
@@ -635,7 +658,10 @@ class Music(commands.Cog):
         return player
 
     @commands.command(
-        name="playing", aliases=["current", "nowplaying", "np"], brief="show current playing song", example=",playing"
+        name="playing",
+        aliases=["current", "nowplaying", "np"],
+        brief="show current playing song",
+        example=",playing",
     )
     async def playing(
         self,
@@ -818,7 +844,7 @@ class Music(commands.Cog):
         name="shuffle",
         aliases=["mix"],
         example=",shuffle",
-        brief="shuffle your current queue of songs"
+        brief="shuffle your current queue of songs",
     )
     async def shuffle(self, ctx: Context):
         """Shuffle the queue"""
@@ -831,7 +857,12 @@ class Music(commands.Cog):
         else:
             await ctx.fail("There aren't any **tracks** in the queue")
 
-    @commands.command(name="skip", aliases=["next", "sk"], example=",skip", brief="Skip the currently playing song")
+    @commands.command(
+        name="skip",
+        aliases=["next", "sk"],
+        example=",skip",
+        brief="Skip the currently playing song",
+    )
     async def skip(self, ctx: Context):
         """Skip the current track"""
 
@@ -847,7 +878,7 @@ class Music(commands.Cog):
         name="loop",
         example=",loop queue",
         aliases=["repeat", "lp"],
-        brief="loop a track or queue currently playing or about to be played"
+        brief="loop a track or queue currently playing or about to be played",
     )
     async def loop(self, ctx: Context, option: Literal["track", "queue", "off"]):
         """Toggle looping for the current track or queue"""
@@ -869,7 +900,11 @@ class Music(commands.Cog):
         )
         await player.set_loop(option if option != "off" else False)
 
-    @commands.command(name="pause", example=",pause", brief="Pause the currently playing song in your voice channel")
+    @commands.command(
+        name="pause",
+        example=",pause",
+        brief="Pause the currently playing song in your voice channel",
+    )
     async def pause(self, ctx: Context):
         """Pause the current track"""
 
@@ -886,7 +921,12 @@ class Music(commands.Cog):
                 else "The player is already paused"
             )
 
-    @commands.command(name="resume", aliases=["rsm"], brief="resume a recently paused song in your voice channel", example=",resume")
+    @commands.command(
+        name="resume",
+        aliases=["rsm"],
+        brief="resume a recently paused song in your voice channel",
+        example=",resume",
+    )
     async def resume(self, ctx: Context):
         """Resume the current track"""
 
@@ -903,7 +943,7 @@ class Music(commands.Cog):
         name="volume",
         aliases=["vol", "v"],
         example=",volume 50",
-        brief="Adjust the volume of wock playing music"
+        brief="Adjust the volume of wock playing music",
     )
     async def volume(self, ctx: Context, percentage: int = 65):
         """Set the player volume"""
@@ -915,7 +955,12 @@ class Music(commands.Cog):
         await player.set_volume(percentage)
         await ctx.success(f"Set **volume** to `{percentage}%`")
 
-    @commands.command(name="disconnect", aliases=["dc", "stop"], example=",disconnect", brief="Make wock leave your current voice channel")
+    @commands.command(
+        name="disconnect",
+        aliases=["dc", "stop"],
+        example=",disconnect",
+        brief="Make wock leave your current voice channel",
+    )
     async def disconnect(self, ctx: Context):
         """Disconnect the music player"""
         player: Player = await self.get_player(ctx, connect=False)

@@ -1,9 +1,10 @@
 from typing import List, Union  # type: ignore
-from tools.important.subclasses.builder import EmbedBuilder  # type: ignore
-from orjson import loads, dumps
-from discord.ext.commands import Context
-import orjson
+
 import discord
+import orjson
+from discord.ext.commands import Context
+from orjson import dumps, loads
+from tools.important.subclasses.builder import EmbedBuilder  # type: ignore
 
 
 class Paginate:

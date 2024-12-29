@@ -1,43 +1,39 @@
-from discord.ext.commands import (
-    Cog,
-    command,
-    group,
-    CommandError,
-    param,
-    Boolean,
-    has_permissions,
-)
-from asyncspotify import Client as SpotifyClient
-from asyncspotify import ClientCredentialsFlow as SpotifyClientCredentialsFlow
-from system.patch.context import Context
-from discord import Client, Message, Embed, File, Member, User, Guild, utils
-from discord.ext import commands
-from asyncio import gather, sleep, ensure_future
-from system.classes.builtins import shorten
-from humanize import intcomma as comma
-from typing import Optional, List, Union, Dict, Tuple, Any
-from .classes.client import ClientSession
-from .classes import lastfm
-from .classes.lastfm import Client as LastFMClient
-from time import perf_counter
-from yarl import URL
-from loguru import logger
-import aiohttp
+import urllib
+from asyncio import ensure_future, gather, sleep
+from datetime import datetime
 from io import BytesIO
-from system.worker import offloaded
-from bs4 import BeautifulSoup
-from discord import Color, HTTPException, NotFound
-from discord.utils import escape_markdown as escape_md
-from .converters import Timeframe, Artist, Album, Track
+from time import perf_counter
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import aiohttp
 import discord
 import orjson
-from datetime import datetime
-import urllib
 import pytz
-from system.classes.music import soundcloud, itunes
+from asyncspotify import Client as SpotifyClient
+from asyncspotify import ClientCredentialsFlow as SpotifyClientCredentialsFlow
+from bs4 import BeautifulSoup
+from discord import (Client, Color, Embed, File, Guild, HTTPException, Member,
+                     Message, NotFound, User, utils)
+from discord.ext import commands
+from discord.ext.commands import (Boolean, Cog, CommandError, command, group,
+                                  has_permissions, param)
+from discord.utils import escape_markdown as escape_md
+from humanize import intcomma as comma
+from loguru import logger
 from lxml import html
 from munch import Munch
+from system.classes.builtins import shorten
+from system.classes.music import itunes, soundcloud
 from system.managers.flags.lastfm import CollageFlags
+from system.patch.context import Context
+from system.worker import offloaded
+from yarl import URL
+
+from .classes import lastfm
+from .classes.client import ClientSession
+from .classes.lastfm import Client as LastFMClient
+from .converters import Album, Artist, Timeframe, Track
+
 
 def format_duration(value: int, ms: bool = True) -> str:
     h = int((value / (1000 * 60 * 60)) % 24) if ms else int((value / (60 * 60)) % 24)
@@ -53,7 +49,8 @@ def format_duration(value: int, ms: bool = True) -> str:
 
     return result
 
-UTC = pytz.timezone('UTC')
+
+UTC = pytz.timezone("UTC")
 log = logger
 
 
@@ -107,12 +104,14 @@ class plural:
             len(value)
             if isinstance(value, list)
             else (
-                int(value.split(" ", 1)[-1])
-                if value.startswith(("CREATE", "DELETE"))
-                else int(value)
+                (
+                    int(value.split(" ", 1)[-1])
+                    if value.startswith(("CREATE", "DELETE"))
+                    else int(value)
+                )
+                if isinstance(value, str)
+                else value
             )
-            if isinstance(value, str)
-            else value
         )
         self.number: bool = number
         self.md: str = md
@@ -135,7 +134,6 @@ def loggg(message: str):
     log.info(message)
 
 
-
 class LastFM(Cog):
     def __init__(self: "LastFM", bot: Client):
         self.bot = bot
@@ -154,19 +152,70 @@ class LastFM(Cog):
     async def scrape_play_locations(self: "LastFM", ctx: Context, data: Munch):
         track_name = data.name
         artist_name = data.artist["#text"]
-        if cached := await self.bot.db.fetchrow("""SELECT spotify, youtube, itunes FROM lastfm.locations WHERE track = $1 AND artist = $2""", track_name, artist_name):
-            return {"youtube": cached.youtube, "spotify": cached.spotify, "itunes": cached.itunes.replace("geo.", "") if cached.itunes else None}
+        if cached := await self.bot.db.fetchrow(
+            """SELECT spotify, youtube, itunes FROM lastfm.locations WHERE track = $1 AND artist = $2""",
+            track_name,
+            artist_name,
+        ):
+            return {
+                "youtube": cached.youtube,
+                "spotify": cached.spotify,
+                "itunes": cached.itunes.replace("geo.", "") if cached.itunes else None,
+            }
         url = data.url
         async with ClientSession() as session:
             async with session.get(url) as response:
                 data = await response.text()
         tree = html.fromstring(data)
-        youtube = tree.xpath('//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--youtube")]/@href')[0] if len(tree.xpath('//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--youtube")]/@href')) > 0 else None
-        spotify = tree.xpath('//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--spotify")]/@href')[0] if len(tree.xpath('//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--spotify")]/@href')) > 0 else None
-        itunes = tree.xpath('//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--itunes")]/@href')[0] if len(tree.xpath('//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--itunes")]/@href')) > 0 else None
-        await self.bot.db.execute("""INSERT INTO lastfm.locations (track, artist, youtube, spotify, itunes) VALUES($1, $2, $3, $4, $5) ON CONFLICT(track, artist) DO UPDATE SET youtube = excluded.youtube, itunes = excluded.itunes, spotify = excluded.spotify""", track_name, artist_name, youtube, spotify, itunes)
-        return {"youtube": youtube, "spotify": spotify, "itunes": itunes.replace("geo.", "") if itunes else None}
-
+        youtube = (
+            tree.xpath(
+                '//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--youtube")]/@href'
+            )[0]
+            if len(
+                tree.xpath(
+                    '//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--youtube")]/@href'
+                )
+            )
+            > 0
+            else None
+        )
+        spotify = (
+            tree.xpath(
+                '//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--spotify")]/@href'
+            )[0]
+            if len(
+                tree.xpath(
+                    '//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--spotify")]/@href'
+                )
+            )
+            > 0
+            else None
+        )
+        itunes = (
+            tree.xpath(
+                '//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--itunes")]/@href'
+            )[0]
+            if len(
+                tree.xpath(
+                    '//a[contains(@class, "play-this-track-playlink") and contains(@class, "play-this-track-playlink--itunes")]/@href'
+                )
+            )
+            > 0
+            else None
+        )
+        await self.bot.db.execute(
+            """INSERT INTO lastfm.locations (track, artist, youtube, spotify, itunes) VALUES($1, $2, $3, $4, $5) ON CONFLICT(track, artist) DO UPDATE SET youtube = excluded.youtube, itunes = excluded.itunes, spotify = excluded.spotify""",
+            track_name,
+            artist_name,
+            youtube,
+            spotify,
+            itunes,
+        )
+        return {
+            "youtube": youtube,
+            "spotify": spotify,
+            "itunes": itunes.replace("geo.", "") if itunes else None,
+        }
 
     async def cog_check(self: "LastFM", ctx: Context):
         if not ctx.command:
@@ -184,9 +233,12 @@ class LastFM(Cog):
             ctx.command.qualified_name
             in (
                 "lastfm login",
-#                "lastfm logout",
+                #                "lastfm logout",
                 "lastfm",
-                "fm", "spotifytrack", "spotifyalbum", "itunes"
+                "fm",
+                "spotifytrack",
+                "spotifyalbum",
+                "itunes",
             )
             or "login" in ctx.command.qualified_name
         ):
@@ -343,7 +395,12 @@ class LastFM(Cog):
         self.tasks.remove(ctx.author.id)
         return message
 
-    async def send_nowplaying(self, ctx: Context, member: Optional[Member] = None, as_data: Optional[bool] = False):
+    async def send_nowplaying(
+        self,
+        ctx: Context,
+        member: Optional[Member] = None,
+        as_data: Optional[bool] = False,
+    ):
         member = member or ctx.author
         if not isinstance(member, Member):
             member = ctx.author
@@ -425,14 +482,16 @@ class LastFM(Cog):
                 or "https://lastfm.freetls.fastly.net/i/u/avatar170s/818148bf682d429dc215c1705eb27b98.png",
                 "{user.plays}": user.playcount,
                 "{proper(user.plays)}": comma(int(user.playcount)),
-                "{user.artist_crown}": "👑"
-                if await self.bot.db.fetchrow(
-                    """SELECT * FROM lastfm.crowns WHERE user_id = $1 AND guild_id = $2 AND artist = $3""",
-                    member.id,
-                    ctx.guild.id,
-                    artist,
-                )
-                else "",
+                "{user.artist_crown}": (
+                    "👑"
+                    if await self.bot.db.fetchrow(
+                        """SELECT * FROM lastfm.crowns WHERE user_id = $1 AND guild_id = $2 AND artist = $3""",
+                        member.id,
+                        ctx.guild.id,
+                        artist,
+                    )
+                    else ""
+                ),
                 "{user.url}": f"https://last.fm/user/{user.username}",
                 "{author}": str(member),
                 "{author.nickname}": member.nick if member.nick else "N/A",
@@ -444,16 +503,21 @@ class LastFM(Cog):
                 "{lower(track.name)}": track.name.lower(),
                 "{track.url}": track.url or "",
                 "{track.spotify_url}": "",
-                "{track.release_date}": discord.utils.format_dt(
-                    datetime.strptime(
-                        track.data.get("wiki", {}).get("published"), "%d %b %Y, %H:%M"
+                "{track.release_date}": (
+                    discord.utils.format_dt(
+                        datetime.strptime(
+                            track.data.get("wiki", {}).get("published"),
+                            "%d %b %Y, %H:%M",
+                        )
                     )
-                )
-                if track.data.wiki.get("published")
-                else "N/A",
-                "{track.duration}": format_duration(int(track.data.duration))
-                if track.data.get("duration")
-                else "N/A",
+                    if track.data.wiki.get("published")
+                    else "N/A"
+                ),
+                "{track.duration}": (
+                    format_duration(int(track.data.duration))
+                    if track.data.get("duration")
+                    else "N/A"
+                ),
                 "{track.plays}": track.data.userplaycount or 0,
                 "{proper(track.plays)}": comma(track.data.userplaycount or 0),
                 "{artist.name}": artist,
@@ -505,7 +569,10 @@ class LastFM(Cog):
         return message
 
     @group(
-        name="lastfm", aliases=["fm", "lf"], description="Commands to integrate last.fm into discord", invoke_without_command=True
+        name="lastfm",
+        aliases=["fm", "lf"],
+        description="Commands to integrate last.fm into discord",
+        invoke_without_command=True,
     )
     async def lastfm(self, ctx: Context, *, member: Optional[Member] = commands.Author):
         return await self.send_nowplaying(ctx, member)
@@ -516,7 +583,9 @@ class LastFM(Cog):
         description="Shows your current song or another user's current song playing from Last.fm",
         example=",nowplaying @aiohttp",
     )
-    async def nowplaying(self, ctx: Context, *, member: Optional[Member] = commands.Author):
+    async def nowplaying(
+        self, ctx: Context, *, member: Optional[Member] = commands.Author
+    ):
         return await self.send_nowplaying(ctx, member)
 
     @lastfm.command(
@@ -615,7 +684,9 @@ class LastFM(Cog):
             )
         self.tasks.append(ctx.author.id)
         message = await ctx.normal("Starting index of your Last.fm library...")
-        username = await self.bot.db.fetchval("""SELECT username FROM lastfm.config WHERE user_id = $1""", ctx.author.id)
+        username = await self.bot.db.fetchval(
+            """SELECT username FROM lastfm.config WHERE user_id = $1""", ctx.author.id
+        )
 
         start = perf_counter()
         await gather(
@@ -661,9 +732,11 @@ class LastFM(Cog):
                         (
                             ctx.author.id,
                             artist["name"] if isinstance(artist, dict) else artist,
-                            int(artist["playcount"])
-                            if not isinstance(artist, str)
-                            else 0,
+                            (
+                                int(artist["playcount"])
+                                if not isinstance(artist, str)
+                                else 0
+                            ),
                         )
                         for artist in items
                     ],
@@ -731,9 +804,15 @@ class LastFM(Cog):
         embed = message.embeds[0]
         embed.description = "Your Last.fm library has been refreshed."
         return await message.edit(embed=embed)
-    
-    @lastfm.command(name = "favorites", description = "View yours or a member's liked tracks", example = ",lastfm favorites @aiohttp")
-    async def lastfm_favorites(self, ctx: Context, *, member: Optional[Member] = commands.Author):
+
+    @lastfm.command(
+        name="favorites",
+        description="View yours or a member's liked tracks",
+        example=",lastfm favorites @aiohttp",
+    )
+    async def lastfm_favorites(
+        self, ctx: Context, *, member: Optional[Member] = commands.Author
+    ):
         if not (
             data := await self.bot.db.fetchrow(
                 """
@@ -749,22 +828,36 @@ class LastFM(Cog):
                 if member == ctx.author
                 else f"`{member}` hasn't connected their Last.fm account!"
             )
-        favorites = await lastfm.api_request({"method": "user.getLovedTracks", "username": data.username, "limit": 1000})
+        favorites = await lastfm.api_request(
+            {"method": "user.getLovedTracks", "username": data.username, "limit": 1000}
+        )
         if not favorites:
             raise CommandError(f"{data.username} has not **favorited** any tracks")
         favorites = favorites["lovedtracks"]["track"]
 
         def get_datetime_object(uts: int):
             return datetime.fromtimestamp(uts, UTC)
-        
+
         def format_row(data: dict):
             return f"[**{data['name']}**]({data['url']}) by **{data['artist']['name']} ({utils.format_dt(get_datetime_object(data['date']['uts']), style='R')})"
-        rows = [f"`{i}` {format_row(favorite)}" for i, favorite in enumerate(favorites, start = 1)]
-        embed = Embed(title = f"Liked songs for {data.username}").set_author(name = ctx.author.display_name, icon_url = ctx.author.display_avatar.url)
+
+        rows = [
+            f"`{i}` {format_row(favorite)}"
+            for i, favorite in enumerate(favorites, start=1)
+        ]
+        embed = Embed(title=f"Liked songs for {data.username}").set_author(
+            name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
+        )
         return await ctx.paginate(embed, rows, 10, "liked")
 
-    @lastfm.command(name="streak", description="check a member's listening streak", example=",lastfm streak @aiohttp")
-    async def lastfm_streak(self, ctx: Context, *, member: Optional[Member] = commands.Author):
+    @lastfm.command(
+        name="streak",
+        description="check a member's listening streak",
+        example=",lastfm streak @aiohttp",
+    )
+    async def lastfm_streak(
+        self, ctx: Context, *, member: Optional[Member] = commands.Author
+    ):
         if not (
             data := await self.bot.db.fetchrow(
                 """
@@ -1447,7 +1540,12 @@ class LastFM(Cog):
             items,
         )
 
-    @lastfm.command(name = "globalwhoknows", aliases = ["gwk"], description = "View the top listeners for an artist globally", example = ",lastfm globalwhoknows Lucki")
+    @lastfm.command(
+        name="globalwhoknows",
+        aliases=["gwk"],
+        description="View the top listeners for an artist globally",
+        example=",lastfm globalwhoknows Lucki",
+    )
     async def globalwhoknows(
         self,
         ctx: Context,
@@ -1492,8 +1590,13 @@ class LastFM(Cog):
             ),
             items,
         )
-    
-    @lastfm.command(name = "globalwkalbum", aliases = ["gwka"], description = "View the top listeners for an album globally", example = ",lastfm globalwkalbum YOUNG GENIUS")
+
+    @lastfm.command(
+        name="globalwkalbum",
+        aliases=["gwka"],
+        description="View the top listeners for an album globally",
+        example=",lastfm globalwkalbum YOUNG GENIUS",
+    )
     async def globalwkalbum(
         self,
         ctx: Context,
@@ -1543,8 +1646,13 @@ class LastFM(Cog):
             ),
             items,
         )
-    
-    @lastfm.command(name = "globalwktrack", aliases = ["gwkt"], description = "View the top listeners for a track globally", example = ",lastfm globalwktrack BANG BANG!")
+
+    @lastfm.command(
+        name="globalwktrack",
+        aliases=["gwkt"],
+        description="View the top listeners for a track globally",
+        example=",lastfm globalwktrack BANG BANG!",
+    )
     async def globalwktrack(
         self,
         ctx: Context,
@@ -1599,7 +1707,8 @@ class LastFM(Cog):
         config = await self.bot.db.fetchrow(
             """SELECT * FROM lastfm.config WHERE user_id = $1""", ctx.author.id
         )
-        plays = await self.bot.db.fetch("""
+        plays = await self.bot.db.fetch(
+            """
             WITH max_plays AS (
                 SELECT user_id
                 FROM lastfm.artists
@@ -1610,7 +1719,8 @@ class LastFM(Cog):
             SELECT artist, user_id, plays
             FROM lastfm.artists
             WHERE user_id = (SELECT user_id FROM max_plays);
-        """)
+        """
+        )
         crowns = [u for u in plays if u.user_id == member.id]
         for c in crowns:
             ensure_future(
@@ -1691,29 +1801,31 @@ class LastFM(Cog):
             ),
             items,
         )
-    
+
     async def track_collage(self, ctx: Context, **kwargs):
         recents = await self.client.request(
             method="user.getrecenttracks",
             slug="recenttracks.track",
             username=ctx.lastfm.username,
             period=kwargs["timeperiod"],
-            limit=int(kwargs['size'].split("x")[0]) * int(kwargs['size'].split('x')[1]),
+            limit=int(kwargs["size"].split("x")[0]) * int(kwargs["size"].split("x")[1]),
         )
 
         async def get_track_image(data: dict):
             async with ClientSession() as session:
-                async with session.get(data['image'][3]['#text']) as response:
+                async with session.get(data["image"][3]["#text"]) as response:
                     image = await response.read()
             return {"a": f"{data['name']} - {data['artist']['#text']}", "image": image}
-        
+
         image_data = [await get_track_image(d) for d in recents]
 
         @offloaded
         def read_image(data: list, size: str):
             a, b = map(int, size.split("x"))
-            from PIL import Image, ImageDraw, ImageFont
             from io import BytesIO
+
+            from PIL import Image, ImageDraw, ImageFont
+
             font = ImageFont.truetype("data/Arial.ttf", 20)
             images = []
             for artist in data:
@@ -1729,7 +1841,7 @@ class LastFM(Cog):
                     (5, 200),
                     f"{aa}",
                     fill="white",
-                    font=font,  
+                    font=font,
                     stroke_width=1,
                     stroke_fill=0,
                 )
@@ -1743,7 +1855,11 @@ class LastFM(Cog):
             grid.save(buffer, format="png")
             buffer.seek(0)
             return buffer.getvalue()
-        return File(fp = BytesIO(await read_image(image_data, kwargs["size"])), filename = "chart.png")
+
+        return File(
+            fp=BytesIO(await read_image(image_data, kwargs["size"])),
+            filename="chart.png",
+        )
 
     async def album_collage(self, ctx: Context, **kwargs):
         recents = await self.client.request(
@@ -1751,27 +1867,35 @@ class LastFM(Cog):
             slug="topalbums.album",
             username=ctx.lastfm.username,
             period=kwargs["timeperiod"],
-            limit=int(kwargs['size'].split("x")[0]) * int(kwargs['size'].split('x')[1]),
+            limit=int(kwargs["size"].split("x")[0]) * int(kwargs["size"].split("x")[1]),
         )
 
         async def get_album_image(data: dict):
             async with ClientSession() as session:
                 try:
-                    async with session.get(data['image'][3]['#text']) as response:
+                    async with session.get(data["image"][3]["#text"]) as response:
                         image = await response.read()
                 except Exception:
-                    async with session.get("https://lastfm.freetls.fastly.net/i/u/300x300/c6f59c1e5e7240a4c0d427abd71f3dbb.jpg") as response:
+                    async with session.get(
+                        "https://lastfm.freetls.fastly.net/i/u/300x300/c6f59c1e5e7240a4c0d427abd71f3dbb.jpg"
+                    ) as response:
                         image = await response.read()
-            return {"a": f"{data['name']} - {data['artist']['#text']}", "image": image, "plays": data['playcount']}
+            return {
+                "a": f"{data['name']} - {data['artist']['#text']}",
+                "image": image,
+                "plays": data["playcount"],
+            }
 
         image_data = await gather(*[get_album_image(d) for d in recents])
-        image_data = sorted(image_data, key = lambda x: x['plays'], reverse = True)
+        image_data = sorted(image_data, key=lambda x: x["plays"], reverse=True)
 
         @offloaded
         def read_image(data: list, size: str):
             a, b = map(int, size.split("x"))
-            from PIL import Image, ImageDraw, ImageFont
             from io import BytesIO
+
+            from PIL import Image, ImageDraw, ImageFont
+
             font = ImageFont.truetype("data/Arial.ttf", 20)
             images = []
             for artist in data:
@@ -1788,7 +1912,7 @@ class LastFM(Cog):
                     (5, 200),
                     f"{plays} plays\n{aa}",
                     fill="white",
-                    font=font,  
+                    font=font,
                     stroke_width=1,
                     stroke_fill=0,
                 )
@@ -1802,20 +1926,24 @@ class LastFM(Cog):
             grid.save(buffer, format="png")
             buffer.seek(0)
             return buffer.getvalue()
-        return File(fp = BytesIO(await read_image(image_data, kwargs["size"])), filename = "chart.png")
 
-    
+        return File(
+            fp=BytesIO(await read_image(image_data, kwargs["size"])),
+            filename="chart.png",
+        )
+
     async def artist_collage(self, ctx: Context, **kwargs):
         artists = await self.client.request(
             method="user.gettopartists",
             slug="topartists.artist",
             username=ctx.lastfm.username,
             period=kwargs["timeperiod"],
-            limit=int(kwargs['size'].split("x")[0]) * int(kwargs['size'].split('x')[1]),
+            limit=int(kwargs["size"].split("x")[0]) * int(kwargs["size"].split("x")[1]),
         )
+
         async def get_artist_image(data: dict):
             async with ClientSession() as session:
-                async with session.get(data["url"]+"/+images") as response:
+                async with session.get(data["url"] + "/+images") as response:
                     soup = BeautifulSoup(await response.read(), "html.parser")
                     image = soup.find("img", {"class": "image-list-image"})
                     if image is None:
@@ -1836,13 +1964,16 @@ class LastFM(Cog):
                     image = await response.read()
 
             return {"artist": data["name"], "image": image, "plays": data["playcount"]}
+
         image_data = [await get_artist_image(a) for a in artists]
 
         @offloaded
         def read_image(data: list, size: str):
             a, b = map(int, size.split("x"))
-            from PIL import Image, ImageDraw, ImageFont
             from io import BytesIO
+
+            from PIL import Image, ImageDraw, ImageFont
+
             font = ImageFont.truetype("data/Arial.ttf", 20)
             images = []
             for artist in data:
@@ -1859,7 +1990,7 @@ class LastFM(Cog):
                     (5, 200),
                     f"{plays} Plays\n{aa}",
                     fill="white",
-                    font=font,  
+                    font=font,
                     stroke_width=1,
                     stroke_fill=0,
                 )
@@ -1873,23 +2004,36 @@ class LastFM(Cog):
             grid.save(buffer, format="png")
             buffer.seek(0)
             return buffer.getvalue()
-        return File(fp = BytesIO(await read_image(image_data, kwargs["size"])), filename = "chart.png")
 
-        
-    
-    @lastfm.command(name = "collage", description = "generate a collage out of your most listened artists in a timeperiod", example = ",lastfm collage --size 3x3 --timeframe 7d")
+        return File(
+            fp=BytesIO(await read_image(image_data, kwargs["size"])),
+            filename="chart.png",
+        )
+
+    @lastfm.command(
+        name="collage",
+        description="generate a collage out of your most listened artists in a timeperiod",
+        example=",lastfm collage --size 3x3 --timeframe 7d",
+    )
     async def lastfm_collage(self, ctx: Context, *, flags: CollageFlags):
-        kwargs = {"chart_type": flags.chart_type or "recent", "size": flags.size or "3x3", "username": ctx.lastfm.username, "timeperiod": flags.time_period or "overall"}
+        kwargs = {
+            "chart_type": flags.chart_type or "recent",
+            "size": flags.size or "3x3",
+            "username": ctx.lastfm.username,
+            "timeperiod": flags.time_period or "overall",
+        }
         if kwargs["chart_type"] == "artist":
             file = await self.artist_collage(ctx, **kwargs)
-        elif kwargs['chart_type'] == "album":
+        elif kwargs["chart_type"] == "album":
             file = await self.album_collage(ctx, **kwargs)
-        elif kwargs['chart_type'] == "recent":
+        elif kwargs["chart_type"] == "recent":
             file = await self.track_collage(ctx, **kwargs)
-        embed = Embed(title = f"{ctx.lastfm.username}'s {kwargs['timeperiod']} {kwargs['chart_type']} collage")
-        embed.set_image(url = "attachment://chart.png")
-        return await ctx.send(embed = embed, file = file)
-    
+        embed = Embed(
+            title=f"{ctx.lastfm.username}'s {kwargs['timeperiod']} {kwargs['chart_type']} collage"
+        )
+        embed.set_image(url="attachment://chart.png")
+        return await ctx.send(embed=embed, file=file)
+
     @lastfm.command(
         name="wktrack",
         aliases=["whoknowstrack", "wkt"],
@@ -1945,34 +2089,62 @@ class LastFM(Cog):
             ),
             items,
         )
-    
-    @lastfm.command(name = "youtube", description = "Gives YouTube link for the current song playing", example = ",lastfm youtube @aiohttp")
-    async def lastfm_youtube(self, ctx: Context, *, member: Optional[Member] = commands.Author):
+
+    @lastfm.command(
+        name="youtube",
+        description="Gives YouTube link for the current song playing",
+        example=",lastfm youtube @aiohttp",
+    )
+    async def lastfm_youtube(
+        self, ctx: Context, *, member: Optional[Member] = commands.Author
+    ):
         """Get the YouTube link for the current song playing."""
         try:
             track, artist, album = await self.send_nowplaying(ctx, member, True)
         except Exception:
             raise CommandError("No playing track found")
-        return await ctx.invoke(self.bot.get_command("youtube"), query=f"{track.name} {artist}")
-    
-    @lastfm.command(name = "itunes", description = "Gives iTunes link for the current song playing", example = ",lastfm itunes @aiohttp")
-    async def lastfm_itunes(self, ctx: Context, *, member: Optional[Member] = commands.Author):
+        return await ctx.invoke(
+            self.bot.get_command("youtube"), query=f"{track.name} {artist}"
+        )
+
+    @lastfm.command(
+        name="itunes",
+        description="Gives iTunes link for the current song playing",
+        example=",lastfm itunes @aiohttp",
+    )
+    async def lastfm_itunes(
+        self, ctx: Context, *, member: Optional[Member] = commands.Author
+    ):
         try:
             track, artist, album = await self.send_nowplaying(ctx, member, True)
         except Exception:
             raise CommandError("No playing track found")
         try:
             query = f"{track.name} {artist}"
-            url = await itunes(query = query)
+            url = await itunes(query=query)
             return await ctx.send(url)
         except Exception:
             raise CommandError("that track could not be found")
-        
-    @lastfm.command(name = "spotify", description = "Gives Spotify link for the current song playing", example = ",lastfm spotify @aiohttp")
-    async def lastfm_spotify(self, ctx: Context, *, member: Optional[Member] = commands.Author):
+
+    @lastfm.command(
+        name="spotify",
+        description="Gives Spotify link for the current song playing",
+        example=",lastfm spotify @aiohttp",
+    )
+    async def lastfm_spotify(
+        self, ctx: Context, *, member: Optional[Member] = commands.Author
+    ):
         try:
             track, artist, album = await self.send_nowplaying(ctx, member, True)
-            if url := await self.bot.db.fetchval("""SELECT spotify FROM lastfm.locations WHERE artist = $1 AND track = $2""", artist if isinstance(artist, str) else artist.get('name', artist.get('#text')), track.name):
+            if url := await self.bot.db.fetchval(
+                """SELECT spotify FROM lastfm.locations WHERE artist = $1 AND track = $2""",
+                (
+                    artist
+                    if isinstance(artist, str)
+                    else artist.get("name", artist.get("#text"))
+                ),
+                track.name,
+            ):
                 return await ctx.send(url)
             query = f"{track.name} {artist if isinstance(artist, str) else artist.get('name', artist.get('#text'))}"
         except Exception as e:
@@ -1984,21 +2156,29 @@ class LastFM(Cog):
             return await ctx.warn(f"No results found on Spotify for **{query}**")
 
         return await ctx.send(data.link)
-    
-    @lastfm.command(name = "soundcloud", description = "Gives Soundcloud link for the current song playing", example = ",lastfm soundcloud @aiohttp")
-    async def lastfm_soundcloud(self, ctx: Context, *, member: Optional[Member] = commands.Author):
+
+    @lastfm.command(
+        name="soundcloud",
+        description="Gives Soundcloud link for the current song playing",
+        example=",lastfm soundcloud @aiohttp",
+    )
+    async def lastfm_soundcloud(
+        self, ctx: Context, *, member: Optional[Member] = commands.Author
+    ):
         try:
             track, artist, album = await self.send_nowplaying(ctx, member, True)
             query = f"{track.name} {artist}"
         except Exception:
             raise CommandError("No playing track found")
         try:
-            url = await soundcloud(query = query, as_url = True, search_type = "tracks")
-            return await ctx.send(content = url)
+            url = await soundcloud(query=query, as_url=True, search_type="tracks")
+            return await ctx.send(content=url)
         except Exception as e:
             if ctx.author.name == "aiohttp":
                 raise e
-            raise CommandError(f"No results found on soundcloud {track.name} by {artist}")
+            raise CommandError(
+                f"No results found on soundcloud {track.name} by {artist}"
+            )
 
     @command(
         name="spotifyalbum",
@@ -2043,7 +2223,11 @@ class LastFM(Cog):
             try:
                 await self.cog_check(ctx)
                 track, artist, album = await self.send_nowplaying(ctx, ctx.author, True)
-                if url := await self.bot.db.fetchval("""SELECT spotify FROM lastfm.locations WHERE artist = $1 AND track = $2""", artist, track.name):
+                if url := await self.bot.db.fetchval(
+                    """SELECT spotify FROM lastfm.locations WHERE artist = $1 AND track = $2""",
+                    artist,
+                    track.name,
+                ):
                     return await ctx.send(url)
                 query = f"{track.name} {artist}"
             except Exception:
@@ -2054,26 +2238,33 @@ class LastFM(Cog):
             return await ctx.warn(f"No results found on Spotify for **{query}**")
 
         return await ctx.send(data.link)
-    
-    @command(name = "itunes", description = "Finds a song from the iTunes API", example = ",itunes ram ranch")
+
+    @command(
+        name="itunes",
+        description="Finds a song from the iTunes API",
+        example=",itunes ram ranch",
+    )
     async def itunes(self, ctx: Context, *, query: str = None) -> Message:
         if not query:
             try:
                 await self.cog_check(ctx)
                 track, artist, album = await self.send_nowplaying(ctx, ctx.author, True)
-                if url := await self.bot.db.fetchval("""SELECT itunes FROM lastfm.locations WHERE artist = $1 AND track = $2""", artist, track.name):
+                if url := await self.bot.db.fetchval(
+                    """SELECT itunes FROM lastfm.locations WHERE artist = $1 AND track = $2""",
+                    artist,
+                    track.name,
+                ):
                     return await ctx.send(url)
                 query = f"{track.name} {artist}"
             except Exception:
                 return await ctx.send_help()
         try:
-            url = await itunes(query = query)
+            url = await itunes(query=query)
         except Exception:
             url = None
         if not url:
             raise CommandError(f"No Results found for **{query[:20]}**")
         return await ctx.send(url)
-    
 
 
 async def setup(bot: Client):

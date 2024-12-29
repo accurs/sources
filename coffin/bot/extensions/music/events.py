@@ -1,16 +1,22 @@
-from discord.ext.commands import Cog
-from .player import CoffinPlayer, Context
-from typing import cast
-from wavelink import TrackEndEventPayload, TrackStartEventPayload # type: ignore
 from contextlib import suppress
-from discord import Client, HTTPException, VoiceState, Member
+from typing import cast
+
+from discord import Client, HTTPException, Member, VoiceState
+from discord.ext.commands import Cog
+from wavelink import (TrackEndEventPayload,  # type: ignore
+                      TrackStartEventPayload)
+
+from .player import CoffinPlayer, Context
+
+
 class MusicEvents(Cog):
     def __init__(self, bot: Client):
         self.bot = bot
 
-
     @Cog.listener("on_voice_state_update")
-    async def check_player_activity(self, member: Member, before: VoiceState, after: VoiceState):
+    async def check_player_activity(
+        self, member: Member, before: VoiceState, after: VoiceState
+    ):
         if before.channel and not after.channel and member.guild.voice_client:
             if not isinstance(before.guild.voice_client, CoffinPlayer):
                 return
@@ -19,7 +25,9 @@ class MusicEvents(Cog):
                     channel = member.guild.get_channel(before.channel.id)
                     members = [m for m in channel.members if m.id != self.bot.user.id]
                     if not members:
-                        self.bot.dispatch("wavelink_inactive_player", before.guild.voice_client)
+                        self.bot.dispatch(
+                            "wavelink_inactive_player", before.guild.voice_client
+                        )
 
     @Cog.listener()
     async def on_wavelink_track_end(self, payload: TrackEndEventPayload):
@@ -53,6 +61,7 @@ class MusicEvents(Cog):
     @Cog.listener()
     async def on_wavelink_inactive_player(self, player: CoffinPlayer):
         await player.disconnect()
+
 
 async def setup(bot: Client):
     await bot.add_cog(MusicEvents(bot))

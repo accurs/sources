@@ -1,23 +1,13 @@
 from contextlib import suppress
 
-from discord import (
-    Embed,
-    Guild,
-    Interaction,
-    InteractionResponded,
-    InviteTarget,
-    Member,
-    Role,
-    SelectOption,
-    VoiceChannel,
-    WebhookMessage,
-)
+import config
+from discord import (Embed, Guild, Interaction, InteractionResponded,
+                     InviteTarget, Member, Role, SelectOption, VoiceChannel,
+                     WebhookMessage)
 from discord.ui import Button, Select, View, button
 from discord.utils import format_dt
-
-import config
-from tools.converters import activity_types
 from tools.bleed import Bleed
+from tools.converters import activity_types
 from tools.utilities.text import Plural
 
 

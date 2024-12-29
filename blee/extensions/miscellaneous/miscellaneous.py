@@ -1,67 +1,36 @@
-from discord.ext.commands import Cog
+import random
+from asyncio import sleep
 from contextlib import suppress
-from typing import List, Optional
+from datetime import datetime, timezone
+from io import BytesIO
 from random import choice
-from discord import (
-    CategoryChannel,
-    Embed,
-    File,
-    Color,
-    Invite,
-    Forbidden,
-    HTTPException,
-    Member,
-    Message,
-    PartialMessage,
-    Reaction,
-    Status,
-    TextChannel,
-    User,
-    utils,
-)
-from discord.ext.commands import (
-    BucketType,
-    MissingPermissions,
-    Range,
-    command,
-    cooldown,
-    flag,
-    BadArgument,
-    parameter,
-    group,
-    has_permissions,
-    FlagConverter,
-    max_concurrency,
-    param,
-)
+from typing import List, Optional
+
+import config
+from bs4 import BeautifulSoup
+from discord import (CategoryChannel, Color, Embed, File, Forbidden,
+                     HTTPException, Invite, Member, Message, PartialMessage,
+                     Reaction, Status, TextChannel, User, utils)
+from discord.ext.commands import (BadArgument, BucketType, Cog, FlagConverter,
+                                  MissingPermissions, Range, command, cooldown,
+                                  flag, group, has_permissions,
+                                  max_concurrency, param, parameter)
 from discord.ext.tasks import loop
-from discord.utils import (
-    as_chunks,
-    escape_markdown,
-    escape_mentions,
-    find,
-    format_dt,
-    utcnow,
-)
+from discord.utils import (as_chunks, escape_markdown, escape_mentions, find,
+                           format_dt, utcnow)
+from gtts import gTTS
 from loguru import logger as log
 from PIL import Image, ImageOps
-from io import BytesIO
-from asyncio import sleep
-import random
-from bs4 import BeautifulSoup
-from datetime import datetime, timezone
-import config
-from gtts import gTTS
-
-from tools.client.context import Context
-from tools.utilities import human_timedelta, shorten
 from tools import Bleed
+from tools.client.context import Context
 from tools.converters.basic import Domain as FilteredDomain
 from tools.converters.embed import EmbedScript, EmbedScriptValidator
-from .snipe import Snipe
-from .views.views import RPS
-from .views.tictactoe import TicTacToe
+from tools.utilities import human_timedelta, shorten
 from tools.utilities.shazam import Recognizer
+
+from .snipe import Snipe
+from .views.tictactoe import TicTacToe
+from .views.views import RPS
 
 
 class ScreenshotFlags(FlagConverter):
@@ -878,10 +847,7 @@ class Miscellaneous(Snipe, Cog):
                 await ctx.warn(f"Failed to analyze audio: {e}")
 
     @command(
-        name="texttospeech",
-        aliases=["tts"],
-        usage="<text>",
-        example="hey waddup hello"
+        name="texttospeech", aliases=["tts"], usage="<text>", example="hey waddup hello"
     )
     @cooldown(1, 5, BucketType.user)
     @has_permissions(attach_files=True)
@@ -891,13 +857,11 @@ class Miscellaneous(Snipe, Cog):
         """
         try:
             buffer = BytesIO()
-            tts = gTTS(text=text, lang='en')
+            tts = gTTS(text=text, lang="en")
             tts.write_to_fp(buffer)
             buffer.seek(0)
-            
-            return await ctx.send(
-                file=File(buffer, filename="tts.mp3")
-            )
-            
+
+            return await ctx.send(file=File(buffer, filename="tts.mp3"))
+
         except Exception as e:
             return await ctx.warn(f"Failed to convert text to speech: {e}")

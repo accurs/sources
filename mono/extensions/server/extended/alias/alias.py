@@ -1,14 +1,11 @@
 from re import search
 
 from asyncpg import UniqueViolationError
+from core.client.context import Context
+from core.managers.paginator import Paginator
+from core.tools import CompositeMetaClass, MixinMeta, plural
 from discord import Embed, Message
 from discord.ext.commands import Cog, group, has_permissions
-
-from core.tools import CompositeMetaClass, MixinMeta
-from core.client.context import Context
-
-from core.tools import plural
-from core.managers.paginator import Paginator
 
 from .entry import AliasEntry
 

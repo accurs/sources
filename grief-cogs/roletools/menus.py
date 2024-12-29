@@ -69,9 +69,7 @@ class LastItemButton(discord.ui.Button):
     ):
         super().__init__(style=style, row=row)
         self.style = style
-        self.emoji = (
-            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}"
-        )
+        self.emoji = "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}"
 
     async def callback(self, interaction: discord.Interaction):
         await self.view.show_page(self.view._source.get_max_pages() - 1, interaction)
@@ -85,9 +83,7 @@ class FirstItemButton(discord.ui.Button):
     ):
         super().__init__(style=style, row=row)
         self.style = style
-        self.emoji = (
-            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}"
-        )
+        self.emoji = "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}"
 
     async def callback(self, interaction: discord.Interaction):
         await self.view.show_page(0, interaction)
@@ -102,7 +98,9 @@ class ReactRolePages(menus.ListPageSource):
 
     async def format_page(self, menu: menus.MenuPages, page):
         if menu.ctx.channel.permissions_for(menu.ctx.guild.me).embed_links:
-            em = discord.Embed(description=page, colour=await menu.bot.get_embed_colour(menu.ctx))
+            em = discord.Embed(
+                description=page, colour=await menu.bot.get_embed_colour(menu.ctx)
+            )
             em.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
             return em
         else:
@@ -126,12 +124,16 @@ class ButtonRolePages(menus.ListPageSource):
                         em.description += pages
                     else:
                         em.add_field(name=_("Button Role Info Continued"), value=pages)
-                em.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
+                em.set_footer(
+                    text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+                )
             else:
                 em = discord.Embed(
                     description=page, colour=await menu.bot.get_embed_colour(menu.ctx)
                 )
-                em.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
+                em.set_footer(
+                    text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+                )
             return em
         else:
             return page
@@ -153,13 +155,19 @@ class SelectOptionPages(menus.ListPageSource):
                     if count < 4:
                         em.description += pages
                     else:
-                        em.add_field(name=_("Select Option Info Continued"), value=pages)
-                em.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
+                        em.add_field(
+                            name=_("Select Option Info Continued"), value=pages
+                        )
+                em.set_footer(
+                    text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+                )
             else:
                 em = discord.Embed(
                     description=page, colour=await menu.bot.get_embed_colour(menu.ctx)
                 )
-                em.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
+                em.set_footer(
+                    text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+                )
             return em
         else:
             return page
@@ -182,12 +190,16 @@ class SelectMenuPages(menus.ListPageSource):
                         em.description += pages
                     else:
                         em.add_field(name=_("Select Menu Info Continued"), value=pages)
-                em.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
+                em.set_footer(
+                    text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+                )
             else:
                 em = discord.Embed(
                     description=page, colour=await menu.bot.get_embed_colour(menu.ctx)
                 )
-                em.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
+                em.set_footer(
+                    text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+                )
             return em
         else:
             return page
@@ -241,7 +253,9 @@ class SelfAddToggleButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         cog = interaction.client.get_cog("RoleTools")
         current = await cog.config.role(self.view._source.current_role).selfassignable()
-        await cog.config.role(self.view._source.current_role).selfassignable.set(not current)
+        await cog.config.role(self.view._source.current_role).selfassignable.set(
+            not current
+        )
         await self.view.show_page(self.view.current_page, interaction)
 
 
@@ -255,7 +269,9 @@ class SelfRemToggleButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         cog = interaction.client.get_cog("RoleTools")
         current = await cog.config.role(self.view._source.current_role).selfremovable()
-        await cog.config.role(self.view._source.current_role).selfremovable.set(not current)
+        await cog.config.role(self.view._source.current_role).selfremovable.set(
+            not current
+        )
         await self.view.show_page(self.view.current_page, interaction)
 
 
@@ -276,10 +292,18 @@ class RolePages(menus.ListPageSource):
         mod_roles = await menu.bot.get_mod_roles(menu.ctx.guild)
         admin_roles = await menu.bot.get_admin_roles(menu.ctx.guild)
         required_roles = [menu.ctx.guild.get_role(i) for i in role_settings["required"]]
-        exclusive_roles = [menu.ctx.guild.get_role(i) for i in role_settings["exclusive_to"]]
-        inclusive_roles = [menu.ctx.guild.get_role(i) for i in role_settings["inclusive_with"]]
+        exclusive_roles = [
+            menu.ctx.guild.get_role(i) for i in role_settings["exclusive_to"]
+        ]
+        inclusive_roles = [
+            menu.ctx.guild.get_role(i) for i in role_settings["inclusive_with"]
+        ]
         permissions = humanize_list(
-            [perm.replace("_", " ").title() for perm, value in role.permissions if value]
+            [
+                perm.replace("_", " ").title()
+                for perm, value in role.permissions
+                if value
+            ]
         )
         buttons = humanize_list(role_settings["buttons"])
         select_options = humanize_list(role_settings["select_options"])
@@ -296,8 +320,8 @@ class RolePages(menus.ListPageSource):
             "# RoleTools settings\n"
             "Sticky          {sticky}\n"
             "Auto            {auto}\n"
-                # "Selfassignable  {selfassign}\n"
-                # "Selfremovable   {selfrem}\n"
+            # "Selfassignable  {selfassign}\n"
+            # "Selfremovable   {selfrem}\n"
             "```"
         ).format(
             role=role.mention,
@@ -309,8 +333,8 @@ class RolePages(menus.ListPageSource):
             hoisted=role.hoist,
             sticky=role_settings["sticky"],
             auto=role_settings["auto"],
-                # selfassign=role_settings["selfassignable"],
-                # selfrem=role_settings["selfremovable"],
+            # selfassign=role_settings["selfassignable"],
+            # selfrem=role_settings["selfremovable"],
             colour=str(role.colour),
         )
         settings += _("**Created:** {created_at}\n").format(
@@ -323,7 +347,9 @@ class RolePages(menus.ListPageSource):
                 select_names=select_options
             )
         if permissions:
-            settings += _("**Permissions:** {permissions}\n").format(permissions=permissions)
+            settings += _("**Permissions:** {permissions}\n").format(
+                permissions=permissions
+            )
         if role.managed:
             if getattr(role, "is_bot_managed", lambda: False)():
                 bot = role.guild.get_member(role.tags.bot_id)
@@ -353,8 +379,12 @@ class RolePages(menus.ListPageSource):
                 emoji = menu.bot.get_emoji(int(emoji))
             if not emoji:
                 emoji = _("Emoji from another server")
-            link = jump_url.format(guild=menu.ctx.guild.id, channel=channel, message=message)
-            settings += _("{emoji} on [message]({link})\n").format(emoji=emoji, link=link)
+            link = jump_url.format(
+                guild=menu.ctx.guild.id, channel=channel, message=message
+            )
+            settings += _("{emoji} on [message]({link})\n").format(
+                emoji=emoji, link=link
+            )
         embeds = [e for e in pagify(settings, page_length=5500)]
         if len(embeds) > 1:
             command = f"`{menu.ctx.clean_prefix}roletools reactionroles`"
@@ -369,7 +399,9 @@ class RolePages(menus.ListPageSource):
                 em.description += page
             else:
                 em.add_field(
-                    name=_("Role settings for {role} (continued)").format(role=role.name),
+                    name=_("Role settings for {role} (continued)").format(
+                        role=role.name
+                    ),
                     value=page,
                 )
         if role.display_icon:
@@ -463,7 +495,9 @@ class BaseMenu(discord.ui.View):
         self.message = await self.send_initial_message(ctx)
 
     async def _get_kwargs_from_page(self, page):
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         if isinstance(value, dict):
             return value
         elif isinstance(value, str):
@@ -489,7 +523,9 @@ class BaseMenu(discord.ui.View):
         kwargs = await self._get_kwargs_from_page(page)
         await interaction.response.edit_message(**kwargs, view=self)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None:
@@ -512,7 +548,8 @@ class BaseMenu(discord.ui.View):
             getattr(self.author, "id", None),
         ):
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -552,7 +589,9 @@ class ConfirmView(discord.ui.View):
             await self.message.edit(view=None)
 
     @discord.ui.button(label=_("Yes"), style=discord.ButtonStyle.green)
-    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def confirm_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.result = True
         self.stop()
         # respond to the interaction so the user does not see "interaction failed".
@@ -561,7 +600,9 @@ class ConfirmView(discord.ui.View):
         await self.on_timeout()
 
     @discord.ui.button(label=_("No"), style=discord.ButtonStyle.secondary)
-    async def dismiss_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def dismiss_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.result = False
         self.stop()
         # respond to the interaction so the user does not see "interaction failed".
@@ -574,7 +615,8 @@ class ConfirmView(discord.ui.View):
             self.message = interaction.message
         if self.author and interaction.user.id != self.author.id:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True

@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING
+
 from discord.ext.commands import Cog
 
 if TYPE_CHECKING:
     from system.myth import Myth
+
 
 class CogMeta(Cog):
     bot: "Myth"

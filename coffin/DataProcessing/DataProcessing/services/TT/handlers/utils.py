@@ -33,19 +33,18 @@
 # ==============================================================================
 
 
-import re
-import sys
-import random
-import secrets
 import datetime
+import random
+import re
+import secrets
+import sys
+from pathlib import Path
+from typing import Any, List, Union
+from urllib.parse import quote, urlencode  # URLyaya
+
 import browser_cookie3
 import importlib_resources
-
 from pydantic import BaseModel
-
-from urllib.parse import quote, urlencode  # URLyaya
-from typing import Union, List, Any
-from pathlib import Path
 
 # yayaya 16 yayayayayayayaya (Generate a random byte string of 16 bytes)
 seed_bytes = secrets.token_bytes(16)
@@ -104,7 +103,7 @@ def get_timestamp(unit: str = "milli"):
 
 
 def timestamp_2_str(
-        timestamp: Union[str, int, float], format: str = "%Y-%m-%d %H-%M-%S"
+    timestamp: Union[str, int, float], format: str = "%Y-%m-%d %H-%M-%S"
 ) -> str:
     """
     ya UNIX yayayayayayayayayayayaya (Convert a UNIX timestamp to a formatted string)
@@ -319,7 +318,7 @@ def get_cookie_from_browser(browser_choice: str, domain: str = "") -> dict:
 
 
 def check_invalid_naming(
-        naming: str, allowed_patterns: list, allowed_separators: list
+    naming: str, allowed_patterns: list, allowed_separators: list
 ) -> list:
     """
     yayayayayayayayayayayaya (Check if the naming conforms to the naming template)
@@ -361,9 +360,9 @@ def check_invalid_naming(
 
 
 def merge_config(
-        main_conf: dict = ...,
-        custom_conf: dict = ...,
-        **kwargs,
+    main_conf: dict = ...,
+    custom_conf: dict = ...,
+    **kwargs,
 ):
     """
     yayayayayaya，ya CLI yayayayayayayayayayayaya，yayayayayayayayayayayayaya，yayayayayayayayayayayaya。

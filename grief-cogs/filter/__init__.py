@@ -1,5 +1,6 @@
-from .filter import Filter
 from grief.core.bot import Grief
+
+from .filter import Filter
 
 
 async def setup(bot: Grief) -> None:

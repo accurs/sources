@@ -2,6 +2,7 @@ from typing import Union
 
 import discord
 from red_commons.logging import getLogger
+
 from grief.core import Config, checks, commands, modlog
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils.chat_formatting import humanize_list
@@ -65,7 +66,9 @@ class ExtendedModLog(EventMixin, commands.Cog):
         self.settings = {}
         self._ban_cache = {}
         self.invite_links_loop.start()
-        self.allowed_mentions = discord.AllowedMentions(users=False, roles=False, everyone=False)
+        self.allowed_mentions = discord.AllowedMentions(
+            users=False, roles=False, everyone=False
+        )
 
     def format_help_for_context(self, ctx: commands.Context):
         pre_processed = super().format_help_for_context(ctx)
@@ -73,10 +76,12 @@ class ExtendedModLog(EventMixin, commands.Cog):
 
     async def cog_unload(self):
         self.invite_links_loop.stop()
-        
+
     async def cog_load(self) -> None:
         for guild_id in await self.config.all_guilds():
-            self.settings[int(guild_id)] = await self.config.guild_from_id(guild_id).all()
+            self.settings[int(guild_id)] = await self.config.guild_from_id(
+                guild_id
+            ).all()
 
     async def modlog_settings(self, ctx: commands.Context) -> None:
         guild = ctx.message.guild
@@ -107,9 +112,9 @@ class ExtendedModLog(EventMixin, commands.Cog):
             "thread_delete": _("Thread deleted"),
             "thread_change": _("Thread changed"),
         }
-        msg = _("Setting for {guild}\n Modlog Channel {channel} (Deprecated)\n\n").format(
-            guild=guild.name, channel=modlog_channel
-        )
+        msg = _(
+            "Setting for {guild}\n Modlog Channel {channel} (Deprecated)\n\n"
+        ).format(guild=guild.name, channel=modlog_channel)
         if guild.id not in self.settings:
             self.settings[guild.id] = await self.config.guild(guild).all()
 
@@ -190,7 +195,9 @@ class ExtendedModLog(EventMixin, commands.Cog):
         - `<true_or_false>` Either on or off.
         """
         if len(events) == 0:
-            return await ctx.send(_("You must provide which events should be included."))
+            return await ctx.send(
+                _("You must provide which events should be included.")
+            )
         if ctx.guild.id not in self.settings:
             self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
         for event in events:
@@ -217,7 +224,9 @@ class ExtendedModLog(EventMixin, commands.Cog):
         - `<channel>` The text channel to send the events to.
         """
         if len(events) == 0:
-            return await ctx.send(_("You must provide which events should be included."))
+            return await ctx.send(
+                _("You must provide which events should be included.")
+            )
         if ctx.guild.id not in self.settings:
             self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
         for event in events:
@@ -231,7 +240,9 @@ class ExtendedModLog(EventMixin, commands.Cog):
         )
 
     @_modlog.command(name="all", aliaes=["all_settings", "toggle_all"])
-    async def _toggle_all_logs(self, ctx: commands.Context, true_or_false: bool) -> None:
+    async def _toggle_all_logs(
+        self, ctx: commands.Context, true_or_false: bool
+    ) -> None:
         """
         Turn all logging options on or off.
 
@@ -245,42 +256,41 @@ class ExtendedModLog(EventMixin, commands.Cog):
         await self.save(ctx.guild)
         await self.modlog_settings(ctx)
 
-
-   # @_modlog.command(name="resetchannel")
+    # @_modlog.command(name="resetchannel")
     # @wrapped_additional_help()
-    #async def _reset_event_channel(
-     #   self,
-      #  ctx: commands.Context,
-       # *events: EventChooser,
-    #-> None:
-       # """
-       # Reset the modlog event to the default modlog channel.
-       # """
-        #if len(events) == 0:
-        #    return await ctx.send(_("You must provide which events should be included."))
-        #if ctx.guild.id not in self.settings:
-         #   self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-        #or event in events:
-         #   self.settings[ctx.guild.id][event]["channel"] = None
-        # await self.save(ctx.guild)
-        # await ctx.send(
-            # _("{event} logs channel have been reset.").format(event=humanize_list(events))
-        # )
+    # async def _reset_event_channel(
+    #   self,
+    #  ctx: commands.Context,
+    # *events: EventChooser,
+    # -> None:
+    # """
+    # Reset the modlog event to the default modlog channel.
+    # """
+    # if len(events) == 0:
+    #    return await ctx.send(_("You must provide which events should be included."))
+    # if ctx.guild.id not in self.settings:
+    #   self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    # or event in events:
+    #   self.settings[ctx.guild.id][event]["channel"] = None
+    # await self.save(ctx.guild)
+    # await ctx.send(
+    # _("{event} logs channel have been reset.").format(event=humanize_list(events))
+    # )
 
     # @_modlog.command(name="all", aliaes=["all_settings", "toggle_all"])
     # async def _toggle_all_logs(self, ctx: commands.Context, true_or_false: bool) -> None:
-        # """
-        # Turn all logging options on or off.
+    # """
+    # Turn all logging options on or off.
 
-       # - `<true_or_false>` True of False, what to set all loggable settings to.
-        # """
-        # if ctx.guild.id not in self.settings:
-            # self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-        # for setting in self.settings[ctx.guild.id].keys():
-            # if "enabled" in self.settings[ctx.guild.id][setting]:
-                # self.settings[ctx.guild.id][setting]["enabled"] = true_or_false
-        # await self.save(ctx.guild)
-        # await self.modlog_settings(ctx)
+    # - `<true_or_false>` True of False, what to set all loggable settings to.
+    # """
+    # if ctx.guild.id not in self.settings:
+    # self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    # for setting in self.settings[ctx.guild.id].keys():
+    # if "enabled" in self.settings[ctx.guild.id][setting]:
+    # self.settings[ctx.guild.id][setting]["enabled"] = true_or_false
+    # await self.save(ctx.guild)
+    # await self.modlog_settings(ctx)
 
     @_modlog.group(name="delete")
     async def _delete(self, ctx: commands.Context) -> None:
@@ -315,7 +325,9 @@ class ExtendedModLog(EventMixin, commands.Cog):
         if ctx.guild.id not in self.settings:
             self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
         guild = ctx.message.guild
-        msg = _("Individual message delete logs for bulk message delete {enabled_or_disabled}.")
+        msg = _(
+            "Individual message delete logs for bulk message delete {enabled_or_disabled}."
+        )
         if not await self.config.guild(guild).message_delete.bulk_individual():
             self.settings[ctx.guild.id]["message_delete"]["bulk_individual"] = True
             verb = _("enabled")
@@ -364,163 +376,163 @@ class ExtendedModLog(EventMixin, commands.Cog):
 
     # @_modlog.group(name="member", aliases=["members", "memberchanges"])
     # async def _members(self, ctx: commands.Context) -> None:
-      #   """
-      #   Toggle individual member update settings.
-     #    """
+    #   """
+    #   Toggle individual member update settings.
+    #    """
 
-   #  @_members.command(name="settings")
-  #   async def _members_show_settings(self, ctx: commands.Context) -> None:
- # #        """
- #        Show the current settings on member updates.
-  #       """
- #        await self._members_settings(ctx)
+    #  @_members.command(name="settings")
+    #   async def _members_show_settings(self, ctx: commands.Context) -> None:
+    # #        """
+    #        Show the current settings on member updates.
+    #       """
+    #        await self._members_settings(ctx)
 
- #    async def _members_settings(self, ctx: commands.Context, msg: str = ""):
-  #       guild = ctx.guild
-  #       msg += _("\n### Member logging Settings for {guild}\n").format(guild=guild.name)
- #        if guild.id not in self.settings:
- #            self.settings[guild.id] = inv_settings
+    #    async def _members_settings(self, ctx: commands.Context, msg: str = ""):
+    #       guild = ctx.guild
+    #       msg += _("\n### Member logging Settings for {guild}\n").format(guild=guild.name)
+    #        if guild.id not in self.settings:
+    #            self.settings[guild.id] = inv_settings
 
- #        data = self.settings[guild.id]["user_change"]
- #        for update_type in MemberUpdateEnum:
-#            msg += f"{update_type.get_name()}: **{data[update_type.name]}**\n"
-  #       await self.save(ctx.guild)
-         # save the data back to config incase we had some deleted channels
+    #        data = self.settings[guild.id]["user_change"]
+    #        for update_type in MemberUpdateEnum:
+    #            msg += f"{update_type.get_name()}: **{data[update_type.name]}**\n"
+    #       await self.save(ctx.guild)
+    # save the data back to config incase we had some deleted channels
     #     await ctx.maybe_send_embed(msg)
 
     # @_members.command(name="nickname", aliases=["nicknames"])
     # async def _user_nickname_logging(self, ctx: commands.Context) -> None:
-      #   """
-       #  Toggle nickname updates for member changes.
-        # """
-        # if ctx.guild.id not in self.settings:
-         #    self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-        # setting = self.settings[ctx.guild.id]["user_change"]["nicknames"]
-        # self.settings[ctx.guild.id]["user_change"]["nicknames"] = not setting
-        # await self.save(ctx.guild)
-        # if setting:
-          #   await self._members_settings(
-            #     ctx, _("Nicknames will no longer be tracked in member change logs.")
-            # )
-        # else:
-          #   await self._members_settings(
-            #     ctx, _("Nicknames will be tracked in member change logs.")
-            # )
+    #   """
+    #  Toggle nickname updates for member changes.
+    # """
+    # if ctx.guild.id not in self.settings:
+    #    self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    # setting = self.settings[ctx.guild.id]["user_change"]["nicknames"]
+    # self.settings[ctx.guild.id]["user_change"]["nicknames"] = not setting
+    # await self.save(ctx.guild)
+    # if setting:
+    #   await self._members_settings(
+    #     ctx, _("Nicknames will no longer be tracked in member change logs.")
+    # )
+    # else:
+    #   await self._members_settings(
+    #     ctx, _("Nicknames will be tracked in member change logs.")
+    # )
 
-   #  @_members.command(name="avatar")# 
+    #  @_members.command(name="avatar")#
     # async def _user_avatar_logging(self, ctx: commands.Context) -> None:
-      #   """
-        # Toggle avatar updates for member changes.
-        # """
-        # if ctx.guild.id not in self.settings:
-          #   self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-        # setting = self.settings[ctx.guild.id]["user_change"]["avatar"]
-        # self.settings[ctx.guild.id]["user_change"]["avatar"] = not setting
-        # await self.save(ctx.guild)
-        # if setting:
-          #   await self._members_settings(
-            #     ctx, _("Avatars will no longer be tracked in member change logs.")
-            # )
-        # else:
-          #   await self._members_settings(ctx, _("Avatars will be tracked in member change logs."))
+    #   """
+    # Toggle avatar updates for member changes.
+    # """
+    # if ctx.guild.id not in self.settings:
+    #   self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    # setting = self.settings[ctx.guild.id]["user_change"]["avatar"]
+    # self.settings[ctx.guild.id]["user_change"]["avatar"] = not setting
+    # await self.save(ctx.guild)
+    # if setting:
+    #   await self._members_settings(
+    #     ctx, _("Avatars will no longer be tracked in member change logs.")
+    # )
+    # else:
+    #   await self._members_settings(ctx, _("Avatars will be tracked in member change logs."))
 
     # @_members.command(name="roles", aliases=["role"])
     # async def _user_role_logging(self, ctx: commands.Context) -> None:
-      #   """
-      #   Toggle role updates for members.
-       #  """
-        # if ctx.guild.id not in self.settings:
-          #   self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-       #  setting = self.settings[ctx.guild.id]["user_change"]["roles"]
-       #  self.settings[ctx.guild.id]["user_change"]["roles"] = not setting
-        # await self.save(ctx.guild)
-        # if setting:
-         #    await self._members_settings(
-           #      ctx, _("Roles will no longer be tracked in member change logs.")
-           #  )
-        # else:
-          #   await self._members_settings(ctx, _("Roles will be tracked in member change logs."))
+    #   """
+    #   Toggle role updates for members.
+    #  """
+    # if ctx.guild.id not in self.settings:
+    #   self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    #  setting = self.settings[ctx.guild.id]["user_change"]["roles"]
+    #  self.settings[ctx.guild.id]["user_change"]["roles"] = not setting
+    # await self.save(ctx.guild)
+    # if setting:
+    #    await self._members_settings(
+    #      ctx, _("Roles will no longer be tracked in member change logs.")
+    #  )
+    # else:
+    #   await self._members_settings(ctx, _("Roles will be tracked in member change logs."))
 
     # @_members.command(name="pending")
     # async def _user_pending_logging(self, ctx: commands.Context) -> None:
-      #   """
-        # Toggle pending updates for members.
-        # """
-        # if ctx.guild.id not in self.settings:
-           #  self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-        # setting = self.settings[ctx.guild.id]["user_change"]["pending"]
-       #  self.settings[ctx.guild.id]["user_change"]["pending"] = not setting
-       #  await self.save(ctx.guild)
-        # if setting:
-           #  await self._members_settings(
-             #    ctx, _("Pending will no longer be tracked in member change logs.")
-            # )
-       #  else:
-         #    await self._members_settings(ctx, _("Pending will be tracked in member change logs."))
+    #   """
+    # Toggle pending updates for members.
+    # """
+    # if ctx.guild.id not in self.settings:
+    #  self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    # setting = self.settings[ctx.guild.id]["user_change"]["pending"]
+    #  self.settings[ctx.guild.id]["user_change"]["pending"] = not setting
+    #  await self.save(ctx.guild)
+    # if setting:
+    #  await self._members_settings(
+    #    ctx, _("Pending will no longer be tracked in member change logs.")
+    # )
+    #  else:
+    #    await self._members_settings(ctx, _("Pending will be tracked in member change logs."))
 
     # @_members.command(name="timeout")
     # async def _user_timeout_logging(self, ctx: commands.Context) -> None:
-       #  """
-       #  Toggle timeout updates for members.
+    #  """
+    #  Toggle timeout updates for members.
 
-        # Note: Due to a discord limitation this will not update when a members
-        # timeout has expired and may display a before timeout in the past.
-        # """
-        # if ctx.guild.id not in self.settings:
-          #   self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-        # setting = self.settings[ctx.guild.id]["user_change"]["timeout"]
-        # self.settings[ctx.guild.id]["user_change"]["timeout"] = not setting
-        # await self.save(ctx.guild)
-        # if setting:
-          #   await self._members_settings(
-            #     ctx, _("Timeout will no longer be tracked in member change logs.")
-            # )
-        # else:
-           #  await self._members_settings(ctx, _("Timeout will be tracked in member change logs."))
+    # Note: Due to a discord limitation this will not update when a members
+    # timeout has expired and may display a before timeout in the past.
+    # """
+    # if ctx.guild.id not in self.settings:
+    #   self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    # setting = self.settings[ctx.guild.id]["user_change"]["timeout"]
+    # self.settings[ctx.guild.id]["user_change"]["timeout"] = not setting
+    # await self.save(ctx.guild)
+    # if setting:
+    #   await self._members_settings(
+    #     ctx, _("Timeout will no longer be tracked in member change logs.")
+    # )
+    # else:
+    #  await self._members_settings(ctx, _("Timeout will be tracked in member change logs."))
 
     # @_members.command(name="flags")
     # async def _user_flags_logging(self, ctx: commands.Context) -> None:
-        # """
-        # Toggle flags updates for members.
+    # """
+    # Toggle flags updates for members.
 
-        # This includes things like:
-        # - `did_rejoin`
-        # - `completed_onboarding`
-        # - `bypasses_verification`
-        # - `started_onboarding`
-        # """
-        # if ctx.guild.id not in self.settings:
-            # self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-        # setting = self.settings[ctx.guild.id]["user_change"]["flags"]
-        # self.settings[ctx.guild.id]["user_change"]["flags"] = not setting
-        # await self.save(ctx.guild)
-        # if setting:
-            # await self._members_settings(
-                # ctx, _("Member flags will no longer be tracked in member change logs.")
-            # )
-        # else:
-            # await self._members_settings(
-                # ctx, _("Member flags will be tracked in member change logs.")
-            # )
+    # This includes things like:
+    # - `did_rejoin`
+    # - `completed_onboarding`
+    # - `bypasses_verification`
+    # - `started_onboarding`
+    # """
+    # if ctx.guild.id not in self.settings:
+    # self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    # setting = self.settings[ctx.guild.id]["user_change"]["flags"]
+    # self.settings[ctx.guild.id]["user_change"]["flags"] = not setting
+    # await self.save(ctx.guild)
+    # if setting:
+    # await self._members_settings(
+    # ctx, _("Member flags will no longer be tracked in member change logs.")
+    # )
+    # else:
+    # await self._members_settings(
+    # ctx, _("Member flags will be tracked in member change logs.")
+    # )
 
     # For whatever reason trying to toggle all these settings causes all of the guilds
     # config to reset and I have no clue why so this will be unsupported for now
     # @_members.command(name="all")
     # async def _user_all_logging(self, ctx: commands.Context, set_to: bool) -> None:
-        # """
-        # Set all member update settings.
+    # """
+    # Set all member update settings.
 
-        # - `<set_to>` True or False what to set all the member update settings to.
-        # """
-        # if ctx.guild.id not in self.settings:
-            # self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
-            # logger.debug("Adding %s to cache", ctx.guild.id)
-        # async with self.config.guild(ctx.guild).user_change() as user_change:
-        # for update_type in MemberUpdateEnum:
-            # self.settings[ctx.guild.id]["user_change"][update_type.name] = set_to
-        # await self.save(ctx.guild)
-        # user_change[update_type.name] = set_to
-        # await self._members_settings(ctx)
+    # - `<set_to>` True or False what to set all the member update settings to.
+    # """
+    # if ctx.guild.id not in self.settings:
+    # self.settings[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+    # logger.debug("Adding %s to cache", ctx.guild.id)
+    # async with self.config.guild(ctx.guild).user_change() as user_change:
+    # for update_type in MemberUpdateEnum:
+    # self.settings[ctx.guild.id]["user_change"][update_type.name] = set_to
+    # await self.save(ctx.guild)
+    # user_change[update_type.name] = set_to
+    # await self._members_settings(ctx)
 
     @_modlog.command()
     async def ignore(
@@ -548,7 +560,9 @@ class ExtendedModLog(EventMixin, commands.Cog):
             cur_ignored.append(channel.id)
             self.settings[guild.id]["ignored_channels"] = cur_ignored
             await self.save(ctx.guild)
-            await ctx.send(_("Now ignoring events in {channel}.").format(channel=channel.mention))
+            await ctx.send(
+                _("Now ignoring events in {channel}.").format(channel=channel.mention)
+            )
         else:
             await ctx.send(
                 _("{channel} is already being ignored.").format(channel=channel.mention)
@@ -580,9 +594,13 @@ class ExtendedModLog(EventMixin, commands.Cog):
             cur_ignored.remove(channel.id)
             self.settings[guild.id]["ignored_channels"] = cur_ignored
             await self.save(ctx.guild)
-            await ctx.send(_("Now tracking events in {channel}.").format(channel=channel.mention))
+            await ctx.send(
+                _("Now tracking events in {channel}.").format(channel=channel.mention)
+            )
         else:
-            await ctx.send(_("{channel} is not being ignored.").format(channel=channel.mention))
+            await ctx.send(
+                _("{channel} is not being ignored.").format(channel=channel.mention)
+            )
 
     @_modlog.group(name="bot", aliases=["bots"])
     async def _modlog_bot(self, ctx: commands.Context) -> None:

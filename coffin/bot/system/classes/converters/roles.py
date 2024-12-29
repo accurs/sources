@@ -1,25 +1,24 @@
+from typing import Dict, List, Union
 
+from data.variables import DISCORD_ID, DISCORD_ROLE_MENTION, PERMISSION_LIST
+from discord import Role as DiscordRole
+from discord import utils
 from discord.ext import commands
 from fast_string_match import closest_match
-from data.variables import DISCORD_ID, DISCORD_ROLE_MENTION, PERMISSION_LIST
 from system.patch.context import Context
-from discord import Role as DiscordRole, utils
-from typing import Union, List, Dict
+
 
 def find_role(ctx: Context, argument: str) -> DiscordRole:
     role = (
-        utils.find(
-            lambda r: r.name.lower() == argument.lower(), ctx.guild.roles
-        )
-        or utils.find(
-            lambda r: argument.lower() in r.name.lower(), ctx.guild.roles
-        )
+        utils.find(lambda r: r.name.lower() == argument.lower(), ctx.guild.roles)
+        or utils.find(lambda r: argument.lower() in r.name.lower(), ctx.guild.roles)
         or utils.find(
             lambda r: r.name.lower().startswith(argument.lower()),
             ctx.guild.roles,
         )
     )
     return role
+
 
 class AssignedRole(commands.RoleConverter):
     async def convert(self, ctx: Context, arg: str):
@@ -42,7 +41,9 @@ class AssignedRole(commands.RoleConverter):
                     role = ctx.guild.get_role(int(match.group(1)))
                 else:
                     if not (role := find_role(ctx, argument)):
-                        if match := closest_match(argument.lower(), list(_roles.keys())):
+                        if match := closest_match(
+                            argument.lower(), list(_roles.keys())
+                        ):
                             try:
                                 role = _roles[match]
                             except Exception:
@@ -69,7 +70,9 @@ class AssignedRole(commands.RoleConverter):
                     ):
                         roles.append(role)
                     else:
-                        raise commands.CommandError(f"{role.mention} is **above my role**")
+                        raise commands.CommandError(
+                            f"{role.mention} is **above my role**"
+                        )
                 else:
                     if role == ctx.author.top_role and ctx.author != ctx.guild.owner:
                         m = "the same as your top role"
@@ -79,7 +82,8 @@ class AssignedRole(commands.RoleConverter):
             else:
                 roles.append(role)
         return roles[0]
-    
+
+
 class Role(commands.RoleConverter):
     async def convert(self, ctx: Context, arg: str):
         self.assign = False
@@ -101,7 +105,9 @@ class Role(commands.RoleConverter):
                     role = ctx.guild.get_role(int(match.group(1)))
                 else:
                     if not (role := find_role(ctx, argument)):
-                        if match := closest_match(argument.lower(), list(_roles.keys())):
+                        if match := closest_match(
+                            argument.lower(), list(_roles.keys())
+                        ):
                             try:
                                 role = _roles[match]
                             except Exception:
@@ -121,7 +127,7 @@ class Role(commands.RoleConverter):
                         raise commands.RoleNotFound(argument)
             roles.append(role)
         return roles[0]
-    
+
 
 class MultipleRoles(commands.RoleConverter):
     async def convert(self, ctx: Context, arg: str):
@@ -149,7 +155,9 @@ class MultipleRoles(commands.RoleConverter):
                     role = ctx.guild.get_role(int(match.group(1)))
                 else:
                     if not (role := find_role(ctx, argument)):
-                        if match := closest_match(argument.lower(), list(_roles.keys())):
+                        if match := closest_match(
+                            argument.lower(), list(_roles.keys())
+                        ):
                             try:
                                 role = _roles[match]
                             except Exception:
@@ -170,14 +178,17 @@ class MultipleRoles(commands.RoleConverter):
             roles.append(role)
         return roles
 
+
 class FakePermission(commands.Converter):
     async def convert(self, ctx: Context, argument: str):
         if "," in argument:
-            permissions = [l.rstrip().lstrip().replace(" ", "_").lower() for l in argument.split(",")]
+            permissions = [
+                l.rstrip().lstrip().replace(" ", "_").lower()
+                for l in argument.split(",")
+            ]
         else:
             permissions = [argument.strip().rstrip().replace(" ", "_").lower()]
         for permission in permissions:
             if permission not in PERMISSION_LIST:
                 raise commands.BadArgument(f"Invalid permission: {permission}")
         return permissions
-        

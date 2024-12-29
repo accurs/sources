@@ -1,4 +1,5 @@
 from core.tools import CompositeMetaClass
+
 from .snipe import Snipe
 
 

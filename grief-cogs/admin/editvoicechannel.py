@@ -7,9 +7,14 @@ import typing  # isort:skip
 
 from grief.core.utils.chat_formatting import box, pagify
 
+
 def _(untranslated: str) -> str:  # `redgettext` will found these strings.
     return untranslated
-ERROR_MESSAGE = _("I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}")
+
+
+ERROR_MESSAGE = _(
+    "I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}"
+)
 
 _ = Translator("DiscordEdit", __file__)
 
@@ -34,7 +39,9 @@ class PositionConverter(commands.Converter):
 class PermissionConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str) -> str:
         permissions = [
-            key for key, value in dict(discord.Permissions.all_channel()).items() if value
+            key
+            for key, value in dict(discord.Permissions.all_channel()).items()
+            if value
         ]
         if argument not in permissions:
             raise commands.BadArgument(_("This permission is invalid."))
@@ -266,7 +273,11 @@ class EditVoiceChannel(Cog):
     @commands.has_permissions(manage_channels=True)
     @editvoicechannel.command(name="position")
     async def editvoicechannel_position(
-        self, ctx: commands.Context, channel: discord.VoiceChannel, *, position: PositionConverter
+        self,
+        ctx: commands.Context,
+        channel: discord.VoiceChannel,
+        *,
+        position: PositionConverter,
     ) -> None:
         """Edit voice channel position.
 
@@ -288,7 +299,10 @@ class EditVoiceChannel(Cog):
     @commands.has_permissions(manage_channels=True)
     @editvoicechannel.command(name="syncpermissions")
     async def editvoicechannel_sync_permissions(
-        self, ctx: commands.Context, channel: discord.VoiceChannel, sync_permissions: bool = None
+        self,
+        ctx: commands.Context,
+        channel: discord.VoiceChannel,
+        sync_permissions: bool = None,
     ) -> None:
         """Edit voice channel sync permissions."""
         await self.check_voice_channel(ctx, channel)
@@ -407,7 +421,9 @@ class EditVoiceChannel(Cog):
                 targets.append(ctx.guild.default_role)
         if not targets:
             raise commands.UserFeedbackCheckFailure(
-                _("You need to provide a role or user you want to edit permissions for.")
+                _(
+                    "You need to provide a role or user you want to edit permissions for."
+                )
             )
         # for target in targets:
         #     if (
@@ -427,7 +443,11 @@ class EditVoiceChannel(Cog):
         channel_permissions = channel.permissions_for(ctx.author)
         for permission in permissions:
             if not getattr(channel_permissions, permission):
-                raise commands.UserFeedbackCheckFailure(_("You don't have the permission {permission_name} in this channel.").format(permission_name=permission))
+                raise commands.UserFeedbackCheckFailure(
+                    _(
+                        "You don't have the permission {permission_name} in this channel."
+                    ).format(permission_name=permission)
+                )
         overwrites = channel.overwrites
         for target in targets:
             if target in overwrites:
@@ -474,9 +494,7 @@ class EditVoiceChannel(Cog):
                 content = f"{ctx.author.mention} " + _(
                     "Do you really want to delete the voice channel {channel.mention} ({channel.id})?"
                 ).format(channel=channel)
-            if not await CogsUtils.ConfirmationAsk(
-                ctx, content=content, embed=embed
-            ):
+            if not await CogsUtils.ConfirmationAsk(ctx, content=content, embed=embed):
                 await CogsUtils.delete_message(ctx.message)
                 return
         try:

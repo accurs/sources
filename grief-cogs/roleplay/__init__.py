@@ -1,10 +1,10 @@
-
 import logging
-from random import randint
 import random
+from random import randint
 from typing import Optional
 
 import discord
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 
@@ -64,7 +64,6 @@ class Roleplay(commands.Cog):
         self.config.init_custom("Target", 2)
         self.config.register_custom("Target", **default_target)
         self.cache = {}
-        
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command()
@@ -73,7 +72,9 @@ class Roleplay(commands.Cog):
         Cuddles a user.
         """
 
-        images = f"https://cdn.slit.sh/roleplay/cuddle/cuddle{random.randint(1, 20)}.gif"
+        images = (
+            f"https://cdn.slit.sh/roleplay/cuddle/cuddle{random.randint(1, 20)}.gif"
+        )
 
         embed = discord.Embed(
             colour=discord.Colour.dark_theme(),
@@ -89,7 +90,9 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).cuddle_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).cuddle_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).cuddle_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command()
@@ -114,7 +117,9 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).poke_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).poke_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).poke_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command()
@@ -139,7 +144,9 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).kiss_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).kiss_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).kiss_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command()
@@ -174,7 +181,7 @@ class Roleplay(commands.Cog):
         """
 
         images = f"https://cdn.slit.sh/roleplay/pat/pat{random.randint(1, 19)}.gif"
-        
+
         embed = discord.Embed(
             colour=discord.Colour.dark_theme(),
             description=f"**{ctx.author.mention}** just patted {f'**{str(user.mention)}**' if user else 'themselves'}!",
@@ -198,7 +205,9 @@ class Roleplay(commands.Cog):
         Tickles a user.
         """
 
-        images = f"https://cdn.slit.sh/roleplay/tickle/tickle{random.randint(1, 18)}.gif"
+        images = (
+            f"https://cdn.slit.sh/roleplay/tickle/tickle{random.randint(1, 18)}.gif"
+        )
 
         embed = discord.Embed(
             colour=discord.Colour.dark_theme(),
@@ -214,7 +223,9 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).tickle_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).tickle_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).tickle_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command()
@@ -239,7 +250,9 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).lick_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).lick_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).lick_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command()
@@ -264,7 +277,9 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).slap_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).slap_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).slap_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(name="spank")
@@ -326,7 +341,7 @@ class Roleplay(commands.Cog):
         """
         Punch a user.
         """
-        
+
         images = f"https://cdn.slit.sh/roleplay/punch/punch{random.randint(1, 19)}.gif"
 
         embed = discord.Embed(
@@ -354,7 +369,9 @@ class Roleplay(commands.Cog):
         Highfive a user.
         """
 
-        images = f"https://cdn.slit.sh/roleplay/highfive/highfive{random.randint(1, 10)}.gif"
+        images = (
+            f"https://cdn.slit.sh/roleplay/highfive/highfive{random.randint(1, 10)}.gif"
+        )
 
         embed = discord.Embed(
             colour=discord.Colour.dark_theme(),
@@ -373,7 +390,7 @@ class Roleplay(commands.Cog):
         await self.config.custom("Target", ctx.author.id, user.id).highfive_r.set(
             target + 1
         )
-    
+
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(name="kill")
     async def kill(self, ctx: commands.Context, user: discord.Member):
@@ -383,16 +400,23 @@ class Roleplay(commands.Cog):
 
         images = f"https://cdn.slit.sh/roleplay/kill/kill{random.randint(1, 13)}.gif"
 
-        embed = discord.Embed(colour=discord.Colour.dark_theme(), description=f"**{ctx.author.mention}** kills {f'**{str(user.mention)}**' if user else 'themselves'}!",)
+        embed = discord.Embed(
+            colour=discord.Colour.dark_theme(),
+            description=f"**{ctx.author.mention}** kills {f'**{str(user.mention)}**' if user else 'themselves'}!",
+        )
 
         embed.set_author(name=self.bot.user.display_name, icon_url=self.bot.user.avatar)
         embed.set_image(url=images)
         target = await self.config.custom("Target", ctx.author.id, user.id).kill_r()
         used = await self.config.user(ctx.author).kill_s()
-        embed.set_footer(text=f"{ctx.author.name}'s total kills: {used + 1} | {ctx.author.name} has killed {user.name} {target + 1} times")
+        embed.set_footer(
+            text=f"{ctx.author.name}'s total kills: {used + 1} | {ctx.author.name} has killed {user.name} {target + 1} times"
+        )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).kill_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).kill_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).kill_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(name="bite")
@@ -417,7 +441,9 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).bite_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).bite_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).bite_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(name="yeet")
@@ -442,7 +468,9 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).yeet_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).yeet_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).yeet_r.set(
+            target + 1
+        )
 
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(name="nutkick", aliases=["kicknuts"])
@@ -451,7 +479,9 @@ class Roleplay(commands.Cog):
         Kick a user in the balls.
         """
 
-        images = f"https://cdn.slit.sh/roleplay/nutkick/nutkick{random.randint(1, 8)}.gif"
+        images = (
+            f"https://cdn.slit.sh/roleplay/nutkick/nutkick{random.randint(1, 8)}.gif"
+        )
 
         embed = discord.Embed(
             colour=discord.Colour.dark_theme(),
@@ -492,10 +522,19 @@ class Roleplay(commands.Cog):
         )
         await send_embed(self, ctx, embed, user)
         await self.config.user(ctx.author).fuck_s.set(used + 1)
-        await self.config.custom("Target", ctx.author.id, user.id).fuck_r.set(target + 1)
+        await self.config.custom("Target", ctx.author.id, user.id).fuck_r.set(
+            target + 1
+        )
 
-async def send_embed(self, ctx: commands.Context, embed: discord.Embed, user: Optional[discord.Member] = None,):
+
+async def send_embed(
+    self,
+    ctx: commands.Context,
+    embed: discord.Embed,
+    user: Optional[discord.Member] = None,
+):
     await ctx.reply(embed=embed, mention_author=False)
+
 
 async def setup(bot):
     await bot.add_cog(Roleplay(bot))

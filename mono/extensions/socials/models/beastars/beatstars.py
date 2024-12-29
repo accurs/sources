@@ -5,11 +5,10 @@ from logging import getLogger
 from typing import List, Optional
 
 from aiohttp import ClientSession
+from core.client.context import Context
 from discord.ext.commands import CommandError
 from pydantic import BaseModel
 from typing_extensions import Self
-
-from core.client.context import Context
 
 log = getLogger("mono/beatstats")
 

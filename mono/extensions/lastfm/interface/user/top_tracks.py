@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import List, Literal, Optional
 
 from discord.ext.commands import CommandError
-from pydantic import BaseModel, Field
-
 from extensions.lastfm import http
+from pydantic import BaseModel, Field
 
 
 class Streamable(BaseModel):

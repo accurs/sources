@@ -2,7 +2,7 @@ from discord.ext import commands
 
 
 async def create_db(self: commands.Bot):
-    
+
     await self.db.execute(
         "CREATE TABLE IF NOT EXISTS prefixes (guild_id BIGINT, prefix TEXT)"
     )
@@ -114,9 +114,7 @@ async def create_db(self: commands.Bot):
     await self.db.execute(
         "CREATE TABLE IF NOT EXISTS shutup (guild_id BIGINT, user_id BIGINT)"
     )
-    await self.db.execute(
-        "CREATE TABLE IF NOT EXISTS antiinvite (guild_id BIGINT)"
-    )
+    await self.db.execute("CREATE TABLE IF NOT EXISTS antiinvite (guild_id BIGINT)")
     await self.db.execute(
         "CREATE TABLE IF NOT EXISTS whitelist (guild_id BIGINT, module TEXT, object_id BIGINT, mode TEXT)"
     )

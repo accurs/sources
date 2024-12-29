@@ -1,39 +1,42 @@
-
-from typing import List, Tuple, cast, Optional
 import asyncio
 from collections import defaultdict
-import discord
-from grief.core import commands, i18n
-from grief.core.utils.chat_formatting import bold, pagify
-from grief.core.utils.common_filters import (
-    filter_invites,
-    filter_various_mentions,
-    escape_spoilers_and_mass_mentions,
-)
-from .abc import MixinMeta
-import discord
-from grief.core import Config, commands
-from grief.core.bot import Grief
 from logging import Logger, getLogger
+from typing import List, Optional, Tuple, cast
+
+import discord
+
+from grief.core import Config, commands, i18n
+from grief.core.bot import Grief
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils import AsyncIter
-from grief.core.utils.chat_formatting import box, humanize_timedelta, inline
+from grief.core.utils.chat_formatting import (bold, box, humanize_timedelta,
+                                              inline, pagify)
+from grief.core.utils.common_filters import (escape_spoilers_and_mass_mentions,
+                                             filter_invites,
+                                             filter_various_mentions)
+
+from .abc import MixinMeta
 
 _ = i18n.Translator("Mod", __file__)
+
 
 @cog_i18n(_)
 class Names(commands.Cog):
     """Moderation tools."""
-    
+
     def format_help_for_context(self, ctx: commands.Context) -> str:
         pre_processed = super().format_help_for_context(ctx)
-        return (f"{pre_processed}\n")
-    
+        return f"{pre_processed}\n"
+
     default_member_settings = {"past_nicks": []}
     default_user_settings = {"past_names": [], "past_display_names": []}
-    default_global_settings = { "track_all_names": True,}
-    default_guild_settings = {"track_nicknames": True,}
-    
+    default_global_settings = {
+        "track_all_names": True,
+    }
+    default_guild_settings = {
+        "track_nicknames": True,
+    }
+
     def __init__(self, bot: Grief):
         super().__init__()
         self.bot: Grief = bot
@@ -45,17 +48,26 @@ class Names(commands.Cog):
         self.config.register_guild(**self.default_guild_settings)
         self.cache: dict = {}
 
-    async def get_names(self, member: discord.Member) -> Tuple[List[str], List[str], List[str]]:
+    async def get_names(
+        self, member: discord.Member
+    ) -> Tuple[List[str], List[str], List[str]]:
         user_data = await self.config.user(member).all()
-        usernames, display_names = user_data["past_names"], user_data["past_display_names"]
+        usernames, display_names = (
+            user_data["past_names"],
+            user_data["past_display_names"],
+        )
         nicks = await self.config.member(member).past_nicks()
-        usernames = list(map(escape_spoilers_and_mass_mentions, filter(None, usernames)))
-        display_names = list(map(escape_spoilers_and_mass_mentions, filter(None, display_names)))
+        usernames = list(
+            map(escape_spoilers_and_mass_mentions, filter(None, usernames))
+        )
+        display_names = list(
+            map(escape_spoilers_and_mass_mentions, filter(None, display_names))
+        )
         nicks = list(map(escape_spoilers_and_mass_mentions, filter(None, nicks)))
         return usernames, display_names, nicks
 
     @commands.command()
-    async def names(self, ctx: commands.Context, *, member: discord.Member=None):
+    async def names(self, ctx: commands.Context, *, member: discord.Member = None):
         """Show previous usernames, global display names, and server nicknames of a member."""
         author = ctx.author
         if not member:
@@ -73,7 +85,9 @@ class Names(commands.Cog):
             for msg in pagify(filter_various_mentions("\n\n".join(parts))):
                 await ctx.send(msg)
         else:
-            await ctx.send(_("That member doesn't have any recorded name or nickname change."))
+            await ctx.send(
+                _("That member doesn't have any recorded name or nickname change.")
+            )
 
     @commands.is_owner()
     @commands.command()
@@ -129,7 +143,9 @@ class Names(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
-    async def deletenames(self, ctx: commands.Context, confirmation: bool = False) -> None:
+    async def deletenames(
+        self, ctx: commands.Context, confirmation: bool = False
+    ) -> None:
         """Delete all stored usernames, global display names, and server nicknames.
 
         Examples:
@@ -151,13 +167,17 @@ class Names(commands.Cog):
 
         async with ctx.typing():
             # Nickname data
-            async with self.config._get_base_group(self.config.MEMBER).all() as mod_member_data:
+            async with self.config._get_base_group(
+                self.config.MEMBER
+            ).all() as mod_member_data:
                 guilds_to_remove = []
                 for guild_id, guild_data in mod_member_data.items():
                     await asyncio.sleep(0)
                     members_to_remove = []
 
-                    async for member_id, member_data in AsyncIter(guild_data.items(), steps=100):
+                    async for member_id, member_data in AsyncIter(
+                        guild_data.items(), steps=100
+                    ):
                         if "past_nicks" in member_data:
                             del member_data["past_nicks"]
                         if not member_data:
@@ -172,9 +192,13 @@ class Names(commands.Cog):
                     del mod_member_data[guild_id]
 
             # Username and global display name data
-            async with self.config._get_base_group(self.config.USER).all() as mod_user_data:
+            async with self.config._get_base_group(
+                self.config.USER
+            ).all() as mod_user_data:
                 users_to_remove = []
-                async for user_id, user_data in AsyncIter(mod_user_data.items(), steps=100):
+                async for user_id, user_data in AsyncIter(
+                    mod_user_data.items(), steps=100
+                ):
                     if "past_names" in user_data:
                         del user_data["past_names"]
                     if "past_display_names" in user_data:
@@ -217,7 +241,9 @@ class Names(commands.Cog):
         return act, discord.ActivityType.playing
 
     def handle_streaming(self, user):
-        s_acts = [c for c in user.activities if c.type == discord.ActivityType.streaming]
+        s_acts = [
+            c for c in user.activities if c.type == discord.ActivityType.streaming
+        ]
         if not s_acts:
             return None, discord.ActivityType.streaming
         s_act = s_acts[0]
@@ -233,7 +259,9 @@ class Names(commands.Cog):
         return act, discord.ActivityType.streaming
 
     def handle_listening(self, user):
-        l_acts = [c for c in user.activities if c.type == discord.ActivityType.listening]
+        l_acts = [
+            c for c in user.activities if c.type == discord.ActivityType.listening
+        ]
         if not l_acts:
             return None, discord.ActivityType.listening
         l_act = l_acts[0]
@@ -241,7 +269,9 @@ class Names(commands.Cog):
             act = _("Listening: [{title}{sep}{artist}]({url})").format(
                 title=discord.utils.escape_markdown(l_act.title),
                 sep=" | " if l_act.artist else "",
-                artist=discord.utils.escape_markdown(l_act.artist) if l_act.artist else "",
+                artist=(
+                    discord.utils.escape_markdown(l_act.artist) if l_act.artist else ""
+                ),
                 url=f"https://open.spotify.com/track/{l_act.track_id}",
             )
         else:
@@ -257,7 +287,9 @@ class Names(commands.Cog):
         return act, discord.ActivityType.watching
 
     def handle_competing(self, user):
-        w_acts = [c for c in user.activities if c.type == discord.ActivityType.competing]
+        w_acts = [
+            c for c in user.activities if c.type == discord.ActivityType.competing
+        ]
         if not w_acts:
             return None, discord.ActivityType.competing
         w_act = w_acts[0]
@@ -279,7 +311,6 @@ class Names(commands.Cog):
                 continue
             string += f"{status_string}\n"
         return string
-    
 
     @commands.command()
     @commands.guild_only()
@@ -303,10 +334,20 @@ class Names(commands.Cog):
         joined_at = member.joined_at
         voice_state = member.voice
         member_number = (
-            sorted(guild.members, key=lambda m: m.joined_at or ctx.message.created_at).index(member)+ 1)
-        created_on = (f"{discord.utils.format_dt(member.created_at)}\n" f"{discord.utils.format_dt(member.created_at, 'R')}")
+            sorted(
+                guild.members, key=lambda m: m.joined_at or ctx.message.created_at
+            ).index(member)
+            + 1
+        )
+        created_on = (
+            f"{discord.utils.format_dt(member.created_at)}\n"
+            f"{discord.utils.format_dt(member.created_at, 'R')}"
+        )
         if joined_at is not None:
-            joined_on = (f"{discord.utils.format_dt(joined_at)}\n" f"{discord.utils.format_dt(joined_at, 'R')}")
+            joined_on = (
+                f"{discord.utils.format_dt(joined_at)}\n"
+                f"{discord.utils.format_dt(joined_at, 'R')}"
+            )
         else:
             joined_on = _("Unknown")
         if any(a.type is discord.ActivityType.streaming for a in member.activities):
@@ -334,7 +375,9 @@ class Names(commands.Cog):
                 continuation_string = _(
                     "and {numeric_number} more roles not displayed due to embed limits."
                 )
-                available_length = 1024 - len(continuation_string)  # do not attempt to tweak, i18n
+                available_length = 1024 - len(
+                    continuation_string
+                )  # do not attempt to tweak, i18n
 
                 role_chunks = []
                 remaining_roles = 0
@@ -348,34 +391,51 @@ class Names(commands.Cog):
                     else:
                         remaining_roles += 1
 
-                role_chunks.append(continuation_string.format(numeric_number=remaining_roles))
+                role_chunks.append(
+                    continuation_string.format(numeric_number=remaining_roles)
+                )
 
                 role_str = "".join(role_chunks)
         else:
             role_str = None
         data = discord.Embed(description=status_string or activity, colour=0x313338)
-        button1 = discord.ui.Button(emoji="<:info:1202073815140810772>", label=f"profile", style=discord.ButtonStyle.url, url=f"https://discordapp.com/users/{member.id}")
+        button1 = discord.ui.Button(
+            emoji="<:info:1202073815140810772>",
+            label=f"profile",
+            style=discord.ButtonStyle.url,
+            url=f"https://discordapp.com/users/{member.id}",
+        )
         view = discord.ui.View()
         view.add_item(button1)
         data.add_field(name=_("Joined Discord on"), value=created_on)
         data.add_field(name=_("Joined this server on"), value=joined_on)
         if role_str is not None:
             data.add_field(
-                name=_("Roles") if len(roles) > 1 else _("Role"), value=role_str, inline=False
+                name=_("Roles") if len(roles) > 1 else _("Role"),
+                value=role_str,
+                inline=False,
             )
         for single_form, plural_form, names in (
             (_("Previous Username"), _("Previous Usernames"), usernames),
-            (_("Previous Global Display Name"), _("Previous Global Display Names"), display_names),
+            (
+                _("Previous Global Display Name"),
+                _("Previous Global Display Names"),
+                display_names,
+            ),
             (_("Previous Server Nickname"), _("Previous Server Nicknames"), nicks),
-       ):
+        ):
             if names:
                 data.add_field(
-                   name=plural_form if len(names) > 1 else single_form,
+                    name=plural_form if len(names) > 1 else single_form,
                     value=filter_invites(", ".join(names)),
                     inline=False,
                 )
         if voice_state and voice_state.channel:
-            data.add_field(name=_("Current voice channel"), value="{0.mention} ID: {0.id}".format(voice_state.channel), inline=False,)
+            data.add_field(
+                name=_("Current voice channel"),
+                value="{0.mention} ID: {0.id}".format(voice_state.channel),
+                inline=False,
+            )
         data.set_footer(text=_("Join Position: {}").format(member_number))
         name = str(member)
         name = " ~ ".join((name, member.nick)) if member.nick else name
@@ -427,5 +487,6 @@ class Names(commands.Cog):
             async with self.config.member(before).past_nicks() as nick_list:
                 self._update_past_names(before.nick, nick_list)
 
+
 async def setup(bot: Grief) -> None:
-        await bot.add_cog(Names(bot))
+    await bot.add_cog(Names(bot))

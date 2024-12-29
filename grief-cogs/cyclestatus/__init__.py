@@ -1,23 +1,21 @@
-
-
 import asyncio
 import enum
+import json
 import logging
+import pathlib
 import random
 import re
 from datetime import datetime
 from itertools import cycle
-from typing import Any, Final, List, Dict, Optional, TYPE_CHECKING
-import json
-import pathlib
-
-from grief.core.bot import Grief
+from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional
 
 import discord
 from discord.ext import tasks
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
-from grief.core.utils.chat_formatting import humanize_list, humanize_number, pagify
+from grief.core.utils.chat_formatting import (humanize_list, humanize_number,
+                                              pagify)
 from grief.core.utils.predicates import MessagePredicate
 
 from .menus import Menu, Page, PositiveInt
@@ -30,8 +28,8 @@ _config_structure = {
         "next_iter": 0,
         "toggled": True,  # Toggle if the status should be cycled or not
         "random": False,
-        "status_type": 0, # int, the value corresponds with a `discord.ActivityType` value
-        "status_mode": "online", # str, the value that corresponds with a `discord.Status` value
+        "status_type": 0,  # int, the value corresponds with a `discord.ActivityType` value
+        "status_mode": "online",  # str, the value that corresponds with a `discord.Status` value
     },
 }
 
@@ -39,9 +37,10 @@ _bot_guild_var: Final[str] = r"{bot_guild_count}"
 _bot_member_var: Final[str] = r"{bot_member_count}"
 _bot_prefix_var: Final[str] = r"{bot_prefix}"
 
+
 def humanize_enum_vals(e: enum.Enum) -> str:
     return humanize_list(
-        list(map(lambda c: f"`{c.name.replace('_', ' ')}`", e)) # type:ignore
+        list(map(lambda c: f"`{c.name.replace('_', ' ')}`", e))  # type:ignore
     )
 
 
@@ -60,6 +59,7 @@ class ActivityType(enum.Enum):
 if TYPE_CHECKING:
     ActivityConverter = ActivityType
 else:
+
     class ActivityConverter(commands.Converter):
         async def convert(self, ctx: commands.Context, arg: str) -> ActivityType:
             arg = arg.lower()
@@ -83,6 +83,7 @@ class Status(enum.Enum):
 if TYPE_CHECKING:
     StatusConverter = Status
 else:
+
     class StatusConverter(commands.Converter):
         async def convert(self, ctx: commands.Context, arg: str) -> Status:
             arg = arg.lower().replace(" ", "_")
@@ -140,7 +141,7 @@ class CycleStatus(commands.Cog):
     @status.command(name="mode")
     async def status_mode(self, ctx: commands.Context, mode: StatusConverter):
         """Change [botname]'s status mode
-        
+
         **Arguments**
             - `mode` The mode type. Valid types are:
             `online, idle, dnd, and do not disturb`
@@ -149,7 +150,7 @@ class CycleStatus(commands.Cog):
         await ctx.send(f"Done, set the status mode to `{mode.value}`.")
 
     @status.command()
-    @commands.check(lambda ctx: ctx.cog.random is False) # type:ignore
+    @commands.check(lambda ctx: ctx.cog.random is False)  # type:ignore
     async def forcenext(self, ctx: commands.Context):
         """Force the next status to display on the bot"""
         nl = await self.config.next_iter()
@@ -198,7 +199,9 @@ class CycleStatus(commands.Cog):
         await ctx.tick()
 
     @status.command(name="remove", aliases=["del", "rm", "delete"])
-    async def status_remove(self, ctx: commands.Context, num: Optional[PositiveInt] = None):
+    async def status_remove(
+        self, ctx: commands.Context, num: Optional[PositiveInt] = None
+    ):
         """Remove a status from the list
 
         **Arguments**
@@ -281,13 +284,19 @@ class CycleStatus(commands.Cog):
         }
         title = "Your Cycle Status settings"
         kwargs: Dict[str, Any] = {
-            "content": f"**{title}**\n\n" + "\n".join(f"**{k}** {v}" for k, v in settings.items())
+            "content": f"**{title}**\n\n"
+            + "\n".join(f"**{k}** {v}" for k, v in settings.items())
         }
         if await ctx.embed_requested():
             embed = discord.Embed(
-                title=title, colour=await ctx.embed_colour(), timestamp=datetime.utcnow()
+                title=title,
+                colour=await ctx.embed_colour(),
+                timestamp=datetime.utcnow(),
             )
-            [embed.add_field(name=k, value=v, inline=False) for k, v in settings.items()]
+            [
+                embed.add_field(name=k, value=v, inline=False)
+                for k, v in settings.items()
+            ]
             kwargs = {"embed": embed}
         await ctx.send(**kwargs)
 
@@ -335,19 +344,24 @@ class CycleStatus(commands.Cog):
         return
 
     async def _status_add(self, status: str, use_help: bool) -> None:
-        status = status.replace(_bot_guild_var, humanize_number(len(self.bot.guilds))).replace(
-            _bot_member_var, humanize_number(len(self.bot.users))
-        )
+        status = status.replace(
+            _bot_guild_var, humanize_number(len(self.bot.guilds))
+        ).replace(_bot_member_var, humanize_number(len(self.bot.users)))
 
         prefix = (await self.bot.get_valid_prefixes())[0]
-        prefix = re.sub(rf"<@!?{self.bot.user.id}>", f"@{self.bot.user.name}", prefix) # type:ignore
+        prefix = re.sub(
+            rf"<@!?{self.bot.user.id}>", f"@{self.bot.user.name}", prefix
+        )  # type:ignore
 
         status = status.replace(_bot_prefix_var, prefix)
 
         if use_help:
             status += f" | {prefix}help"
         game = discord.Activity(type=await self.config.status_type(), name=status)
-        await self.bot.change_presence(activity=game, status=await self.config.status_mode())
+        await self.bot.change_presence(
+            activity=game, status=await self.config.status_mode()
+        )
+
 
 async def setup(bot: Grief):
     await bot.add_cog(CycleStatus(bot))

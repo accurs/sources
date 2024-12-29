@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 
-from discord import Guild, Member, Role, User, Message
-from discord.abc import GuildChannel
-
 import config
+from discord import Guild, Member, Message, Role, User
+from discord.abc import GuildChannel
 
 if TYPE_CHECKING:
     from core.Mono import Mono

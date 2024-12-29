@@ -1,8 +1,14 @@
-import discord, json, humanfriendly, asyncio, datetime, random
+import asyncio
+import datetime
+import json
+import random
+
+import discord
+import humanfriendly
+from bot.managers.emojis import Colors, Emojis
 from discord.ext import commands
+from events.tasks import gw_loop, gwend_task
 from patches.permissions import Permissions
-from events.tasks import gwend_task, gw_loop
-from bot.managers.emojis import Emojis, Colors
 
 
 class GiveawayView(discord.ui.View):
@@ -86,9 +92,7 @@ class giveaway(commands.Cog):
             self.bot.get_command("giveaway create"), channel=channel or ctx.channel
         )
 
-    @commands.command(
-        description="returns a list of active giveaways in the server"
-    )
+    @commands.command(description="returns a list of active giveaways in the server")
     @Permissions.has_permission(manage_guild=True)
     async def glist(self, ctx: commands.Context):
         return await ctx.invoke(self.bot.get_command("giveaway list"))

@@ -1,2 +1,2 @@
-from .User import SoundCloudUser
 from .Search import SoundCloudSearch
+from .User import SoundCloudUser

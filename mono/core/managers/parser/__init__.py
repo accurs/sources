@@ -2,12 +2,12 @@ import re
 from contextlib import suppress
 from typing import List, Literal, Optional, Tuple, TypedDict
 
-from discord import Embed, Member, Message, TextChannel, Thread, VoiceChannel, Webhook
-from discord.ui import Button, View
-from pydantic import BaseModel
-
 from core.client.context import Context
 from core.managers.parser.variables import TARGET, parse
+from discord import (Embed, Member, Message, TextChannel, Thread, VoiceChannel,
+                     Webhook)
+from discord.ui import Button, View
+from pydantic import BaseModel
 
 NODE = re.compile(r"\{(?P<name>.*?):\s*(?P<value>.*?)\}", re.DOTALL)
 IMAGE = re.compile(r"(?:http\:|https\:)?\/\/.*\.(?P<mime>png|jpg|jpeg|webp|gif)")

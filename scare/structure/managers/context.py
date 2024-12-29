@@ -1,22 +1,18 @@
 import datetime
+from math import ceil
+from typing import TYPE_CHECKING, List, Optional, Union
+
+from discord import (ButtonStyle, Embed, Interaction, Message, Role,
+                     SelectOption)
+from discord.embeds import EmbedProxy
+from discord.ext import commands
+from discord.ext.commands import Context as DefaultContext
+from discord.ext.commands import Group, HelpCommand, HybridGroup
+from discord.ui import Button, Select, View
+from discord.utils import as_chunks, utcnow
+from pydantic import BaseModel
 
 from .paginator import Paginator
-
-from discord import Embed, Message, Role, Interaction, SelectOption, ButtonStyle
-from discord.ui import View, Select, Button
-from discord.embeds import EmbedProxy
-from discord.utils import as_chunks, utcnow
-from discord.ext import commands
-from discord.ext.commands import (
-    Context as DefaultContext,
-    HelpCommand,
-    Group,
-    HybridGroup,
-)
-
-from typing import Union, List, TYPE_CHECKING, Optional
-from pydantic import BaseModel
-from math import ceil
 
 if TYPE_CHECKING:
     from structure.scare import Scare
@@ -27,49 +23,37 @@ class Reskin(BaseModel):
     avatar_url: str
     color: int
 
+
 class ConfirmView(View):
-    def __init__(
-        self, 
-        author_id: int, 
-        yes, 
-        no
-    ):
+    def __init__(self, author_id: int, yes, no):
         super().__init__()
-        self.agree = Button(
-            label="Yes",
-            style=ButtonStyle.green
-        )
-        self.disagree = Button(
-            label="No",
-            style=ButtonStyle.red
-        )
+        self.agree = Button(label="Yes", style=ButtonStyle.green)
+        self.disagree = Button(label="No", style=ButtonStyle.red)
         self.agree.callback = yes
         self.disagree.callback = no
         self.author_id = author_id
         self.add_item(self.agree)
         self.add_item(self.disagree)
-    
+
     async def interaction_check(self, interaction: Interaction):
-        exp = (interaction.user.id == self.author_id)
-        if not exp: 
+        exp = interaction.user.id == self.author_id
+        if not exp:
             await interaction.response.defer(ephemeral=True)
-        
+
         return exp
-    
+
     def stop(self):
         for child in self.children:
             child.disabled = True
-        
+
         return super().stop()
 
     async def on_timeout(self):
         self.stop()
         embed = self.message.embeds[0]
         embed.description = "Time's up!"
-        return await self.message.edit(
-            embed=embed,
-            view=self
-        )
+        return await self.message.edit(embed=embed, view=self)
+
 
 class GroupSelect(Select):
     def __init__(self, group: Group):
@@ -159,6 +143,7 @@ class GroupHelp(View):
         self.stop()
         return await self.message.edit(view=self)
 
+
 class Context(DefaultContext):
     bot: "Scare"
 
@@ -183,24 +168,16 @@ class Context(DefaultContext):
         }
 
         return Reskin(**r)
-    
-    async def confirmation(
-        self,
-        message: str,
-        yes,
-        no = None
-    ):
+
+    async def confirmation(self, message: str, yes, no=None):
         async def default_no(interaction: Interaction):
             embed = interaction.message.embeds[0]
             embed.description = "Aborting this action!"
-            return await interaction.response.edit_message(
-                embed=embed, 
-                view=None
-            )
+            return await interaction.response.edit_message(embed=embed, view=None)
 
         if not no:
             no = default_no
-        
+
         view = ConfirmView(self.author.id, yes, no)
         view.message = await self.neutral(message, view=view)
 
@@ -263,11 +240,7 @@ class Context(DefaultContext):
 
     async def confirm(self: "Context", value: str, *args, **kwargs) -> Message:
         embed = Embed(
-            description=(
-                f"> {self.author.mention}: "
-                if not ">" in value
-                else ""
-            )
+            description=(f"> {self.author.mention}: " if not ">" in value else "")
             + value,
             color=0x83FF4F,
         )
@@ -280,11 +253,7 @@ class Context(DefaultContext):
 
     async def alert(self: "Context", value: str, *args, **kwargs) -> Message:
         embed = Embed(
-            description=(
-                f"> {self.author.mention}: "
-                if not ">" in value
-                else ""
-            )
+            description=(f"> {self.author.mention}: " if not ">" in value else "")
             + value,
             color=0xFFD04F,
         )
@@ -301,7 +270,7 @@ class Context(DefaultContext):
             + value,
             color=0x2B2D31,
         )
-        kwargs['embed'] = embed 
+        kwargs["embed"] = embed
         return await self.send(**kwargs)
 
     async def paginate(

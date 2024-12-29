@@ -1,34 +1,32 @@
 import asyncio
 import datetime
-import humanize
 import re
 import typing
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import Callable, List, Optional, Union
+
 import aiohttp
 import discord
-import orjson
 import humanfriendly
+import humanize
+import orjson
 from discord.ext import commands
 from discord.ext.commands import Cog, CommandError
-from collections import defaultdict
-from typing import Union, Optional, Callable, List
-from tools.important import Context  # type: ignore
-from tools.important.subclasses.command import (  # type: ignore
-    Role,
-    Member,
-    CategoryChannel,
-    TextChannel,
-    VoiceChannel,
-    Argument,
-)
-from tools.views import Confirmation  # type: ignore
+from fast_string_match import closest_match
 from rival_tools import lock, timeit  # type: ignore
 from tools.aliases import CommandConverter  # type: ignore
-from dataclasses import dataclass
-from fast_string_match import closest_match
+from tools.important import Context  # type: ignore
+from tools.important.subclasses.command import (Argument,  # type: ignore
+                                                CategoryChannel, Member, Role,
+                                                TextChannel, VoiceChannel)
+from tools.views import Confirmation  # type: ignore
+
 
 class InvalidError(TypeError):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
 
 class GuildChannel(commands.Converter):
     async def convert(self, ctx: Context, argument: str):
@@ -206,7 +204,7 @@ class Moderation(Cog):
     @commands.command(
         name="nsfw", brief="Toggle nsfw for a channel", example=",nsfw #channel"
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.has_permissions(manage_channels=True)
     async def nsfw(self, ctx: Context, *, channel: TextChannel = None):
         if channel is None:
@@ -228,7 +226,7 @@ class Moderation(Cog):
         example=",slowmode 5 20m",
         invoke_without_command=True,
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.has_permissions(moderate_members=True)
     async def slowmode(self, ctx: Context, seconds: int, *, timeframe: str = None):
         if seconds > 21600:
@@ -255,7 +253,7 @@ class Moderation(Cog):
         brief="reset the slowmode on the channel",
         example=",slowmode reset",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.has_permissions(moderate_members=True)
     async def slowmode_reset(self, ctx: Context):
         await ctx.channel.edit(
@@ -301,7 +299,7 @@ class Moderation(Cog):
     @commands.command(
         name="banned", brief="view the reason a user is banned", example=",banned c_5n"
     )
-    @commands.bot_has_permissions(ban_members = True)
+    @commands.bot_has_permissions(ban_members=True)
     @commands.has_permissions(moderate_members=True)
     async def banned(self, ctx: Context, *, user: str):
         bans = [ban async for ban in ctx.guild.bans(limit=5000)]
@@ -325,7 +323,7 @@ class Moderation(Cog):
         brief="delete and recreate the same channel with the same permissions",
         example=",nuke #>.<",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.has_permissions(administrator=True)
     async def nuke(self, ctx: Context, *, channel: discord.TextChannel = None):
         if channel is None:
@@ -387,7 +385,7 @@ class Moderation(Cog):
         brief="mute a member from reacting to messages",
         example=",rmute @c_5n toxic",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def reactionmute(self, ctx: Context, *, member: Member):
         role = discord.utils.get(ctx.guild.roles, name="rmute")
@@ -411,7 +409,7 @@ class Moderation(Cog):
         brief="mute a member from sending images",
         example="imute @c_5n nsfw",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def imagemute(self, ctx: Context, *, member: Member):
         role = discord.utils.get(ctx.guild.roles, name="imute")
@@ -434,7 +432,7 @@ class Moderation(Cog):
         invoke_without_command=True,
         example=",restrict ban @role",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(administrator=True)
     async def restrict(self, ctx: Context):
         return await ctx.send_help()
@@ -442,7 +440,7 @@ class Moderation(Cog):
     @restrict.command(
         name="add", aliases=["create", "c", "a"], brief="add a command restriction"
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(administrator=True)
     async def restrict_add(self, ctx: Context, *, args: Restriction):
         await self.bot.db.execute(
@@ -461,7 +459,7 @@ class Moderation(Cog):
         brief="Delete a command restriction",
         example=",restrict remove ban, @role",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(administrator=True)
     async def restrict_remove(self, ctx: Context, *, args: Restriction):
         await self.bot.db.execute(
@@ -480,7 +478,7 @@ class Moderation(Cog):
         brief="reset all command restrictions",
         example=",restrict reset",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(administrator=True)
     async def restrict_reset(self, ctx: Context):
         await self.bot.db.execute(
@@ -494,7 +492,7 @@ class Moderation(Cog):
         aliases=["show"],
         example=",restrict list",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(administrator=True)
     async def restrict_list(self, ctx: Context):
         restrictions = await self.bot.db.fetch(
@@ -521,7 +519,7 @@ class Moderation(Cog):
         brief="change the channel topic",
         example=",topic c_5n is the best",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.has_permissions(manage_channels=True)
     async def topic(self, ctx: Context, *, args: ChannelConverter):
         await args.channel.edit(topic=args.arg)
@@ -534,7 +532,7 @@ class Moderation(Cog):
         aliases=["perms"],
         brief="show a member or role's permissions",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def permissions(self, ctx: Context, *, member: Union[discord.Member, Role]):
         if isinstance(member, discord.Member):
@@ -589,11 +587,15 @@ class Moderation(Cog):
         brief="Give a role to a user",
         example=",role @c_5n owner",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def role(self, ctx, member: Member = None, *, role_input: Role):
         if ctx.invoked_subcommand is None:
-            if member.top_role > ctx.author.top_role and member != ctx.author and ctx.author != ctx.guild.owner:
+            if (
+                member.top_role > ctx.author.top_role
+                and member != ctx.author
+                and ctx.author != ctx.guild.owner
+            ):
                 if member.id != ctx.author.id:
                     return await ctx.warning(f"{member.mention} is **higher than you**")
             if not role_input:
@@ -637,7 +639,7 @@ class Moderation(Cog):
         brief="make a role mentionable lol",
         example=",role mentionable @owner",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def role_mentionable(self, ctx: Context, *, role: Role):
         role = role[0]
@@ -655,7 +657,7 @@ class Moderation(Cog):
         brief="give a role to all members or bots",
         example=",role all @members",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def roleall(self, ctx: Context):
         return await ctx.send_help(ctx.command)
@@ -665,7 +667,7 @@ class Moderation(Cog):
         brief="give a role to all users in a channel",
         example=",role all @members",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def roleall_mentionable(self, ctx: Context, *, role: Role):
         role = role[0]
@@ -687,7 +689,7 @@ class Moderation(Cog):
         brief="give a role to all bots",
         example=",role all bots @botrole",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def roleall_bots(self, ctx: Context, *, role: Role):
         if self.tasks.get(f"role-all-{ctx.guild.id}"):
@@ -708,7 +710,7 @@ class Moderation(Cog):
         brief="remove a role from all bots",
         example=",role all bots remove @botrole",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     async def roleall_bots_remove(self, ctx: Context, *, role: Role):
         role = role[0]
         if self.tasks.get(f"role-all-{ctx.guild.id}"):
@@ -729,7 +731,7 @@ class Moderation(Cog):
         invoke_without_command=True,
         example=",role all humans @member",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def roleall_humans(self, ctx: Context, *, role: Role):
         if self.tasks.get(f"role-all-{ctx.guild.id}"):
@@ -750,7 +752,7 @@ class Moderation(Cog):
         brief="remove a role from all humans",
         example=",role all humans remove @member",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     async def roleall_humans_remove(self, ctx: Context, *, role: Role):
         if self.tasks.get(f"role-all-{ctx.guild.id}"):
             return await ctx.fail("only one **task** can run at a time")
@@ -768,7 +770,7 @@ class Moderation(Cog):
     @roleall.command(
         name="cancel", brief="cancel the roleall task", example=",role all cancel"
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def roleall_cancel(self, ctx: Context):
         if not self.tasks.get(f"role-all-{ctx.guild.id}"):
@@ -785,7 +787,7 @@ class Moderation(Cog):
         brief="Rename a created role",
         example=",role rename @members, com",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def role_rename(self, ctx, *, args: RoleArgs):
         role = args.roles[0]
@@ -799,7 +801,7 @@ class Moderation(Cog):
         brief="Create a color for a role",
         example=",role color @com, 010101",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def role_color(self, ctx, color: discord.Color | str, *, role: Role):
         role = role[0]
@@ -822,7 +824,7 @@ class Moderation(Cog):
         brief="Display the role seperately from other roles",
         example=",role hoist @com",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def role_hoist(self, ctx, *, role: Role):
         role = role[0]
@@ -848,7 +850,7 @@ class Moderation(Cog):
         brief="Create a new role for the guild",
         example=",role create com",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def role_create(self, ctx, *, name):
         role = await ctx.guild.create_role(
@@ -861,7 +863,7 @@ class Moderation(Cog):
         brief="Delete an existing role in the guild",
         example=",role delete com",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def role_delete(self, ctx, *, role: Role):
         role = role[0]
@@ -878,7 +880,7 @@ class Moderation(Cog):
         brief="Duplicate an existing role",
         example=",role duplicate com",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def role_duplicate(self, ctx, *, role: Role):
         role = role[0]
@@ -902,7 +904,7 @@ class Moderation(Cog):
         brief="Change the icon of a roles emoji",
         example=",role icon com, <emoji_here>",
     )
-    @commands.bot_has_permissions(manage_roles = True)
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
     async def role_icon(
         self, ctx, role: Role, *, icon: Union[discord.PartialEmoji, str, None] = None
@@ -937,7 +939,7 @@ class Moderation(Cog):
 
     @commands.group(name="channel", brief="List of Channel commands")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def channel(self, ctx):
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
             return
@@ -945,7 +947,7 @@ class Moderation(Cog):
 
     @channel.command(name="create", brief="Create a new channel in a guild")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def channel_create(self, ctx, type: str = "text", *, name: str):
         type = type.lower()
         if "text" in type:
@@ -960,7 +962,7 @@ class Moderation(Cog):
 
     @channel.command(name="delete", brief="Delete a channel in the current guild")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def channel_delete(
         self, ctx, *, channel: TextChannel | VoiceChannel | discord.abc.GuildChannel
     ):
@@ -972,7 +974,7 @@ class Moderation(Cog):
         name="rename", brief="Rename an existing channel in the current guild"
     )
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def channel_rename(self, ctx, *, args: ChannelConverter):
         name = args.arg
         channel_name = args.channel.name
@@ -986,7 +988,7 @@ class Moderation(Cog):
         brief="Duplicate an existing channel in the current guild",
     )
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def channel_duplicate(self, ctx, *, channel: TextChannel | VoiceChannel):
         c = await channel.clone(reason=f"invoked by author | {ctx.author.id}")
         return await ctx.success(f"**Duplicated** `{channel.name}` into {c.mention}")
@@ -996,7 +998,7 @@ class Moderation(Cog):
 
     @commands.group(name="category", brief="List of category commands")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def category(self, ctx):
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
             return
@@ -1004,7 +1006,7 @@ class Moderation(Cog):
 
     @category.command(name="create", brief="Create a category for a guild")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def category_create(self, ctx, *, name: str):
         c = await ctx.guild.create_category_channel(
             name=name, reason=f"invoked by author | {ctx.author.id}"
@@ -1013,7 +1015,7 @@ class Moderation(Cog):
 
     @category.command(name="rename", brief="Rename an existing category's name")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def category_rename(self, ctx, *, args: ChannelConverter):
         category_name = args.channel.name
         category = args.channel
@@ -1026,7 +1028,7 @@ class Moderation(Cog):
 
     @category.command(name="delete", brief="Delete an existing category from the guild")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def category_delete(self, ctx, *, category: CategoryChannel):
         category_name = category.name
         await category.delete(reason=f"invoked by author | {ctx.author.id}")
@@ -1036,7 +1038,7 @@ class Moderation(Cog):
         name="duplicate", brief="Duplicate an existing category in the guild"
     )
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def category_duplicate(self, ctx, *, category: CategoryChannel):
         c = await category.clone(reason=f"invoked by author | {ctx.author.id}")
         return await ctx.success(
@@ -1049,7 +1051,7 @@ class Moderation(Cog):
 
     @commands.command(name="ban", aliases=["exile"], brief="Ban a user from the guild")
     @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members = True)
+    @commands.bot_has_permissions(ban_members=True)
     async def ban_member(
         self, ctx, user: Union[discord.Member, discord.User], *, reason=None
     ):
@@ -1111,7 +1113,7 @@ class Moderation(Cog):
 
     @commands.command(name="unban", brief="Unban a banned user from the guild")
     @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members = True)
+    @commands.bot_has_permissions(ban_members=True)
     async def unban_member(self, ctx, user_id: int | str):
         guild = ctx.guild
         try:
@@ -1140,7 +1142,7 @@ class Moderation(Cog):
     @commands.command(
         name="kick", aliases=["deport"], brief="Kick a user from the guild"
     )
-    @commands.bot_has_permissions(kick_members = True)
+    @commands.bot_has_permissions(kick_members=True)
     @commands.has_permissions(kick_members=True)
     async def kick_member(self, ctx, user: discord.Member):
         if not (r := await self.bot.hierarchy(ctx, user)):
@@ -1185,9 +1187,7 @@ class Moderation(Cog):
             )
             raise InvalidError()
         except discord.NotFound:
-            await ctx.fail(
-                f"**{user.name}** is already **kicked** from the server."
-            )
+            await ctx.fail(f"**{user.name}** is already **kicked** from the server.")
             raise InvalidError()
         return await self.moderator_logs(ctx, f"kicked **{user.name}**")
 
@@ -1227,7 +1227,7 @@ class Moderation(Cog):
         brief="show muted members and the duration left for their mute",
         example=",muted",
     )
-    @commands.bot_has_permissions(moderate_members = True)
+    @commands.bot_has_permissions(moderate_members=True)
     @commands.has_permissions(moderate_members=True)
     async def muted(self, ctx: Context):
         from humanize import naturaltime
@@ -1252,7 +1252,7 @@ class Moderation(Cog):
         brief="Mute a member in the guild for a duration",
         example=",mute @c_5n 30m",
     )
-    @commands.bot_has_permissions(moderate_members = True)
+    @commands.bot_has_permissions(moderate_members=True)
     @commands.has_permissions(manage_roles=True)
     async def timeout(self, ctx, member: discord.Member, *, time: str):
         if not (r := await self.bot.hierarchy(ctx, member)):
@@ -1339,7 +1339,7 @@ class Moderation(Cog):
     @commands.command(
         name="jail", brief="jail a member", example=",jail @c_5n laddering"
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(moderate_members=True)
     async def jail(self, ctx: Context, *, member: Member):
         if not (r := await self.bot.hierarchy(ctx, member)):
@@ -1364,7 +1364,7 @@ class Moderation(Cog):
         example=",setup",
         invoke_without_command=True,
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(administrator=True)
     @lock(key="setme:{ctx.guild.id}")
     async def setup(self, ctx: Context):
@@ -1447,7 +1447,7 @@ class Moderation(Cog):
 
     @setup.command(name="reset", brief="Reset the jail setup", example=",setup reset")
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @lock(key="setme:{ctx.guild.id}")
     async def setup_reset(self, ctx: Context):
         for user_id in await self.bot.db.fetch(
@@ -1482,7 +1482,7 @@ class Moderation(Cog):
 
     @commands.command(name="jailed", brief="show jailed members", example=",jailed")
     @commands.has_permissions(moderate_members=True)
-    @commands.bot_has_permissions(moderate_members = True)
+    @commands.bot_has_permissions(moderate_members=True)
     async def jailed(self, ctx: Context):
         jailed = await self.bot.db.fetch(
             """SELECT user_id FROM jailed WHERE guild_id = $1""", ctx.guild.id
@@ -1492,7 +1492,7 @@ class Moderation(Cog):
         rows = []
         for i, member in enumerate(jailed, start=1):
             if not isinstance(member, int):
-                member = member["user_id"]        
+                member = member["user_id"]
             if user := self.bot.get_user(member):
                 rows.append(f"`{i}` **{user.name}**")
             else:
@@ -1506,17 +1506,22 @@ class Moderation(Cog):
         )
 
     @commands.group(
-        name="unjail", brief="unjail a jailed member", example=",unjail @c_5n", invoke_without_command = True
+        name="unjail",
+        brief="unjail a jailed member",
+        example=",unjail @c_5n",
+        invoke_without_command=True,
     )
-    @commands.bot_has_permissions(moderate_members = True)
+    @commands.bot_has_permissions(moderate_members=True)
     @commands.has_permissions(moderate_members=True)
     async def unjail(self, ctx: Context, *, member: Member):
         await self.do_unjail(ctx, member)
         return await ctx.success(f"unjailed {member.mention}")
-        
-    @unjail.command(name = "all", brief = "unjail all jailed members", example = ",unjail all")
+
+    @unjail.command(
+        name="all", brief="unjail all jailed members", example=",unjail all"
+    )
     @commands.has_permissions(moderate_members=True)
-    @commands.bot_has_permissions(moderate_members = True)
+    @commands.bot_has_permissions(moderate_members=True)
     async def unjail_all(self, ctx: Context):
         jailed = await self.bot.db.fetch(
             """SELECT user_id FROM jailed WHERE guild_id = $1""", ctx.guild.id
@@ -1529,8 +1534,6 @@ class Moderation(Cog):
                 await self.do_unjail(ctx, member)
         return await ctx.success("unjailed all **jailed** members")
 
-
-
     @commands.command(
         name="unmute",
         aliases=[
@@ -1540,7 +1543,7 @@ class Moderation(Cog):
         brief="Unmute a user in the guild",
         example=",unmute @c_5n",
     )
-    @commands.bot_has_permissions(moderate_members = True)
+    @commands.bot_has_permissions(moderate_members=True)
     @commands.has_permissions(manage_roles=True)
     async def untime(self, ctx, member: discord.Member):
         if not (r := await self.bot.hierarchy(ctx, member)):
@@ -1558,7 +1561,7 @@ class Moderation(Cog):
         brief="Force/Remove the force of a users nickname in a guild",
         example="forcenick @c_5n catboy",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def forcenick(self, ctx, member: discord.Member, *, name: str = None):
         if name is None:
@@ -1612,7 +1615,7 @@ class Moderation(Cog):
 
     @commands.group(name="lock", brief="Lock the channel in a guild")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def lock(self, ctx):
         if ctx.invoked_subcommand is None:
             channel = ctx.channel
@@ -1629,7 +1632,7 @@ class Moderation(Cog):
             await ctx.success(f"Chat has been **locked** for {channel.mention}")
 
     @lock.command(name="permit", brief="Permit a user to speak in a locked channel")
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.has_permissions(manage_channels=True)
     async def permit(self, ctx, member: discord.Member):
         channel = ctx.channel
@@ -1644,7 +1647,7 @@ class Moderation(Cog):
         name="unpermit",
         brief="Remove a users permissions from speaking in locked channels",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.has_permissions(manage_channels=True)
     async def unpermit(self, ctx, member: discord.Member):
         overwrites = ctx.channel.overwrites
@@ -1662,7 +1665,7 @@ class Moderation(Cog):
 
     @lock.command(name="role", brief="set the role to be allowed / disallowed to speak")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def lock_role(self, ctx, *, role: Role):
         role = role[0]
         await self.bot.db.execute(
@@ -1671,10 +1674,10 @@ class Moderation(Cog):
             role.id,
         )
         return await ctx.success(f"**Lock role** has been set to {role.mention}")
-    
+
     @lock.command(name="reset", brief="Reset the lock role")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def lock_reset(self, ctx):
         if role_id := await self.bot.db.fetchval(
             """SELECT role_id FROM lock_role WHERE guild_id = $1""", ctx.guild.id
@@ -1696,7 +1699,7 @@ class Moderation(Cog):
 
     @commands.command(name="unlock", brief="Unlock a locked channel in a guild")
     @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def unlock(self, ctx):
         channel = ctx.channel
         permissions = channel.overwrites_for(ctx.guild.default_role)
@@ -1721,7 +1724,7 @@ class Moderation(Cog):
         name="restore",
         brief="Restore all roles to a user who recently lost roles in a guild",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def restore(self, ctx: Context, *, member: discord.Member):
         if (
@@ -1749,7 +1752,7 @@ class Moderation(Cog):
 
     @commands.command(name="strip", brief="Remove all roles from a user in a guild")
     @commands.has_permissions(manage_roles=True)
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     async def strip(self, ctx: Context, *, member: discord.Member):
         if (
             member.top_role > ctx.author.top_role
@@ -1758,11 +1761,16 @@ class Moderation(Cog):
             return await ctx.fail(f"you couldn't strip {member.mention}")
         if len(member.roles) > 0:
             roles = [
-                role for role in member.roles
+                role
+                for role in member.roles
                 if role != ctx.guild.premium_subscriber_role
                 and role != ctx.guild.default_role
             ]
-            roles = [r.id for r in roles if r < ctx.author.top_role and r != ctx.author.top_role]
+            roles = [
+                r.id
+                for r in roles
+                if r < ctx.author.top_role and r != ctx.author.top_role
+            ]
             if len(roles) == 0:
                 return await ctx.fail(f"you couldn't strip {member.mention}")
             await self.bot.redis.set(
@@ -1910,7 +1918,7 @@ class Moderation(Cog):
         brief="clean messages from bots",
         example=",botclear 100",
     )
-    @commands.bot_has_permissions(manage_messages = True)
+    @commands.bot_has_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
     async def botclear(self, ctx: Context, amount: int = 100):
         return await self.cleanup_bot_messages(ctx, amount)
@@ -1922,7 +1930,7 @@ class Moderation(Cog):
         brief="Mass delete messages in a guild",
         example=",purge @o_5v 100",
     )
-    @commands.bot_has_permissions(manage_messages = True)
+    @commands.bot_has_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
     async def purge(
         self,
@@ -1966,7 +1974,7 @@ class Moderation(Cog):
         brief="purge bot messages",
         example=",purge bots 100",
     )
-    @commands.bot_has_permissions(manage_messages = True)
+    @commands.bot_has_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
     async def purge_bots(self, ctx: Context, amount: int = 100):
         return await self.cleanup_bot_messages(ctx, amount)
@@ -1977,7 +1985,7 @@ class Moderation(Cog):
         brief="Mass delete webhook messages in a guild",
         example=",purge webhooks 10",
     )
-    @commands.bot_has_permissions(manage_messages = True)
+    @commands.bot_has_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
     async def purge_webhooks(self, ctx: Context, limit: int = 10):
         if ctx.invoked_subcommand is None:
@@ -2001,7 +2009,7 @@ class Moderation(Cog):
         brief="Mass delete reactions in a guild",
         example=",purge reactions 20",
     )
-    @commands.bot_has_permissions(manage_messages = True)
+    @commands.bot_has_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
     async def purge_reactions(self, ctx: Context, limit: int = 10):
         async with self.locks[ctx.channel.id]:
@@ -2023,7 +2031,7 @@ class Moderation(Cog):
         brief="Mass delete Emojis sent in a guild",
         example=",purge emojis 100",
     )
-    @commands.bot_has_permissions(manage_messages = True)
+    @commands.bot_has_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
     async def purge_emojis(self, ctx, limit: int = 10):
         if ctx.invoked_subcommand is None:
@@ -2051,7 +2059,7 @@ class Moderation(Cog):
         brief="Cleans up all bot messages from the channel",
         example=",cleanup",
     )
-    @commands.bot_has_permissions(manage_messages = True)
+    @commands.bot_has_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
     async def cleanup(self, ctx):
         bot_messages = []

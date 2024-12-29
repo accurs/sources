@@ -4,19 +4,8 @@ import math
 import operator
 from typing import Optional
 
-from pyparsing import (
-    CaselessLiteral,
-    Combine,
-    Forward,
-    Group,
-    Literal,
-    Optional,
-    Word,
-    ZeroOrMore,
-    alphas,
-    nums,
-    oneOf,
-)
+from pyparsing import (CaselessLiteral, Combine, Forward, Group, Literal,
+                       Optional, Word, ZeroOrMore, alphas, nums, oneOf)
 
 from ..interface import Block
 from ..interpreter import Context

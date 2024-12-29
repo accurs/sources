@@ -7,6 +7,7 @@ from typing import Optional
 
 import aiohttp
 import discord
+
 from grief.core import Config, commands
 from grief.core.commands.converter import TimedeltaConverter
 from grief.core.utils.chat_formatting import pagify
@@ -17,6 +18,7 @@ from .objects import Giveaway, GiveawayEnterError, GiveawayExecError
 
 log = logging.getLogger("grief.giveaways")
 GIVEAWAY_KEY = "giveaways"
+
 
 class Giveaways(commands.Cog):
     """Create giveaways for your server."""
@@ -73,9 +75,13 @@ class Giveaways(commands.Cog):
             if giveaway.endtime < datetime.now(timezone.utc):
                 await self.draw_winner(giveaway)
                 to_clear.append(msgid)
-                gw = await self.config.custom(GIVEAWAY_KEY, giveaway.guildid, str(msgid)).all()
+                gw = await self.config.custom(
+                    GIVEAWAY_KEY, giveaway.guildid, str(msgid)
+                ).all()
                 gw["ended"] = True
-                await self.config.custom(GIVEAWAY_KEY, giveaway.guildid, str(msgid)).set(gw)
+                await self.config.custom(
+                    GIVEAWAY_KEY, giveaway.guildid, str(msgid)
+                ).set(gw)
         for msgid in to_clear:
             del self.giveaways[msgid]
 
@@ -129,9 +135,9 @@ class Giveaways(commands.Cog):
                 GIVEAWAY_KEY, giveaway.guildid, str(giveaway.messageid)
             ).all()
             gw["ended"] = True
-            await self.config.custom(GIVEAWAY_KEY, giveaway.guildid, str(giveaway.messageid)).set(
-                gw
-            )
+            await self.config.custom(
+                GIVEAWAY_KEY, giveaway.guildid, str(giveaway.messageid)
+            ).set(gw)
             return
         if giveaway.kwargs.get("announce"):
             announce_embed = discord.Embed(
@@ -144,9 +150,11 @@ class Giveaways(commands.Cog):
                 text=f"Reroll: {(await self.bot.get_prefix(msg))[-1]}gw reroll {giveaway.messageid}"
             )
             await channel_obj.send(
-                content="Congratulations " + ",".join([x.mention for x in winner_objs])
-                if winner_objs is not None
-                else "",
+                content=(
+                    "Congratulations " + ",".join([x.mention for x in winner_objs])
+                    if winner_objs is not None
+                    else ""
+                ),
                 embed=announce_embed,
             )
         if channel_obj.permissions_for(guild.me).manage_messages:
@@ -206,7 +214,9 @@ class Giveaways(commands.Cog):
         await msg.add_reaction("🎉")
         giveaway_dict = deepcopy(giveaway_obj.__dict__)
         giveaway_dict["endtime"] = giveaway_dict["endtime"].timestamp()
-        await self.config.custom(GIVEAWAY_KEY, str(ctx.guild.id), str(msg.id)).set(giveaway_dict)
+        await self.config.custom(GIVEAWAY_KEY, str(ctx.guild.id), str(msg.id)).set(
+            giveaway_dict
+        )
 
     @giveaway.command()
     async def reroll(self, ctx: commands.Context, msgid: int):
@@ -219,9 +229,9 @@ class Giveaways(commands.Cog):
                 f"Giveaway already running. Please wait for it to end or end it via `{ctx.clean_prefix}gw end {msgid}`."
             )
         giveaway_dict = data[str(msgid)]
-        giveaway_dict["endtime"] = datetime.fromtimestamp(giveaway_dict["endtime"]).replace(
-            tzinfo=timezone.utc
-        )
+        giveaway_dict["endtime"] = datetime.fromtimestamp(
+            giveaway_dict["endtime"]
+        ).replace(tzinfo=timezone.utc)
         giveaway = Giveaway(**giveaway_dict)
         try:
             await self.draw_winner(giveaway)
@@ -287,7 +297,9 @@ class Giveaways(commands.Cog):
 
                     elif kwtitle == "Roles":
                         roles = arguments[kwarg]
-                        kwvalue = "".join(f"{ctx.guild.get_role(r).mention} " for r in roles)
+                        kwvalue = "".join(
+                            f"{ctx.guild.get_role(r).mention} " for r in roles
+                        )
                         kwtitle = "Required Roles"
                         subject = ""
 
@@ -322,7 +334,10 @@ class Giveaways(commands.Cog):
         msg = await channel.send(
             content=f"{emoji} Giveaway! {emoji}{txt}",
             embed=embed,
-            allowed_mentions=discord.AllowedMentions(roles=bool(arguments["mentions"]), everyone=bool(arguments["ateveryone"])),
+            allowed_mentions=discord.AllowedMentions(
+                roles=bool(arguments["mentions"]),
+                everyone=bool(arguments["ateveryone"]),
+            ),
         )
 
         giveaway_obj = Giveaway(
@@ -332,13 +347,19 @@ class Giveaways(commands.Cog):
             end,
             prize,
             str(emoji),
-            **{k: v for k, v in arguments.items() if k not in ["prize", "duration", "channel", "emoji"]},
+            **{
+                k: v
+                for k, v in arguments.items()
+                if k not in ["prize", "duration", "channel", "emoji"]
+            },
         )
         self.giveaways[msg.id] = giveaway_obj
         await msg.add_reaction(emoji)
         giveaway_dict = deepcopy(giveaway_obj.__dict__)
         giveaway_dict["endtime"] = giveaway_dict["endtime"].timestamp()
-        await self.config.custom(GIVEAWAY_KEY, str(ctx.guild.id), str(msg.id)).set(giveaway_dict)
+        await self.config.custom(GIVEAWAY_KEY, str(ctx.guild.id), str(msg.id)).set(
+            giveaway_dict
+        )
 
     @giveaway.command()
     async def entrants(self, ctx: commands.Context, msgid: int):
@@ -357,7 +378,11 @@ class Giveaways(commands.Cog):
         msg = ""
         for userid, count_int in count.items():
             user = ctx.guild.get_member(userid)
-            msg += f"{user.mention} ({count_int})\n" if user else f"<{userid}> ({count_int})\n"
+            msg += (
+                f"{user.mention} ({count_int})\n"
+                if user
+                else f"<{userid}> ({count_int})\n"
+            )
         embeds = []
         for page in pagify(msg, delims=["\n"], page_length=800):
             embed = discord.Embed(
@@ -410,13 +435,15 @@ class Giveaways(commands.Cog):
         embeds = []
         for page in pagify(msg, delims=["\n"]):
             embed = discord.Embed(
-                title=f"Giveaways in {ctx.guild}", description=page, color=await ctx.embed_color()
+                title=f"Giveaways in {ctx.guild}",
+                description=page,
+                color=await ctx.embed_color(),
             )
             embeds.append(embed)
         if len(embeds) == 1:
             return await ctx.send(embed=embeds[0])
         return await menu(ctx, embeds, DEFAULT_CONTROLS)
-    
+
     @giveaway.command(hidden=True)
     async def explain(self, ctx: commands.Context):
         """Explanation of giveaway advanced and the arguements it supports."""
@@ -462,7 +489,9 @@ class Giveaways(commands.Cog):
             prefix=ctx.clean_prefix
         )
         embed = discord.Embed(
-            title="Giveaway Advanced Explanation", description=msg, color=await ctx.embed_color()
+            title="Giveaway Advanced Explanation",
+            description=msg,
+            color=await ctx.embed_color(),
         )
         await ctx.send(embed=embed)
 
@@ -474,10 +503,15 @@ class Giveaways(commands.Cog):
             giveaway = self.giveaways[payload.message_id]
             if payload.emoji.is_custom_emoji() and str(payload.emoji) != giveaway.emoji:
                 return
-            elif payload.emoji.is_unicode_emoji() and str(payload.emoji) != giveaway.emoji:
+            elif (
+                payload.emoji.is_unicode_emoji()
+                and str(payload.emoji) != giveaway.emoji
+            ):
                 return
             try:
-                await giveaway.add_entrant(payload.member, bot=self.bot, session=self.session)
+                await giveaway.add_entrant(
+                    payload.member, bot=self.bot, session=self.session
+                )
             except GiveawayEnterError as e:
                 if giveaway.kwargs.get("notify", False):
                     with contextlib.suppress(discord.Forbidden):

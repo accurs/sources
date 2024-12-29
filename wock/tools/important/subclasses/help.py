@@ -1,10 +1,12 @@
-import discord
-from discord.ext import commands
-from discord.ext.commands import Context, Command, Group
-from discord import Embed
 import datetime
-from typing import List, Generator
+from typing import Generator, List
+
+import discord
+from discord import Embed
+from discord.ext import commands
+from discord.ext.commands import Command, Context, Group
 from tools.exceptions import InvalidSubCommand
+
 
 class OnCooldown(Exception):
     pass
@@ -57,14 +59,21 @@ class CogConverter(commands.Converter):
         return None
 
 
-
 class MyHelpCommand(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         if retry_after := await self.context.bot.glory_cache.ratelimited(
             f"rl:user_commands{self.context.author.id}", 2, 4
         ):
             raise commands.CommandOnCooldown(None, retry_after, None)
-        total_commands = len([c for c in self.context.bot.walk_commands() if c.cog_name and c.cog_name.lower() not in ["owner", "jishaku", "errors", "webserver"]])
+        total_commands = len(
+            [
+                c
+                for c in self.context.bot.walk_commands()
+                if c.cog_name
+                and c.cog_name.lower()
+                not in ["owner", "jishaku", "errors", "webserver"]
+            ]
+        )
         embed = discord.Embed(
             description=f"[**Wocks Website**]({self.context.bot.domain}) has **{total_commands} commands** listed",
             color=0x2B2D31,
@@ -76,9 +85,12 @@ class MyHelpCommand(commands.HelpCommand):
 
     def subcommand_not_found(self, command, string):
         if isinstance(command, Group) and len(command.all_commands) > 0:
-            raise InvalidSubCommand(f'**Command** "{command.qualified_name}" has **no subcommand named** `{string}`')
-        raise InvalidSubCommand(f'**Command** "{command.qualified_name}" **has** `no subcommands.`')
-
+            raise InvalidSubCommand(
+                f'**Command** "{command.qualified_name}" has **no subcommand named** `{string}`'
+            )
+        raise InvalidSubCommand(
+            f'**Command** "{command.qualified_name}" **has** `no subcommands.`'
+        )
 
     async def send_group_help(self, group):
         if retry_after := await self.context.bot.glory_cache.ratelimited(
@@ -127,7 +139,10 @@ class MyHelpCommand(commands.HelpCommand):
                 d = []
                 descriptions = []
                 for flag_name, flag in flags.items():
-                    if flag.get("description") and flag.get("description") not in descriptions:
+                    if (
+                        flag.get("description")
+                        and flag.get("description") not in descriptions
+                    ):
                         descriptions.append(flag.get("description"))
                         if flag["converter"] == int:
                             flag_value = "number"
@@ -146,8 +161,12 @@ class MyHelpCommand(commands.HelpCommand):
                             f = f"{description} "
                         else:
                             f = ""
-                        d.append(f"> [**{flag_name.title()}:**](https://wock.bot) **{f}{flag_value} {m}**")
-                embed.add_field(name = "Flags", value = "".join(f"{_}\n" for _ in d), inline = True)
+                        d.append(
+                            f"> [**{flag_name.title()}:**](https://wock.bot) **{f}{flag_value} {m}**"
+                        )
+                embed.add_field(
+                    name="Flags", value="".join(f"{_}\n" for _ in d), inline=True
+                )
             if len(command.aliases) > 0:
                 aliases = "".join(f"{a}, " for a in command.aliases)
                 aliases = aliases[:-2]
@@ -252,7 +271,10 @@ class MyHelpCommand(commands.HelpCommand):
             d = []
             descriptions = []
             for flag_name, flag in flags.items():
-                if flag.get("description") and flag.get("description") not in descriptions:
+                if (
+                    flag.get("description")
+                    and flag.get("description") not in descriptions
+                ):
                     descriptions.append(flag.get("description"))
                     if flag["converter"] == int:
                         flag_value = "number"
@@ -271,8 +293,12 @@ class MyHelpCommand(commands.HelpCommand):
                         f = f"{description} "
                     else:
                         f = ""
-                    d.append(f"> [**{flag_name.title()}:**](https://wock.bot) **{f}{flag_value} {m}**")
-            embed.add_field(name = "Flags", value = "".join(f"{_}\n" for _ in d), inline = True)
+                    d.append(
+                        f"> [**{flag_name.title()}:**](https://wock.bot) **{f}{flag_value} {m}**"
+                    )
+            embed.add_field(
+                name="Flags", value="".join(f"{_}\n" for _ in d), inline=True
+            )
         if len(command.aliases) > 0:
             aliases = "".join(f"{a}, " for a in command.aliases)
             aliases = aliases[:-2]
@@ -286,4 +312,3 @@ class MyHelpCommand(commands.HelpCommand):
         except AttributeError:
             pass
         return await ctx.send(embed=embed)
-

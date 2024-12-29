@@ -4,17 +4,14 @@ from enum import Enum
 from logging import getLogger
 from typing import List, Optional
 
+import config
 from aiohttp import ClientSession, ClientTimeout, ContentTypeError, CookieJar
 from cashews import cache
+from core.Mono import Mono
+from core.tools import dominant_color
 from discord import Color
 from discord.ext.commands import CommandError
 from pydantic import BaseModel, Field
-
-from core.Mono import Mono
-from core.tools import dominant_color
-
-import config
-
 
 log = getLogger("greedbot/gram")
 

@@ -1,16 +1,9 @@
 from .base import *  # noqa: F403
+from .instagram import Instagram
+from .kick import Kick
 from .tiktok import TikTok
+from .twitch import Twitch
 from .twitter import Twitter
 from .youtube import YouTube
-from .instagram import Instagram
-from .twitch import Twitch
-from .kick import Kick
 
-FEEDS = [
-    TikTok, 
-    Twitter, 
-    YouTube, 
-    Twitch, 
-    Kick, 
-    Instagram
-]
+FEEDS = [TikTok, Twitter, YouTube, Twitch, Kick, Instagram]

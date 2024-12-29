@@ -1,19 +1,16 @@
-import discord
 import asyncpg
+import discord
 from discord.ext import commands
-
-from tools.config      import emoji, color
-from tools.context     import Context
-from tools.paginator   import Simple
+from tools.config import color, emoji
+from tools.context import Context
+from tools.paginator import Simple
 
 
 class Dev(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.group(
-        aliases=["dnr"]
-    )
+    @commands.group(aliases=["dnr"])
     @commands.has_permissions(manage_channels=True)
     async def donor(self, ctx: Context):
         if ctx.invoked_subcommand is None:
@@ -39,29 +36,33 @@ class Dev(commands.Cog):
         await self.update_donor_status(member.id, add=False)
         await ctx.agree(f"**Revoked** donor from {member.mention}")
 
-    @commands.command(
-        description="Blacklist horrible people",
-        aliases=["bl"]
-    )
+    @commands.command(description="Blacklist horrible people", aliases=["bl"])
     @commands.is_owner()
-    async def blacklist(self, ctx, user: discord.User, *, reason: str = "No reason provided"):
+    async def blacklist(
+        self, ctx, user: discord.User, *, reason: str = "No reason provided"
+    ):
         async with self.client.pool.acquire() as conn:
-            result = await conn.fetchval("SELECT 1 FROM blacklist WHERE user_id = $1", str(user.id))
+            result = await conn.fetchval(
+                "SELECT 1 FROM blacklist WHERE user_id = $1", str(user.id)
+            )
             if result:
                 await ctx.deny(f"{user.mention} is **already** blacklisted.")
                 return
 
-            await conn.execute("INSERT INTO blacklist (user_id, reason) VALUES ($1, $2)", str(user.id), reason)
+            await conn.execute(
+                "INSERT INTO blacklist (user_id, reason) VALUES ($1, $2)",
+                str(user.id),
+                reason,
+            )
             await ctx.message.add_reaction(f"{emoji.agree}")
 
-    @commands.command(
-        description="Unblacklist nice people",
-        aliases=["unbl"]
-    )
+    @commands.command(description="Unblacklist nice people", aliases=["unbl"])
     @commands.is_owner()
     async def unblacklist(self, ctx, user: discord.User):
         async with self.client.pool.acquire() as conn:
-            result = await conn.fetchval("SELECT 1 FROM blacklist WHERE user_id = $1", str(user.id))
+            result = await conn.fetchval(
+                "SELECT 1 FROM blacklist WHERE user_id = $1", str(user.id)
+            )
             if not result:
                 await ctx.deny(f"{user.mention} isn't **blacklisted**")
                 return
@@ -69,9 +70,7 @@ class Dev(commands.Cog):
             await conn.execute("DELETE FROM blacklist WHERE user_id = $1", str(user.id))
             await ctx.message.add_reaction(f"{emoji.agree}")
 
-    @commands.command(
-        description="Check for all the blacklisted users"
-    )
+    @commands.command(description="Check for all the blacklisted users")
     async def blacklisted(self, ctx: commands.Context):
         rows = await self.client.pool.fetch("SELECT user_id, reason FROM blacklist")
 
@@ -83,7 +82,7 @@ class Dev(commands.Cog):
         for i in range(0, len(rows), 10):
             embed = discord.Embed(title="Blacklisted", color=color.default)
             description = ""
-            for row in rows[i:i+10]:
+            for row in rows[i : i + 10]:
                 user_id = row["user_id"]
                 reason = row["reason"]
                 user = await self.client.fetch_user(user_id)
@@ -97,18 +96,23 @@ class Dev(commands.Cog):
         await paginator.start(ctx, embeds)
 
     async def is_donor(self, user_id: int) -> bool:
-        result = await self.client.pool.fetchrow('SELECT is_donor FROM donors WHERE user_id = $1', user_id)
-        return result and result['is_donor']
+        result = await self.client.pool.fetchrow(
+            "SELECT is_donor FROM donors WHERE user_id = $1", user_id
+        )
+        return result and result["is_donor"]
 
     async def update_donor_status(self, user_id: int, add: bool):
         if add:
             await self.client.pool.execute(
-                'INSERT INTO donors (user_id, is_donor) VALUES ($1, TRUE) '
-                'ON CONFLICT (user_id) DO UPDATE SET is_donor = TRUE',
-                user_id
+                "INSERT INTO donors (user_id, is_donor) VALUES ($1, TRUE) "
+                "ON CONFLICT (user_id) DO UPDATE SET is_donor = TRUE",
+                user_id,
             )
         else:
-            await self.client.pool.execute('UPDATE donors SET is_donor = FALSE WHERE user_id = $1', user_id)
+            await self.client.pool.execute(
+                "UPDATE donors SET is_donor = FALSE WHERE user_id = $1", user_id
+            )
+
 
 async def setup(client):
     await client.add_cog(Dev(client))

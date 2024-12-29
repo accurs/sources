@@ -2,7 +2,15 @@ REDDIT_BASEURL = "https://api.reddit.com/r/{}/random"
 IMGUR_LINKS = "http://imgur.com", "https://m.imgur.com", "https://imgur.com"
 GOOD_EXTENSIONS = ".png", ".jpg", ".jpeg", ".gif"
 
-ART = ["Art", "learnart", "DrugArt", "ImaginaryLovers", "conceptart", "DigitalArt", "PixelArt"]
+ART = [
+    "Art",
+    "learnart",
+    "DrugArt",
+    "ImaginaryLovers",
+    "conceptart",
+    "DigitalArt",
+    "PixelArt",
+]
 CUTE = [
     "cute",
     "Awww",
