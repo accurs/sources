@@ -1,19 +1,18 @@
-from typing import Optional
-
-import discord 
-import psutil 
 import platform
 import time
+from datetime import datetime, timedelta
+from typing import Optional
 
-from discord import User, Member, Embed, ButtonStyle
-from discord.ext       import commands 
-from discord.utils     import format_dt, get
-from discord.ui        import Button, View
-from datetime          import datetime, timedelta
+import discord
+import psutil
+from config import color, emoji
+from discord import ButtonStyle, Embed, Member, User
+from discord.ext import commands
 from discord.ext.commands.parameters import Author
-
-from config import emoji, color
+from discord.ui import Button, View
+from discord.utils import format_dt, get
 from system.base.context import Context
+
 
 class Information(commands.Cog):
     def __init__(self, client):

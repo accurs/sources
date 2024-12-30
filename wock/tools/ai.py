@@ -1,10 +1,12 @@
-from gpt4all import GPT4All as GPT
-from asyncio import to_thread as run_safe, run
-from typing import Optional, List
+from asyncio import run
+from asyncio import to_thread as run_safe
 from datetime import datetime
-from pydantic import BaseModel
+from typing import List, Optional
+
 from aiohttp import ClientSession
+from gpt4all import GPT4All as GPT
 from orjson import loads
+from pydantic import BaseModel
 
 
 class Model(BaseModel):

@@ -2,6 +2,7 @@ import datetime
 from typing import TYPE_CHECKING
 
 from dateutil.parser import ParserError, parse
+
 from grief.core.commands import BadArgument, Context, Converter
 
 from .vexutils import get_vex_logger
@@ -27,7 +28,9 @@ else:
                 return out
             except ParserError:
                 if ctx.interaction:
-                    raise BadArgument("That's not a valid date. Example: `1 Jan` or `1 Jan 2000`.")
+                    raise BadArgument(
+                        "That's not a valid date. Example: `1 Jan` or `1 Jan 2000`."
+                    )
                 raise BadArgument(
                     f"That's not a valid date. See {ctx.clean_prefix}help"
                     f" {ctx.command.qualified_name} for more information."

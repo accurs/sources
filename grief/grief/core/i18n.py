@@ -3,15 +3,14 @@ from __future__ import annotations
 import contextlib
 import functools
 import io
-import os
 import logging
-import discord
-
-from pathlib import Path
-from typing import Callable, TYPE_CHECKING, Union, Dict, Optional, TypeVar
+import os
 from contextvars import ContextVar
+from pathlib import Path
+from typing import TYPE_CHECKING, Callable, Dict, Optional, TypeVar, Union
 
 import babel.localedata
+import discord
 from babel.core import Locale
 
 if TYPE_CHECKING:
@@ -85,7 +84,9 @@ def get_regional_format() -> str:
 
 def set_regional_format(regional_format: Optional[str]) -> None:
     global _current_regional_format
-    _current_regional_format = ContextVar("_current_regional_format", default=regional_format)
+    _current_regional_format = ContextVar(
+        "_current_regional_format", default=regional_format
+    )
 
 
 def set_contextual_regional_format(regional_format: Optional[str]) -> None:
@@ -117,7 +118,9 @@ async def get_locale_from_guild(bot: Grief, guild: Optional[discord.Guild]) -> s
     return await bot._i18n_cache.get_locale(guild)
 
 
-async def get_regional_format_from_guild(bot: Grief, guild: Optional[discord.Guild]) -> str:
+async def get_regional_format_from_guild(
+    bot: Grief, guild: Optional[discord.Guild]
+) -> str:
     """
     Get regional format for the given guild.
 
@@ -137,7 +140,9 @@ async def get_regional_format_from_guild(bot: Grief, guild: Optional[discord.Gui
     return await bot._i18n_cache.get_regional_format(guild)
 
 
-async def set_contextual_locales_from_guild(bot: Grief, guild: Optional[discord.Guild]) -> None:
+async def set_contextual_locales_from_guild(
+    bot: Grief, guild: Optional[discord.Guild]
+) -> None:
     """
     Set contextual locales (locale and regional format) for given guild context.
 
@@ -308,7 +313,9 @@ def _get_babel_locale(red_locale: str) -> babel.core.Locale:
             # Lets handle it silently and default to "en_US"
             try:
                 # Try to find a babel locale that's close to the one used by red
-                babel_locale = Locale(Locale.negotiate([red_locale], supported_locales, sep="-"))
+                babel_locale = Locale(
+                    Locale.negotiate([red_locale], supported_locales, sep="-")
+                )
             except (ValueError, TypeError, babel.core.UnknownLocaleError):
                 # If we fail to get a close match we will then default to "en_US"
                 babel_locale = Locale("en", "US")
@@ -333,7 +340,9 @@ def get_babel_locale(locale: Optional[str] = None) -> babel.core.Locale:
     return _get_babel_locale(locale)
 
 
-def get_babel_regional_format(regional_format: Optional[str] = None) -> babel.core.Locale:
+def get_babel_regional_format(
+    regional_format: Optional[str] = None,
+) -> babel.core.Locale:
     """Function to convert a regional format to a `babel.core.Locale`.
 
     If ``regional_format`` parameter is passed, this behaves the same as `get_babel_locale`.

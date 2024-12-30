@@ -2,36 +2,22 @@ import datetime
 from contextlib import suppress
 from io import BytesIO
 from typing import Union
-from discord.utils import oauth_url
+
 import humanize
 import psutil
-from discord import (
-    ButtonStyle,
-    Embed,
-    utils,
-    File,
-    Interaction,
-    Member,
-    Message,
-    Permissions,
-    Role,
-    User,
-    Invite,
-    Object,
-    __version__,
-    app_commands,
-)
+from discord import (ButtonStyle, Embed, File, Interaction, Invite, Member,
+                     Message, Object, Permissions, Role, User, __version__,
+                     app_commands, utils)
 from discord.abc import GuildChannel
-
-from discord.ext.commands import Author, Cog, command, has_permissions, hybrid_command
+from discord.ext.commands import (Author, Cog, command, has_permissions,
+                                  hybrid_command)
 from discord.ui import Button, View
 from discord.utils import format_dt, oauth_url, utcnow
 from jishaku.math import natural_size
 from psutil import Process
-
-from structure.scare import Scare
 from structure.managers import Context
 from structure.managers.discordstatus import DiscordStatus
+from structure.scare import Scare
 
 
 class DefaultBanner(Button):
@@ -112,10 +98,10 @@ class Information(Cog):
         )
         embed.add_field(
             name=f"Credits",
-            value=f"`1` **{await self.bot.fetch_user(596752300756697098)}** - Founder & Developer (`596752300756697098`)\n`2` **{await self.bot.fetch_user(1188955485462872226)}** - Owner & Developer (`1188955485462872226`)\n`3` **{await self.bot.fetch_user(1280856653230505994)}** - Owner & Developer (`1280856653230505994`)\n`4` **{await self.bot.fetch_user(1083131355984044082)}** - Owner & Developer (`1083131355984044082`)\n`5` **{await self.bot.fetch_user(809975522867412994)}** - scare's cat (`809975522867412994`)\n`6` **{await self.bot.fetch_user(1137846765576540171)}** - Creator of scare (`1137846765576540171`)"
+            value=f"`1` **{await self.bot.fetch_user(596752300756697098)}** - Founder & Developer (`596752300756697098`)\n`2` **{await self.bot.fetch_user(1188955485462872226)}** - Owner & Developer (`1188955485462872226`)\n`3` **{await self.bot.fetch_user(1280856653230505994)}** - Owner & Developer (`1280856653230505994`)\n`4` **{await self.bot.fetch_user(1083131355984044082)}** - Owner & Developer (`1083131355984044082`)\n`5` **{await self.bot.fetch_user(809975522867412994)}** - scare's cat (`809975522867412994`)\n`6` **{await self.bot.fetch_user(1137846765576540171)}** - Creator of scare (`1137846765576540171`)",
         )
         view = View().add_item(
-        Button(style=ButtonStyle.grey, label="owners", disabled=True)
+            Button(style=ButtonStyle.grey, label="owners", disabled=True)
         )
         await ctx.reply(embed=embed, view=view)
 
@@ -158,42 +144,42 @@ class Information(Cog):
                     )
 
         return await ctx.reply(embed=embed)
-    
+
     @command()
     @has_permissions(view_audit_log=True)
     async def audit(self, ctx: Context):
         """
         View the audit log
         """
-        
+
         def format_action(action: str):
             if action == "kick":
                 return "kicked"
-            
-            arr = action.split('_')
-            if arr[-1].endswith('e'):
+
+            arr = action.split("_")
+            if arr[-1].endswith("e"):
                 return f"{arr[-1]}d {' '.join(arr[:-1])}"
-            elif arr[-1].endswith('n'):
+            elif arr[-1].endswith("n"):
                 if len(arr) == 1:
                     return f"{arr[0]}ned"
                 else:
                     return f"{arr[-1]}ned {' '.join(arr[:-1])}"
-            else: 
+            else:
                 return f"{arr[-1]} {' '.join(arr[:-1])}"
-        
+
         def format_object(target):
             if isinstance(target, (Member, User)):
                 return f"[@{target.name}]({target.url})"
-            
+
             elif isinstance(target, GuildChannel):
                 return f"[#{target.name}]({target.jump_url})"
-            
+
             elif isinstance(target, Role):
                 return f"@{target.name}"
-            
+
             elif isinstance(target, Invite):
                 return f"[{target.code}]({target.url})"
-            
+
             elif isinstance(target, Object):
                 if target.type == Role:
                     return f"{f'@{ctx.guild.get_role(target.id).name}' if ctx.guild.get_role(target.id) else f'**{target.id}**'}"
@@ -201,15 +187,16 @@ class Information(Cog):
                     return f"**{target.id}**"
 
         logs = [
-            entry async for entry in ctx.guild.audit_logs() 
-            if not 'automod' in entry.action.name
+            entry
+            async for entry in ctx.guild.audit_logs()
+            if not "automod" in entry.action.name
         ]
         return await ctx.paginate(
             [
                 f"[@{entry.user.name}]({entry.user.url}) {format_action(entry.action.name)} {format_object(entry.target)}"
                 for entry in logs
             ],
-            Embed(title="Audit Log")
+            Embed(title="Audit Log"),
         )
 
     @hybrid_command()
@@ -231,30 +218,24 @@ class Information(Cog):
             ],
             Embed(title=f"Bans in {ctx.guild} ({len(bans)})"),
         )
-    
+
     @hybrid_command()
-    async def boosters(
-        self: "Information",
-        ctx: Context
-    ):
+    async def boosters(self: "Information", ctx: Context):
         """
         View all boosters
         """
 
         if not (
-            boosters := [
-                member for member in ctx.guild.members 
-                if member.premium_since
-            ]
+            boosters := [member for member in ctx.guild.members if member.premium_since]
         ):
             return await ctx.alert("There are no boosters in this server")
-        
+
         return await ctx.paginate(
             [
                 f"{member.mention} {format_dt(member.premium_since, style='R')}"
                 for member in boosters
             ],
-            Embed(title="Server boosters")
+            Embed(title="Server boosters"),
         )
 
     @hybrid_command()
@@ -394,10 +375,7 @@ class Information(Cog):
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def avatar(
-        self: "Information", 
-        ctx: Context, 
-        *, 
-        user: Union[Member, User] = Author
+        self: "Information", ctx: Context, *, user: Union[Member, User] = Author
     ) -> Message:
         """
         View a users avatar
@@ -438,10 +416,7 @@ class Information(Cog):
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def banner(
-        self: "Information", 
-        ctx: Context, 
-        *, 
-        member: Union[Member, User] = Author
+        self: "Information", ctx: Context, *, member: Union[Member, User] = Author
     ) -> Message:
         """
         View a users banner
@@ -487,15 +462,32 @@ class Information(Cog):
         """
         Get the invite for scare
         """
-        button = Button(label="invite", style=ButtonStyle.url, url=utils.oauth_url(client_id=self.bot.user.id, permissions=Permissions.all()), emoji="<:bots:1288748751086813245>")
-        button2 = Button(label="support", style=ButtonStyle.url, url="https://discord.gg/scarebot", emoji="<:home:1288749488596586549>")
-        button3 = Button(label="vote", style=ButtonStyle.url, url="https://top.gg/bot/912268358416756816", emoji="<:link:1288748791553593355>")
+        button = Button(
+            label="invite",
+            style=ButtonStyle.url,
+            url=utils.oauth_url(
+                client_id=self.bot.user.id, permissions=Permissions.all()
+            ),
+            emoji="<:bots:1288748751086813245>",
+        )
+        button2 = Button(
+            label="support",
+            style=ButtonStyle.url,
+            url="https://discord.gg/scarebot",
+            emoji="<:home:1288749488596586549>",
+        )
+        button3 = Button(
+            label="vote",
+            style=ButtonStyle.url,
+            url="https://top.gg/bot/912268358416756816",
+            emoji="<:link:1288748791553593355>",
+        )
         view = View()
         view.add_item(button)
         view.add_item(button2)
         view.add_item(button3)
         await ctx.reply(view=view)
-        
+
     @hybrid_command(
         name="uptime",
         aliases=["ut", "up"],

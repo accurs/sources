@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord.enums import ButtonStyle
+
 from grief.core.config import Config
 
 from ..vexutils import get_vex_logger
@@ -32,7 +33,10 @@ class OptionButton(discord.ui.Button):
             interaction.guild, interaction.user.id  # type:ignore
         )
 
-        if self.view.poll_settings.allow_vote_change is False and current_choice is not None:
+        if (
+            self.view.poll_settings.allow_vote_change is False
+            and current_choice is not None
+        ):
             msg = (
                 f"You've already voted for `{current_choice}`, and you can't change your vote in "
                 "this poll."
@@ -63,7 +67,9 @@ class PollView(discord.ui.View):
                 OptionButton(
                     style=option.style,
                     label=option.name,
-                    custom_id=poll_settings.unique_poll_id[:70] + "_" + option.name[:29],
+                    custom_id=poll_settings.unique_poll_id[:70]
+                    + "_"
+                    + option.name[:29],
                 )
             )
 
@@ -73,7 +79,9 @@ class PollView(discord.ui.View):
         if poll_settings.view_while_live is False:
             self.remove_item(self.view_results_btn)  # type:ignore  # yes this does work
 
-    async def get_user_voter_vote(self, guild: discord.Guild, user_id: int) -> Optional[str]:
+    async def get_user_voter_vote(
+        self, guild: discord.Guild, user_id: int
+    ) -> Optional[str]:
         """Get the vote of a user in a poll."""
         return (
             (await self.config.guild(guild).poll_user_choices())
@@ -81,14 +89,20 @@ class PollView(discord.ui.View):
             .get(str(user_id), None)  # everything is a string in config
         )
 
-    @discord.ui.button(label="View my vote", custom_id="view_vote", style=ButtonStyle.grey, row=2)
-    async def view_my_vote_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="View my vote", custom_id="view_vote", style=ButtonStyle.grey, row=2
+    )
+    async def view_my_vote_btn(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         """Show the user their current vote, if any."""
         choice = await self.get_user_voter_vote(
             interaction.guild, interaction.user.id  # type:ignore
         )
         if choice is None:
-            await interaction.response.send_message("You haven't voted yet!", ephemeral=True)
+            await interaction.response.send_message(
+                "You haven't voted yet!", ephemeral=True
+            )
         else:
             change = (
                 "Change your vote by clicking a new button."
@@ -101,9 +115,14 @@ class PollView(discord.ui.View):
             )
 
     @discord.ui.button(
-        label="View results so far", custom_id="view_results", style=ButtonStyle.grey, row=2
+        label="View results so far",
+        custom_id="view_results",
+        style=ButtonStyle.grey,
+        row=2,
     )
-    async def view_results_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def view_results_btn(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         """Show the results of the poll."""
         choice = await self.get_user_voter_vote(
             interaction.guild, interaction.user.id  # type:ignore
@@ -121,6 +140,7 @@ class PollView(discord.ui.View):
         }
 
         await interaction.response.send_message(
-            "**Results so far**:\n" + "\n".join(f"{k}: {v}" for k, v in sorted_results.items()),
+            "**Results so far**:\n"
+            + "\n".join(f"{k}: {v}" for k, v in sorted_results.items()),
             ephemeral=True,
         )

@@ -113,10 +113,10 @@ class SoundcloudPlaylists1794053211(BaseModel):
 
 class Playlists(BaseModel):
     soundcloud_playlists_1809366229: Optional[SoundcloudPlaylists1809366229] = Field(
-        None, alias='soundcloud:playlists:1809366229'
+        None, alias="soundcloud:playlists:1809366229"
     )
     soundcloud_playlists_1794053211: Optional[SoundcloudPlaylists1794053211] = Field(
-        None, alias='soundcloud:playlists:1794053211'
+        None, alias="soundcloud:playlists:1794053211"
     )
 
 
@@ -2355,7 +2355,6 @@ class SoundcloudTracks1497314884(BaseModel):
     data: Optional[Data32] = None
 
 
-
 class Product(BaseModel):
     id: Optional[str] = None
 
@@ -2446,6 +2445,7 @@ class Data36(BaseModel):
     station_permalink: Optional[str] = None
     dataRepresentation: Optional[int] = None
 
+
 class Data37(BaseModel):
     collection: Optional[List[str]] = None
     next_href: Optional[str] = None
@@ -2467,10 +2467,9 @@ class Data38(BaseModel):
     fetchingMore: Optional[bool] = None
 
 
-
 class CollectionItem(BaseModel):
     id: Optional[str] = None
-    schema_: Optional[str] = Field(None, alias='schema')
+    schema_: Optional[str] = Field(None, alias="schema")
 
 
 class Data39(BaseModel):
@@ -2479,7 +2478,6 @@ class Data39(BaseModel):
     query_urn: None = None
     id: Optional[str] = None
     fetchingMore: Optional[bool] = None
-
 
 
 class Entities(BaseModel):
@@ -2524,6 +2522,7 @@ class Entities(BaseModel):
     historicalPlays: Optional[Dict[str, Any]] = None
     playHistoryCollections: Optional[Dict[str, Any]] = None
 
+
 class MeUserUrn(BaseModel):
     status: Optional[str] = None
 
@@ -2539,31 +2538,31 @@ class SoundcloudUsersAnonymous(BaseModel):
 
 class Followings(BaseModel):
     soundcloud_users_anonymous: Optional[SoundcloudUsersAnonymous] = Field(
-        None, alias='soundcloud:users:anonymous'
+        None, alias="soundcloud:users:anonymous"
     )
 
 
 class TrackLikes(BaseModel):
     soundcloud_users_anonymous: Optional[SoundcloudUsersAnonymous] = Field(
-        None, alias='soundcloud:users:anonymous'
+        None, alias="soundcloud:users:anonymous"
     )
 
 
 class TrackReposts(BaseModel):
     soundcloud_users_anonymous: Optional[SoundcloudUsersAnonymous] = Field(
-        None, alias='soundcloud:users:anonymous'
+        None, alias="soundcloud:users:anonymous"
     )
 
 
 class PlaylistLikes(BaseModel):
     soundcloud_users_anonymous: Optional[SoundcloudUsersAnonymous] = Field(
-        None, alias='soundcloud:users:anonymous'
+        None, alias="soundcloud:users:anonymous"
     )
 
 
 class PlaylistReposts(BaseModel):
     soundcloud_users_anonymous: Optional[SoundcloudUsersAnonymous] = Field(
-        None, alias='soundcloud:users:anonymous'
+        None, alias="soundcloud:users:anonymous"
     )
 
 
@@ -2657,17 +2656,17 @@ class RuntimeConfig(BaseModel):
 
 
 class DangerouslySetInnerHTML(BaseModel):
-    field__html: Optional[str] = Field(None, alias='__html')
+    field__html: Optional[str] = Field(None, alias="__html")
 
 
 class Head(BaseModel):
     charSet: Optional[str] = None
     src: Optional[str] = None
-    async_: Optional[bool] = Field(None, alias='async')
+    async_: Optional[bool] = Field(None, alias="async")
     dangerouslySetInnerHTML: Optional[DangerouslySetInnerHTML] = None
     type: Optional[str] = None
-    data_domain_script: Optional[str] = Field(None, alias='data-domain-script')
-    data_testid: Optional[str] = Field(None, alias='data-testid')
+    data_domain_script: Optional[str] = Field(None, alias="data-domain-script")
+    data_testid: Optional[str] = Field(None, alias="data-testid")
     rel: Optional[str] = None
     sizes: Optional[str] = None
     href: Optional[str] = None
@@ -2676,7 +2675,7 @@ class Head(BaseModel):
     content: Optional[str] = None
     children: Optional[str] = None
     name: Optional[str] = None
-    as_: Optional[str] = Field(None, alias='as')
+    as_: Optional[str] = Field(None, alias="as")
 
 
 class SoundCloudUser(BaseModel):

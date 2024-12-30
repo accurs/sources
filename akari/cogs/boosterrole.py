@@ -1,14 +1,12 @@
 import asyncio
-
-from discord import Interaction, Embed, Role, PartialEmoji, Member
-from discord.ext.commands import Cog, group, has_guild_permissions
-
 from typing import Union
 
+from discord import Embed, Interaction, Member, PartialEmoji, Role
+from discord.ext.commands import Cog, group, has_guild_permissions
 from tools.bot import Akari
-from tools.helpers import AkariContext
 from tools.converters import HexColor, NewRoleConverter
-from tools.predicates import br_is_configured, has_br_role, boosted_to
+from tools.helpers import AkariContext
+from tools.predicates import boosted_to, br_is_configured, has_br_role
 
 
 class Boosterrole(Cog):

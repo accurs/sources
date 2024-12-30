@@ -4,42 +4,35 @@ License: MIT
 Copyright (c) 2019 - present AppSeed.us
 Copyright (c) 2020 - NeuroAssassin
 """
-# Flask related libraries
-from flask import Flask, url_for, session, render_template
-from flask_babel import Babel
-from waitress import serve
-
-# Terminal related libraries
-from rich import console, traceback as rtb, progress, logging as richlogging
-import logging
-
-# Secret key libraries
-from cryptography import fernet
 import base64
-
+import json
+import logging
+import os
+import sys
 # Background thread libraries
 import threading
 import time
-import websocket
 import traceback
 
+import websocket
 # Base libraries
 from babel import Locale
-import json
-import sys
-import os
-
+# Secret key libraries
+from cryptography import fernet
+# Flask related libraries
+from flask import Flask, render_template, session, url_for
+from flask_babel import Babel
 # Relative imports
-from reddash.app.constants import Lock, DEFAULTS, WS_URL, ALLOWED_LOCALES
+from reddash.app.constants import ALLOWED_LOCALES, DEFAULTS, WS_URL, Lock
 from reddash.app.tasks import TaskManager
-from reddash.app.utils import (
-    register_blueprints,
-    apply_themes,
-    add_constants,
-    initialize_babel,
-    startup_message,
-)
-
+from reddash.app.utils import (add_constants, apply_themes, initialize_babel,
+                               register_blueprints, startup_message)
+# Terminal related libraries
+from rich import console
+from rich import logging as richlogging
+from rich import progress
+from rich import traceback as rtb
+from waitress import serve
 
 # Logging and terminal set up
 
@@ -53,7 +46,9 @@ progress_bar = progress.Progress(
     "{task.description}", progress.TextColumn("{task.fields[status]}\n")
 )
 
-logging.basicConfig(format="%(message)s", handlers=[richlogging.RichHandler(console=progress_bar)])
+logging.basicConfig(
+    format="%(message)s", handlers=[richlogging.RichHandler(console=progress_bar)]
+)
 queuelog.setLevel(logging.ERROR)
 
 # Base variable setup

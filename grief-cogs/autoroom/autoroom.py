@@ -1,9 +1,9 @@
-
 from abc import ABC
 from contextlib import suppress
 from typing import Any, Optional, Union
 
 import discord
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.utils.chat_formatting import humanize_timedelta
@@ -25,7 +25,7 @@ class AutoRoom(
     metaclass=CompositeMetaClass,
 ):
     """Create automated voice channels for your server."""
-    
+
     default_global_settings = {"schema_version": 0}
     default_guild_settings = {
         "admin_access": True,

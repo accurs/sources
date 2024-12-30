@@ -1,7 +1,8 @@
-import discord
-from discord.ext import commands
 from typing import Union
+
+import discord
 from bot.managers.emojis import Colors
+from discord.ext import commands
 
 
 class InvokeClass:

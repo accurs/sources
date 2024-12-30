@@ -1,10 +1,12 @@
 import traceback
 
+
 class UserSuspended(Exception):
     def __init__(self, message):
         self.message = message
         self.traceback_info = traceback.format_exc()
         super().__init__(f"{self.message} is suspended!")
+
 
 class UserNotFound(Exception):
     def __init__(self, message):
@@ -18,4 +20,3 @@ class TweetNotFound(Exception):
         self.message = message
         self.traceback_info = traceback.format_exc()
         super().__init__(f"no tweet can be found from URL `{message}`")
-        

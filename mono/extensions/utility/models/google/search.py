@@ -83,7 +83,9 @@ class Result(BaseModel):
                     )
 
             cite = result.select_one(".cite")  # Assuming there's a way to extract cite
-            description = result.select_one(".description")  # Assuming there's a way to extract description
+            description = result.select_one(
+                ".description"
+            )  # Assuming there's a way to extract description
 
             results.append(
                 cls(
@@ -94,7 +96,9 @@ class Result(BaseModel):
                     extended_links=links,
                     tweets=tweets,
                     cite=cite.text if cite else None,  # Extract cite text
-                    description=description.text if description else None,  # Extract description text
+                    description=(
+                        description.text if description else None
+                    ),  # Extract description text
                 )
             )
 

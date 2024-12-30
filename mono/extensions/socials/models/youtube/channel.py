@@ -4,12 +4,11 @@ import re
 from typing import List, Optional
 
 from aiohttp import ClientSession
+from config import PIPED_API
+from core.client.context import Context
 from discord.ext.commands import CommandError
 from pydantic import BaseModel
 from yarl import URL
-
-from config import PIPED_API
-from core.client.context import Context
 
 from .video import Video
 

@@ -1,54 +1,44 @@
+import asyncio
 import contextlib
-import re
-
 #
 import copy
-import asyncio
-import aiohttp
+import re
 import typing
 import unicodedata
-from dataclasses import dataclass
-from datetime import timedelta, datetime  # type: ignore
-from base64 import b64decode  # type: ignore
-from io import StringIO
-from typing import Optional, Any, Union, Dict, List  # type: ignore
-from io import BytesIO
 from asyncio import gather, sleep
-from discord.ext.commands import (
-    Cog,
-    bot_has_permissions,
-    group as Group,
-    has_permissions,
-)
-from discord import (
-    Embed,
-    TextChannel,  # type: ignore  # noqa: F401
-)
-from tools.views import EmojiConfirmation  # type: ignore
-from tools.aliases import AliasConverter  # type: ignore # type: ignore
-from discord.ext.commands.errors import CommandError
-from tools.important.database import query_limit  # type: ignore
-from discord.errors import HTTPException  # type: ignore
+from base64 import b64decode  # type: ignore
+from dataclasses import dataclass
+from datetime import datetime, timedelta  # type: ignore
+from io import BytesIO, StringIO
+from logging import getLogger
+from typing import Any, Dict, List, Optional, Union  # type: ignore
+
+import aiohttp
 import discord
+from discord import TextChannel  # type: ignore  # noqa: F401
+from discord import Embed
+from discord.errors import HTTPException  # type: ignore
 from discord.ext import commands
+from discord.ext.commands import Cog, bot_has_permissions
+from discord.ext.commands import group as Group
+from discord.ext.commands import has_permissions
 from discord.ext.commands.converter import PartialEmojiConverter
-from tools.important.subclasses.color import ColorConverter  # type: ignore
-from tools.important import Context, is_donator  # type: ignore # type: ignore
-from tools.important.subclasses.command import (  # type: ignore
-    Role,
-    Sticker,
-    Attachment,
-    Image,
-    Stickers,
-    FakePermissionConverter,
-    Argument,
-    Emoji,
-)
-from tuuid import tuuid
+from discord.ext.commands.errors import CommandError
 from loguru import logger
 from pydantic import BaseModel
-from logging import getLogger
+from tools.aliases import AliasConverter  # type: ignore # type: ignore
+from tools.important import Context, is_donator  # type: ignore # type: ignore
+from tools.important.database import query_limit  # type: ignore
+from tools.important.subclasses.color import ColorConverter  # type: ignore
+from tools.important.subclasses.command import (Argument,  # type: ignore
+                                                Attachment, Emoji,
+                                                FakePermissionConverter, Image,
+                                                Role, Sticker, Stickers)
+from tools.views import EmojiConfirmation  # type: ignore
+from tuuid import tuuid
+
 log = getLogger(__name__)
+
 
 class GuildSticker(BaseModel):
     name: str
@@ -77,14 +67,22 @@ class EmojiEntry:
 
 
 class Emojis(commands.Converter):
-    async def convert(self, ctx: Context, argument: str, ref: Optional[bool] = False, multiple: Optional[bool] = False):
+    async def convert(
+        self,
+        ctx: Context,
+        argument: str,
+        ref: Optional[bool] = False,
+        multiple: Optional[bool] = False,
+    ):
         matches = None
         emojis = []
         if ctx.message.reference and ref:
             if ctx.message.reference.cached_message:
                 message = ctx.message.reference.cached_message
             else:
-                message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                message = await ctx.channel.fetch_message(
+                    ctx.message.reference.message_id
+                )
             if _matches := EMOJI_REGEX.findall(message.content):
                 matches = _matches
             else:
@@ -100,16 +98,17 @@ class Emojis(commands.Converter):
                                         matches = match
                                         break
                                     else:
-                                        string = "".join(f" {m.value}" for m in message.embeds[0].fields)
+                                        string = "".join(
+                                            f" {m.value}"
+                                            for m in message.embeds[0].fields
+                                        )
                                         matches = EMOJI_REGEX.findall(string)
                                         break
         else:
             matches = EMOJI_REGEX.findall(argument)
         for e in matches:
             emojis.append(
-                await PartialEmojiConverter().convert(
-                    ctx, f"<{e[0]}:{e[1]}:{e[2]}>"
-                )
+                await PartialEmojiConverter().convert(ctx, f"<{e[0]}:{e[1]}:{e[2]}>")
             )
         defaults = DEFAULT_EMOJIS.findall(argument)
         if len(defaults) > 0:
@@ -305,8 +304,9 @@ class Servers(Cog):
         return t
 
     async def get_timeframe(self, timeframe: str):
-        import humanfriendly
         from datetime import timedelta
+
+        import humanfriendly
 
         try:
             converted = humanfriendly.parse_timespan(timeframe)
@@ -346,7 +346,7 @@ class Servers(Cog):
         invoke_without_command=True,
         aliases=["p"],
         brief="Set up multi page embeds for your server",
-        example=",paginator {embed_code}"
+        example=",paginator {embed_code}",
     )
     async def paginator(self, ctx: Context):
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
@@ -377,12 +377,16 @@ class Servers(Cog):
     async def paginator_remove(self, ctx: Context, *, name: str):
         return await self.bot.paginators.delete(ctx, name)
 
-    @paginator.command(name="list", brief="list all paginators setup", example=",paginator list")
+    @paginator.command(
+        name="list", brief="list all paginators setup", example=",paginator list"
+    )
     @commands.has_permissions(manage_messages=True)
     async def paginator_list(self, ctx: Context):
         return await self.bot.paginators.list(ctx)
 
-    @paginator.command(name="clear", brief="Remove all existing paginators", example=",paginator clear")
+    @paginator.command(
+        name="clear", brief="Remove all existing paginators", example=",paginator clear"
+    )
     @commands.has_permissions(manage_messages=True)
     async def paginator_clear(self, ctx: Context):
         await asyncio.gather(
@@ -496,70 +500,145 @@ class Servers(Cog):
     #     )
     #     return await ctx.success("Autopfp channel was **removed**")
 
-    @Group(name="settings", aliases=["setting"], brief="Settings for your server", example=",settings")
+    @Group(
+        name="settings",
+        aliases=["setting"],
+        brief="Settings for your server",
+        example=",settings",
+    )
     async def settings(self, ctx: Context):
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
             return
         return await ctx.send_help(ctx.command)
 
-    @settings.group(name = "context", invoke_without_command = True)
+    @settings.group(name="context", invoke_without_command=True)
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def settings_context(self, ctx: Context):
         return await ctx.send_help(ctx.command)
-    
-    @settings_context.command(name = "clear", brief = "reset all of your context settings")
+
+    @settings_context.command(name="clear", brief="reset all of your context settings")
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def settings_context_reset(self, ctx: Context):
-        await self.bot.db.execute("""DELETE FROM context WHERE guild_id = $1""", ctx.guild.id)
+        await self.bot.db.execute(
+            """DELETE FROM context WHERE guild_id = $1""", ctx.guild.id
+        )
         return await ctx.success("reset your **context settings**")
-    
-    @settings_context.group(name = "success", brief = "change the success color", example = ",settings context success #303135", usage = ",settings context success {color}", invoke_without_command = True)
+
+    @settings_context.group(
+        name="success",
+        brief="change the success color",
+        example=",settings context success #303135",
+        usage=",settings context success {color}",
+        invoke_without_command=True,
+    )
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def settings_context_success(self, ctx: Context, *, color: ColorConverter):
-        await self.bot.db.execute("""INSERT INTO context (guild_id, success_color) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET success_color = excluded.success_color""", ctx.guild.id, str(color))
-        return await ctx.success(f"successfully set your **success color** to {str(color)}")
-    
-    @settings_context_success.command(name = "emoji", brief = "change the success emoji", example = ",settings context success emoji <:hi:1231421421412>", usage = ",settings context success emoji {emoji}")
+        await self.bot.db.execute(
+            """INSERT INTO context (guild_id, success_color) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET success_color = excluded.success_color""",
+            ctx.guild.id,
+            str(color),
+        )
+        return await ctx.success(
+            f"successfully set your **success color** to {str(color)}"
+        )
+
+    @settings_context_success.command(
+        name="emoji",
+        brief="change the success emoji",
+        example=",settings context success emoji <:hi:1231421421412>",
+        usage=",settings context success emoji {emoji}",
+    )
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def settings_context_success_emoji(self, ctx: Context, *, emoji: Emojis):
         emoji = emoji[0]
-        await self.bot.db.execute("""INSERT INTO context (guild_id, success_emoji) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET success_emoji = excluded.success_emoji""", ctx.guild.id, str(emoji))
-        return await ctx.success(f"successfully set your **success emoji** to {str(emoji)}")
+        await self.bot.db.execute(
+            """INSERT INTO context (guild_id, success_emoji) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET success_emoji = excluded.success_emoji""",
+            ctx.guild.id,
+            str(emoji),
+        )
+        return await ctx.success(
+            f"successfully set your **success emoji** to {str(emoji)}"
+        )
 
-    @settings_context.group(name = "fail", brief = "change the fail color", example = ",settings context fail #303135", usage = ",settings context fail {color}", invoke_without_command = True)
+    @settings_context.group(
+        name="fail",
+        brief="change the fail color",
+        example=",settings context fail #303135",
+        usage=",settings context fail {color}",
+        invoke_without_command=True,
+    )
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def settings_context_fail(self, ctx: Context, *, color: ColorConverter):
-        await self.bot.db.execute("""INSERT INTO context (guild_id, fail_color) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET fail_color = excluded.fail_color""", ctx.guild.id, str(color))
-        return await ctx.success(f"successfully set your **fail color** to {str(color)}")
-    
-    @settings_context_fail.command(name = "emoji", brief = "change the fail emoji", example = ",settings fail emoji <:hi:1231421421412>", usage = ",settings fail emoji {emoji}")
+        await self.bot.db.execute(
+            """INSERT INTO context (guild_id, fail_color) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET fail_color = excluded.fail_color""",
+            ctx.guild.id,
+            str(color),
+        )
+        return await ctx.success(
+            f"successfully set your **fail color** to {str(color)}"
+        )
+
+    @settings_context_fail.command(
+        name="emoji",
+        brief="change the fail emoji",
+        example=",settings fail emoji <:hi:1231421421412>",
+        usage=",settings fail emoji {emoji}",
+    )
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def settings_context_fail_emoji(self, ctx: Context, *, emoji: Emojis):
         emoji = emoji[0]
-        await self.bot.db.execute("""INSERT INTO context (guild_id, fail_emoji) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET fail_emoji = excluded.fail_emoji""", ctx.guild.id, str(emoji))
-        return await ctx.success(f"successfully set your **fail emoji** to {str(emoji)}")
+        await self.bot.db.execute(
+            """INSERT INTO context (guild_id, fail_emoji) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET fail_emoji = excluded.fail_emoji""",
+            ctx.guild.id,
+            str(emoji),
+        )
+        return await ctx.success(
+            f"successfully set your **fail emoji** to {str(emoji)}"
+        )
 
-    @settings_context.group(name = "warning", brief = "change the warning color", example = ",settings contextwarning #303135", usage = ",settings contextwarning {color}", invoke_without_command = True)
+    @settings_context.group(
+        name="warning",
+        brief="change the warning color",
+        example=",settings contextwarning #303135",
+        usage=",settings contextwarning {color}",
+        invoke_without_command=True,
+    )
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def settings_context_warning(self, ctx: Context, *, color: ColorConverter):
-        await self.bot.db.execute("""INSERT INTO context (guild_id, warning_color) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET warning_color = excluded.warning_color""", ctx.guild.id, str(color))
-        return await ctx.success(f"successfully set your **warning color** to {str(color)}")
-    
-    @settings_context_warning.command(name = "emoji", brief = "change the warning emoji", example = ",settings contextwarning emoji <:hi:1231421421412>", usage = ",settings contextwarning emoji {emoji}")
+        await self.bot.db.execute(
+            """INSERT INTO context (guild_id, warning_color) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET warning_color = excluded.warning_color""",
+            ctx.guild.id,
+            str(color),
+        )
+        return await ctx.success(
+            f"successfully set your **warning color** to {str(color)}"
+        )
+
+    @settings_context_warning.command(
+        name="emoji",
+        brief="change the warning emoji",
+        example=",settings contextwarning emoji <:hi:1231421421412>",
+        usage=",settings contextwarning emoji {emoji}",
+    )
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def settings_context_warning_emoji(self, ctx: Context, *, emoji: Emojis):
         emoji = emoji[0]
-        await self.bot.db.execute("""INSERT INTO context (guild_id, warning_emoji) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET warning_emoji = excluded.warning_emoji""", ctx.guild.id, str(emoji))
-        return await ctx.success(f"successfully set your **warning emoji** to {str(emoji)}")
-
+        await self.bot.db.execute(
+            """INSERT INTO context (guild_id, warning_emoji) VALUES($1, $2) ON CONFLICT(guild_id) DO UPDATE SET warning_emoji = excluded.warning_emoji""",
+            ctx.guild.id,
+            str(emoji),
+        )
+        return await ctx.success(
+            f"successfully set your **warning emoji** to {str(emoji)}"
+        )
 
     async def get_attachments(self, ctx: Context):
         if reference := ctx.message.reference:
@@ -570,13 +649,23 @@ class Servers(Cog):
             return await ctx.message.attachments[0].read()
         return None
 
-    @settings.group(name="system", aliases=["sys"], brief="Settings for system related commands", example=",settings system", invoke_without_command = True)
+    @settings.group(
+        name="system",
+        aliases=["sys"],
+        brief="Settings for system related commands",
+        example=",settings system",
+        invoke_without_command=True,
+    )
     async def system(self, ctx: Context):
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
             return
         return await ctx.send_help(ctx.command.qualified_name)
 
-    @system.command(name="boost", brief="Toggle the servers boost system message", example=",settings system boost true")
+    @system.command(
+        name="boost",
+        brief="Toggle the servers boost system message",
+        example=",settings system boost true",
+    )
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def system_boost(
@@ -604,7 +693,11 @@ class Servers(Cog):
         )
         return await ctx.success(f"**System Boost messages** set to {state}")
 
-    @system.command(name="welcome", brief="toggle the welcome system message", example=",settings system welcome true")
+    @system.command(
+        name="welcome",
+        brief="toggle the welcome system message",
+        example=",settings system welcome true",
+    )
     @bot_has_permissions(manage_guild=True)
     @has_permissions(manage_guild=True)
     async def system_welcome(
@@ -636,7 +729,7 @@ class Servers(Cog):
         name="sticker",
         alaises=("stickers",),
         brief="auto reply to the welcome system message",
-        example=",settings system sticker true"
+        example=",settings system sticker true",
     )
     @has_permissions(manage_guild=True)
     @bot_has_permissions(manage_guild=True)
@@ -651,7 +744,11 @@ class Servers(Cog):
             )
         return await ctx.success(f"**System sticker message reply** set to {state}")
 
-    @settings.command(name="banner", brief="Apply an image as the guild banner", example=",settings system banner {image}")
+    @settings.command(
+        name="banner",
+        brief="Apply an image as the guild banner",
+        example=",settings system banner {image}",
+    )
     @has_permissions(manage_guild=True)
     @bot_has_permissions(manage_guild=True)
     async def set_banner(self, ctx: Context, *, image: Image = None):
@@ -665,7 +762,11 @@ class Servers(Cog):
         )
         return await ctx.success("**Updated** the servers banner")
 
-    @settings.command(name="splash", brief="Apply an image as the guild splash", example=",settings system splash {image}")
+    @settings.command(
+        name="splash",
+        brief="Apply an image as the guild splash",
+        example=",settings system splash {image}",
+    )
     @has_permissions(manage_guild=True)
     @bot_has_permissions(manage_guild=True)
     async def set_splash(self, ctx: Context, *, image: Image = None):
@@ -680,7 +781,10 @@ class Servers(Cog):
         return await ctx.success("*Updated** the server splash")
 
     @settings.command(
-        name="icon", aliases=["pfp", "av", "avatar"], brief="Aplly an image as the guild icon", example=",settings system icon {image}"
+        name="icon",
+        aliases=["pfp", "av", "avatar"],
+        brief="Aplly an image as the guild icon",
+        example=",settings system icon {image}",
     )
     @has_permissions(manage_guild=True)
     @bot_has_permissions(manage_guild=True)
@@ -694,7 +798,10 @@ class Servers(Cog):
         return await ctx.success("**Updated** the server icon")
 
     @settings.command(
-        name="description", brief="Apply a message as the guild description", aliases=["desc"], example=",settings system description this is the best server"
+        name="description",
+        brief="Apply a message as the guild description",
+        aliases=["desc"],
+        example=",settings system description this is the best server",
     )
     @has_permissions(manage_guild=True)
     @bot_has_permissions(manage_guild=True)
@@ -760,8 +867,8 @@ class Servers(Cog):
                 return output_buffer.read()
 
     async def convert_sticker(self, img_url: str, svg: bool = False) -> discord.File:  # type: ignore
-        from rival_tools import thread  # type: ignore
         from PIL import Image, ImageSequence
+        from rival_tools import thread  # type: ignore
         from wand.image import Image as IMG
 
         @thread
@@ -834,7 +941,12 @@ class Servers(Cog):
 
         return discord.File(fp=BytesIO(conversion), filename=filename)
 
-    @sticker.command(name="add", aliases=("create",), example=",sticker add (reply to sticker)", brief="Add a sticker recently posted in chat to the server")
+    @sticker.command(
+        name="add",
+        aliases=("create",),
+        example=",sticker add (reply to sticker)",
+        brief="Add a sticker recently posted in chat to the server",
+    )
     @bot_has_permissions(manage_emojis_and_stickers=True)
     @has_permissions(manage_emojis_and_stickers=True)
     async def sticker_add(self: "Servers", ctx: Context, *, name: str):
@@ -890,10 +1002,16 @@ class Servers(Cog):
                 embed.description = "**Failed** to create the sticker with the attachment provided due to it being to large"
 
             return await message.edit(embed=embed)
-        return await ctx.success(f"**Created** the sticker [**{sticker.name}**]({sticker.url})")
+        return await ctx.success(
+            f"**Created** the sticker [**{sticker.name}**]({sticker.url})"
+        )
 
     @sticker.command(
-        name="remove", aliases=("delete",), usage="<sticker>", example=",sticker delete dumb_sticker", brief="Delete a sticker from the server",
+        name="remove",
+        aliases=("delete",),
+        usage="<sticker>",
+        example=",sticker delete dumb_sticker",
+        brief="Delete a sticker from the server",
     )
     @bot_has_permissions(manage_emojis_and_stickers=True)
     @has_permissions(manage_emojis_and_stickers=True)
@@ -907,7 +1025,11 @@ class Servers(Cog):
         return await ctx.fail("**Deleted** that sticker")
 
     @sticker.command(
-        name="rename", aliases=("name",), usage="<sticker>", example=",sticker rename dumb_sticker, new_name,", brief="Rename a sticker in the server"
+        name="rename",
+        aliases=("name",),
+        usage="<sticker>",
+        example=",sticker rename dumb_sticker, new_name,",
+        brief="Rename a sticker in the server",
     )
     @bot_has_permissions(manage_emojis_and_stickers=True)
     @has_permissions(manage_emojis_and_stickers=True)
@@ -925,7 +1047,12 @@ class Servers(Cog):
 
         return await ctx.fail(f"**Renamed** that sticker to: **{name}**")
 
-    @sticker.command(name="clean", aliases=("strip",), brief="Remove any vanity links from all stickers", example=",sticker clean")
+    @sticker.command(
+        name="clean",
+        aliases=("strip",),
+        brief="Remove any vanity links from all stickers",
+        example=",sticker clean",
+    )
     @bot_has_permissions(manage_emojis_and_stickers=True)
     @has_permissions(manage_emojis_and_stickers=True)
     async def sticker_clean(self: "Servers", ctx: Context):
@@ -963,7 +1090,11 @@ class Servers(Cog):
 
         return await ctx.success(f"**Cleaned** `{len(cleaned)}` stickers")
 
-    @sticker.command(name="tag", brief="Add your vanity link to every sticker name", example=",sticker tag")
+    @sticker.command(
+        name="tag",
+        brief="Add your vanity link to every sticker name",
+        example=",sticker tag",
+    )
     @bot_has_permissions(manage_emojis_and_stickers=True)
     @has_permissions(manage_emojis_and_stickers=True)
     async def sticker_tag(self: "Servers", ctx: Context):
@@ -991,7 +1122,12 @@ class Servers(Cog):
 
         return await ctx.success(f"**Tagged** `{len(tagged)}` stickers")
 
-    @Group(name="premiumrole", aliases=["pr", "boosterreward"], brief="Premium role settings for when users boost", example=",premiumrole")
+    @Group(
+        name="premiumrole",
+        aliases=["pr", "boosterreward"],
+        brief="Premium role settings for when users boost",
+        example=",premiumrole",
+    )
     @commands.has_permissions(manage_guild=True)
     async def premiumrole(self, ctx: Context):
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
@@ -1072,7 +1208,9 @@ class Servers(Cog):
 
         return await ctx.send_help(ctx.command.qualified_name)
 
-    @emoji.command(name="steal", brief="steal the most recently used emoji", example=",emoji steal")
+    @emoji.command(
+        name="steal", brief="steal the most recently used emoji", example=",emoji steal"
+    )
     @bot_has_permissions(manage_emojis=True)
     @has_permissions(manage_emojis=True)
     async def emoji_steal(self, ctx: Context):
@@ -1126,7 +1264,12 @@ class Servers(Cog):
         await message.edit(view=view)
         await view.wait()
 
-    @emoji.command(name="add", aliases=("create",), example=",emoji add :sad_bear:", brief="Add an emoji to the guild")
+    @emoji.command(
+        name="add",
+        aliases=("create",),
+        example=",emoji add :sad_bear:",
+        brief="Add an emoji to the guild",
+    )
     @bot_has_permissions(manage_emojis=True)
     @has_permissions(manage_emojis=True)
     async def emoji_add(
@@ -1177,7 +1320,12 @@ class Servers(Cog):
             f"**Created** the emoji [**{emoji.name}**]({emoji.url})"
         )
 
-    @emoji.command(name="addmultiple", aliases=("addmany",), example=",emoji addmultiple [all emojis]", brief="Add multiple emojis to the server")
+    @emoji.command(
+        name="addmultiple",
+        aliases=("addmany",),
+        example=",emoji addmultiple [all emojis]",
+        brief="Add multiple emojis to the server",
+    )
     @bot_has_permissions(manage_emojis=True)
     @has_permissions(manage_emojis=True)
     async def emoji_addmultiple(
@@ -1189,13 +1337,17 @@ class Servers(Cog):
         """
         Create multiple emojis
         """
-        if ctx.message.reference: emojis = await Emojis().convert(ctx, "", True, True)
-        else: 
-            if emojis: emojis = await Emojis().convert(ctx, emojis)
-            else: return await ctx.fail("Please provide **Emojis**")
+        if ctx.message.reference:
+            emojis = await Emojis().convert(ctx, "", True, True)
+        else:
+            if emojis:
+                emojis = await Emojis().convert(ctx, emojis)
+            else:
+                return await ctx.fail("Please provide **Emojis**")
         if len(ctx.guild.emojis) >= ctx.guild.emoji_limit:
             return await ctx.fail("**Server exceeds** the **emoji limit**.")
-        if emojis == None: return await ctx.fail("No **Emojis** were found")
+        if emojis == None:
+            return await ctx.fail("No **Emojis** were found")
         # I can't gather this without doing something stupid
         created = 0
         log.info(emojis)
@@ -1237,7 +1389,12 @@ class Servers(Cog):
             )
         return await ctx.success(f"**Created** `{created}` emojis")
 
-    @emoji.command(name="fromfile", aliases=("fromattachments", "fromfiles"), example=",emoji fromfile (reply to the image)", brief="Add an emoji from a file by replying to it")
+    @emoji.command(
+        name="fromfile",
+        aliases=("fromattachments", "fromfiles"),
+        example=",emoji fromfile (reply to the image)",
+        brief="Add an emoji from a file by replying to it",
+    )
     @bot_has_permissions(manage_emojis=True)
     @has_permissions(manage_emojis=True)
     async def emoji_addfromattachments(self: "Servers", ctx: Context):
@@ -1295,7 +1452,12 @@ class Servers(Cog):
 
         return await ctx.success(f"**Created** `{created}` emojis")
 
-    @emoji.command(name="remove", aliases=("delete",), example=",emoji remove [emoji]", brief="Remove an emoji from the server")
+    @emoji.command(
+        name="remove",
+        aliases=("delete",),
+        example=",emoji remove [emoji]",
+        brief="Remove an emoji from the server",
+    )
     @bot_has_permissions(manage_emojis=True)
     @has_permissions(manage_emojis=True)
     async def emoji_remove(self: "Servers", ctx: Context, *, emoji: Emoji):
@@ -1307,7 +1469,12 @@ class Servers(Cog):
         )
         return await ctx.success("**Deleted** that emoji")
 
-    @emoji.command(name="rename", aliases=("name",), example=",emoji rename :sad: megasad", brief="Rename an emoji")
+    @emoji.command(
+        name="rename",
+        aliases=("name",),
+        example=",emoji rename :sad: megasad",
+        brief="Rename an emoji",
+    )
     @bot_has_permissions(manage_emojis=True)
     @has_permissions(manage_emojis=True)
     async def emoji_rename(self: "Servers", ctx: Context, emoji: Emoji, *, name: str):
@@ -1321,7 +1488,11 @@ class Servers(Cog):
 
         return await ctx.success(f"Renamed** that emoji to: **{name}**")
 
-    @emoji.command(name="removeduplicates", brief="Remove all emojis that has a duplicate", example=",emoji removeduplicates")
+    @emoji.command(
+        name="removeduplicates",
+        brief="Remove all emojis that has a duplicate",
+        example=",emoji removeduplicates",
+    )
     @bot_has_permissions(manage_emojis=True)
     @has_permissions(manage_emojis=True)
     async def emoji_removeduplicates(self: "Servers", ctx: Context):
@@ -1371,7 +1542,12 @@ class Servers(Cog):
             if channel:
                 await self.bot.send_embed(channel, message, user=member)
 
-    @commands.command(name="embed", aliases=["ce", "createembed"], example=",embed {embed_code}", brief="Create an embed using an embed code")
+    @commands.command(
+        name="embed",
+        aliases=["ce", "createembed"],
+        example=",embed {embed_code}",
+        brief="Create an embed using an embed code",
+    )
     @commands.has_permissions(manage_messages=True)
     async def embed(self, ctx: Context, *, code: str):
         from tools.rival import EmbedException  # type: ignore # type: ignore
@@ -1384,7 +1560,12 @@ class Servers(Cog):
         except Exception as e:
             raise e
 
-    @commands.group(name="selfprefix", invoke_without_command=True, brief="Set a self prefix thats unique to you to use for wock", example=",selfprefix !")
+    @commands.group(
+        name="selfprefix",
+        invoke_without_command=True,
+        brief="Set a self prefix thats unique to you to use for wock",
+        example=",selfprefix !",
+    )
     async def selfprefix(self, ctx: Context, prefix: str = None):
         if prefix and len(prefix) > 3:
             return await ctx.fail("Prefix **cannot** be longer than `2` **characters**")
@@ -1398,7 +1579,12 @@ class Servers(Cog):
         self.bot.cache.self_prefixes[ctx.author.id] = prefix
         await ctx.success(f"**Selfprefix** has been changed to `{prefix}`")
 
-    @selfprefix.command(name="remove", aliases=["reset"], brief="Reset the self prefix you have previously set", example=",selfprefix remove")
+    @selfprefix.command(
+        name="remove",
+        aliases=["reset"],
+        brief="Reset the self prefix you have previously set",
+        example=",selfprefix remove",
+    )
     @is_donator()
     async def selfprefix_remove(self, ctx: Context):
         await self.bot.db.execute(
@@ -1410,7 +1596,12 @@ class Servers(Cog):
             pass
         await ctx.success("**Removed** your **Selfprefix**")
 
-    @commands.group(name="prefix", invoke_without_command=True, brief="Set a prefix for the bot to respond to in the guild", example=",prefix ;")
+    @commands.group(
+        name="prefix",
+        invoke_without_command=True,
+        brief="Set a prefix for the bot to respond to in the guild",
+        example=",prefix ;",
+    )
     async def prefix(self, ctx: Context, prefix: str = None):
         if prefix is not None and len(prefix) > 2:
             await ctx.fail("Prefix **cannot** be longer than **2 characters**")
@@ -1426,7 +1617,12 @@ class Servers(Cog):
             f"[**Guild Prefix**]({invite_link}) has been **changed** to `{prefix}`"
         )
 
-    @prefix.command(name="remove", aliases=["reset"], brief="Remove the custom guild prefix from the bot", example=",prefix remove")
+    @prefix.command(
+        name="remove",
+        aliases=["reset"],
+        brief="Remove the custom guild prefix from the bot",
+        example=",prefix remove",
+    )
     async def prefix_remove(self, ctx: Context):
         invite_link = await ctx.channel.create_invite()
         await self.bot.db.execute(
@@ -1868,7 +2064,7 @@ class Servers(Cog):
         brief="Allow users to create their own role after boosting the guild",
         example=",boosterroles enable",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     @check_guild_boost_level()
     async def br_enable(self, ctx: Context) -> discord.Message:
@@ -1892,7 +2088,7 @@ class Servers(Cog):
         brief="Disable booster roles in the guild",
         example=",boosterroles disable",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def br_disable(self, ctx: Context) -> discord.Message:
         if not await self.bot.db.fetchval(
@@ -1951,7 +2147,7 @@ class Servers(Cog):
         brief="Set a base role for booster roles to be created under",
         example=",boosterroles base @members",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_roles=True)
     async def br_base(self, ctx: Context, *, role: Role = None):
         if role is None:
@@ -2007,7 +2203,7 @@ class Servers(Cog):
         brief="Share your booster role with another user",
         example=",boosterroles share @o_5v",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @check_br_status()
     async def br_share(self, ctx: Context, *, member: discord.Member):
         if data := await self.bot.db.fetchval(
@@ -2032,7 +2228,7 @@ class Servers(Cog):
         example=",boosterroles create topG",
     )
     @check_br_status()
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     async def br_create(
         self, ctx: Context, *, name: str, color: int = 3447003
     ) -> discord.Message:
@@ -2070,7 +2266,7 @@ class Servers(Cog):
         brief="Remove your custom booster role from the guild",
         example=",boosterroles remove",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @check_br_status()
     async def br_delete(self, ctx: Context) -> discord.Message | None:
         author: discord.Member = typing.cast(discord.Member, ctx.author)
@@ -2101,7 +2297,7 @@ class Servers(Cog):
         brief="Rename your custom booster role in this guild",
         example=",boosterroles rename littleG",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @check_br_status()
     async def br_rename(self, ctx: Context, name: str) -> discord.Message | None:
         author: discord.Member = typing.cast(discord.Member, ctx.author)
@@ -2132,7 +2328,7 @@ class Servers(Cog):
         brief="Change the color or recolor your custom booster role in this guild",
         example=",boosterroles color #2b2d31",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @check_br_status()
     async def br_color(
         self, ctx: Context, *, color: ColorConverter
@@ -2177,7 +2373,7 @@ class Servers(Cog):
         brief="Set or Change the current icon you have set for your custom booster role in this guild",
         example=",boosterroles icon :blunt:",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @check_br_status()
     async def br_icon(
         self,
@@ -2216,16 +2412,26 @@ class Servers(Cog):
 
     # Autorole setup for guilds.
 
-    @commands.group(name="autorole", aliases=["arole"], example=",autorole", brief="Configure autorole settings through wock")
+    @commands.group(
+        name="autorole",
+        aliases=["arole"],
+        example=",autorole",
+        brief="Configure autorole settings through wock",
+    )
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     async def autorole(self, ctx: commands.Context):
         if ctx.invoked_subcommand is None:
             return await ctx.send_help(ctx.command.qualified_name)
 
-    @autorole.command(name="add", aliases=["set"], brief="Add an autorole or autoroles", example=",autorole add @member")
+    @autorole.command(
+        name="add",
+        aliases=["set"],
+        brief="Add an autorole or autoroles",
+        example=",autorole add @member",
+    )
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @query_limit("autorole", 3)
     async def autorole_add(self, ctx: commands.Context, *, roles: Role):
         if not roles:
@@ -2255,10 +2461,13 @@ class Servers(Cog):
         )
 
     @autorole.command(
-        name="remove", aliases=["delete"], brief="Remove an autorole or autoroles", example=",autorole remove member"
+        name="remove",
+        aliases=["delete"],
+        brief="Remove an autorole or autoroles",
+        example=",autorole remove member",
     )
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     async def autorole_remove(self, ctx: commands.Context, *, roles: Role):
         for role in roles:
             if not await self.bot.db.fetch(
@@ -2284,7 +2493,7 @@ class Servers(Cog):
 
     @autorole.command(name="list", brief="list all autoroles", example=",autorole list")
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     async def autorole_list(self, ctx: commands.Context):
         guild = ctx.guild
         embed = discord.Embed(title=f"{guild.name} Autoroles", color=self.bot.color)
@@ -2860,7 +3069,12 @@ class Servers(Cog):
             pass
         return await ctx.success("**Cleared** every **auto-reaction trigger**")
 
-    @autoreact.command(name="removeall", aliases=("deleteall",), example=",autoreact removeall", brief="Remove and reset every auto reaction trigger")
+    @autoreact.command(
+        name="removeall",
+        aliases=("deleteall",),
+        example=",autoreact removeall",
+        brief="Remove and reset every auto reaction trigger",
+    )
     @commands.has_permissions(manage_emojis=True)
     async def autoreact_removeall(self: "Servers", ctx: Context, trigger: str):
         if trigger not in tuple(
@@ -2994,7 +3208,12 @@ class Servers(Cog):
             )
         )
 
-    @commands.group(name="reactionrole", aliases=["reactionroles", "rr", "reactrole"], example=",reactionrole", brief="Configure reaction role settings")
+    @commands.group(
+        name="reactionrole",
+        aliases=["reactionroles", "rr", "reactrole"],
+        example=",reactionrole",
+        brief="Configure reaction role settings",
+    )
     @commands.has_permissions(manage_roles=True)
     async def reactionrole(self, ctx: Context):
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
@@ -3005,7 +3224,7 @@ class Servers(Cog):
         name="add",
         aliases=["a", "create", "c"],
         brief="Add a reaction role to a message",
-        example=",autoreaction add [message_id] [emoji] [roles]"
+        example=",autoreaction add [message_id] [emoji] [roles]",
     )
     async def reactionrole_add(
         self,
@@ -3056,7 +3275,7 @@ class Servers(Cog):
         name="remove",
         aliases=["delete", "del", "rem", "r", "d"],
         brief="Remove a reaction role from a message",
-        example=",reactionrole remove [message_id] [emoji]"
+        example=",reactionrole remove [message_id] [emoji]",
     )
     async def reactionrole_remove(
         self,
@@ -3077,7 +3296,11 @@ class Servers(Cog):
         )
         return await ctx.success("**Removed** the **reaction role**")
 
-    @reactionrole.command(name="clear", brief="Clear all reaction roles from a message", example=",reactionrole clear")
+    @reactionrole.command(
+        name="clear",
+        brief="Clear all reaction roles from a message",
+        example=",reactionrole clear",
+    )
     async def reactionrole_clear(self, ctx: Context):
         await self.bot.db.execute(
             """DELETE FROM reactionrole WHERE guild_id = $1""", ctx.guild.id
@@ -3085,7 +3308,9 @@ class Servers(Cog):
         return await ctx.success("**Cleared** all **reaction roles** if any exist")
 
     @reactionrole.command(
-        name="list", brief="View a list of all reaction roles set to messages", example=",reactionrole list"
+        name="list",
+        brief="View a list of all reaction roles set to messages",
+        example=",reactionrole list",
     )
     async def reactionrole_list(self, ctx: Context):
         rows = []
@@ -3116,7 +3341,12 @@ class Servers(Cog):
             return await ctx.fail("**No reaction roles found**")
         return await self.bot.dummy_paginator(ctx, embed, rows, 10, "reaction role")
 
-    @commands.group("autoresponder", aliases=["ar", "autoresponse"], example=",autoresponder", brief="Configure auto responses for your server")
+    @commands.group(
+        "autoresponder",
+        aliases=["ar", "autoresponse"],
+        example=",autoresponder",
+        brief="Configure auto responses for your server",
+    )
     @commands.has_permissions(manage_messages=True)
     async def autoresponder(self, ctx: Context):
         if ctx.subcommand_passed is not None:  # Check if a subcommand was passed
@@ -3127,7 +3357,7 @@ class Servers(Cog):
         name="add",
         aliases=["a", "create"],
         brief="Add an automatic response to given phrase",
-        example=",autoresponder add com, you're a troll"
+        example=",autoresponder add com, you're a troll",
     )
     async def autoresponder_add(self, ctx: Context, *, arg: Argument):
         #        if "," not in arg: return await ctx.fail('use a comma to split the trigger and response')
@@ -3153,7 +3383,7 @@ class Servers(Cog):
         name="remove",
         aliases=["del", "d", "r", "rem"],
         brief="Remove an automatic response from a given phrase",
-        example=",autoresponder remove hi"
+        example=",autoresponder remove hi",
     )
     async def autoresponder_remove(self, ctx: Context, *, trigger: str):
         if ctx.guild.id not in self.bot.cache.autoresponders:
@@ -3173,7 +3403,10 @@ class Servers(Cog):
         )
 
     @autoresponder.command(
-        name="clear", aliases=["cl"], brief="Clear all the current auto responders", example=",autoresponder clear"
+        name="clear",
+        aliases=["cl"],
+        brief="Clear all the current auto responders",
+        example=",autoresponder clear",
     )
     async def autoresponder_clear(self, ctx: Context):
         await self.bot.db.execute(
@@ -3189,7 +3422,7 @@ class Servers(Cog):
         name="list",
         aliases=["l", "show"],
         brief="Show a list of all current auto responses",
-        example=",autoresponder list"
+        example=",autoresponder list",
     )
     async def autoresponder_list(self, ctx: Context):
         rows = [

@@ -3,10 +3,9 @@ from typing import Dict, List, Optional
 
 from aiohttp import ClientResponseError
 from cashews import cache
+from config import Authorization
 from munch import Munch
 from pydantic import BaseModel
-
-from config import Authorization
 from tools.managers import Asset, ClientSession, assets  # type: ignore
 
 cache.setup("mem://")

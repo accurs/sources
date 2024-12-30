@@ -1,10 +1,13 @@
 import asyncio
-import discord
-from datetime import datetime
-from grief.core.utils.chat_formatting import pagify
 import io
 import weakref
+from datetime import datetime
 from typing import List, Optional, Union
+
+import discord
+
+from grief.core.utils.chat_formatting import pagify
+
 from .common_filters import filter_mass_mentions
 
 __all__ = ("Tunnel",)
@@ -19,7 +22,10 @@ class TunnelMeta(type):
     """
 
     def __call__(cls, *args, **kwargs):
-        lockout_tuple = ((kwargs.get("sender"), kwargs.get("origin")), kwargs.get("recipient"))
+        lockout_tuple = (
+            (kwargs.get("sender"), kwargs.get("origin")),
+            kwargs.get("recipient"),
+        )
 
         if lockout_tuple in _instances:
             return _instances[lockout_tuple]
@@ -70,7 +76,10 @@ class Tunnel(metaclass=TunnelMeta):
         *,
         sender: discord.Member,
         origin: Union[
-            discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.Thread,
         ],
         recipient: discord.User,
     ):
@@ -81,7 +90,9 @@ class Tunnel(metaclass=TunnelMeta):
 
     async def react_close(self, *, uid: int, message: str = ""):
         send_to = self.recipient if uid == self.sender.id else self.origin
-        closer = next(filter(lambda x: x.id == uid, (self.sender, self.recipient)), None)
+        closer = next(
+            filter(lambda x: x.id == uid, (self.sender, self.recipient)), None
+        )
         await send_to.send(filter_mass_mentions(message.format(closer=closer)))
 
     @property
@@ -191,11 +202,18 @@ class Tunnel(metaclass=TunnelMeta):
             The message to send to both ends of the tunnel.
         """
 
-        tasks = [destination.send(close_message) for destination in (self.recipient, self.origin)]
+        tasks = [
+            destination.send(close_message)
+            for destination in (self.recipient, self.origin)
+        ]
         await asyncio.gather(*tasks, return_exceptions=True)
 
     async def communicate(
-        self, *, message: discord.Message, topic: str = None, skip_message_content: bool = False
+        self,
+        *,
+        message: discord.Message,
+        topic: str = None,
+        skip_message_content: bool = False,
     ):
         """
         Forwards a message.
@@ -247,7 +265,9 @@ class Tunnel(metaclass=TunnelMeta):
         else:
             attach = []
 
-        rets = await self.message_forwarder(destination=send_to, content=content, files=attach)
+        rets = await self.message_forwarder(
+            destination=send_to, content=content, files=attach
+        )
 
         await message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await message.add_reaction("\N{NEGATIVE SQUARED CROSS MARK}")

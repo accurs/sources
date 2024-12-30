@@ -1,9 +1,11 @@
-from tornado.escape import url_unescape
-from .data import data
-from urllib.parse import urlparse
 from pathlib import Path
-from pydantic import BaseModel
 from typing import Optional
+from urllib.parse import urlparse
+
+from pydantic import BaseModel
+from tornado.escape import url_unescape
+
+from .data import data
 
 
 class FileType(BaseModel):

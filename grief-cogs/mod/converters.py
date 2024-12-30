@@ -1,37 +1,32 @@
 import logging
 import re
-import discord
-
-from rapidfuzz import process
-
-from typing import Union, Dict, Optional
 from datetime import timedelta
-
-from grief.core import commands, i18n
-
-from unidecode import unidecode
-
-from typing import Union, Dict
-from datetime import timedelta
-
-from discord.ext.commands.converter import Converter
-from re import Pattern
-from typing import Union
 from io import BytesIO
+from re import Pattern
+from typing import Dict, Optional, Union
 
 import discord
 import regex as re
 import unidecode
 from discord.ext.commands.converter import Converter
 from discord.ext.commands.errors import BadArgument
-from grief.core.commands import BadArgument, MemberConverter
 from rapidfuzz import process
+from unidecode import unidecode
 
-IMAGE_LINKS: Pattern = re.compile(r"(https?:\/\/[^\"\'\s]*\.(?:png|jpg|jpeg|webp|gif|png|svg)(\?size=[0-9]*)?)", flags=re.I)
+from grief.core import commands, i18n
+from grief.core.commands import BadArgument, MemberConverter
+
+IMAGE_LINKS: Pattern = re.compile(
+    r"(https?:\/\/[^\"\'\s]*\.(?:png|jpg|jpeg|webp|gif|png|svg)(\?size=[0-9]*)?)",
+    flags=re.I,
+)
 EMOJI_REGEX: Pattern = re.compile(r"(<(a)?:[a-zA-Z0-9\_]+:([0-9]+)>)")
 MENTION_REGEX: Pattern = re.compile(r"<@!?([0-9]+)>")
 ID_REGEX: Pattern = re.compile(r"[0-9]{17,}")
-VIDEO_LINKS: Pattern = re.compile(r"(https?:\/\/[^\"\'\s]*\.(?:png|jpg|jpeg|mov|mp4|webv|webp|gif|png|svg)(\?size=[0-9]*)?)", flags=re.I)
+VIDEO_LINKS: Pattern = re.compile(
+    r"(https?:\/\/[^\"\'\s]*\.(?:png|jpg|jpeg|mov|mp4|webv|webp|gif|png|svg)(\?size=[0-9]*)?)",
+    flags=re.I,
+)
 
 
 class ChannelToggle(commands.Converter):
@@ -49,7 +44,9 @@ class ChannelToggle(commands.Converter):
 
 
 class LockableChannel(commands.TextChannelConverter):
-    async def convert(self, ctx: commands.Context, arg: str) -> Optional[discord.TextChannel]:
+    async def convert(
+        self, ctx: commands.Context, arg: str
+    ) -> Optional[discord.TextChannel]:
         channel = await super().convert(ctx, arg)
         if not ctx.channel.permissions_for(ctx.me).manage_roles:
             raise commands.BadArgument(
@@ -97,7 +94,9 @@ class FuzzyRole(commands.RoleConverter):
             )
         ]
         if not result:
-            raise commands.BadArgument(f'Role "{argument}" not found.' if self.response else None)
+            raise commands.BadArgument(
+                f'Role "{argument}" not found.' if self.response else None
+            )
 
         sorted_result = sorted(result, key=lambda r: r[1], reverse=True)
         return sorted_result[0][0]
@@ -118,7 +117,9 @@ class ImageFinder(Converter):
     more general converter class.
     """
 
-    async def convert(self, ctx: commands.Context, argument: str) -> list[Union[discord.Asset, str]]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> list[Union[discord.Asset, str]]:
         attachments = ctx.message.attachments
         mentions = MENTION_REGEX.finditer(argument)
         matches = IMAGE_LINKS.finditer(argument)
@@ -167,8 +168,10 @@ class ImageFinder(Converter):
             msg = "No images provided."
             raise BadArgument(msg)
         return urls
-    
-    async def search_for_images(self, ctx: commands.Context) -> list[Union[discord.Asset, discord.Attachment, str]]:
+
+    async def search_for_images(
+        self, ctx: commands.Context
+    ) -> list[Union[discord.Asset, discord.Attachment, str]]:
         urls = []
         if not ctx.channel.permissions_for(ctx.me).read_message_history:
             msg = "I require read message history perms to find images."
@@ -195,7 +198,9 @@ class ImageFinder(Converter):
 
 
 class VideoFinder(ImageFinder):
-    async def convert(self, ctx: commands.Context, argument: str) -> list[Union[discord.Asset, str]]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> list[Union[discord.Asset, str]]:
         attachments = ctx.message.attachments
         mentions = MENTION_REGEX.finditer(argument)
         matches = VIDEO_LINKS.finditer(argument)

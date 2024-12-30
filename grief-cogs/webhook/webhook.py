@@ -1,14 +1,14 @@
-
-
 import asyncio
 import logging
 from typing import Dict, Optional, Union
 
 import aiohttp
 import discord
+
 from grief.core import Config, commands
 from grief.core.utils.chat_formatting import humanize_list, pagify
-from grief.core.utils.menus import DEFAULT_CONTROLS, close_menu, menu, start_adding_reactions
+from grief.core.utils.menus import (DEFAULT_CONTROLS, close_menu, menu,
+                                    start_adding_reactions)
 from grief.core.utils.predicates import ReactionPredicate
 
 from .converters import WebhookLinkConverter
@@ -83,7 +83,9 @@ class Webhook(commands.Cog):
         """
         channel = channel or ctx.channel
         webhook_name = webhook_name or f"{ctx.bot.user.name} Webhook"
-        creation_reason = f"Webhook creation requested by {ctx.author} ({ctx.author.id})"
+        creation_reason = (
+            f"Webhook creation requested by {ctx.author} ({ctx.author.id})"
+        )
         await channel.create_webhook(name=webhook_name, reason=creation_reason)
         await ctx.tick()
 
@@ -122,7 +124,9 @@ class Webhook(commands.Cog):
     @commands.admin_or_permissions(manage_webhooks=True)
     @commands.bot_has_permissions(manage_webhooks=True)
     @webhook.command("sudo")
-    async def webhook_sudo(self, ctx: commands.Context, member: discord.Member, *, message: str):
+    async def webhook_sudo(
+        self, ctx: commands.Context, member: discord.Member, *, message: str
+    ):
         """
         Sends a message to the channel as a webhook with the specified member's avatar and display name.
         """
@@ -234,7 +238,9 @@ class Webhook(commands.Cog):
                     roles.append(role)
                     lines.append(f"**{role}** | {role.mention}")
                     members = []
-                    for member in filter(lambda m: m not in total_members, role.members):
+                    for member in filter(
+                        lambda m: m not in total_members, role.members
+                    ):
                         total_members.add(member)
                         member_string = f"{member} ({member.id})"
                         if member.bot:
@@ -249,9 +255,12 @@ class Webhook(commands.Cog):
                 )
 
             base_embed = discord.Embed(
-                color=await ctx.embed_color(), title="Users with `Manage Webhook` Permissions"
+                color=await ctx.embed_color(),
+                title="Users with `Manage Webhook` Permissions",
             )
-            base_embed.set_footer(text=f"{len(roles)} roles | {len(total_members)} members")
+            base_embed.set_footer(
+                text=f"{len(roles)} roles | {len(total_members)} members"
+            )
             embeds = []
 
             for page in pagify("\n".join(lines)):
@@ -259,19 +268,25 @@ class Webhook(commands.Cog):
                 embed.description = page
                 embeds.append(embed)
 
-        controls = {"\N{CROSS MARK}": close_menu} if len(embeds) == 1 else DEFAULT_CONTROLS
+        controls = (
+            {"\N{CROSS MARK}": close_menu} if len(embeds) == 1 else DEFAULT_CONTROLS
+        )
         await menu(ctx, embeds, controls)
 
     @commands.max_concurrency(1, commands.BucketType.channel)
     @commands.admin_or_permissions(manage_webhooks=True)
     @webhook.group("session", invoke_without_command=True)
-    async def webhook_session(self, ctx: commands.Context, webhook_link: WebhookLinkConverter):
+    async def webhook_session(
+        self, ctx: commands.Context, webhook_link: WebhookLinkConverter
+    ):
         """Initiate a session within this channel sending messages to a specified webhook link."""
         if ctx.channel.id in self.webhook_sessions:
             return await ctx.send(
                 f"This channel already has an ongoing session. Use `{ctx.clean_prefix}webhook session close` to close it."
             )
-        session = Session(self, channel=ctx.channel, author=ctx.author, webhook=webhook_link)
+        session = Session(
+            self, channel=ctx.channel, author=ctx.author, webhook=webhook_link
+        )
         await session.initialize(ctx)
 
     @webhook_session.command("close")
@@ -308,14 +323,18 @@ class Webhook(commands.Cog):
     @commands.cooldown(5, 10, commands.BucketType.guild)
     @commands.admin_or_permissions(manage_webhooks=True)
     @webhook.command("edit")
-    async def webhook_edit(self, ctx: commands.Context, message: discord.Message, *, content: str):
+    async def webhook_edit(
+        self, ctx: commands.Context, message: discord.Message, *, content: str
+    ):
         """
         Edit a message sent by a webhook.
         """
         if not message.webhook_id:
             raise commands.BadArgument
         if not message.channel.permissions_for(ctx.me).manage_webhooks:
-            return await ctx.send(f"I need `Manage Webhook` permission in {message.channel}.")
+            return await ctx.send(
+                f"I need `Manage Webhook` permission in {message.channel}."
+            )
         webhooks = await message.channel.webhooks()
         webhook = None
         for chan_webhook in webhooks:
@@ -346,14 +365,18 @@ class Webhook(commands.Cog):
 
     @commands.is_owner()
     @webhook.command("monkeypatch", hidden=True)
-    async def webhook_monkeypatch(self, ctx: commands.Context, true_or_false: bool = None):
+    async def webhook_monkeypatch(
+        self, ctx: commands.Context, true_or_false: bool = None
+    ):
         """
         Monkeypatch `commands.Context.send` to use webhooks.
 
         Don't run this if you don't know what monkeypatch means.
         """
         target_state = (
-            true_or_false if true_or_false is not None else not (await self.config.monkey_patch())
+            true_or_false
+            if true_or_false is not None
+            else not (await self.config.monkey_patch())
         )
         await self.config.monkey_patch.set(target_state)
         if target_state:
@@ -448,7 +471,9 @@ class Webhook(commands.Cog):
                 # await delete_hook.delete()
                 return  # can't delete follower type webhooks
             creation_reason = (
-                f"Webhook creation requested by {author} ({author.id})" if author else ""
+                f"Webhook creation requested by {author} ({author.id})"
+                if author
+                else ""
             )
             if reason:
                 creation_reason += f" Reason: {reason}"

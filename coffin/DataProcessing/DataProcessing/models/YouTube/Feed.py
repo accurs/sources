@@ -6,10 +6,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+import feedparser
+from aiohttp import ClientSession
 from pydantic import BaseModel
 from typing_extensions import Self
-from aiohttp import ClientSession
-import feedparser
+
 
 class TitleDetail(BaseModel):
     type: Optional[str] = None
@@ -125,6 +126,9 @@ class YouTubeFeed(BaseModel):
     @classmethod
     async def from_id(cls, channel_id: str) -> Optional[Self]:
         async with ClientSession() as session:
-            async with session.get("https://www.youtube.com/feeds/videos.xml", params = {"channel_id": channel_id}) as response:
+            async with session.get(
+                "https://www.youtube.com/feeds/videos.xml",
+                params={"channel_id": channel_id},
+            ) as response:
                 data = await response.text()
         return cls(**feedparser.parse(data))

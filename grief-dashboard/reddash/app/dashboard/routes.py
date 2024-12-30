@@ -1,15 +1,17 @@
-from reddash.app import app
-from reddash.app.dashboard import blueprint
-from flask import render_template, redirect, url_for, session, request, jsonify, Response, g
+import datetime
+import json
+import logging
+import random
+import time
+import traceback
+
+import websocket
+from flask import (Response, g, jsonify, redirect, render_template, request,
+                   session, url_for)
 from flask_babel import _, refresh
 from jinja2 import TemplateNotFound
-import traceback
-import websocket
-import json
-import time
-import random
-import logging
-import datetime
+from reddash.app import app
+from reddash.app.dashboard import blueprint
 
 dashlog = logging.getLogger("reddash")
 
@@ -49,7 +51,9 @@ def guild(guild):
                 else:
                     dashlog.error(result["error"])
                     data = {"status": 0, "message": "Something went wrong"}
-            if isinstance(result["result"], dict) and result["result"].get("disconnected", False):
+            if isinstance(result["result"], dict) and result["result"].get(
+                "disconnected", False
+            ):
                 data = {"status": 0, "message": "Not connected to bot"}
         if not data:
             data = {"status": 1, "data": result["result"]}

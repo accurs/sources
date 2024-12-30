@@ -2,7 +2,7 @@ import getpass
 import json
 import sys
 from pathlib import Path
-from typing import Optional, Any, AsyncIterator, Tuple, Union, Callable, List
+from typing import Any, AsyncIterator, Callable, List, Optional, Tuple, Union
 
 try:
     # pylint: disable=import-error
@@ -11,7 +11,7 @@ except ModuleNotFoundError:
     asyncpg = None
 
 from ... import data_manager, errors
-from ..base import BaseDriver, IdentifierData, ConfigCategory
+from ..base import BaseDriver, ConfigCategory, IdentifierData
 from ..log import log
 
 __all__ = ["PostgresDriver"]
@@ -28,7 +28,11 @@ def encode_identifier_data(
         id_data.cog_name,
         id_data.uuid,
         id_data.category,
-        ["0"] if id_data.category == ConfigCategory.GLOBAL else list(id_data.primary_key),
+        (
+            ["0"]
+            if id_data.category == ConfigCategory.GLOBAL
+            else list(id_data.primary_key)
+        ),
         list(id_data.identifiers),
         1 if id_data.category == ConfigCategory.GLOBAL else id_data.primary_key_len,
         id_data.is_custom,
@@ -103,7 +107,11 @@ class PostgresDriver(BaseDriver):
             or None
         )
 
-        passfile = r"%APPDATA%\postgresql\pgpass.conf" if sys.platform == "win32" else "~/.pgpass"
+        passfile = (
+            r"%APPDATA%\postgresql\pgpass.conf"
+            if sys.platform == "win32"
+            else "~/.pgpass"
+        )
         password = getpass.getpass(
             f"Enter the PostgreSQL server password. The input will be hidden.\n"
             f"  NOTE: If using ident/peer authentication (no password), enter NONE.\n"
@@ -159,10 +167,15 @@ class PostgresDriver(BaseDriver):
             raise errors.CannotSetSubfield
 
     async def clear(self, identifier_data: IdentifierData):
-        await self._execute("SELECT red_config.clear($1)", encode_identifier_data(identifier_data))
+        await self._execute(
+            "SELECT red_config.clear($1)", encode_identifier_data(identifier_data)
+        )
 
     async def inc(
-        self, identifier_data: IdentifierData, value: Union[int, float], default: Union[int, float]
+        self,
+        identifier_data: IdentifierData,
+        value: Union[int, float],
+        default: Union[int, float],
     ) -> Union[int, float]:
         try:
             return await self._execute(
@@ -219,7 +232,9 @@ class PostgresDriver(BaseDriver):
             await cls._pool.execute(fs.read())
 
     @classmethod
-    async def _execute(cls, query: str, *args, method: Optional[Callable] = None) -> Any:
+    async def _execute(
+        cls, query: str, *args, method: Optional[Callable] = None
+    ) -> Any:
         if method is None:
             method = cls._pool.execute
         log.invisible("Query: %s", query)

@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Union
 from datetime import datetime
+from typing import Optional, Union
 
 import discord
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 
@@ -22,13 +23,17 @@ class MixinMeta(ABC):
     @staticmethod
     @abstractmethod
     async def _voice_perm_check(
-        ctx: commands.Context, user_voice_state: Optional[discord.VoiceState], **perms: bool
+        ctx: commands.Context,
+        user_voice_state: Optional[discord.VoiceState],
+        **perms: bool
     ) -> bool:
         raise NotImplementedError()
-    
+
     @staticmethod
     @abstractmethod
     async def _voice_perm_check(
-        ctx: commands.Context, user_voice_state: Optional[discord.VoiceState], **perms: bool
+        ctx: commands.Context,
+        user_voice_state: Optional[discord.VoiceState],
+        **perms: bool
     ) -> bool:
         raise NotImplementedError()

@@ -1,3 +1,2 @@
-
-from .events import EconomyEvents
 from .commands import Economy
+from .events import EconomyEvents

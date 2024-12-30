@@ -1,85 +1,78 @@
-import discord
-import asyncio
-import concurrent
-import logging
-import time
-import re
-import discord
-import speedtest
-import random
-import colorama
-import os
-import pathlib
-import datetime
-from grief.core import checks, commands, data_manager
-from grief.core.i18n import Translator, cog_i18n
-from grief.core.commands.context import Context
-from grief.core.bot import Grief
-from grief.core import Config, commands
-from grief.core.utils.chat_formatting import humanize_list
-from discord.utils import get
 ### FROM SERVERSTATS
 import asyncio
+import concurrent
+import datetime
+import json
 import logging
+import os
+import pathlib
+import platform
+import random
+import re
+import subprocess
+import time
+import typing as t
+from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
-from typing import Dict, List, Literal, Optional, Tuple, Union, cast
-import typing as t
-from .diskspeed import get_disk_speed
-from .dpymenu import DEFAULT_CONTROLS, confirm, menu
 from sys import executable
 from time import perf_counter
-import subprocess
-import os
-import platform
-import json
-from concurrent.futures import ThreadPoolExecutor
-import psutil
-import cpuinfo
+from typing import Dict, List, Literal, Optional, Tuple, Union, cast
 
 import aiohttp
+import colorama
+import cpuinfo
 import discord
+import psutil
+import speedtest
+from discord import Embed
+from discord.utils import get
+
 from grief import VersionInfo, version_info
-from grief.core import Config, checks, commands
+from grief.core import Config, checks, commands, data_manager
 from grief.core.bot import Grief
+from grief.core.commands.context import Context
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils import AsyncIter
-from grief.core.utils.chat_formatting import (
-    bold,
-    box,
-    escape,
-    humanize_list,
-    humanize_number,
-    humanize_timedelta,
-    pagify,
-    text_to_file,
-)
+from grief.core.utils.chat_formatting import (bold, box, escape, humanize_list,
+                                              humanize_number,
+                                              humanize_timedelta, pagify,
+                                              text_to_file)
 from grief.core.utils.menus import start_adding_reactions
 from grief.core.utils.predicates import MessagePredicate, ReactionPredicate
 
-from .converters import GuildConverter, MultiGuildConverter, PermissionConverter
+from .converters import (GuildConverter, MultiGuildConverter,
+                         PermissionConverter)
+from .diskspeed import get_disk_speed
+from .dpymenu import DEFAULT_CONTROLS, confirm, menu
 from .menus import BaseView, GuildPages, ListPages
-
-from discord import Embed
 
 _ = Translator("Owner", __file__)
 log = logging.getLogger("grief.owner")
+
 
 @cog_i18n(_)
 class Owner(commands.Cog):
     """
     Gather useful information about servers the bot is in.
     """
-    
+
     default_role = {"banned_members": []}
 
     def __init__(self, bot):
         self.bot = bot
         self.saveFolder = data_manager.cog_data_path(cog_instance=self)
         default_global: dict = {"join_channel": None}
-        default_guild: dict = {"last_checked": 0, "members": {}, "total": 0, "channels": {}}
-        self.config: Config = Config.get_conf(self, 54853421465543, force_registration=True)
+        default_guild: dict = {
+            "last_checked": 0,
+            "members": {},
+            "total": 0,
+            "channels": {},
+        }
+        self.config: Config = Config.get_conf(
+            self, 54853421465543, force_registration=True
+        )
         self.config.register_role(**self.default_role)
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
@@ -115,7 +108,9 @@ class Owner(commands.Cog):
         cmd = f"{executable} -m {command}"
 
         def exe():
-            results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            results = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+            )
             return results.stdout.decode("utf-8") or results.stderr.decode("utf-8")
 
         res = await asyncio.to_thread(exe)
@@ -161,7 +156,7 @@ class Owner(commands.Cog):
         await destination.send(message)
         await ctx.tick()
 
-    ### FROM SERVERSTATS 
+    ### FROM SERVERSTATS
     @commands.bot_has_permissions(embed_links=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.group(invoke_without_command=True)
@@ -215,7 +210,7 @@ class Owner(commands.Cog):
             await message.edit(embed=e)
         except discord.NotFound:
             return
-        
+
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         """Build and send a message containing serverinfo when the bot joins a new server"""
@@ -243,7 +238,9 @@ class Owner(commands.Cog):
             em.description = created_at
             await channel.send(embed=em)
         except Exception:
-            log.error(f"Error creating guild embed for new guild ID {guild.id}", exc_info=True)
+            log.error(
+                f"Error creating guild embed for new guild ID {guild.id}", exc_info=True
+            )
 
     async def guild_embed(self, guild: discord.Guild) -> discord.Embed:
         """
@@ -269,7 +266,7 @@ class Owner(commands.Cog):
             num=bold(f"<t:{int(guild.created_at.timestamp())}:R>"),
         )
         total_users = humanize_number(guild.member_count)
-        
+
         try:
             joined_at = guild.me.joined_at
         except AttributeError:
@@ -279,7 +276,9 @@ class Owner(commands.Cog):
         joined_on = _(
             "**{bot_name}** joined this server on **{bot_join}**.\n"
             "That's over **{since_join}**!"
-        ).format(bot_name=self.bot.user.mention, bot_join=bot_joined, since_join=since_joined)
+        ).format(
+            bot_name=self.bot.user.mention, bot_join=bot_joined, since_join=since_joined
+        )
 
         shard = (
             _("\nShard ID: **{shard_id}/{shard_count}**").format(
@@ -299,7 +298,8 @@ class Owner(commands.Cog):
             "\N{LARGE RED CIRCLE}": lambda x: x.status is discord.Status.do_not_disturb,
             "\N{MEDIUM WHITE CIRCLE}": lambda x: x.status is discord.Status.offline,
             "\N{LARGE PURPLE CIRCLE}": lambda x: (
-                x.activity is not None and x.activity.type is discord.ActivityType.streaming
+                x.activity is not None
+                and x.activity.type is discord.ActivityType.streaming
             ),
         }
         member_msg = _("Total Users: {}\n").format(bold(total_users))
@@ -349,13 +349,15 @@ class Owner(commands.Cog):
             "WELCOME_SCREEN_ENABLED": _("Welcome Screen enabled"),
         }
         guild_features_list = [
-            f"✅ {name}" for feature, name in features.items() if feature in guild.features
+            f"✅ {name}"
+            for feature, name in features.items()
+            if feature in guild.features
         ]
 
         em = discord.Embed(
             description=(f"{guild.description}\n\n" if guild.description else "")
             + f"{created_at}\n{joined_on}",
-            colour= 0x313338,
+            colour=0x313338,
         )
         author_icon = None
         if "VERIFIED" in guild.features:
@@ -371,7 +373,11 @@ class Owner(commands.Cog):
             url=guild_icon,
         )
         em.set_thumbnail(
-            url=guild.icon.url if guild.icon else "https://cdn.discordapp.com/embed/avatars/1.png"
+            url=(
+                guild.icon.url
+                if guild.icon
+                else "https://cdn.discordapp.com/embed/avatars/1.png"
+            )
         )
         em.add_field(name=_("Members:"), value=member_msg)
         em.add_field(
@@ -381,15 +387,21 @@ class Owner(commands.Cog):
                 "\N{SPEAKER WITH THREE SOUND WAVES} Voice: {voice}"
             ).format(
                 text=bold(humanize_number(text_channels)),
-                nsfw=_("\N{NO ONE UNDER EIGHTEEN SYMBOL} Nsfw: {}\n").format(
-                    bold(humanize_number(nsfw_channels))
-                )
-                if nsfw_channels
-                else "",
+                nsfw=(
+                    _("\N{NO ONE UNDER EIGHTEEN SYMBOL} Nsfw: {}\n").format(
+                        bold(humanize_number(nsfw_channels))
+                    )
+                    if nsfw_channels
+                    else ""
+                ),
                 voice=bold(humanize_number(voice_channels)),
             ),
         )
-        owner = guild.owner if guild.owner else await self.bot.get_or_fetch_user(guild.owner_id)
+        owner = (
+            guild.owner
+            if guild.owner
+            else await self.bot.get_or_fetch_user(guild.owner_id)
+        )
         em.add_field(
             name=_("Utility:"),
             value=_(
@@ -408,7 +420,11 @@ class Owner(commands.Cog):
             value=_(
                 "AFK channel: {afk_chan}\nAFK timeout: {afk_timeout}\nCustom emojis: {emojis}\nRoles: {roles}"
             ).format(
-                afk_chan=bold(str(guild.afk_channel)) if guild.afk_channel else bold(_("Not set")),
+                afk_chan=(
+                    bold(str(guild.afk_channel))
+                    if guild.afk_channel
+                    else bold(_("Not set"))
+                ),
                 afk_timeout=bold(humanize_timedelta(seconds=guild.afk_timeout)),
                 emojis=bold(humanize_number(len(guild.emojis))),
                 roles=bold(humanize_number(len(guild.roles))),
@@ -416,7 +432,9 @@ class Owner(commands.Cog):
             inline=False,
         )
         if guild_features_list:
-            em.add_field(name=_("Server features:"), value="\n".join(guild_features_list))
+            em.add_field(
+                name=_("Server features:"), value="\n".join(guild_features_list)
+            )
         if guild.premium_tier != 0:
             nitro_boost = _(
                 "Tier {boostlevel} with {nitroboosters} boosters\n"
@@ -461,7 +479,9 @@ class Owner(commands.Cog):
             em.description = created_at
             await channel.send(embed=em)
         except Exception:
-            log.error(f"Error creating guild embed for old guild ID {guild.id}", exc_info=True)
+            log.error(
+                f"Error creating guild embed for old guild ID {guild.id}", exc_info=True
+            )
 
     @commands.command()
     @checks.is_owner()
@@ -546,7 +566,11 @@ class Owner(commands.Cog):
                 map(lambda x: x.permissions_for(guild.me), guild.text_channels),
             )
             channel = next(
-                (channel for channel, perms in channels_and_perms if perms.create_instant_invite),
+                (
+                    channel
+                    for channel, perms in channels_and_perms
+                    if perms.create_instant_invite
+                ),
                 None,
             )
             if channel is None:
@@ -560,8 +584,12 @@ class Owner(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command()
     @commands.bot_has_permissions(embed_links=True)
-    @commands.bot_has_permissions(read_message_history=True, add_reactions=True, embed_links=True)
-    async def getguild(self, ctx: commands.Context, *, guild: GuildConverter = None) -> None:
+    @commands.bot_has_permissions(
+        read_message_history=True, add_reactions=True, embed_links=True
+    )
+    async def getguild(
+        self, ctx: commands.Context, *, guild: GuildConverter = None
+    ) -> None:
         """
         Display info about servers the bot is on
 
@@ -589,8 +617,12 @@ class Owner(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command()
     @commands.bot_has_permissions(embed_links=True)
-    @commands.bot_has_permissions(read_message_history=True, add_reactions=True, embed_links=True)
-    async def getguilds(self, ctx: commands.Context, *, guilds: MultiGuildConverter) -> None:
+    @commands.bot_has_permissions(
+        read_message_history=True, add_reactions=True, embed_links=True
+    )
+    async def getguilds(
+        self, ctx: commands.Context, *, guilds: MultiGuildConverter
+    ) -> None:
         """
         Display info about multiple servers
 
@@ -621,12 +653,23 @@ class Owner(commands.Cog):
         async with self.config.role(role).banned_members() as banned_list:
             for member in role.members:
                 try:
-                    assert ctx.guild.me.top_role > member.top_role and ctx.guild.owner != member
-                    if (mod_cog and await mod_cog.config.guild(ctx.guild).respect_hierarchy()) or not mod_cog:
-                        assert ctx.author.top_role > member.top_role or ctx.author == ctx.guild.owner
+                    assert (
+                        ctx.guild.me.top_role > member.top_role
+                        and ctx.guild.owner != member
+                    )
+                    if (
+                        mod_cog
+                        and await mod_cog.config.guild(ctx.guild).respect_hierarchy()
+                    ) or not mod_cog:
+                        assert (
+                            ctx.author.top_role > member.top_role
+                            or ctx.author == ctx.guild.owner
+                        )
                     await ctx.guild.ban(member)
                 except (discord.HTTPException, AssertionError):
-                    failure_list.append("{0.name}#{0.discriminator} (id {0.id})".format(member))
+                    failure_list.append(
+                        "{0.name}#{0.discriminator} (id {0.id})".format(member)
+                    )
                 else:
                     banned_list.append(member.id)
         if failure_list:
@@ -675,7 +718,9 @@ class Owner(commands.Cog):
                 await ctx.author.send(embed=embed)
                 await ctx.tick()
             except discord.Forbidden:
-                await ctx.send("Your DMs appear to be disabled, please enable them and try again.")
+                await ctx.send(
+                    "Your DMs appear to be disabled, please enable them and try again."
+                )
 
     @commands.command()
     @commands.is_owner()
@@ -804,7 +849,9 @@ class Owner(commands.Cog):
             elif stage == 6:
                 count = 256
                 size = 4194304
-            res = await self.run_disk_speed(block_count=count, block_size=size, passes=3)
+            res = await self.run_disk_speed(
+                block_count=count, block_size=size, passes=3
+            )
             write = f"{humanize_number(round(res['write'], 2))}MB/s"
             read = f"{humanize_number(round(res['read'], 2))}MB/s"
             results[f"write{stage}"] = write
@@ -828,7 +875,9 @@ class Owner(commands.Cog):
                 await ctx.author.send(embed=embed)
                 await ctx.tick()
             except discord.Forbidden:
-                await ctx.send("Your DMs appear to be disabled, please enable them and try again.")
+                await ctx.send(
+                    "Your DMs appear to be disabled, please enable them and try again."
+                )
 
     @commands.command(aliases=["istats"])
     async def invitestats(self, ctx, invite_link: str):
@@ -874,11 +923,9 @@ class Owner(commands.Cog):
                     else:
                         # If the bot is not in the guild, set member-related information to None
                         members = None
-                        online_members = (
-                            text_channels
-                        ) = (
-                            voice_channels
-                        ) = emojis_count = stickers_count = roles_count = None
+                        online_members = text_channels = voice_channels = (
+                            emojis_count
+                        ) = stickers_count = roles_count = None
 
                 elif isinstance(invite, discord.Invite):
                     # Extract information from Invite
@@ -932,11 +979,9 @@ class Owner(commands.Cog):
                     else:
                         # If the bot is not in the guild, set member-related information to None
                         members = None
-                        online_members = (
-                            text_channels
-                        ) = (
-                            voice_channels
-                        ) = emojis_count = stickers_count = roles_count = 0
+                        online_members = text_channels = voice_channels = (
+                            emojis_count
+                        ) = stickers_count = roles_count = 0
 
                 else:
                     raise ValueError("Invalid invite type")

@@ -2,14 +2,13 @@ from datetime import datetime
 from io import BytesIO
 from typing import List, Optional
 
+from core.client.cache.redis import Redis
 from discord import File, Message, Reaction, User
 from discord.http import HTTPClient
 from discord.utils import utcnow
 from pydantic import BaseModel
 from typing_extensions import Self
 from xxhash import xxh64_hexdigest
-
-from core.client.cache.redis import Redis
 
 
 class MessageAttachment(BaseModel):

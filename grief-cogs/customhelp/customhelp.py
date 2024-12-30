@@ -12,12 +12,13 @@ from typing import Dict, List, Optional
 
 import discord
 import yaml
+from tabulate import tabulate
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils import menus, predicates
 from grief.core.utils.chat_formatting import box, pagify
-from tabulate import tabulate
 
 from . import themes
 from .core import ARROWS, GLOBAL_CATEGORIES
@@ -90,12 +91,42 @@ class CustomHelp(commands.Cog):
                 "deletemessage": False,
             },
             "arrows": [
-                {"name": "force_left", "emoji": "<:grief_force_arrow_L:1107472953362370650>", "style": "secondary", "label": ""},
-                {"name": "left", "emoji": "<:grief_arrow_L:1107472938069921852>", "style": "secondary", "label": ""},
-                {"name": "cross", "emoji": "<:grief_x:1107472962333978655>", "style": "secondary", "label": ""},
-                {"name": "right", "emoji": "<:grief_arrow_R:1107472965580365836>", "style": "secondary", "label": ""},
-                {"name": "force_right", "emoji": "<:grief_force_arrow_R:1107472947758780456>", "style": "secondary", "label": ""},
-                {"name": "home", "emoji": "<:grief_home:1107472958475214918>", "style": "secondary", "label": ""},
+                {
+                    "name": "force_left",
+                    "emoji": "<:grief_force_arrow_L:1107472953362370650>",
+                    "style": "secondary",
+                    "label": "",
+                },
+                {
+                    "name": "left",
+                    "emoji": "<:grief_arrow_L:1107472938069921852>",
+                    "style": "secondary",
+                    "label": "",
+                },
+                {
+                    "name": "cross",
+                    "emoji": "<:grief_x:1107472962333978655>",
+                    "style": "secondary",
+                    "label": "",
+                },
+                {
+                    "name": "right",
+                    "emoji": "<:grief_arrow_R:1107472965580365836>",
+                    "style": "secondary",
+                    "label": "",
+                },
+                {
+                    "name": "force_right",
+                    "emoji": "<:grief_force_arrow_R:1107472947758780456>",
+                    "style": "secondary",
+                    "label": "",
+                },
+                {
+                    "name": "home",
+                    "emoji": "<:grief_home:1107472958475214918>",
+                    "style": "secondary",
+                    "label": "",
+                },
             ],
             "blacklist": {"nsfw": [], "dev": []},
         }
@@ -126,7 +157,10 @@ class CustomHelp(commands.Cog):
                     self.chelp_global["settings"]["arrows"][index]["name"],
                 )
                 ARROWS.append(
-                    Arrow(**details, emoji=self.chelp_global["settings"]["arrows"][index]["emoji"])
+                    Arrow(
+                        **details,
+                        emoji=self.chelp_global["settings"]["arrows"][index]["emoji"],
+                    )
                 )
 
     async def refresh_cache(self):
@@ -176,7 +210,12 @@ class CustomHelp(commands.Cog):
                 async with self.config.settings.arrows() as arrows:
                     for name, emoji in arrows.items():
                         new_arrows.append(
-                            {"name": name, "emoji": emoji, "style": "primary", "label": ""}
+                            {
+                                "name": name,
+                                "emoji": emoji,
+                                "style": "primary",
+                                "label": "",
+                            }
                         )
                     arrows.clear()
                 await self.config.arrows.set(new_arrows)
@@ -262,7 +301,9 @@ class CustomHelp(commands.Cog):
             for category in my_categories:
                 if category.get("is_uncat"):
                     continue
-                category["cogs"][:] = [cog for cog in category["cogs"] if cog in all_cogs]
+                category["cogs"][:] = [
+                    cog for cog in category["cogs"] if cog in all_cogs
+                ]
 
         await self.refresh_cache()
         await ctx.tick()
@@ -278,7 +319,9 @@ class CustomHelp(commands.Cog):
                 with open(check, "r", encoding="utf-8") as f:
                     try:
                         tmp = json.load(f)
-                        data[k] = [i.lower() for i in tmp["tags"]] if "tags" in tmp else []
+                        data[k] = (
+                            [i.lower() for i in tmp["tags"]] if "tags" in tmp else []
+                        )
                     except json.JSONDecodeError:
                         # TODO Implement logger you lazy bum <_<
                         print("[ERROR] Invaild JSON in cog {}".format(k))
@@ -332,7 +375,9 @@ class CustomHelp(commands.Cog):
             if i in setting_mapping:
                 other_settings.append(f"`{setting_mapping[i]:<15}`: {j}")
         val = await self.config.theme()
-        val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
+        val = "\n".join(
+            [f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()]
+        )
         emb = discord.Embed(
             title="Custom help settings",
             description=f"Cog Version: {self.__version__}",
@@ -415,7 +460,9 @@ class CustomHelp(commands.Cog):
                 return
 
         available_categories = [
-            category.name for category in GLOBAL_CATEGORIES if category.is_uncat == False
+            category.name
+            for category in GLOBAL_CATEGORIES
+            if category.is_uncat == False
         ]
         # Not using cache (GLOBAL_CATEGORIES.uncategorised.cogs) cause cog unloads aren't tracked
         all_cogs = set(self.bot.cogs.keys())
@@ -452,7 +499,9 @@ class CustomHelp(commands.Cog):
             # check if category exist
             if category in available_categories:
                 # update the existing category
-                to_config["existing"][category].extend(parse_to_config(category)["cogs"])
+                to_config["existing"][category].extend(
+                    parse_to_config(category)["cogs"]
+                )
             else:
                 to_config["new"].append(parse_to_config(category))
 
@@ -522,11 +571,13 @@ class CustomHelp(commands.Cog):
         }
         check = ["name", "desc", "long_desc", "reaction", "thumbnail", "label", "style"]
         available_categories = [
-            category.name for category in GLOBAL_CATEGORIES if category.is_uncat == False
+            category.name
+            for category in GLOBAL_CATEGORIES
+            if category.is_uncat == False
         ]
-        already_present_emojis = [str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction] + [
-            i.emoji for i in ARROWS
-        ]
+        already_present_emojis = [
+            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
+        ] + [i.emoji for i in ARROWS]
         failed = []  # example: [('desc','categoryname')]
 
         def validity_checker(category, item):
@@ -563,7 +614,9 @@ class CustomHelp(commands.Cog):
                         failed.append((item, category_name))
             else:
                 # TODO make this a lil neater for Everything failed?
-                failed.append((("[Not a valid category name]", "Everything"), category_name))
+                failed.append(
+                    (("[Not a valid category name]", "Everything"), category_name)
+                )
 
         if to_config:
             async with self.config.categories() as conf_cat:
@@ -597,7 +650,9 @@ class CustomHelp(commands.Cog):
             chain(*(category["cogs"] for category in available_categories_raw))
         )
         joined = (
-            _("Set Categories:\n") if len(available_categories_raw) > 1 else _("Set Category:\n")
+            _("Set Categories:\n")
+            if len(available_categories_raw) > 1
+            else _("Set Category:\n")
         )
         for category in available_categories_raw:
             if category.get("is_uncat") == True:
@@ -625,7 +680,9 @@ class CustomHelp(commands.Cog):
         def loader(theme, feature):
             inherit_theme = themes.list[theme]
             if hasattr(inherit_theme, self.feature_list[feature]):
-                inherit_feature = getattr(themes.list[theme], self.feature_list[feature])
+                inherit_feature = getattr(
+                    themes.list[theme], self.feature_list[feature]
+                )
                 # load up the attribute,Monkey patch me daddy UwU
                 setattr(
                     self.bot._help_formatter,
@@ -656,14 +713,20 @@ class CustomHelp(commands.Cog):
     @chelp.group(invoke_without_command=True)
     async def reset(self, ctx):
         """Resets all settings to default **custom** help \n use `[p]chelp set 0` to revert back to the old help"""
-        msg = await ctx.send("Are you sure? This will reset everything back to the default theme.")
+        msg = await ctx.send(
+            "Are you sure? This will reset everything back to the default theme."
+        )
         menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
         await ctx.bot.wait_for("reaction_add", check=pred)
         if pred.result is True:
             self.bot.reset_help_formatter()
             self.bot.set_help_formatter(
-                BaguetteHelp(self.bot, await self.config.settings(), await self.config.blacklist())
+                BaguetteHelp(
+                    self.bot,
+                    await self.config.settings(),
+                    await self.config.blacklist(),
+                )
             )
             await self.config.theme.set(
                 {"cog": None, "category": None, "command": None, "main": None}
@@ -778,9 +841,15 @@ class CustomHelp(commands.Cog):
                     new_conf_list.append(cat)
             conf_cat[:] = new_conf_list
 
-        text += _("Sucessfully removed: ") + (", ".join(to_config) + "\n") if to_config else ""
+        text += (
+            _("Sucessfully removed: ") + (", ".join(to_config) + "\n")
+            if to_config
+            else ""
+        )
         if invalid:
-            text += _("These categories aren't present in the list:\n" + ",".join(invalid))
+            text += _(
+                "These categories aren't present in the list:\n" + ",".join(invalid)
+            )
         await self.refresh_cache()
         await ctx.send(text)
 
@@ -841,7 +910,9 @@ class CustomHelp(commands.Cog):
                 + (", ".join(uncat))
             )
         if invalid:
-            text += "The following cogs are invalid or unloaded:\n" + (", ".join(invalid))
+            text += "The following cogs are invalid or unloaded:\n" + (
+                ", ".join(invalid)
+            )
 
         await self.refresh_cache()
         for page in pagify(text, page_length=1985, shorten_by=0):
@@ -856,15 +927,23 @@ class CustomHelp(commands.Cog):
         """Toggles between various menus and arrow types"""
         options = [
             discord.SelectOption(
-                label="Emojis", description="Old-Fashion, Highly ratelimited", emoji="😃"
+                label="Emojis",
+                description="Old-Fashion, Highly ratelimited",
+                emoji="😃",
             ),
-            discord.SelectOption(label="Buttons", description="Cool chonky buttons", emoji="🟦"),
+            discord.SelectOption(
+                label="Buttons", description="Cool chonky buttons", emoji="🟦"
+            ),
             discord.SelectOption(
                 label="Select", description="Minimalistic Dropdown Menus", emoji="⏬"
             ),
-            discord.SelectOption(label="Hidden", description="No components are shown", emoji="🥷"),
+            discord.SelectOption(
+                label="Hidden", description="No components are shown", emoji="🥷"
+            ),
         ]
-        select_bar_view = MenuView(ctx.author.id, self.config.settings, self._update_conf)
+        select_bar_view = MenuView(
+            ctx.author.id, self.config.settings, self._update_conf
+        )
         select_bar_view.add_item(MenuPicker(ComponentType.MENU, options))
         select_bar_view.add_item(MenuPicker(ComponentType.ARROW, options))
 
@@ -951,9 +1030,9 @@ class CustomHelp(commands.Cog):
         if not (yaml_data := await self.parse_yaml(ctx, content)):
             return
 
-        already_present_emojis = list(str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction) + [
-            i["emoji"] for i in await self.config.arrows()
-        ]
+        already_present_emojis = list(
+            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
+        ) + [i["emoji"] for i in await self.config.arrows()]
 
         parsed = {}
         failed = []  # [(reason for failure,arrow_name)]
@@ -992,7 +1071,9 @@ class CustomHelp(commands.Cog):
                 # Emoji verify
                 if emoji := details.pop("emoji", None):
                     if emoji in already_present_emojis:
-                        failed.append((("emoji", "Emoji already present as arrow"), arrow))
+                        failed.append(
+                            (("emoji", "Emoji already present as arrow"), arrow)
+                        )
                     elif converted := emoji_converter(self.bot, emoji):
                         parsed[arrow]["emoji"] = converted
 
@@ -1043,7 +1124,9 @@ class CustomHelp(commands.Cog):
                         self._update_conf("blacklist_names", "nsfw", conf)
                         await ctx.send(f"Sucessfully added {category} to nsfw category")
                     else:
-                        await ctx.send(f"{category} is already present in nsfw blocklist")
+                        await ctx.send(
+                            f"{category} is already present in nsfw blocklist"
+                        )
         else:
             await ctx.send("Invalid category name")
 

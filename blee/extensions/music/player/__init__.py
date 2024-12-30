@@ -1,17 +1,16 @@
 from contextlib import suppress
 from dataclasses import dataclass
-from pydantic import BaseModel
 from typing import List, Optional, cast
 
-from pomice import Player as DefaultPlayer, QueueEmpty, Track
-from pomice import Queue
-
-from discord import Member, Message, HTTPException
-
-from .panel import Panel
+from discord import HTTPException, Member, Message
+from pomice import Player as DefaultPlayer
+from pomice import Queue, QueueEmpty, Track
+from pydantic import BaseModel
 from tools.client.context import Context
 from tools.utilities import format_duration
 from tools.utilities.text import shorten
+
+from .panel import Panel
 
 
 class Player(DefaultPlayer):

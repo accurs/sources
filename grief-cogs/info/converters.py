@@ -5,13 +5,12 @@ from typing import List, Union
 import discord
 from discord.ext.commands.converter import IDConverter
 from discord.ext.commands.errors import BadArgument
-from rapidfuzz import process
 from fuzzywuzzy import fuzz, process
-from typing import List
+from rapidfuzz import process
 from unidecode import unidecode
+
 from grief.core import commands
 from grief.core.i18n import Translator
-from unidecode import unidecode
 
 _ = Translator("ServerStats", __file__)
 log = logging.getLogger("grief.ServerStats")
@@ -34,7 +33,9 @@ class GuildConverter(discord.app_commands.Transformer):
         result = None
         if not argument.isdigit():
             # Not a mention
-            for g in process.extractOne(argument, {g: unidecode(g.name) for g in bot.guilds}):
+            for g in process.extractOne(
+                argument, {g: unidecode(g.name) for g in bot.guilds}
+            ):
                 result = g
         else:
             guild_id = int(argument)
@@ -48,7 +49,9 @@ class GuildConverter(discord.app_commands.Transformer):
         return result
 
     @classmethod
-    async def transform(cls, interaction: discord.Interaction, argument: str) -> discord.Guild:
+    async def transform(
+        cls, interaction: discord.Interaction, argument: str
+    ) -> discord.Guild:
         ctx = await interaction.client.get_context(interaction)
         return await cls.convert(ctx, argument)
 
@@ -82,7 +85,9 @@ class MultiGuildConverter(IDConverter):
     https://github.com/Cog-Creators/Grief-DiscordBot/blob/V3/develop/redbot/cogs/mod/mod.py#L24
     """
 
-    async def convert(self, ctx: commands.Context, argument: str) -> List[discord.Guild]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> List[discord.Guild]:
         bot = ctx.bot
         match = self._get_id_match(argument)
         result = []
@@ -93,7 +98,10 @@ class MultiGuildConverter(IDConverter):
         if not match:
             # Not a mention
             for g in process.extract(
-                argument, {g: unidecode(g.name) for g in bot.guilds}, limit=None, score_cutoff=75
+                argument,
+                {g: unidecode(g.name) for g in bot.guilds},
+                limit=None,
+                score_cutoff=75,
             ):
                 result.append(g[2])
         else:
@@ -177,22 +185,33 @@ class PermissionConverter(IDConverter):
         if not result:
             raise BadArgument(f"Permission `{argument}` not found")
         return result
-    
+
+
 class FuzzyMember(IDConverter):
 
-    async def convert(self, ctx: commands.Context, argument: str) -> List[discord.Member]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> List[discord.Member]:
         bot = ctx.bot
         guild = ctx.guild
         result = []
 
         members = {m: unidecode(m.name) for m in guild.members}
-        fuzzy_results = process.extract(argument, members, limit=1000, scorer=fuzz.partial_ratio)
+        fuzzy_results = process.extract(
+            argument, members, limit=1000, scorer=fuzz.partial_ratio
+        )
         matching_names = [m[2] for m in fuzzy_results if m[1] > 90]
         for x in matching_names:
             result.append(x)
 
-        nick_members = {m: unidecode(m.nick) for m in guild.members if m.nick and m not in matching_names}
-        fuzzy_results2 = process.extract(argument, nick_members, limit=50, scorer=fuzz.partial_ratio)
+        nick_members = {
+            m: unidecode(m.nick)
+            for m in guild.members
+            if m.nick and m not in matching_names
+        }
+        fuzzy_results2 = process.extract(
+            argument, nick_members, limit=50, scorer=fuzz.partial_ratio
+        )
         matching_nicks = [m[2] for m in fuzzy_results2 if m[1] > 90]
         for x in matching_nicks:
             result.append(x)

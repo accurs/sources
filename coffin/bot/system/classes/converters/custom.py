@@ -1,14 +1,19 @@
-from discord.ext.commands import CommandError, Converter, Group, GuildConverter as GuildConv
-from system.patch.context import Context
-from fast_string_match import closest_match
-import humanfriendly
-from ..embed import Script
-import discord
-import re
 import os
+import re
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import discord
+import humanfriendly
+from aiohttp import ClientResponse
+from aiohttp import ClientSession as Session
 from discord import Client
-from aiohttp import ClientSession as Session, ClientResponse
-from typing import Tuple, List, Any, Optional, Union, Dict
+from discord.ext.commands import CommandError, Converter, Group
+from discord.ext.commands import GuildConverter as GuildConv
+from fast_string_match import closest_match
+from system.patch.context import Context
+
+from ..embed import Script
+
 
 class EmbedConverter(Converter):
     async def convert(self, ctx: Context, argument: str):
@@ -21,6 +26,7 @@ class EmbedConverter(Converter):
             raise e
         return argument
 
+
 class Boolean(Converter):
     async def convert(self, ctx: Context, argument: str):
         true = ["enable", "on", "yes", "t", "e", "y", "true"]
@@ -31,10 +37,10 @@ class Boolean(Converter):
             return False
         else:
             raise CommandError(f"{argument[:20]} is not a valid setting")
-        
 
 
 GLOBAL_COMMANDS = {}
+
 
 def find_command(bot, query):
     query = query.lower()
@@ -47,7 +53,9 @@ def find_command(bot, query):
                 aliases = command.aliases
                 for cmd in command.walk_commands():
                     for a in aliases:
-                        commands[f"{cmd.qualified_name.replace(f'{command.qualified_name}', f'{a}')}"] = cmd
+                        commands[
+                            f"{cmd.qualified_name.replace(f'{command.qualified_name}', f'{a}')}"
+                        ] = cmd
                     commands[cmd.qualified_name] = cmd
                 commands[command.qualified_name] = command
             else:
@@ -55,7 +63,7 @@ def find_command(bot, query):
                 for alias in command.aliases:
                     commands[alias] = command
         GLOBAL_COMMANDS.update(commands)
-    if not bot.command_dict: 
+    if not bot.command_dict:
         bot.get_command_dict()
     if query in bot.command_dict:
         return bot.get_command(query)
@@ -64,13 +72,14 @@ def find_command(bot, query):
     else:
         return None
 
+
 class CommandConverter(Converter):
     async def convert(self, ctx: Context, argument: str):
         argument = argument.replace("_", " ").lower()
         if not (command := find_command(ctx.bot, argument)):
             raise CommandError(f"Could not find a command named `{argument[:25]}`")
         return command
-    
+
 
 class AntinukeAction(Converter):
     async def convert(self, ctx: Context, argument: str):
@@ -82,9 +91,10 @@ class AntinukeAction(Converter):
         elif _action_ == "kick":
             return "kick"
         else:
-            raise CommandError("the only valid actions are `ban`, `kick`, and `stripstaff`")
-    
-    
+            raise CommandError(
+                "the only valid actions are `ban`, `kick`, and `stripstaff`"
+            )
+
 
 async def get_int(argument: str):
     t = ""
@@ -108,23 +118,25 @@ class Timeframe(Converter):
         if converted >= 40320:
             raise CommandError("discord's API is limited to `28 days` for timeouts")
         return converted
-    
+
 
 def validate_discord_guild_id(guild_id: str) -> bool:
     # Check if the guild_id consists only of digits and is 17 to 19 digits long
-    return bool(re.fullmatch(r'^\d{17,19}$', guild_id))
+    return bool(re.fullmatch(r"^\d{17,19}$", guild_id))
+
 
 async def get_a_response(response: ClientResponse):
     try:
         return await response.json()
-    except Exception: 
-        
+    except Exception:
+
         pass
     try:
         return await response.text()
-    except Exception: 
+    except Exception:
         pass
     return await response.read()
+
 
 async def get_response(response: ClientResponse):
     if response.content_type == "text/plain":
@@ -156,12 +168,17 @@ def convert_str(s: str) -> Optional[int]:
     except Exception:
         return None
 
+
 async def fetch_guild(guild_id: int) -> Tuple[int, Any]:
     async with Session() as session:
-        async with session.get(f"https://discord.com/api/v10/guilds/{guild_id}", headers = {"Authentication": f"Bot {os.environ['TOKEN']}"}) as response:
+        async with session.get(
+            f"https://discord.com/api/v10/guilds/{guild_id}",
+            headers={"Authentication": f"Bot {os.environ['TOKEN']}"},
+        ) as response:
             data = await get_response(response)
             status = int(response.status)
     return status, data
+
 
 def get_valid_ints(message: Union[discord.Message, str]) -> list:
     content = message if isinstance(message, str) else message.content
@@ -171,12 +188,16 @@ def get_valid_ints(message: Union[discord.Message, str]) -> list:
                 g = int(content)
                 if check := validate_discord_guild_id(content):
                     return [g]
-        except Exception: 
+        except Exception:
             pass
     except Exception:
         pass
-    return [convert_str(d) for d in (part for part in content.split() for part in part.split()) if convert_str(d) is not None]
-    
+    return [
+        convert_str(d)
+        for d in (part for part in content.split() for part in part.split())
+        if convert_str(d) is not None
+    ]
+
 
 async def fetch_invite(bot: Client, invite: Union[discord.Invite, str]) -> int:
     if isinstance(invite, str):
@@ -203,6 +224,7 @@ async def fetch_invite(bot: Client, invite: Union[discord.Invite, str]) -> int:
             except Exception:
                 return invite.id
     return None
+
 
 class GConverter(Converter):
     async def convert(self, ctx: Context, argument: str) -> Optional[int]:
@@ -255,6 +277,7 @@ class GuildConverter(Converter):
         except Exception:
             return None
 
+
 class Expiration(Converter):
     async def convert(self, ctx: Context, argument: str):
         try:
@@ -266,5 +289,7 @@ class Expiration(Converter):
         if ctx.command:
             if ctx.command.qualified_name == "timeout":
                 if converted >= 40320:
-                    raise CommandError("discord's API is limited to `28 days` for timeouts")
+                    raise CommandError(
+                        "discord's API is limited to `28 days` for timeouts"
+                    )
         return converted

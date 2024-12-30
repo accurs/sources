@@ -6,13 +6,14 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import discord
+from rich.table import Table  # type:ignore
+
 from grief.core import Config, commands
 from grief.core.commands import CheckFailure
 from grief.core.utils import AsyncIter
 from grief.core.utils.chat_formatting import box, pagify, warning
 from grief.core.utils.menus import start_adding_reactions
 from grief.core.utils.predicates import ReactionPredicate
-from rich.table import Table  # type:ignore
 
 from .abc import MixinMeta
 from .components.setup import SetupView
@@ -68,7 +69,9 @@ class BirthdayCommands(MixinMeta):
         # year as 1 means year not specified
 
         if birthday.year != 1 and birthday.year < MIN_BDAY_YEAR:
-            await ctx.send(f"I'm sorry, but I can't set your birthday to before {MIN_BDAY_YEAR}.")
+            await ctx.send(
+                f"I'm sorry, but I can't set your birthday to before {MIN_BDAY_YEAR}."
+            )
             return
 
         if birthday > datetime.datetime.utcnow():
@@ -127,12 +130,18 @@ class BirthdayCommands(MixinMeta):
             assert ctx.guild is not None
 
         if days < 1 or days > 365:
-            await ctx.send("You must enter a number of days greater than 0 and smaller than 365.")
+            await ctx.send(
+                "You must enter a number of days greater than 0 and smaller than 365."
+            )
             return
 
-        today_dt = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_dt = datetime.datetime.utcnow().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
-        all_birthdays: dict[int, dict[str, dict]] = await self.config.all_members(ctx.guild)
+        all_birthdays: dict[int, dict[str, dict]] = await self.config.all_members(
+            ctx.guild
+        )
 
         log.trace("raw data for all bdays: %s", all_birthdays)
 
@@ -140,7 +149,9 @@ class BirthdayCommands(MixinMeta):
         number_day_mapping: dict[int, str] = {}
 
         async for member_id, member_data in AsyncIter(all_birthdays.items(), steps=50):
-            if not member_data["birthday"]:  # birthday removed but user remains in config
+            if not member_data[
+                "birthday"
+            ]:  # birthday removed but user remains in config
                 continue
             member = ctx.guild.get_member(member_id)
             if not isinstance(member, discord.Member):
@@ -166,14 +177,18 @@ class BirthdayCommands(MixinMeta):
 
             this_year_bday = birthday_dt.replace(year=today_dt.year)
             next_year_bday = birthday_dt.replace(year=today_dt.year + 1)
-            next_birthday_dt = this_year_bday if this_year_bday > today_dt else next_year_bday
+            next_birthday_dt = (
+                this_year_bday if this_year_bday > today_dt else next_year_bday
+            )
 
             diff = next_birthday_dt - today_dt
             if diff.days > days:
                 continue
 
             next_bday_year = (
-                today_dt.year if today_dt.year == next_birthday_dt.year else today_dt.year + 1
+                today_dt.year
+                if today_dt.year == next_birthday_dt.year
+                else today_dt.year + 1
             )
 
             parsed_bdays[diff.days].append(
@@ -194,7 +209,9 @@ class BirthdayCommands(MixinMeta):
 
         sorted_parsed_bdays = sorted(parsed_bdays.items(), key=lambda x: x[0])
 
-        embed = discord.Embed(title="Upcoming Birthdays", colour=await ctx.embed_colour())
+        embed = discord.Embed(
+            title="Upcoming Birthdays", colour=await ctx.embed_colour()
+        )
 
         if len(parsed_bdays) > 25:
             embed.description = "Too many days to display. I've had to stop at 25."
@@ -214,7 +231,9 @@ class BirthdayAdminCommands(MixinMeta):
 
     @birthdaydebug.command(name="upcoming")
     async def debug_upcoming(self, ctx: commands.Context):
-        await ctx.send_interactive(pagify(str(await self.config.all_members(ctx.guild))), "py")
+        await ctx.send_interactive(
+            pagify(str(await self.config.all_members(ctx.guild))), "py"
+        )
 
     @commands.group()
     @commands.guild_only()  # type:ignore
@@ -233,7 +252,9 @@ class BirthdayAdminCommands(MixinMeta):
         if TYPE_CHECKING:
             assert isinstance(ctx.author, discord.Member)
 
-        await ctx.send("Click below to start.", view=SetupView(ctx.author, self.bot, self.config))
+        await ctx.send(
+            "Click below to start.", view=SetupView(ctx.author, self.bot, self.config)
+        )
 
     @bdset.command()
     async def settings(self, ctx: commands.Context):
@@ -257,7 +278,9 @@ class BirthdayAdminCommands(MixinMeta):
             if conf["time_utc_s"] is None:
                 time = "invalid"
             else:
-                time = datetime.datetime.utcfromtimestamp(conf["time_utc_s"]).strftime("%H:%M UTC")
+                time = datetime.datetime.utcfromtimestamp(conf["time_utc_s"]).strftime(
+                    "%H:%M UTC"
+                )
                 table.add_row("Time", time)
 
             table.add_row("Allow role mentions", str(conf["allow_role_mention"]))
@@ -475,7 +498,9 @@ class BirthdayAdminCommands(MixinMeta):
 
         # no need to check hierarchy for author, since command is locked to admins
         if ctx.me.top_role < role:
-            await ctx.send(f"I can't use {role.name} because it is higher than my highest role.")
+            await ctx.send(
+                f"I can't use {role.name} because it is higher than my highest role."
+            )
             return
 
         async with self.config.guild(ctx.guild).all() as conf:
@@ -488,7 +513,11 @@ class BirthdayAdminCommands(MixinMeta):
 
     @bdset.command()
     async def forceset(
-        self, ctx: commands.Context, user: discord.Member, *, birthday: BirthdayConverter
+        self,
+        ctx: commands.Context,
+        user: discord.Member,
+        *,
+        birthday: BirthdayConverter,
     ):
         """
         Force-set a specific user's birthday.
@@ -505,7 +534,9 @@ class BirthdayAdminCommands(MixinMeta):
             to 1/1/2000
         """
         if birthday.year != 1 and birthday.year < MIN_BDAY_YEAR:
-            await ctx.send(f"I'm sorry, but I can't set a birthday to before {MIN_BDAY_YEAR}.")
+            await ctx.send(
+                f"I'm sorry, but I can't set a birthday to before {MIN_BDAY_YEAR}."
+            )
             return
 
         if birthday > datetime.datetime.utcnow():
@@ -627,7 +658,9 @@ class BirthdayAdminCommands(MixinMeta):
                         "month": dt.month,
                         "day": dt.day,
                     }
-                    await self.config.member_from_ids(guild_id, user_id).birthday.set(new_data)
+                    await self.config.member_from_ids(guild_id, user_id).birthday.set(
+                        new_data
+                    )
 
         await ctx.send(
             "All set. You can now configure the messages and time to send with other commands"

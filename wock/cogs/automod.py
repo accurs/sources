@@ -1,10 +1,11 @@
+from asyncio import gather
+from typing import Union  # type: ignore
+
 import discord
 import humanfriendly
-from asyncio import gather
+from discord import Guild
 from discord.ext import commands
 from tools.important import Context  # type: ignore
-from typing import Union  # type: ignore
-from discord import Guild
 from tools.wock import Wock  # type: ignore
 
 TUPLE = ()
@@ -34,7 +35,7 @@ class Automod(commands.Cog):
         ),
         invoke_without_command=False,
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def _filter(self: "Automod", ctx: Context):
         """
@@ -48,7 +49,7 @@ class Automod(commands.Cog):
         description="Clear every filtered word in this server",
         example=",filter clear",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_clear(self: "Automod", ctx: Context):
         await self.check_setup(ctx.guild)
@@ -74,7 +75,7 @@ class Automod(commands.Cog):
         brief="Add a filter word to the filter list",
         example=",filter add stupid",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_add(self: "Automod", ctx: Context, *keywords: str):
         await self.check_setup(ctx.guild)
@@ -114,7 +115,7 @@ class Automod(commands.Cog):
         brief="View a list of filtered words",
         example=",filter list",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_list(self: "Automod", ctx: Context):
         """
@@ -144,7 +145,7 @@ class Automod(commands.Cog):
         ),
         example=",filter whitelist @c_5n",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_whitelist(
         self: "Automod",
@@ -228,7 +229,7 @@ class Automod(commands.Cog):
         brief="View a all users, roles and channels whitelisted through automod",
         example=",filter whitelisted",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_whitelisted(self: "Automod", ctx: Context):
         """
@@ -250,7 +251,7 @@ class Automod(commands.Cog):
         brief="Reset all automod settings",
         example=",filter reset",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_reset(self: "Automod", ctx: Context):
         await self.check_setup(ctx.guild)
@@ -266,7 +267,7 @@ class Automod(commands.Cog):
         brief="Setup the automod filtering for the guild",
         example=",filter setup",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_setup(self: "Automod", ctx: Context):
         """
@@ -302,7 +303,7 @@ class Automod(commands.Cog):
         ),
         example=",filter nicknames true",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_nicknames(self: "Automod", ctx: Context, state: bool):
         await self.check_setup(ctx.guild)
@@ -347,7 +348,7 @@ class Automod(commands.Cog):
         aliases=("snipes", "s"),
         example=",filter snipe true",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_snipe(self: "Automod", ctx: Context, state: bool):
         if state == await self.bot.db.fetchval(
@@ -372,7 +373,7 @@ class Automod(commands.Cog):
         description="Show the current configuration of automod",
         example=",filter settings",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_settings(self: "Automod", ctx: Context):
         rows = []
@@ -458,7 +459,7 @@ class Automod(commands.Cog):
             }
         },
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def headers(self, ctx: Context, state: bool):
         await self.check_setup(ctx.guild)
@@ -529,7 +530,7 @@ class Automod(commands.Cog):
             }
         },
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def images(self, ctx: Context, state: bool):
         await self.check_setup(ctx.guild)
@@ -593,7 +594,7 @@ class Automod(commands.Cog):
         description="set the amount of time someone will be muted when they break an automod rule",
         example=",filter timeout 60s",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_timeout(self: "Automod", ctx: Context, *, time: str):
         await self.check_setup(ctx.guild)
@@ -634,7 +635,7 @@ class Automod(commands.Cog):
             }
         },
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_spoilers(self: "Automod", ctx: Context, state: bool):
         await self.check_setup(ctx.guild)
@@ -695,7 +696,7 @@ class Automod(commands.Cog):
         brief="Prevent all links from being sent in the server",
         example=",filter links enable",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_links(self: "Automod", ctx: Context, state: bool):
         """
@@ -733,7 +734,7 @@ class Automod(commands.Cog):
             }
         },
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_spam(self: "Automod", ctx: Context, state: bool):
         await self.check_setup(ctx.guild)
@@ -806,7 +807,7 @@ class Automod(commands.Cog):
             }
         },
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_emojis(self: "Automod", ctx: Context, state: bool):
         await self.check_setup(ctx.guild)
@@ -867,7 +868,7 @@ class Automod(commands.Cog):
         brief="Stop outside server invites from being sent in the guild",
         example=",filter invites true",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_invites(self: "Automod", ctx: Context, state: bool):
         await self.check_setup(ctx.guild)
@@ -902,7 +903,7 @@ class Automod(commands.Cog):
             }
         },
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_caps(self: "Automod", ctx: Context, state: bool):
         """
@@ -972,7 +973,7 @@ class Automod(commands.Cog):
             }
         },
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_massmention(self: "Automod", ctx: Context, state: bool):
         """
@@ -1036,7 +1037,7 @@ class Automod(commands.Cog):
         brief="Remove a filtered word from the filter list",
         example=",filter remove stupid",
     )
-    @commands.bot_has_permissions(administrator = True)
+    @commands.bot_has_permissions(administrator=True)
     @commands.has_permissions(manage_guild=True)
     async def filter_remove(self: "Automod", ctx: Context, keyword: str):
         await self.check_setup(ctx.guild)

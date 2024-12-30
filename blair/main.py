@@ -1,11 +1,10 @@
+import os
+
 import discord
-import jishaku 
-import os 
 import dotenv
-
-from discord.ext       import commands
-
-from tools.blare       import Blare
+import jishaku
+from discord.ext import commands
+from tools.blare import Blare
 
 dotenv.load_dotenv()
 

@@ -2,7 +2,6 @@ import concurrent
 import json
 import time
 from pathlib import Path
-
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, List, Union
 
@@ -16,21 +15,16 @@ from grief.core.i18n import Translator
 from grief.core.utils import AsyncIter
 from grief.core.utils.dbtools import APSWConnectionWrapper
 
-from ..sql_statements import (
-    PERSIST_QUEUE_BULK_PLAYED,
-    PERSIST_QUEUE_CREATE_INDEX,
-    PERSIST_QUEUE_CREATE_TABLE,
-    PERSIST_QUEUE_DELETE_SCHEDULED,
-    PERSIST_QUEUE_DROP_TABLE,
-    PERSIST_QUEUE_FETCH_ALL,
-    PERSIST_QUEUE_PLAYED,
-    PERSIST_QUEUE_UPSERT,
-    PRAGMA_FETCH_user_version,
-    PRAGMA_SET_journal_mode,
-    PRAGMA_SET_read_uncommitted,
-    PRAGMA_SET_temp_store,
-    PRAGMA_SET_user_version,
-)
+from ..sql_statements import (PERSIST_QUEUE_BULK_PLAYED,
+                              PERSIST_QUEUE_CREATE_INDEX,
+                              PERSIST_QUEUE_CREATE_TABLE,
+                              PERSIST_QUEUE_DELETE_SCHEDULED,
+                              PERSIST_QUEUE_DROP_TABLE,
+                              PERSIST_QUEUE_FETCH_ALL, PERSIST_QUEUE_PLAYED,
+                              PERSIST_QUEUE_UPSERT, PRAGMA_FETCH_user_version,
+                              PRAGMA_SET_journal_mode,
+                              PRAGMA_SET_read_uncommitted,
+                              PRAGMA_SET_temp_store, PRAGMA_SET_user_version)
 from .api_utils import QueueFetchResult
 
 log = getLogger("grief.cogs.Audio.api.PersistQueueWrapper")
@@ -42,7 +36,11 @@ if TYPE_CHECKING:
 
 class QueueInterface:
     def __init__(
-        self, bot: Grief, config: Config, conn: APSWConnectionWrapper, cog: Union["Audio", Cog]
+        self,
+        bot: Grief,
+        config: Config,
+        conn: APSWConnectionWrapper,
+        cog: Union["Audio", Cog],
     ):
         self.bot = bot
         self.database = conn
@@ -68,9 +66,15 @@ class QueueInterface:
     async def init(self) -> None:
         """Initialize the PersistQueue table"""
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            executor.submit(self.database.cursor().execute, self.statement.pragma_temp_store)
-            executor.submit(self.database.cursor().execute, self.statement.pragma_journal_mode)
-            executor.submit(self.database.cursor().execute, self.statement.pragma_read_uncommitted)
+            executor.submit(
+                self.database.cursor().execute, self.statement.pragma_temp_store
+            )
+            executor.submit(
+                self.database.cursor().execute, self.statement.pragma_journal_mode
+            )
+            executor.submit(
+                self.database.cursor().execute, self.statement.pragma_read_uncommitted
+            )
             executor.submit(self.database.cursor().execute, self.statement.create_table)
             executor.submit(self.database.cursor().execute, self.statement.create_index)
 
@@ -89,7 +93,9 @@ class QueueInterface:
                 try:
                     row_result = future.result()
                 except Exception as exc:
-                    log.verbose("Failed to complete playlist fetch from database", exc_info=exc)
+                    log.verbose(
+                        "Failed to complete playlist fetch from database", exc_info=exc
+                    )
                     return []
 
         async for index, row in AsyncIter(row_result).enumerate(start=1):
@@ -106,12 +112,16 @@ class QueueInterface:
 
     async def delete_scheduled(self):
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            executor.submit(self.database.cursor().execute, PERSIST_QUEUE_DELETE_SCHEDULED)
+            executor.submit(
+                self.database.cursor().execute, PERSIST_QUEUE_DELETE_SCHEDULED
+            )
 
     async def drop(self, guild_id: int):
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             executor.submit(
-                self.database.cursor().execute, PERSIST_QUEUE_BULK_PLAYED, ({"guild_id": guild_id})
+                self.database.cursor().execute,
+                PERSIST_QUEUE_BULK_PLAYED,
+                ({"guild_id": guild_id}),
             )
 
     async def enqueued(self, guild_id: int, room_id: int, track: lavalink.Track):

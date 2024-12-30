@@ -1,4 +1,3 @@
-
 import asyncio
 import functools
 import time
@@ -7,18 +6,15 @@ from typing import List, Literal, Optional, Tuple
 
 import discord
 from matplotlib import pyplot as plt
+
 from grief.core import commands
 from grief.core.bot import Grief
 from grief.core.commands import GuildConverter, TimedeltaConverter
 from grief.core.config import Config
 from grief.core.utils import AsyncIter
-from grief.core.utils.chat_formatting import (
-    box,
-    humanize_list,
-    humanize_number,
-    humanize_timedelta,
-    pagify,
-)
+from grief.core.utils.chat_formatting import (box, humanize_list,
+                                              humanize_number,
+                                              humanize_timedelta, pagify)
 
 from .views import ConfirmationView, PageSource, PaginatedView
 
@@ -299,7 +295,9 @@ class Baron(commands.Cog):
         for index, page in enumerate(pages, 1):
             e = base_embed.copy()
             e.description = page
-            footer_text = f"{index}/{len(pages)} | {len(guilds)}/{len(bot_guilds)} servers"
+            footer_text = (
+                f"{index}/{len(pages)} | {len(guilds)}/{len(bot_guilds)} servers"
+            )
             if footer:
                 footer_text += f" | {footer}"
             e.set_footer(text=footer_text)
@@ -313,7 +311,10 @@ class Baron(commands.Cog):
 
     @baron_view.command(name="botfarms")
     async def baron_view_botfarms(
-        self, ctx: commands.Context, rate: Optional[int] = 75, page_length: Optional[int] = 500
+        self,
+        ctx: commands.Context,
+        rate: Optional[int] = 75,
+        page_length: Optional[int] = 500,
     ):
         """View servers that have a bot to member ratio with the given rate."""
         bot_farms, ok_guilds = await self.get_bot_farms(rate / 100)
@@ -322,7 +323,11 @@ class Baron(commands.Cog):
                 f"There are no servers with a bot ratio higher or equal than {rate}%."
             )
         await self.view_guilds(
-            ctx, bot_farms, f"Bot Farms ({rate}%)", page_length, footer=f"OK guilds: {ok_guilds}"
+            ctx,
+            bot_farms,
+            f"Bot Farms ({rate}%)",
+            page_length,
+            footer=f"OK guilds: {ok_guilds}",
         )
 
     @baron_view.command(name="members")
@@ -405,7 +410,9 @@ class Baron(commands.Cog):
         page_length: Optional[int] = 500,
     ):
         """View unchunked servers."""
-        guilds = [g async for g in AsyncIter(self.bot.guilds, steps=100) if not g.chunked]
+        guilds = [
+            g async for g in AsyncIter(self.bot.guilds, steps=100) if not g.chunked
+        ]
         if not guilds:
             return await ctx.send(f"There are no unchunked servers.")
 
@@ -415,16 +422,25 @@ class Baron(commands.Cog):
             return f"Members Cached: **{humanize_number(members)} ({round(percent * 100, 2)})%**"
 
         await self.view_guilds(
-            ctx, guilds, "Unchunked Servers", page_length, insert_function=insert_function
+            ctx,
+            guilds,
+            "Unchunked Servers",
+            page_length,
+            insert_function=insert_function,
         )
 
     @baron_view.command(name="ownedby")
     async def baron_view_ownedby(
-        self, ctx: commands.Context, user: discord.User, page_length: Optional[int] = 500
+        self,
+        ctx: commands.Context,
+        user: discord.User,
+        page_length: Optional[int] = 500,
     ):
         """View servers owned by a user."""
         bot_guilds = self.bot.guilds
-        guilds = [g async for g in AsyncIter(bot_guilds, steps=100) if g.owner_id == user.id]
+        guilds = [
+            g async for g in AsyncIter(bot_guilds, steps=100) if g.owner_id == user.id
+        ]
         if not guilds:
             return await ctx.send(f"**{user}** does not own any servers I am in.")
 
@@ -462,7 +478,9 @@ class Baron(commands.Cog):
             raise commands.BadArgument
         guilds, _ = await self.get_bot_farms(rate / 100)
         if not guilds:
-            await ctx.send(f"There are no servers with a bot ratio higher or equal than {rate}%.")
+            await ctx.send(
+                f"There are no servers with a bot ratio higher or equal than {rate}%."
+            )
             return
         await self.leave_guilds(
             ctx,
@@ -482,7 +500,9 @@ class Baron(commands.Cog):
             if guild.member_count < members
         ]
         if not guilds:
-            await ctx.send(f"There are no servers with a member count less than {members}.")
+            await ctx.send(
+                f"There are no servers with a member count less than {members}."
+            )
         await self.leave_guilds(
             ctx,
             guilds,
@@ -491,13 +511,19 @@ class Baron(commands.Cog):
         )
 
     @baron_leave.command(name="blacklisted")
-    async def baron_leave_blacklisted(self, ctx: commands.Context, confirm: bool = False):
+    async def baron_leave_blacklisted(
+        self, ctx: commands.Context, confirm: bool = False
+    ):
         """Leave all servers that are blacklisted (in case of downtime)."""
         blacklist = await self.config.blacklist()
-        guilds = [g async for g in AsyncIter(self.bot.guilds, steps=100) if g.id in blacklist]
+        guilds = [
+            g async for g in AsyncIter(self.bot.guilds, steps=100) if g.id in blacklist
+        ]
         if not guilds:
             return await ctx.send(f"I'm not in any blacklisted servers.")
-        await self.leave_guilds(ctx, guilds, None, notify_guilds=False, confirmed=confirm)
+        await self.leave_guilds(
+            ctx, guilds, None, notify_guilds=False, confirmed=confirm
+        )
 
     @commands.check(comstats_cog)
     @baron_leave.command(name="commands")
@@ -532,7 +558,9 @@ class Baron(commands.Cog):
 
         Credits to KableKompany
         """
-        unchunked = [g async for g in AsyncIter(self.bot.guilds, steps=100) if not g.chunked]
+        unchunked = [
+            g async for g in AsyncIter(self.bot.guilds, steps=100) if not g.chunked
+        ]
         if not unchunked:
             return await ctx.send("All servers are chunked.")
         await self.chunk(ctx, unchunked)
@@ -574,10 +602,14 @@ class Baron(commands.Cog):
             await ctx.send("There are no servers to leave that aren't whitelisted.")
             return
 
-        name_ids = "\n".join(f"{guild.name} - ({guild.id})" for guild in unwl_guilds[:5])
+        name_ids = "\n".join(
+            f"{guild.name} - ({guild.id})" for guild in unwl_guilds[:5]
+        )
 
         guild_preview = name_ids + (
-            f"\nand {len(unwl_guilds) - 5} other servers.." if len(unwl_guilds) > 5 else ""
+            f"\nand {len(unwl_guilds) - 5} other servers.."
+            if len(unwl_guilds) > 5
+            else ""
         )
 
         if not confirmed:
@@ -668,7 +700,10 @@ class Baron(commands.Cog):
             await channel.send(embed=e)
 
     async def notify_guild(self, guild: discord.Guild, message: str):
-        if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
+        if (
+            guild.system_channel
+            and guild.system_channel.permissions_for(guild.me).send_messages
+        ):
             await guild.system_channel.send(message)
         else:
             for channel in guild.text_channels:
@@ -679,13 +714,19 @@ class Baron(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         data = self.settings_cache
-        
+
         if guild.id in data["whitelist"]:
-            await self.notify_guild(guild, f"Hello, I am grief. I am a free mutlipurpose Discord bot that features vanity rewards, TikTok/YouTube reposting, and pretty much everything you'd need. Below you can find my links:\n\n Community server — https://discord.gg/cemetery\n\n Support Server — https://discord.gg/doves\n Commands — <https://grief.cloud/commands>\n\n Docs — <https://docs.grief.cloud>",)
+            await self.notify_guild(
+                guild,
+                f"Hello, I am grief. I am a free mutlipurpose Discord bot that features vanity rewards, TikTok/YouTube reposting, and pretty much everything you'd need. Below you can find my links:\n\n Community server — https://discord.gg/cemetery\n\n Support Server — https://discord.gg/doves\n Commands — <https://grief.cloud/commands>\n\n Docs — <https://docs.grief.cloud>",
+            )
             return
-        
+
         elif guild.id in data["blacklist"]:
-            await self.notify_guild(guild, f"This server has been blacklisted, please join https://discord.gg/doves for support.",)
+            await self.notify_guild(
+                guild,
+                f"This server has been blacklisted, please join https://discord.gg/doves for support.",
+            )
             await guild.leave()
             await self.baron_log("bl_leave", guild=guild)
 
@@ -693,12 +734,19 @@ class Baron(commands.Cog):
         if (
             guild.chunked is False
             and self.bot.intents.members
-            and self.bot.shards[shard_meta].is_ws_ratelimited() is False):  # adds coverage for the case where bot is already pulling chunk
+            and self.bot.shards[shard_meta].is_ws_ratelimited() is False
+        ):  # adds coverage for the case where bot is already pulling chunk
             await guild.chunk()
-        
+
         if data["min_members"] and guild.member_count < data["min_members"]:
-            await self.notify_guild(guild, f"you must have at least 50 members, if your server is active you can request a whitelist at https://discord.gg/doves"),
+            await self.notify_guild(
+                guild,
+                f"you must have at least 50 members, if your server is active you can request a whitelist at https://discord.gg/doves",
+            ),
             await guild.leave()
         else:
-            await self.notify_guild(guild, f"Hello, I am grief. I am a free mutlipurpose Discord bot that features vanity rewards, TikTok/YouTube reposting, and pretty much everything you'd need. Below you can find my links:\n\n Community server — https://discord.gg/yor\n\n Support Server — https://discord.gg/doves\n\n Commands — <https://grief.cloud/commands>\n\n Docs — <https://docs.grief.cloud>"),
+            await self.notify_guild(
+                guild,
+                f"Hello, I am grief. I am a free mutlipurpose Discord bot that features vanity rewards, TikTok/YouTube reposting, and pretty much everything you'd need. Below you can find my links:\n\n Community server — https://discord.gg/yor\n\n Support Server — https://discord.gg/doves\n\n Commands — <https://grief.cloud/commands>\n\n Docs — <https://docs.grief.cloud>",
+            ),
             return

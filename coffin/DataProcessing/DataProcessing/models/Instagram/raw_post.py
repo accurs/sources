@@ -4,7 +4,8 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Any
+from typing import Any, List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -398,7 +399,7 @@ class ImageVersions21(BaseModel):
 
 
 class FbUserTags1(BaseModel):
-    in_: Optional[List] = Field(None, alias='in')
+    in_: Optional[List] = Field(None, alias="in")
 
 
 class CarouselMediaItem(BaseModel):
@@ -488,9 +489,9 @@ class Item(BaseModel):
     has_high_risk_gen_ai_inform_treatment: Optional[bool] = None
     open_carousel_show_follow_button: Optional[bool] = None
     is_tagged_media_shared_to_viewer_profile_grid: Optional[bool] = None
-    should_show_author_pog_for_tagged_media_shared_to_profile_grid: Optional[
-        bool
-    ] = None
+    should_show_author_pog_for_tagged_media_shared_to_profile_grid: Optional[bool] = (
+        None
+    )
     is_eligible_for_media_note_recs_nux: Optional[bool] = None
     is_social_ufi_disabled: Optional[bool] = None
     meta_ai_suggested_prompts: Optional[List] = None

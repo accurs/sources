@@ -13,7 +13,9 @@ class ProfileConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         if len(argument) > 10:
             raise commands.BadArgument(_("This profile does not exist."))
-        profiles = await ctx.bot.get_cog("TicketTool").config.guild(ctx.guild).profiles()
+        profiles = (
+            await ctx.bot.get_cog("TicketTool").config.guild(ctx.guild).profiles()
+        )
         if argument.lower() not in profiles:
             raise commands.BadArgument(_("This profile does not exist."))
         return argument.lower()
@@ -24,7 +26,9 @@ class MyMessageConverter(commands.MessageConverter):
         message = await super().convert(ctx, argument=argument)
         if message.author != ctx.me:
             raise commands.UserFeedbackCheckFailure(
-                _("I have to be the author of the message. You can use EmbedUtils by AAA3A to send one.")
+                _(
+                    "I have to be the author of the message. You can use EmbedUtils by AAA3A to send one."
+                )
             )
         return message
 

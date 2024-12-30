@@ -5,13 +5,15 @@ from io import StringIO
 from typing import TYPE_CHECKING, Deque, Optional, Union
 
 import discord
+from cmdlog.objects import (TIME_FORMAT, LoggedAppCom, LoggedComError,
+                            LoggedCommand)
 from discord import Interaction, InteractionType
 from discord.channel import TextChannel
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
-from grief.core.utils.chat_formatting import humanize_number, humanize_timedelta
-
-from cmdlog.objects import TIME_FORMAT, LoggedAppCom, LoggedComError, LoggedCommand
+from grief.core.utils.chat_formatting import (humanize_number,
+                                              humanize_timedelta)
 
 from .channellogger import ChannelLogger
 from .vexutils import format_help, format_info, get_vex_logger
@@ -35,14 +37,16 @@ class CmdLog(commands.Cog):
     def __init__(self, bot: Grief) -> None:
         self.bot = bot
 
-        self.log_cache: Deque[Union[LoggedCommand, LoggedComError, LoggedAppCom]] = deque(
-            maxlen=100_000
+        self.log_cache: Deque[Union[LoggedCommand, LoggedComError, LoggedAppCom]] = (
+            deque(maxlen=100_000)
         )
         # this is about 50MB max from my simulated testing
 
         self.load_time = discord.utils.utcnow()
 
-        self.config: Config = Config.get_conf(self, 418078199982063626, force_registration=True)
+        self.config: Config = Config.get_conf(
+            self, 418078199982063626, force_registration=True
+        )
         self.config.register_global(log_content=False)
         self.config.register_global(log_channel=None)
 
@@ -62,7 +66,9 @@ class CmdLog(commands.Cog):
                 self.channel_logger = ChannelLogger(self.bot, chan)  # type:ignore
                 self.channel_logger.start()
             else:
-                log.warning("Commands will NOT be sent to a channel because it appears invalid.")
+                log.warning(
+                    "Commands will NOT be sent to a channel because it appears invalid."
+                )
 
     async def cog_unload(self):
         if self.channel_logger:
@@ -108,7 +114,11 @@ class CmdLog(commands.Cog):
             error_info = "an error with inputted command arguments"
         elif isinstance(
             error,
-            (commands.BotMissingPermissions, commands.BotMissingRole, commands.BotMissingAnyRole),
+            (
+                commands.BotMissingPermissions,
+                commands.BotMissingRole,
+                commands.BotMissingAnyRole,
+            ),
         ):
             error_info = "the bot missing permissions/roles"
         elif isinstance(error, (commands.CheckFailure)):
@@ -146,7 +156,8 @@ class CmdLog(commands.Cog):
 
     def log_list_error(self, e):
         log.exception(
-            "Something went wrong processing a command. See below for more info.", exc_info=e
+            "Something went wrong processing a command. See below for more info.",
+            exc_info=e,
         )
 
     @commands.Cog.listener()
@@ -161,7 +172,9 @@ class CmdLog(commands.Cog):
             self.log_list_error(e)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
+    async def on_command_error(
+        self, ctx: commands.Context, error: commands.CommandError
+    ):
         log.trace("command error received: %s", error)
         try:
             if self.log_content is None:
@@ -254,7 +267,9 @@ class CmdLog(commands.Cog):
         """Set whether or not whole message content should be logged. Default false."""
         await self.config.log_content.set(to_log)
         self.log_content = to_log
-        await ctx.send("Message content will " + ("now" if to_log else "now not") + " be logged.")
+        await ctx.send(
+            "Message content will " + ("now" if to_log else "now not") + " be logged."
+        )
 
     @commands.guild_only()
     @cmdlog.command()
@@ -385,7 +400,11 @@ class CmdLog(commands.Cog):
         - `[p]cmdlog server 527961662716772392`
         """
         now = datetime.datetime.now().strftime(TIME_FORMAT)
-        logs = [f"[{i.time}] {i}" for i in self.log_cache if i.guild and i.guild.id == server_id]
+        logs = [
+            f"[{i.time}] {i}"
+            for i in self.log_cache
+            if i.guild and i.guild.id == server_id
+        ]
 
         log_str = f"Generated at {now} for server {server_id}.\n" + (
             "\n".join(logs) or "It looks like I didn't find anything for that server."
@@ -406,7 +425,8 @@ class CmdLog(commands.Cog):
         fp.seek(0)
 
         await ctx.send(
-            f"Here is the command log for server {server_id}. " + self.get_track_start(),
+            f"Here is the command log for server {server_id}. "
+            + self.get_track_start(),
             file=discord.File(fp, f"cmdlog_{server_id}.txt"),  # type:ignore
         )
         fp.close()
@@ -431,7 +451,9 @@ class CmdLog(commands.Cog):
         # not checking if a command exists because want to allow for this to find it if it was
         # unloaded (eg if com was found to be intensive, see if it was one user spamming it)
         now = datetime.datetime.now().strftime(TIME_FORMAT)
-        logs = [f"[{i.time}] {i}" for i in self.log_cache if i.command.startswith(command)]
+        logs = [
+            f"[{i.time}] {i}" for i in self.log_cache if i.command.startswith(command)
+        ]
 
         log_str = f"Generated at {now} for command '{command}'.\n" + (
             "\n".join(logs) or "It looks like I didn't find anything for that command."
@@ -452,7 +474,10 @@ class CmdLog(commands.Cog):
         fp.seek(0)
 
         await ctx.send(
-            f"Here is the command log for command '{command}'. " + self.get_track_start(),
-            file=discord.File(fp, f"cmdlog_{command.replace(' ', '_')}.txt"),  # type:ignore
+            f"Here is the command log for command '{command}'. "
+            + self.get_track_start(),
+            file=discord.File(
+                fp, f"cmdlog_{command.replace(' ', '_')}.txt"
+            ),  # type:ignore
         )
         fp.close()

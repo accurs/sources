@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-
 from typing import TYPE_CHECKING, Mapping, Optional, Union
 
 import aiohttp
@@ -25,7 +24,11 @@ class YouTubeWrapper:
     """Wrapper for the YouTube Data API."""
 
     def __init__(
-        self, bot: Grief, config: Config, session: aiohttp.ClientSession, cog: Union["Audio", Cog]
+        self,
+        bot: Grief,
+        config: Config,
+        session: aiohttp.ClientSession,
+        cog: Union["Audio", Cog],
     ):
         self.bot = bot
         self.config = config
@@ -83,6 +86,8 @@ class YouTubeWrapper:
                 search_response = await r.json(loads=json.loads)
         for search_result in search_response.get("items", []):
             if search_result["id"]["kind"] == "youtube#video":
-                return f"https://www.youtube.com/watch?v={search_result['id']['videoId']}"
+                return (
+                    f"https://www.youtube.com/watch?v={search_result['id']['videoId']}"
+                )
 
         return None

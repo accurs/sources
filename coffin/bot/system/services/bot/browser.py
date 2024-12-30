@@ -1,12 +1,14 @@
-from playwright.async_api import async_playwright
-from aiohttp import ClientSession
+from asyncio import BoundedSemaphore, exceptions, sleep, wait_for
 from io import BytesIO
-from tools import lock
-from typing import Optional, Any, Union, List, Dict
-from .nsfw import ImageModeration
+from typing import Any, Dict, List, Optional, Union
+
+from aiohttp import ClientSession
 from discord import File
-from asyncio import BoundedSemaphore, wait_for, sleep, exceptions
-from ...classes.exceptions import NSFWDetection, ConcurrencyLimit
+from playwright.async_api import async_playwright
+from tools import lock
+
+from ...classes.exceptions import ConcurrencyLimit, NSFWDetection
+from .nsfw import ImageModeration
 
 SCREENSHOT_TIMEOUT = 0.2
 CONCURRENCY_LIMIT = 5
@@ -41,7 +43,9 @@ async def get_screenshot(url: str, safe: Optional[bool] = True, **kwargs: Any) -
     full_page: bool = kwargs.pop("full_page", False)
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page(user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
+        page = await browser.new_page(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+        )
         await page.goto(
             url, wait_until=kwargs.pop("wait_until", "domcontentloaded"), **kwargs
         )
@@ -66,7 +70,7 @@ async def get_screenshot(url: str, safe: Optional[bool] = True, **kwargs: Any) -
             raise NSFWDetection(f"NSFW Content Detected on webpage of `{url}`")
         if cache := CACHE.get(f"{url}-{'-'.join(str(k) for k in kwargs.keys())}"):
             screenshot = cache
-        screenshot = await page.screenshot(animations='disabled', full_page=full_page)
+        screenshot = await page.screenshot(animations="disabled", full_page=full_page)
         await page.close()
     await p.stop()
     return screenshot
@@ -75,8 +79,8 @@ async def get_screenshot(url: str, safe: Optional[bool] = True, **kwargs: Any) -
 async def screenshot(url: str, safe: Optional[bool] = True, **kwargs: Any):
     """_summary_
 
-        uses a bound semaphore to limit concurrency of 
-        screenshotting whilst retaining speed and efficiency 
+        uses a bound semaphore to limit concurrency of
+        screenshotting whilst retaining speed and efficiency
         in the memory namespace
 
     Args:

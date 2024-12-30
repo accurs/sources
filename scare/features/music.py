@@ -6,21 +6,15 @@ from random import shuffle
 from typing import TYPE_CHECKING, Dict, List, Literal, Union
 
 from async_timeout import timeout
-from discord import (
-    Attachment,
-    Embed,
-    File,
-    Guild,
-    Member,
-    Message,
-    TextChannel,
-    VoiceState,
-)
+from discord import (Attachment, Embed, File, Guild, Member, Message,
+                     TextChannel, VoiceState)
 from discord.ext import commands
-from discord.ext.commands import BucketType, Cog, command, cooldown, has_permissions
-from pomice import Equalizer, Node, NodePool, Player, Playlist, Timescale, Track
-from pomice.exceptions import FilterTagAlreadyInUse, NoNodesAvailable, TrackLoadError
-
+from discord.ext.commands import (BucketType, Cog, command, cooldown,
+                                  has_permissions)
+from pomice import (Equalizer, Node, NodePool, Player, Playlist, Timescale,
+                    Track)
+from pomice.exceptions import (FilterTagAlreadyInUse, NoNodesAvailable,
+                               TrackLoadError)
 from structure.managers import Context
 from structure.scare import Error, Scare
 from structure.utilities import Percentage, Position, format_duration, shorten

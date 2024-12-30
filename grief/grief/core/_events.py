@@ -1,42 +1,37 @@
 import asyncio
 import contextlib
+import importlib.metadata
+import logging
 import platform
 import sys
-import logging
 import traceback
 from datetime import datetime, timedelta, timezone
 from typing import Tuple
 
 import aiohttp
 import discord
-import importlib.metadata
-from packaging.requirements import Requirement
-from grief.core import data_manager
-
-from grief.core.bot import ExitCodes
-from grief.core.commands import RedHelpFormatter, HelpSettings
-from grief.core.i18n import (
-    Translator,
-    set_contextual_locales_from_guild,
-)
-from .. import __version__ as red_version, version_info as red_version_info
-from . import commands
-from .config import get_latest_confs
-from .utils._internal_utils import (
-    fuzzy_command_search,
-    format_fuzzy_results,
-    expected_version,
-    fetch_latest_red_version_info,
-    send_to_owners_with_prefix_replaced,
-)
-from .utils.chat_formatting import inline, format_perms_list
-
 import rich
+from packaging.requirements import Requirement
 from rich import box
-from rich.table import Table
 from rich.columns import Columns
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
+
+from grief.core import data_manager
+from grief.core.bot import ExitCodes
+from grief.core.commands import HelpSettings, RedHelpFormatter
+from grief.core.i18n import Translator, set_contextual_locales_from_guild
+
+from .. import __version__ as red_version
+from .. import version_info as red_version_info
+from . import commands
+from .config import get_latest_confs
+from .utils._internal_utils import (expected_version,
+                                    fetch_latest_red_version_info,
+                                    format_fuzzy_results, fuzzy_command_search,
+                                    send_to_owners_with_prefix_replaced)
+from .utils.chat_formatting import format_perms_list, inline
 
 log = logging.getLogger("grief")
 
@@ -92,20 +87,27 @@ def init_events(bot, cli_flags):
         if guilds:
             rich_console.print(
                 Columns(
-                    [Panel(table_general_info, title=bot.user.display_name), Panel(table_counts)],
+                    [
+                        Panel(table_general_info, title=bot.user.display_name),
+                        Panel(table_counts),
+                    ],
                     equal=True,
                     align="center",
                 )
             )
         else:
-            rich_console.print(Columns([Panel(table_general_info, title=bot.user.display_name)]))
+            rich_console.print(
+                Columns([Panel(table_general_info, title=bot.user.display_name)])
+            )
 
         rich_console.print(
             "Loaded {} cogs with {} commands".format(len(bot.cogs), len(bot.commands))
         )
 
         if invite_url:
-            rich_console.print(f"\nInvite URL: {Text(invite_url, style=f'link {invite_url}')}")
+            rich_console.print(
+                f"\nInvite URL: {Text(invite_url, style=f'link {invite_url}')}"
+            )
             # We generally shouldn't care if the client supports it or not as Rich deals with it.
 
         bot._red_ready.set()
@@ -142,7 +144,9 @@ def init_events(bot, cli_flags):
         elif isinstance(error, commands.RangeError):
             if isinstance(error.value, int):
                 if error.minimum == 0 and error.maximum is None:
-                    message = _("Argument `{parameter_name}` must be a positive integer.")
+                    message = _(
+                        "Argument `{parameter_name}` must be a positive integer."
+                    )
                 elif error.minimum is None and error.maximum is not None:
                     message = _(
                         "Argument `{parameter_name}` must be an integer no more than {maximum}."
@@ -157,7 +161,9 @@ def init_events(bot, cli_flags):
                     )
             elif isinstance(error.value, float):
                 if error.minimum == 0 and error.maximum is None:
-                    message = _("Argument `{parameter_name}` must be a positive number.")
+                    message = _(
+                        "Argument `{parameter_name}` must be a positive number."
+                    )
                 elif error.minimum is None and error.maximum is not None:
                     message = _(
                         "Argument `{parameter_name}` must be a number no more than {maximum}."
@@ -195,7 +201,9 @@ def init_events(bot, cli_flags):
             if isinstance(converter, commands.Range):
                 if converter.annotation is int:
                     if converter.min == 0 and converter.max is None:
-                        message = _("Argument `{parameter_name}` must be a positive integer.")
+                        message = _(
+                            "Argument `{parameter_name}` must be a positive integer."
+                        )
                     elif converter.min is None and converter.max is not None:
                         message = _(
                             "Argument `{parameter_name}` must be an integer no more than {maximum}."
@@ -210,7 +218,9 @@ def init_events(bot, cli_flags):
                         )
                 elif converter.annotation is float:
                     if converter.min == 0 and converter.max is None:
-                        message = _("Argument `{parameter_name}` must be a positive number.")
+                        message = _(
+                            "Argument `{parameter_name}` must be a positive number."
+                        )
                     elif converter.min is None and converter.max is not None:
                         message = _(
                             "Argument `{parameter_name}` must be a number no more than {maximum}."
@@ -246,10 +256,14 @@ def init_events(bot, cli_flags):
                 return
             if isinstance(error.__cause__, ValueError):
                 if converter is int:
-                    await ctx.send(_('"{argument}" is not an integer.').format(argument=argument))
+                    await ctx.send(
+                        _('"{argument}" is not an integer.').format(argument=argument)
+                    )
                     return
                 if converter is float:
-                    await ctx.send(_('"{argument}" is not a number.').format(argument=argument))
+                    await ctx.send(
+                        _('"{argument}" is not a number.').format(argument=argument)
+                    )
                     return
             if error.args:
                 await ctx.send(error.args[0])
@@ -266,7 +280,9 @@ def init_events(bot, cli_flags):
                 "Exception in command '{}'".format(ctx.command.qualified_name),
                 exc_info=error.original,
             )
-            exception_log = "Exception in command '{}'\n" "".format(ctx.command.qualified_name)
+            exception_log = "Exception in command '{}'\n" "".format(
+                ctx.command.qualified_name
+            )
             exception_log += "".join(
                 traceback.format_exception(type(error), error, error.__traceback__)
             )
@@ -276,7 +292,9 @@ def init_events(bot, cli_flags):
             if not message:
                 if ctx.author.id in bot.owner_ids:
                     message = inline(
-                        _("Error in command '{command}'. Check your console or logs for details.")
+                        _(
+                            "Error in command '{command}'. Check your console or logs for details."
+                        )
                     )
                 else:
                     message = inline(_("Error in command '{command}'."))
@@ -292,18 +310,22 @@ def init_events(bot, cli_flags):
             if not fuzzy_commands:
                 pass
             elif await ctx.embed_requested():
-                await ctx.send(embed=await format_fuzzy_results(ctx, fuzzy_commands, embed=True))
+                await ctx.send(
+                    embed=await format_fuzzy_results(ctx, fuzzy_commands, embed=True)
+                )
             else:
-                await ctx.send(await format_fuzzy_results(ctx, fuzzy_commands, embed=False))
+                await ctx.send(
+                    await format_fuzzy_results(ctx, fuzzy_commands, embed=False)
+                )
         elif isinstance(error, commands.BotMissingPermissions):
             if bin(error.missing.value).count("1") == 1:  # Only one perm missing
-                msg = _("I require the {permission} permission to execute that command.").format(
-                    permission=format_perms_list(error.missing)
-                )
+                msg = _(
+                    "I require the {permission} permission to execute that command."
+                ).format(permission=format_perms_list(error.missing))
             else:
-                msg = _("I require {permission_list} permissions to execute that command.").format(
-                    permission_list=format_perms_list(error.missing)
-                )
+                msg = _(
+                    "I require {permission_list} permissions to execute that command."
+                ).format(permission_list=format_perms_list(error.missing))
             await ctx.send(msg)
         elif isinstance(error, commands.UserFeedbackCheckFailure):
             if error.message:

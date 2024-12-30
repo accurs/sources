@@ -23,7 +23,9 @@ class DashboardIntegration:
             await self.settings.commands_added.wait()
         try:
             from dashboard.rpc.thirdparties import dashboard_page
-        except ImportError:  # Should never happen because the event would not be dispatched by the Dashboard cog.
+        except (
+            ImportError
+        ):  # Should never happen because the event would not be dispatched by the Dashboard cog.
             return
         for attr in dir(self):
             if hasattr((func := getattr(self, attr)), "__dashboard_decorator_params__"):
@@ -54,7 +56,9 @@ class DashboardIntegration:
             attachment_url = f"https://cdn.discordapp.com/attachments/{attachment_url}"
         return {
             "status": 0,
-            "web-content": web_content_transcript.replace("ATTACHMENT_URL", attachment_url),
+            "web-content": web_content_transcript.replace(
+                "ATTACHMENT_URL", attachment_url
+            ),
         }
 
 

@@ -4,17 +4,17 @@ import datetime
 import json
 import random
 import time
-
 from collections import namedtuple
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, MutableMapping, Optional, Tuple, Union, cast
+from typing import (TYPE_CHECKING, Callable, List, MutableMapping, Optional,
+                    Tuple, Union, cast)
 
 import aiohttp
 import discord
 import lavalink
+from lavalink.rest_api import LoadResult, LoadType
 from red_commons.logging import getLogger
 
-from lavalink.rest_api import LoadResult, LoadType
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.commands import Cog, Context
@@ -23,7 +23,8 @@ from grief.core.utils import AsyncIter
 from grief.core.utils.dbtools import APSWConnectionWrapper
 
 from ..audio_dataclasses import Query
-from ..errors import DatabaseError, SpotifyFetchError, TrackEnqueueError, YouTubeApiError
+from ..errors import (DatabaseError, SpotifyFetchError, TrackEnqueueError,
+                      YouTubeApiError)
 from ..utils import CacheLevel, Notifier
 from .api_utils import LavalinkCacheFetchForGlobalResult
 from .global_db import GlobalCacheWrapper
@@ -61,11 +62,21 @@ class AudioAPIInterface:
         self.config = config
         self.conn = conn
         self.cog = cog
-        self.spotify_api: SpotifyWrapper = SpotifyWrapper(self.bot, self.config, session, self.cog)
-        self.youtube_api: YouTubeWrapper = YouTubeWrapper(self.bot, self.config, session, self.cog)
-        self.local_cache_api = LocalCacheWrapper(self.bot, self.config, self.conn, self.cog)
-        self.global_cache_api = GlobalCacheWrapper(self.bot, self.config, session, self.cog)
-        self.persistent_queue_api = QueueInterface(self.bot, self.config, self.conn, self.cog)
+        self.spotify_api: SpotifyWrapper = SpotifyWrapper(
+            self.bot, self.config, session, self.cog
+        )
+        self.youtube_api: YouTubeWrapper = YouTubeWrapper(
+            self.bot, self.config, session, self.cog
+        )
+        self.local_cache_api = LocalCacheWrapper(
+            self.bot, self.config, self.conn, self.cog
+        )
+        self.global_cache_api = GlobalCacheWrapper(
+            self.bot, self.config, session, self.cog
+        )
+        self.persistent_queue_api = QueueInterface(
+            self.bot, self.config, self.conn, self.cog
+        )
         self._session: aiohttp.ClientSession = session
         self._tasks: MutableMapping = {}
         self._lock: asyncio.Lock = asyncio.Lock()
@@ -84,13 +95,15 @@ class AudioAPIInterface:
         track: Optional[MutableMapping] = {}
         try:
             query_data = {}
-            date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+            date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+                days=7
+            )
             date_timestamp = int(date.timestamp())
             query_data["day"] = date_timestamp
             max_age = await self.config.cache_age()
-            maxage = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(
-                days=max_age
-            )
+            maxage = datetime.datetime.now(
+                tz=datetime.timezone.utc
+            ) - datetime.timedelta(days=max_age)
             maxage_int = int(time.mktime(maxage.timetuple()))
             query_data["maxage"] = maxage_int
             track = await self.local_cache_api.lavalink.fetch_random(query_data)
@@ -134,9 +147,13 @@ class AudioAPIInterface:
                 elif table == "spotify":
                     await self.local_cache_api.spotify.update(data)
         elif action_type == "global" and isinstance(data, list):
-            await asyncio.gather(*[self.global_cache_api.update_global(**d) for d in data])
+            await asyncio.gather(
+                *[self.global_cache_api.update_global(**d) for d in data]
+            )
 
-    async def run_tasks(self, ctx: Optional[commands.Context] = None, message_id=None) -> None:
+    async def run_tasks(
+        self, ctx: Optional[commands.Context] = None, message_id=None
+    ) -> None:
         """Run tasks for a specific context."""
         if message_id is not None:
             lock_id = message_id
@@ -155,10 +172,15 @@ class AudioAPIInterface:
                     del self._tasks[lock_id]
                 except Exception as exc:
                     log.verbose(
-                        "Failed database writes for %s (%s)", lock_id, lock_author, exc_info=exc
+                        "Failed database writes for %s (%s)",
+                        lock_id,
+                        lock_author,
+                        exc_info=exc,
                     )
                 else:
-                    log.trace("Completed database writes for %s (%s)", lock_id, lock_author)
+                    log.trace(
+                        "Completed database writes for %s (%s)", lock_id, lock_author
+                    )
 
     async def run_all_pending_tasks(self) -> None:
         """Run all pending tasks left in the cache, called on cog_unload."""
@@ -179,7 +201,9 @@ class AudioAPIInterface:
             else:
                 log.trace("Completed pending writes to database have finished")
 
-    def append_task(self, ctx: commands.Context, event: str, task: Tuple, _id: int = None) -> None:
+    def append_task(
+        self, ctx: commands.Context, event: str, task: Tuple, _id: int = None
+    ) -> None:
         """Add a task to the cache to be run later."""
         lock_id = _id or ctx.message.id
         if lock_id not in self._tasks:
@@ -210,7 +234,10 @@ class AudioAPIInterface:
         async for track in AsyncIter(tracks):
             if isinstance(track, str):
                 break
-            elif isinstance(track, dict) and track.get("error", {}).get("message") == "invalid id":
+            elif (
+                isinstance(track, dict)
+                and track.get("error", {}).get("message") == "invalid id"
+            ):
                 continue
             (
                 song_url,
@@ -239,12 +266,16 @@ class AudioAPIInterface:
                 val = None
                 if youtube_cache:
                     try:
-                        (val, last_update) = await self.local_cache_api.youtube.fetch_one(
-                            {"track": track_info}
+                        (val, last_update) = (
+                            await self.local_cache_api.youtube.fetch_one(
+                                {"track": track_info}
+                            )
                         )
                     except Exception as exc:
                         log.verbose(
-                            "Failed to fetch %r from YouTube table", track_info, exc_info=exc
+                            "Failed to fetch %r from YouTube table",
+                            track_info,
+                            exc_info=exc,
                         )
                 if val is None:
                     try:
@@ -262,8 +293,12 @@ class AudioAPIInterface:
             else:
                 youtube_urls.append(track_info)
             track_count += 1
-            if notifier is not None and ((track_count % 2 == 0) or (track_count == total_tracks)):
-                await notifier.notify_user(current=track_count, total=total_tracks, key="youtube")
+            if notifier is not None and (
+                (track_count % 2 == 0) or (track_count == total_tracks)
+            ):
+                await notifier.notify_user(
+                    current=track_count, total=total_tracks, key="youtube"
+                )
             if notifier is not None and (youtube_api_error and not global_api):
                 error_embed = discord.Embed(
                     colour=await ctx.embed_colour(),
@@ -331,7 +366,9 @@ class AudioAPIInterface:
                     tracks.extend(new_tracks)
             track_count += len(new_tracks)
             if notifier:
-                await notifier.notify_user(current=track_count, total=total_tracks, key="spotify")
+                await notifier.notify_user(
+                    current=track_count, total=total_tracks, key="spotify"
+                )
             try:
                 if results.get("next") is not None:
                     results = await self.fetch_from_spotify_api(
@@ -342,7 +379,9 @@ class AudioAPIInterface:
                     break
             except KeyError:
                 raise SpotifyFetchError(
-                    _("This doesn't seem to be a valid Spotify playlist/album URL or code.")
+                    _(
+                        "This doesn't seem to be a valid Spotify playlist/album URL or code."
+                    )
                 )
         return tracks
 
@@ -382,7 +421,9 @@ class AudioAPIInterface:
                 )
             except Exception as exc:
                 log.verbose(
-                    "Failed to fetch 'spotify:track:%s' from Spotify table", uri, exc_info=exc
+                    "Failed to fetch 'spotify:track:%s' from Spotify table",
+                    uri,
+                    exc_info=exc,
                 )
                 val = None
         else:
@@ -477,7 +518,9 @@ class AudioAPIInterface:
             time_now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
             youtube_cache = CacheLevel.set_youtube().is_subset(current_cache_level)
             spotify_cache = CacheLevel.set_spotify().is_subset(current_cache_level)
-            async for track_count, track in AsyncIter(tracks_from_spotify).enumerate(start=1):
+            async for track_count, track in AsyncIter(tracks_from_spotify).enumerate(
+                start=1
+            ):
                 (
                     song_url,
                     track_info,
@@ -505,16 +548,22 @@ class AudioAPIInterface:
                 llresponse = None
                 if youtube_cache:
                     try:
-                        (val, last_updated) = await self.local_cache_api.youtube.fetch_one(
-                            {"track": track_info}
+                        (val, last_updated) = (
+                            await self.local_cache_api.youtube.fetch_one(
+                                {"track": track_info}
+                            )
                         )
                     except Exception as exc:
                         log.verbose(
-                            "Failed to fetch %r from YouTube table", track_info, exc_info=exc
+                            "Failed to fetch %r from YouTube table",
+                            track_info,
+                            exc_info=exc,
                         )
                 should_query_global = globaldb_toggle and query_global and val is None
                 if should_query_global:
-                    llresponse = await self.global_cache_api.get_spotify(track_name, artist_name)
+                    llresponse = await self.global_cache_api.get_spotify(
+                        track_name, artist_name
+                    )
                     if llresponse:
                         if llresponse.get("loadType") == "V2_COMPACT":
                             llresponse["loadType"] = "V2_COMPAT"
@@ -550,7 +599,9 @@ class AudioAPIInterface:
                                 (result, called_api) = await self.fetch_track(
                                     ctx,
                                     player,
-                                    Query.process_input(val, self.cog.local_folder_current_path),
+                                    Query.process_input(
+                                        val, self.cog.local_folder_current_path
+                                    ),
                                     forced=forced,
                                     should_query_global=not should_query_global,
                                 )
@@ -569,7 +620,9 @@ class AudioAPIInterface:
                                 lock(ctx, False)
                                 error_embed = discord.Embed(
                                     colour=await ctx.embed_colour(),
-                                    title=_("Player timeout, skipping remaining tracks."),
+                                    title=_(
+                                        "Player timeout, skipping remaining tracks."
+                                    ),
                                 )
                                 if notifier is not None:
                                     await notifier.update_embed(error_embed)
@@ -610,7 +663,9 @@ class AudioAPIInterface:
                     continue
                 consecutive_fails = 0
                 single_track = track_object[0]
-                query = Query.process_input(single_track, self.cog.local_folder_current_path)
+                query = Query.process_input(
+                    single_track, self.cog.local_folder_current_path
+                )
                 if not await self.cog.is_query_allowed(
                     self.config,
                     ctx,
@@ -618,14 +673,18 @@ class AudioAPIInterface:
                     query_obj=query,
                 ):
                     has_not_allowed = True
-                    log.debug("Query is not allowed in %r (%s)", ctx.guild.name, ctx.guild.id)
+                    log.debug(
+                        "Query is not allowed in %r (%s)", ctx.guild.name, ctx.guild.id
+                    )
                     continue
                 track_list.append(single_track)
                 if enqueue:
                     if len(player.queue) >= 10000:
                         continue
                     if guild_data["maxlength"] > 0:
-                        if self.cog.is_track_length_allowed(single_track, guild_data["maxlength"]):
+                        if self.cog.is_track_length_allowed(
+                            single_track, guild_data["maxlength"]
+                        ):
                             enqueued_tracks += 1
                             single_track.extras.update(
                                 {
@@ -671,16 +730,18 @@ class AudioAPIInterface:
                 embed = discord.Embed(
                     colour=await ctx.embed_colour(),
                     title=_("Playlist Enqueued"),
-                    description=_("Added {num} tracks to the queue.{maxlength_msg}").format(
-                        num=enqueued_tracks, maxlength_msg=maxlength_msg
-                    ),
+                    description=_(
+                        "Added {num} tracks to the queue.{maxlength_msg}"
+                    ).format(num=enqueued_tracks, maxlength_msg=maxlength_msg),
                 )
                 if not guild_data["shuffle"] and queue_dur > 0:
                     embed.set_footer(
                         text=_(
                             "{time} until start of playlist"
                             " playback: starts at #{position} in queue"
-                        ).format(time=queue_total_duration, position=before_queue_length + 1)
+                        ).format(
+                            time=queue_total_duration, position=before_queue_length + 1
+                        )
                     )
 
                 if notifier is not None:
@@ -743,9 +804,13 @@ class AudioAPIInterface:
         val = None
         if cache_enabled:
             try:
-                (val, update) = await self.local_cache_api.youtube.fetch_one({"track": track_info})
+                (val, update) = await self.local_cache_api.youtube.fetch_one(
+                    {"track": track_info}
+                )
             except Exception as exc:
-                log.verbose("Failed to fetch %r from YouTube table", track_info, exc_info=exc)
+                log.verbose(
+                    "Failed to fetch %r from YouTube table", track_info, exc_info=exc
+                )
         if val is None:
             try:
                 youtube_url = await self.fetch_youtube_query(
@@ -810,7 +875,9 @@ class AudioAPIInterface:
                     {"query": query_string}
                 )
             except Exception as exc:
-                log.verbose("Failed to fetch %r from Lavalink table", query_string, exc_info=exc)
+                log.verbose(
+                    "Failed to fetch %r from Lavalink table", query_string, exc_info=exc
+                )
 
             if val and isinstance(val, dict):
                 log.trace("Updating Local Database with %r", query_string)
@@ -861,7 +928,9 @@ class AudioAPIInterface:
             called_api = False
             if results.has_error:
                 # If cached value has an invalid entry make a new call so that it gets updated
-                results, called_api = await self.fetch_track(ctx, player, query, forced=True)
+                results, called_api = await self.fetch_track(
+                    ctx, player, query, forced=True
+                )
             valid_global_entry = False
         else:
             log.trace("Querying Lavalink api for %r", query_string)
@@ -873,10 +942,14 @@ class AudioAPIInterface:
             except RuntimeError:
                 raise TrackEnqueueError
         if results is None:
-            results = LoadResult({"loadType": "LOAD_FAILED", "playlistInfo": {}, "tracks": []})
+            results = LoadResult(
+                {"loadType": "LOAD_FAILED", "playlistInfo": {}, "tracks": []}
+            )
             valid_global_entry = False
         update_global = (
-            globaldb_toggle and not valid_global_entry and self.global_cache_api.has_api_key
+            globaldb_toggle
+            and not valid_global_entry
+            and self.global_cache_api.has_api_key
         )
         with contextlib.suppress(Exception):
             if (
@@ -897,7 +970,10 @@ class AudioAPIInterface:
             try:
                 time_now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
                 data = json.dumps(results._raw)
-                if all(k in data for k in ["loadType", "playlistInfo", "isSeekable", "isStream"]):
+                if all(
+                    k in data
+                    for k in ["loadType", "playlistInfo", "isSeekable", "isStream"]
+                ):
                     task = (
                         "insert",
                         (
@@ -952,7 +1028,9 @@ class AudioAPIInterface:
                 (results, called_api) = await self.fetch_track(
                     cast(commands.Context, ctx(player.guild, player.guild, self.cog)),
                     player,
-                    Query.process_input(_TOP_100_US, self.cog.local_folder_current_path),
+                    Query.process_input(
+                        _TOP_100_US, self.cog.local_folder_current_path
+                    ),
                 )
                 tracks = list(results.tracks)
         if tracks:
@@ -981,7 +1059,9 @@ class AudioAPIInterface:
                     query_obj=query,
                 ):
                     log.debug(
-                        "Query is not allowed in %r (%s)", player.guild.name, player.guild.id
+                        "Query is not allowed in %r (%s)",
+                        player.guild.name,
+                        player.guild.id,
                     )
                     continue
                 valid = True

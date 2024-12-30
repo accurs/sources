@@ -1,4 +1,5 @@
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.commands import Context
 from grief.core.i18n import Translator
@@ -45,7 +46,9 @@ class RoleToolsExclusive(RoleToolsMixin):
         inclusive = await self.config.role(role).inclusive_with()
         for excluded_role in exclude:
             if excluded_role.id in inclusive:
-                msg = _("You cannot exclude a role that is already considered inclusive.")
+                msg = _(
+                    "You cannot exclude a role that is already considered inclusive."
+                )
                 await ctx.send(msg)
                 return
             if excluded_role.id not in cur_setting:
@@ -61,7 +64,9 @@ class RoleToolsExclusive(RoleToolsMixin):
 
     @exclusive.command(name="mutual", with_app_command=False)
     @commands.has_permissions(manage_roles=True)
-    async def mutual_exclusive_add(self, ctx: Context, *roles: RoleHierarchyConverter) -> None:
+    async def mutual_exclusive_add(
+        self, ctx: Context, *roles: RoleHierarchyConverter
+    ) -> None:
         """
         Allow setting roles mutually exclusive to eachother
 
@@ -81,15 +86,17 @@ class RoleToolsExclusive(RoleToolsMixin):
                         continue
                     if add_role.id in inclusive:
                         await ctx.send(
-                            _("You cannot exclude a role that is already considered inclusive.")
+                            _(
+                                "You cannot exclude a role that is already considered inclusive."
+                            )
                         )
                         return
                     if add_role.id not in exclusive_roles:
                         exclusive_roles.append(add_role.id)
         await ctx.send(
-            _("The following roles are now mutually exclusive to eachother:\n{roles}").format(
-                roles=humanize_list([r.mention for r in roles])
-            )
+            _(
+                "The following roles are now mutually exclusive to eachother:\n{roles}"
+            ).format(roles=humanize_list([r.mention for r in roles]))
         )
 
     @exclusive.command(name="remove")
@@ -121,5 +128,7 @@ class RoleToolsExclusive(RoleToolsMixin):
             ).format(role=role.mention, excluded_roles=role_names)
             await ctx.send(msg)
         else:
-            msg = _("Role {role} will not have any excluded roles.").format(role=role.mention)
+            msg = _("Role {role} will not have any excluded roles.").format(
+                role=role.mention
+            )
             await ctx.send(msg)

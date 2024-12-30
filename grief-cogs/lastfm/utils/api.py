@@ -38,7 +38,7 @@ class APIMixin:
     async def fetch(self, ctx, url, params=None, handling="json"):
         if params is None:
             params = {}
-        cookies = {'sessionid': self.login_token}
+        cookies = {"sessionid": self.login_token}
         async with self.session.get(url, params=params, cookies=cookies) as response:
 
             if handling == "json":
@@ -49,7 +49,9 @@ class APIMixin:
 
     async def get_current_track(self, ctx, username, ref=None, supress_errors=False):
         data = await self.api_request(
-            ctx, {"method": "user.getrecenttracks", "user": username, "limit": 1}, supress_errors
+            ctx,
+            {"method": "user.getrecenttracks", "user": username, "limit": 1},
+            supress_errors,
         )
         if not data:
             return

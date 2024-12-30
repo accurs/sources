@@ -1,32 +1,17 @@
 #
-from discord.ext.commands import (
-    CommandError,
-    Cog,
-    group,
-    command,
-    Boolean,
-    CommandConverter,
-    has_permissions,
-    check
-)
-from discord import (
-    Client,
-    Embed,
-    File,
-    User,
-    Member,
-    Guild,
-    Message,
-    TextChannel,
-    Thread
-)
-from loguru import logger
-from system.managers.flags.antinuke import Parameters, get_parameters
-from .model import Configuration
+from typing import Any, Dict, List, Literal, Optional, Union
+
 from data.config import CONFIG
 from data.variables import dangerous_permissions
-from typing import Union, List, Optional, Dict, Any, Literal
+from discord import (Client, Embed, File, Guild, Member, Message, TextChannel,
+                     Thread, User)
+from discord.ext.commands import (Boolean, Cog, CommandConverter, CommandError,
+                                  check, command, group, has_permissions)
+from loguru import logger
+from system.managers.flags.antinuke import Parameters, get_parameters
 from system.patch.context import Context
+
+from .model import Configuration
 
 
 def guild_owner():
@@ -34,6 +19,7 @@ def guild_owner():
         if ctx.author.id == ctx.guild.owner_id or ctx.author.id in ctx.bot.owner_ids:
             return True
         raise CommandError("you aren't the guild owner")
+
     return check(predicate)
 
 
@@ -56,7 +42,9 @@ def trusted():
         if ctx.author.id not in admins:
             raise CommandError("you aren't the guild owner or an antinuke admin")
         return True
+
     return check(predicate)
+
 
 class Antinuke(Cog):
     def __init__(self, bot: Client) -> None:
@@ -64,7 +52,10 @@ class Antinuke(Cog):
 
     async def cog_check(self, ctx: Context) -> bool:
         if ctx.command.name == "admin":
-            if not ctx.author.id == ctx.guild.owner_id and ctx.author.id not in self.bot.owner_ids:
+            if (
+                not ctx.author.id == ctx.guild.owner_id
+                and ctx.author.id not in self.bot.owner_ids
+            ):
                 raise CommandError(
                     "You must be the **server owner** to run this command."
                 )
@@ -85,7 +76,9 @@ class Antinuke(Cog):
 
         if ctx.author.id not in admins:
             if ctx.author.id not in self.bot.owner_ids:
-                raise CommandError("You must be an **antinuke admin** to run this command.")
+                raise CommandError(
+                    "You must be an **antinuke admin** to run this command."
+                )
 
         return True
 
@@ -295,7 +288,9 @@ class Antinuke(Cog):
         example=",antinuke admin jonathan",
     )
     @guild_owner()
-    async def antinuke_admin(self, ctx: Context, *, member: Union[Member, User]) -> Message:
+    async def antinuke_admin(
+        self, ctx: Context, *, member: Union[Member, User]
+    ) -> Message:
         """
         Give a member permissions to edit antinuke settings
         """
@@ -349,10 +344,7 @@ class Antinuke(Cog):
             return await ctx.fail("There are no **antinuke admins**")
 
         return await ctx.paginate(
-            Embed(
-                title="Antinuke Admins"
-            ),
-            [f"<@{user_id}>" for user_id in admins]
+            Embed(title="Antinuke Admins"), [f"<@{user_id}>" for user_id in admins]
         )
 
     @antinuke.command(name="list")
@@ -421,7 +413,7 @@ class Antinuke(Cog):
             Embed(
                 title="Antinuke modules & whitelist",
             ),
-            entries
+            entries,
         )
 
     @antinuke.command(
@@ -630,9 +622,7 @@ class Antinuke(Cog):
         parameters=Parameters,
     )
     @trusted()
-    async def antinuke_ban(
-        self, ctx: Context, status: Boolean, flags=None
-    ) -> Message:
+    async def antinuke_ban(self, ctx: Context, status: Boolean, flags=None) -> Message:
         """
         Prevent mass member ban
         """
@@ -652,7 +642,7 @@ class Antinuke(Cog):
                 "punishment": ctx.parameters.get("punishment"),
                 "threshold": ctx.parameters.get("threshold"),
                 "command": ctx.parameters.get("command"),
-            }
+            },
         )
 
         if status:
@@ -673,9 +663,7 @@ class Antinuke(Cog):
         parameters=Parameters,
     )
     @trusted()
-    async def antinuke_kick(
-        self, ctx: Context, status: Boolean, flags=None
-    ) -> Message:
+    async def antinuke_kick(self, ctx: Context, status: Boolean, flags=None) -> Message:
         """
         Prevent mass member kick
         """
@@ -757,9 +745,7 @@ class Antinuke(Cog):
         parameters=Parameters,
     )
     @trusted()
-    async def antinuke_role(
-        self, ctx: Context, status: Boolean, flags=None
-    ) -> Message:
+    async def antinuke_role(self, ctx: Context, status: Boolean, flags=None) -> Message:
         """
         Prevent mass role delete
         """
@@ -793,7 +779,7 @@ class Antinuke(Cog):
             )
         else:
             return await ctx.success("Disabled **role** antinuke module")
-        
+
 
 async def setup(bot: Client):
     await bot.add_cog(Antinuke(bot))

@@ -1,15 +1,13 @@
-import pomice
 import random
-
-from typing import Coroutine, Any
 from contextlib import suppress
+from typing import Any, Coroutine
 
-from discord import Embed, Message, HTTPException, Member, VoiceState, utils
+import pomice
+from discord import Embed, HTTPException, Member, Message, VoiceState, utils
 from discord.ext.commands import Cog, command
-
-from tools.helpers import AkariContext
 from tools.converters import EligibleVolume
-from tools.predicates import is_voice, bot_is_voice
+from tools.helpers import AkariContext
+from tools.predicates import bot_is_voice, is_voice
 
 
 class Player(pomice.Player):

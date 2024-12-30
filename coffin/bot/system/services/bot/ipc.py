@@ -4,11 +4,12 @@ try:
     from rival import Connection
 except Exception:
     pass
-from discord.ext.commands import AutoShardedBot
-from typing import Optional, Union, List, Dict, Any, Coroutine
-from typing_extensions import Self
+from typing import Any, Coroutine, Dict, List, Optional, Union
+
 from cashews import cache
 from data.config import CONFIG
+from discord.ext.commands import AutoShardedBot
+from typing_extensions import Self
 
 cache.setup("mem://")
 

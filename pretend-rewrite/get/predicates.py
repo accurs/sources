@@ -1,10 +1,10 @@
-import json
 import datetime
+import json
 
-from discord.ext.commands import check, BadArgument
-
+from discord.ext.commands import BadArgument, check
 
 from .context import PretendContext
+
 """
 
 LEVELING PREDICATES

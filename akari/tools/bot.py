@@ -1,65 +1,40 @@
-import string
-import random
-import os
-import dotenv
-import urllib
 import asyncio
-import asyncpg
-import logging
-import discord
 import datetime
-import colorgram
 import json
-import aiohttp
-
-from PIL import Image
-from typing import Any, List, Union, Optional, Set
+import logging
+import os
+import random
+import string
+import urllib
+from concurrent.futures import ThreadPoolExecutor
 from copy import copy
+from io import BytesIO
+from typing import Any, List, Optional, Set, Union
 
-from num2words import num2words
-from humanize import precisedelta
-
+import aiohttp
+import asyncpg
+import colorgram
+import discord
+import dotenv
 from AkariAPI import API
-
+from cogs.logging import LogsView, UserBan
+from cogs.music import Music
+from discord.ext import commands
 from discord.gateway import DiscordWebSocket
-
-from .persistent.vm import VoiceMasterView
-from .persistent.tickets import TicketView
-from .persistent.giveaway import GiveawayView
-
-from .helpers import (
-    AkariContext,
-    identify,
-    AkariHelp,
-    guild_perms,
-    CustomInteraction,
-    AntinukeMeasures,
-    Cache,
-)
-
-from .misc.session import Session
-from .misc.tasks import (
-    pomelo_task,
-    snipe_delete,
-    shit_loop,
-    bump_remind,
-    check_monthly_guilds,
-    gw_loop,
-    reminder_task,
-    counter_update,
-    shard_stats,
-)
+from humanize import precisedelta
+from num2words import num2words
+from PIL import Image
 
 from .handlers.embedbuilder import EmbedScript
-
-from io import BytesIO
-
-from cogs.music import Music
-from cogs.logging import UserBan, LogsView
-
-from concurrent.futures import ThreadPoolExecutor
-
-from discord.ext import commands
+from .helpers import (AkariContext, AkariHelp, AntinukeMeasures, Cache,
+                      CustomInteraction, guild_perms, identify)
+from .misc.session import Session
+from .misc.tasks import (bump_remind, check_monthly_guilds, counter_update,
+                         gw_loop, pomelo_task, reminder_task, shard_stats,
+                         shit_loop, snipe_delete)
+from .persistent.giveaway import GiveawayView
+from .persistent.tickets import TicketView
+from .persistent.vm import VoiceMasterView
 
 dotenv.load_dotenv(verbose=True)
 

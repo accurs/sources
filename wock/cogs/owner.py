@@ -1,19 +1,21 @@
-import discord
+import asyncio
 import datetime
 import os
-import sys
 import random
-import aiohttp
-import asyncio
+import sys
 import traceback
-from discord.ext import commands, tasks
-from tools.important import Context  # type: ignore # type: ignore # type: ignore # type: ignore
-from jishaku.codeblocks import codeblock_converter
-from discord import User, Member, Guild
-from typing import Union
-from typing import Optional
-from loguru import logger
 from asyncio.subprocess import PIPE
+from typing import Optional, Union
+
+import aiohttp
+import discord
+from discord import Guild, Member, User
+from discord.ext import commands, tasks
+from jishaku.codeblocks import codeblock_converter
+from loguru import logger
+from tools.important import \
+    Context  # type: ignore # type: ignore # type: ignore # type: ignore
+
 
 async def get_commits(author: str, repository: str, token: str):
     url = f"https://api.github.com/repos/{author}/{repository}/commits"
@@ -28,13 +30,17 @@ async def get_commits(author: str, repository: str, token: str):
             data = await response.json()
     return data
 
+
 async def check_commits(commits: list):
     for commit in commits:
         if commit["commit"]["author"]["name"] != "root":
-            date = datetime.datetime.strptime(commit["commit"]["author"]["date"], "%Y-%m-%dT%H:%M:%SZ").timestamp()
+            date = datetime.datetime.strptime(
+                commit["commit"]["author"]["date"], "%Y-%m-%dT%H:%M:%SZ"
+            ).timestamp()
             if int(datetime.datetime.utcnow().timestamp() - date) < 61:
                 return (True, commit)
     return (False, None)
+
 
 def format_commit(d: tuple):
     d = d[0].decode("UTF-8")
@@ -71,7 +77,7 @@ class Owner(commands.Cog):
             except Exception:
                 pass
 
-    @tasks.loop(minutes = 1)
+    @tasks.loop(minutes=1)
     async def github_pull(self):
         token = "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"
         author = "mazi1337"
@@ -81,7 +87,9 @@ class Owner(commands.Cog):
             check, commit = await check_commits(commits)
             if check is True:
                 if commit != self.last_commit:
-                    proc = await asyncio.create_subprocess_shell("git pull", stderr = PIPE, stdout = PIPE)
+                    proc = await asyncio.create_subprocess_shell(
+                        "git pull", stderr=PIPE, stdout=PIPE
+                    )
                     data = await proc.communicate()
                     self.last_commit = commit
                     if b"Already up to date.\n" in data:
@@ -93,11 +101,8 @@ class Owner(commands.Cog):
                         else:
                             logger.info("[ Commit Detected ] Auto Reloading..")
         except Exception as e:
-            exc = "".join(
-                traceback.format_exception(type(e), e, e.__traceback__)
-            )
+            exc = "".join(traceback.format_exception(type(e), e, e.__traceback__))
             logger.info(f"Issue in Git Pull {exc}")
-
 
     async def do_ban(self, guild: Guild, member: Union[User, Member], reason: str):
         if guild.get_member(member.id):
@@ -118,7 +123,7 @@ class Owner(commands.Cog):
         else:
             return 0
 
-    @commands.group(name="donator", invoke_without_command = True)
+    @commands.group(name="donator", invoke_without_command=True)
     @commands.is_owner()
     async def donator(self, ctx: Context, *, member: Member | User):
         if await self.bot.db.fetchrow(
@@ -136,11 +141,13 @@ class Owner(commands.Cog):
             )
             m = f"added **donator** to {member.mention}"
         return await ctx.success(m)
-    
-    @donator.command(name = "check")
+
+    @donator.command(name="check")
     @commands.is_owner()
     async def donator_check(self, ctx: Context, member: Member | User):
-        if await self.bot.db.fetchrow("""SELECT * FROM donators WHERE user_id = $1""", member.id):
+        if await self.bot.db.fetchrow(
+            """SELECT * FROM donators WHERE user_id = $1""", member.id
+        ):
             return await ctx.success(f"{member.mention} is a donator")
         return await ctx.success(f"{member.mention} is not a donator")
 
@@ -681,5 +688,3 @@ class Owner(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Owner(bot))
-
-

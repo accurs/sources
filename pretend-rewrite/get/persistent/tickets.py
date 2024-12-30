@@ -1,22 +1,14 @@
-import os
 import asyncio
-import discord
 import datetime
-from discord.ext import commands
-import chat_exporter
+import os
 import secrets
-from discord import (
-    PermissionOverwrite,
-    Member,
-    Embed,
-    File,
-    Role,
-    CategoryChannel,
-    TextChannel,
-    Interaction,
-    ButtonStyle,
-    SelectOption,
-)
+
+import chat_exporter
+import discord
+from discord import (ButtonStyle, CategoryChannel, Embed, File, Interaction,
+                     Member, PermissionOverwrite, Role, SelectOption,
+                     TextChannel)
+from discord.ext import commands
 
 
 class TicketTopic(discord.ui.Modal, title="Add a ticket topic"):
@@ -215,8 +207,10 @@ class DeleteTicket(discord.ui.Button):
         with open(filename, "w") as file:
             async for msg in channel.history(oldest_first=True):
                 if not msg.author.bot:
-                    file.write(f"{msg.created_at} - {msg.author.display_name}: {msg.clean_content}\n")
-        return filename  
+                    file.write(
+                        f"{msg.created_at} - {msg.author.display_name}: {msg.clean_content}\n"
+                    )
+        return filename
 
     async def callback(self, interaction: discord.Interaction) -> None:
         # Check if the user has permissions to close the ticket
@@ -226,7 +220,10 @@ class DeleteTicket(discord.ui.Button):
         if che:
             role = interaction.guild.get_role(che[0])
             if role:
-                if not role in interaction.user.roles and not interaction.user.guild_permissions.manage_channels:
+                if (
+                    not role in interaction.user.roles
+                    and not interaction.user.guild_permissions.manage_channels
+                ):
                     return await interaction.response.send_message(
                         embed=discord.Embed(
                             color=interaction.client.warning_color,
@@ -282,7 +279,9 @@ class DeleteTicket(discord.ui.Button):
                     if log_channel:
                         # Attach the transcript file to the embed
                         with open(filename, "rb") as file:
-                            await log_channel.send(embed=embed, file=discord.File(file, filename=filename))
+                            await log_channel.send(
+                                embed=embed, file=discord.File(file, filename=filename)
+                            )
 
             await inter.response.edit_message(
                 content="Deleting this channel in 5 seconds",

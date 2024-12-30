@@ -4,7 +4,8 @@ import logging
 from itertools import islice
 from typing import Any, Dict, List, Optional, Tuple
 
-from .exceptions import ProcessError, StopError, TagScriptError, WorkloadExceededError
+from .exceptions import (ProcessError, StopError, TagScriptError,
+                         WorkloadExceededError)
 from .interface import Adapter, Block
 from .utils import maybe_await
 from .verb import Verb

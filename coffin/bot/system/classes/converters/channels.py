@@ -1,7 +1,8 @@
+import discord
+from data.variables import DISCORD_CHANNEL_MENTION, DISCORD_ID
 from discord.ext import commands
 from system.patch.context import Context
-import discord
-from data.variables import DISCORD_ID, DISCORD_CHANNEL_MENTION
+
 
 class TextChannelConverter(commands.TextChannelConverter):
     async def convert(self, ctx: Context, argument: str):
@@ -30,10 +31,11 @@ class TextChannelConverter(commands.TextChannelConverter):
                     f"channel `{channel}` not found"
                 )
 
+
 class GuildChannelConverter(commands.GuildChannelConverter):
     async def convert(self, ctx: Context, argument: str):
         try:
-            if c := await super().convert_(ctx, argument): 
+            if c := await super().convert_(ctx, argument):
                 return c
         except Exception:
             pass
@@ -42,19 +44,25 @@ class GuildChannelConverter(commands.GuildChannelConverter):
         if match := DISCORD_CHANNEL_MENTION.match(argument):
             channel = ctx.guild.get_channel(int(match.group(1)))
         else:
-            channel = discord.utils.find(
-                lambda m: m.name.lower() == argument.lower(),
-                ctx.guild.channels,
-            ) or discord.utils.find(
-                lambda m: argument.lower() in m.name.lower(),
-                ctx.guild.channels,
-            ) or discord.utils.find(lambda m: str(m.id) == argument, ctx.guild.channels)
+            channel = (
+                discord.utils.find(
+                    lambda m: m.name.lower() == argument.lower(),
+                    ctx.guild.channels,
+                )
+                or discord.utils.find(
+                    lambda m: argument.lower() in m.name.lower(),
+                    ctx.guild.channels,
+                )
+                or discord.utils.find(
+                    lambda m: str(m.id) == argument, ctx.guild.channels
+                )
+            )
             if channel:
                 return channel
             else:
-                raise discord.ext.commands.errors.ChannelNotFound(
-                    f"`{argument}`"
-                )
+                raise discord.ext.commands.errors.ChannelNotFound(f"`{argument}`")
+
+
 class CategoryChannelConverter(commands.TextChannelConverter):
     async def convert(self, ctx: Context, argument: str):
         try:
@@ -66,19 +74,26 @@ class CategoryChannelConverter(commands.TextChannelConverter):
         if match := DISCORD_CHANNEL_MENTION.match(argument):
             channel = ctx.guild.get_channel(int(match.group(1)))
         else:
-            channel = discord.utils.find(
-                lambda m: m.name.lower() == argument.lower(),
-                ctx.guild.categories,
-            ) or discord.utils.find(
-                lambda m: argument.lower() in m.name.lower(),
-                ctx.guild.categories,
-            ) or discord.utils.find(lambda m: str(m.id) == argument, ctx.guild.categories)
+            channel = (
+                discord.utils.find(
+                    lambda m: m.name.lower() == argument.lower(),
+                    ctx.guild.categories,
+                )
+                or discord.utils.find(
+                    lambda m: argument.lower() in m.name.lower(),
+                    ctx.guild.categories,
+                )
+                or discord.utils.find(
+                    lambda m: str(m.id) == argument, ctx.guild.categories
+                )
+            )
             if channel:
                 return channel
             else:
                 raise discord.ext.commands.errors.ChannelNotFound(
                     f"channel `{channel}` not found"
                 )
+
 
 class ThreadChannelConverter(commands.ThreadConverter):
     async def convert(self, ctx: Context, argument: str):
@@ -87,19 +102,23 @@ class ThreadChannelConverter(commands.ThreadConverter):
         if match := DISCORD_CHANNEL_MENTION.match(argument):
             channel = ctx.guild.get_channel(int(match.group(1)))
         else:
-            channel = discord.utils.find(
-                lambda m: m.name.lower() == argument.lower(),
-                ctx.guild.threads,
-            ) or discord.utils.find(
-                lambda m: argument.lower() in m.name.lower(),
-                ctx.guild.threads,
-            ) or discord.utils.find(lambda m: str(m.id) == argument, ctx.guild.threads)
+            channel = (
+                discord.utils.find(
+                    lambda m: m.name.lower() == argument.lower(),
+                    ctx.guild.threads,
+                )
+                or discord.utils.find(
+                    lambda m: argument.lower() in m.name.lower(),
+                    ctx.guild.threads,
+                )
+                or discord.utils.find(
+                    lambda m: str(m.id) == argument, ctx.guild.threads
+                )
+            )
             if channel:
                 return channel
             else:
-                raise discord.ext.commands.errors.ChannelNotFound(
-                    f"`{argument}`"
-                )
+                raise discord.ext.commands.errors.ChannelNotFound(f"`{argument}`")
 
 
 class VoiceChannelConverter(commands.TextChannelConverter):
@@ -126,4 +145,3 @@ class VoiceChannelConverter(commands.TextChannelConverter):
                 raise discord.ext.commands.errors.ChannelNotFound(
                     f"channel `{channel}` not found"
                 )
-

@@ -1,36 +1,21 @@
-import os
 import asyncio
 import datetime
-import chat_exporter
+import os
 import secrets
-import discord
-from get.utils import EmbedBuilder
-from discord.abc import GuildChannel
-from discord.ui import View, Button, Select
-from discord.ext.commands import (
-    group,
-    Cog,
-    has_guild_permissions,
-    bot_has_guild_permissions,
-)
-from discord import (
-    PermissionOverwrite,
-    Member,
-    Embed,
-    File,
-    Role,
-    CategoryChannel,
-    TextChannel,
-    Interaction,
-    ButtonStyle,
-    SelectOption,
-)
 
-from get.pretend import Pretend
-from get.pretend import PretendContext
+import chat_exporter
+import discord
+from discord import (ButtonStyle, CategoryChannel, Embed, File, Interaction,
+                     Member, PermissionOverwrite, Role, SelectOption,
+                     TextChannel)
+from discord.abc import GuildChannel
+from discord.ext.commands import (Cog, bot_has_guild_permissions, group,
+                                  has_guild_permissions)
+from discord.ui import Button, Select, View
 from get.persistent.tickets import TicketTopic, TicketView
 from get.predicates import get_ticket, manage_ticket, ticket_exists
-import os
+from get.pretend import Pretend, PretendContext
+from get.utils import EmbedBuilder
 
 
 class Ticket(Cog):
@@ -38,12 +23,15 @@ class Ticket(Cog):
         self.bot = bot
         self.description = "Manage the ticket system in your server"
 
-    async def make_transcript(c): 
-       filename = f"{c.name}.txt"
-       with open(filename, "w") as file:
-        async for msg in c.history(oldest_first=True):
-          if not msg.author.bot: file.write(f"{msg.created_at} -  {msg.author.display_name}: {msg.clean_content}\n")
-        return filename  
+    async def make_transcript(c):
+        filename = f"{c.name}.txt"
+        with open(filename, "w") as file:
+            async for msg in c.history(oldest_first=True):
+                if not msg.author.bot:
+                    file.write(
+                        f"{msg.created_at} -  {msg.author.display_name}: {msg.clean_content}\n"
+                    )
+            return filename
 
     @Cog.listener()
     async def on_guild_channel_delete(self, channel: GuildChannel):
@@ -193,7 +181,9 @@ class Ticket(Cog):
                 channel.id,
                 ctx.guild.id,
             )
-            return await ctx.send_success(f"Updated **logs** channel to {channel.mention}")
+            return await ctx.send_success(
+                f"Updated **logs** channel to {channel.mention}"
+            )
         else:
             await self.bot.db.execute(
                 "UPDATE tickets SET logs = $1 WHERE guild_id = $2", None, ctx.guild.id

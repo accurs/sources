@@ -1,20 +1,9 @@
-
 from contextlib import suppress
 from typing import Any, Optional
 
-from pyparsing import (
-    Keyword,
-    Literal,
-    ParserElement,
-    ParseResults,
-    SkipTo,
-    Suppress,
-    delimitedList,
-    infixNotation,
-    opAssoc,
-    pyparsing_common,
-    quotedString,
-)
+from pyparsing import (Keyword, Literal, ParserElement, ParseResults, SkipTo,
+                       Suppress, delimitedList, infixNotation, opAssoc,
+                       pyparsing_common, quotedString)
 
 __author__ = "PhasecoreX"
 

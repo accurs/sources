@@ -9,5 +9,7 @@ from .red import RedEvents
 log = getLogger("red.cogs.Audio.cog.Events")
 
 
-class Events(AudioEvents, DpyEvents, LavalinkEvents, RedEvents, metaclass=CompositeMetaClass):
+class Events(
+    AudioEvents, DpyEvents, LavalinkEvents, RedEvents, metaclass=CompositeMetaClass
+):
     """Class joining all event subclasses"""

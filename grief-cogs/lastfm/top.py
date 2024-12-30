@@ -1,6 +1,7 @@
 import asyncio
 
 import discord
+
 from grief.core.utils.chat_formatting import escape
 from grief.core.utils.menus import DEFAULT_CONTROLS, menu
 
@@ -40,7 +41,9 @@ class TopMixin(MixinMeta):
             for i, artist in enumerate(artists, start=1):
                 name = escape(artist["name"], formatting=True)
                 plays = artist["playcount"]
-                rows.append(f"`#{i:2}` **{plays}** {self.format_plays(plays)} — **{name}**")
+                rows.append(
+                    f"`#{i:2}` **{plays}** {self.format_plays(plays)} — **{name}**"
+                )
 
             image_url = await self.scrape_artist_image(artists[0]["name"], ctx)
 
@@ -58,7 +61,9 @@ class TopMixin(MixinMeta):
         else:
             await ctx.send(embed=pages[0])
 
-    @command_fm.command(name="topalbums", aliases=["talb"], usage="[timeframe] [amount]")
+    @command_fm.command(
+        name="topalbums", aliases=["talb"], usage="[timeframe] [amount]"
+    )
     async def command_topalbums(self, ctx, *args):
         """Most listened albums."""
         conf = await self.config.user(ctx.author).all()
@@ -151,7 +156,9 @@ class TopMixin(MixinMeta):
                 # image_url_small = trackdata['track']['album']['image'][1]['#text']
                 # image_colour = await color_from_image_url(image_url_small)
             except KeyError:
-                image_url = await self.scrape_artist_image(tracks[0]["artist"]["name"], ctx)
+                image_url = await self.scrape_artist_image(
+                    tracks[0]["artist"]["name"], ctx
+                )
                 # image_colour = await color_from_image_url(image_url)
 
             content.set_thumbnail(url=image_url)

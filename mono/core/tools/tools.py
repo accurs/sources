@@ -1,35 +1,24 @@
-from typing import List, Optional, Tuple
-from discord.ext.commands import (
-    CommandInvokeError,
-    FlagConverter as OriginalFlagConverter,
-)
-from contextlib import suppress
-from wand.image import Image
-from discord import HTTPException, Member, Message, PartialMessage, Role, Color
-from discord.utils import run_in_executor
-from typing_extensions import Self
-from core.client.context import Context
+import unicodedata
+from contextlib import asynccontextmanager, contextmanager, suppress
+from io import BytesIO
+from logging import Logger, getLogger
+from time import time
+from typing import (TYPE_CHECKING, AsyncGenerator, Callable, Generator, List,
+                    Optional, Tuple)
+
 import dateparser
 import humanize
-from typing import (
-    TYPE_CHECKING,
-    AsyncGenerator,
-    Generator,
-    List,
-    Optional,
-    Tuple,
-    Callable,
-)
-from time import time
-from io import BytesIO
-import unicodedata
-
-from contextlib import asynccontextmanager, contextmanager, suppress
-from .human import fmtseconds
-from logging import Logger, getLogger
-from colorthief import ColorThief
 from anyio import Path as AsyncPath
+from colorthief import ColorThief
+from core.client.context import Context
+from discord import Color, HTTPException, Member, Message, PartialMessage, Role
+from discord.ext.commands import CommandInvokeError
+from discord.ext.commands import FlagConverter as OriginalFlagConverter
+from discord.utils import run_in_executor
+from typing_extensions import Self
+from wand.image import Image
 
+from .human import fmtseconds
 
 TMP_ROOT = AsyncPath("/tmp")
 CACHE_ROOT = TMP_ROOT / "mono"

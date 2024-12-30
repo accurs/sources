@@ -1,8 +1,7 @@
+import config
 from discord import Embed
 from discord import Message as MessageSuper
 from discord.message import Message
-
-import config
 
 
 async def neutral(

@@ -1,15 +1,17 @@
 import asyncio
-import discord
 import re
 from datetime import timezone
-from typing import Union, Set, Literal, Optional
+from typing import Literal, Optional, Set, Union
+
+import discord
 
 from grief.core import Config, commands
 from grief.core.bot import Grief
-from grief.core.i18n import Translator, cog_i18n, set_contextual_locales_from_guild
-from grief.core.utils.predicates import MessagePredicate
+from grief.core.i18n import (Translator, cog_i18n,
+                             set_contextual_locales_from_guild)
 from grief.core.utils import AsyncIter
-from grief.core.utils.chat_formatting import pagify, humanize_list
+from grief.core.utils.chat_formatting import humanize_list, pagify
+from grief.core.utils.predicates import MessagePredicate
 
 _ = Translator("Filter", __file__)
 
@@ -146,7 +148,9 @@ class Filter(commands.Cog):
         author = ctx.author
         word_list = await self.config.guild(server).filter()
         if not word_list:
-            await ctx.send(_("There are no current words setup to be filtered in this server."))
+            await ctx.send(
+                _("There are no current words setup to be filtered in this server.")
+            )
             return
         words = humanize_list(word_list)
         words = _("Filtered in this server:") + "\n\n" + words
@@ -181,7 +185,8 @@ class Filter(commands.Cog):
         if not filter_list:
             return await ctx.send(_("The filter list for this channel is empty."))
         await ctx.send(
-            _("Are you sure you want to clear this channel's filter list?") + " (yes/no)"
+            _("Are you sure you want to clear this channel's filter list?")
+            + " (yes/no)"
         )
         try:
             pred = MessagePredicate.yes_or_no(ctx, user=author)
@@ -199,11 +204,17 @@ class Filter(commands.Cog):
     @_filter_channel.command(name="list")
     async def _channel_list(self, ctx: commands.Context):
         """Send a list of the channel's filtered words."""
-        channel = ctx.channel.parent if isinstance(ctx.channel, discord.Thread) else ctx.channel
+        channel = (
+            ctx.channel.parent
+            if isinstance(ctx.channel, discord.Thread)
+            else ctx.channel
+        )
         author = ctx.author
         word_list = await self.config.channel(channel).filter()
         if not word_list:
-            await ctx.send(_("There are no current words setup to be filtered in this channel."))
+            await ctx.send(
+                _("There are no current words setup to be filtered in this channel.")
+            )
             return
         words = humanize_list(word_list)
         words = _("Filtered in this channel:") + "\n\n" + words
@@ -218,7 +229,10 @@ class Filter(commands.Cog):
         self,
         ctx: commands.Context,
         channel: Union[
-            discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.ForumChannel,
         ],
         *words: str,
     ):
@@ -242,12 +256,17 @@ class Filter(commands.Cog):
         else:
             await ctx.send(_("Words already in the filter."))
 
-    @_filter_channel.command(name="delete", aliases=["remove", "del"], require_var_positional=True)
+    @_filter_channel.command(
+        name="delete", aliases=["remove", "del"], require_var_positional=True
+    )
     async def filter_channel_remove(
         self,
         ctx: commands.Context,
         channel: Union[
-            discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.ForumChannel,
         ],
         *words: str,
     ):
@@ -293,7 +312,9 @@ class Filter(commands.Cog):
         else:
             await ctx.send(_("Those words were already in the filter."))
 
-    @_filter.command(name="delete", aliases=["remove", "del"], require_var_positional=True)
+    @_filter.command(
+        name="delete", aliases=["remove", "del"], require_var_positional=True
+    )
     async def filter_remove(self, ctx: commands.Context, *words: str):
         """Remove words from the filter.
 
@@ -468,7 +489,6 @@ class Filter(commands.Cog):
                     if user_count > 0:
                         user_count = 0
                         member_data["filter_count"] = user_count
-
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

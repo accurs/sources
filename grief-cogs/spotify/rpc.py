@@ -1,5 +1,6 @@
 from dashboard.rpc.utils import rpccheck
 from red_commons.logging import getLogger
+
 from grief.core.bot import Grief
 from grief.core.commands import commands
 

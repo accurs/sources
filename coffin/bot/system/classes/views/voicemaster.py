@@ -1,25 +1,13 @@
 from contextlib import suppress
 
-from discord import (
-    Embed,
-    Guild,
-    Interaction,
-    InteractionResponded,
-    InviteTarget,
-    Member,
-    Role,
-    SelectOption,
-    VoiceChannel,
-    Client,
-    WebhookMessage,
-)
+from data.config import CONFIG as config
+from data.variables import activity_types
+from discord import (Client, Embed, Guild, Interaction, InteractionResponded,
+                     InviteTarget, Member, Role, SelectOption, VoiceChannel,
+                     WebhookMessage)
 from discord.ui import Button, Select, View, button
 from discord.utils import format_dt
-
-from data.config import CONFIG as config
-
 from system.classes.builtins import plural
-from data.variables import activity_types
 
 
 class DisconnectMembers(Select):
@@ -183,12 +171,10 @@ class Interface(View):
         await interaction.user.voice.channel.set_permissions(
             interaction.guild.default_role,
             connect=None,
-            reason=f"VoiceMaster: {interaction.user} unlocked voice channel"
+            reason=f"VoiceMaster: {interaction.user} unlocked voice channel",
         )
 
-        return await interaction.success(
-            "Your **voice channel** has been unlocked"
-        )
+        return await interaction.success("Your **voice channel** has been unlocked")
 
     @button(
         emoji=config["emojis"]["interface"]["ghost"],
@@ -257,8 +243,7 @@ class Interface(View):
         emoji=config["emojis"]["interface"]["disconnect"],
         custom_id="voicemaster:disconnect",
     )
-    async def disconnect(
-        self, interaction: Interaction, button: Button) -> None:
+    async def disconnect(self, interaction: Interaction, button: Button) -> None:
         """
         Reject a member or role from joining your VC
         """
@@ -269,7 +254,8 @@ class Interface(View):
         return await interaction.normal(
             "Select members from the **dropdown** to disconnect.",
             emoji="🔨",
-            view=view, ephemeral = True
+            view=view,
+            ephemeral=True,
         )
 
     @button(
@@ -287,7 +273,8 @@ class Interface(View):
         return await interaction.normal(
             "Select an activity from the **dropdown** to start!",
             emoji=config["emojis"]["interface"]["activity"],
-            view=view, ephemeral = True
+            view=view,
+            ephemeral=True,
         )
 
     @button(

@@ -9,8 +9,8 @@ import re
 import shlex
 import shutil
 import tempfile
-from typing import ClassVar, Final, List, Optional, Pattern, Tuple, Union, TYPE_CHECKING
-from typing_extensions import Self
+from typing import (TYPE_CHECKING, ClassVar, Final, List, Optional, Pattern,
+                    Tuple, Union)
 
 import aiohttp
 import lavalink
@@ -18,29 +18,22 @@ import rich.progress
 import yaml
 from discord.backoff import ExponentialBackoff
 from red_commons.logging import getLogger
+from typing_extensions import Self
 
-from grief.core import data_manager, Config
+from grief.core import Config, data_manager
 from grief.core.i18n import Translator
-
-from .errors import (
-    LavalinkDownloadFailed,
-    InvalidArchitectureException,
-    ManagedLavalinkAlreadyRunningException,
-    ManagedLavalinkPreviouslyShutdownException,
-    UnsupportedJavaException,
-    ManagedLavalinkStartFailure,
-    UnexpectedJavaResponseException,
-    EarlyExitException,
-    ManagedLavalinkNodeException,
-    NoProcessFound,
-    NodeUnhealthy,
-)
-from .utils import (
-    change_dict_naming_convention,
-    get_max_allocation_size,
-    replace_p_with_prefix,
-)
 from grief.core.utils import AsyncIter
+
+from .errors import (EarlyExitException, InvalidArchitectureException,
+                     LavalinkDownloadFailed,
+                     ManagedLavalinkAlreadyRunningException,
+                     ManagedLavalinkNodeException,
+                     ManagedLavalinkPreviouslyShutdownException,
+                     ManagedLavalinkStartFailure, NodeUnhealthy,
+                     NoProcessFound, UnexpectedJavaResponseException,
+                     UnsupportedJavaException)
+from .utils import (change_dict_naming_convention, get_max_allocation_size,
+                    replace_p_with_prefix)
 
 if TYPE_CHECKING:
     from . import Audio
@@ -91,7 +84,9 @@ _RE_JAVA_VERSION_LINE_223: Final[Pattern] = re.compile(
     r'version "(?P<major>\d+)(?:\.(?P<minor>\d+))?(?:\.\d+)*(\-[a-zA-Z0-9]+)?"'
 )
 
-LAVALINK_BRANCH_LINE: Final[Pattern] = re.compile(rb"^Branch\s+(?P<branch>\S+)$", re.MULTILINE)
+LAVALINK_BRANCH_LINE: Final[Pattern] = re.compile(
+    rb"^Branch\s+(?P<branch>\S+)$", re.MULTILINE
+)
 LAVALINK_JAVA_LINE: Final[Pattern] = re.compile(rb"^JVM:\s+(?P<jvm>\S+)$", re.MULTILINE)
 LAVALINK_LAVAPLAYER_LINE: Final[Pattern] = re.compile(
     rb"^Lavaplayer\s+(?P<lavaplayer>\S+)$", re.MULTILINE
@@ -100,7 +95,9 @@ LAVALINK_BUILD_TIME_LINE: Final[Pattern] = re.compile(
     rb"^Build time:\s+(?P<build_time>\d+[.\d+]*).*$", re.MULTILINE
 )
 # present until Lavalink 3.5-rc4
-LAVALINK_BUILD_LINE: Final[Pattern] = re.compile(rb"^Build:\s+(?P<build>\d+)$", re.MULTILINE)
+LAVALINK_BUILD_LINE: Final[Pattern] = re.compile(
+    rb"^Build:\s+(?P<build>\d+)$", re.MULTILINE
+)
 # we don't actually care about what the version format before 3.5-rc4 is exactly
 # as the comparison is based entirely on the build number
 LAVALINK_VERSION_LINE_PRE35: Final[Pattern] = re.compile(
@@ -142,10 +139,14 @@ class LavalinkOldVersion:
     def from_version_output(cls, output: bytes) -> Self:
         build_match = LAVALINK_BUILD_LINE.search(output)
         if build_match is None:
-            raise ValueError("Could not find Build line in the given `--version` output.")
+            raise ValueError(
+                "Could not find Build line in the given `--version` output."
+            )
         version_match = LAVALINK_VERSION_LINE_PRE35.search(output)
         if version_match is None:
-            raise ValueError("Could not find Version line in the given `--version` output.")
+            raise ValueError(
+                "Could not find Version line in the given `--version` output."
+            )
         return cls(
             raw_version=version_match["version"].decode(),
             build_number=int(build_match["build"]),
@@ -215,7 +216,9 @@ class LavalinkVersion:
     def from_version_output(cls, output: bytes) -> Self:
         match = LAVALINK_VERSION_LINE.search(output)
         if match is None:
-            raise ValueError("Could not find Version line in the given `--version` output.")
+            raise ValueError(
+                "Could not find Version line in the given `--version` output."
+            )
         return LavalinkVersion(
             major=int(match["major"]),
             minor=int(match["minor"]),
@@ -225,7 +228,14 @@ class LavalinkVersion:
         )
 
     def _get_comparison_tuple(self) -> Tuple[int, int, int, bool, int, int]:
-        return self.major, self.minor, self.patch, self.rc is None, self.rc or 0, self.red
+        return (
+            self.major,
+            self.minor,
+            self.patch,
+            self.rc is None,
+            self.rc or 0,
+            self.red,
+        )
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, LavalinkVersion):
@@ -277,16 +287,22 @@ class ServerManager:
     _blacklisted_archs: List[str] = []
 
     _lavaplayer: ClassVar[Optional[str]] = None
-    _lavalink_version: ClassVar[Optional[Union[LavalinkOldVersion, LavalinkVersion]]] = None
+    _lavalink_version: ClassVar[
+        Optional[Union[LavalinkOldVersion, LavalinkVersion]]
+    ] = None
     _jvm: ClassVar[Optional[str]] = None
     _lavalink_branch: ClassVar[Optional[str]] = None
     _buildtime: ClassVar[Optional[str]] = None
     _java_exc: ClassVar[str] = "java"
 
-    def __init__(self, config: Config, cog: "Audio", timeout: Optional[int] = None) -> None:
+    def __init__(
+        self, config: Config, cog: "Audio", timeout: Optional[int] = None
+    ) -> None:
         self.ready: asyncio.Event = asyncio.Event()
         self._config = config
-        self._proc: Optional[asyncio.subprocess.Process] = None  # pylint:disable=no-member
+        self._proc: Optional[asyncio.subprocess.Process] = (
+            None  # pylint:disable=no-member
+        )
         self._shutdown: bool = False
         self.start_monitor_task = None
         self.timeout = timeout
@@ -368,13 +384,11 @@ class ServerManager:
                 )
             )
         try:
-            self._proc = (
-                await asyncio.subprocess.create_subprocess_exec(  # pylint:disable=no-member
-                    *args,
-                    cwd=str(self.lavalink_download_dir),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.STDOUT,
-                )
+            self._proc = await asyncio.subprocess.create_subprocess_exec(  # pylint:disable=no-member
+                *args,
+                cwd=str(self.lavalink_download_dir),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
             )
             log.info("Managed Lavalink node started. PID: %s", self._proc.pid)
             try:
@@ -543,9 +557,13 @@ class ServerManager:
                 nbytes = 0
                 with rich.progress.Progress(
                     rich.progress.SpinnerColumn(),
-                    rich.progress.TextColumn("[progress.description]{task.description}"),
+                    rich.progress.TextColumn(
+                        "[progress.description]{task.description}"
+                    ),
                     rich.progress.BarColumn(),
-                    rich.progress.TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                    rich.progress.TextColumn(
+                        "[progress.percentage]{task.percentage:>3.0f}%"
+                    ),
                     rich.progress.TimeRemainingColumn(),
                     rich.progress.TimeElapsedColumn(),
                 ) as progress:
@@ -563,9 +581,14 @@ class ServerManager:
                     finally:
                         file.close()
 
-                shutil.move(path, str(self.lavalink_jar_file), copy_function=shutil.copyfile)
+                shutil.move(
+                    path, str(self.lavalink_jar_file), copy_function=shutil.copyfile
+                )
 
-        log.info("Successfully downloaded Lavalink.jar (%s bytes written)", format(nbytes, ","))
+        log.info(
+            "Successfully downloaded Lavalink.jar (%s bytes written)",
+            format(nbytes, ","),
+        )
         await self._is_up_to_date()
 
     async def _is_up_to_date(self):
@@ -574,11 +597,13 @@ class ServerManager:
             return True
         args, _ = await self._get_jar_args()
         args.append("--version")
-        _proc = await asyncio.subprocess.create_subprocess_exec(  # pylint:disable=no-member
-            *args,
-            cwd=str(self.lavalink_download_dir),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
+        _proc = (
+            await asyncio.subprocess.create_subprocess_exec(  # pylint:disable=no-member
+                *args,
+                cwd=str(self.lavalink_download_dir),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
         )
         stdout = (await _proc.communicate())[0]
         if (branch := LAVALINK_BRANCH_LINE.search(stdout)) is None:
@@ -654,7 +679,9 @@ class ServerManager:
                             log.debug(
                                 "Managed node monitor detected RLL is not connected to any nodes"
                             )
-                            await lavalink.wait_until_ready(timeout=60, wait_if_no_node=60)
+                            await lavalink.wait_until_ready(
+                                timeout=60, wait_if_no_node=60
+                            )
                         except asyncio.TimeoutError:
                             self.cog.lavalink_restart_connect(manual=True)
                             return  # lavalink_restart_connect will cause a new monitor task to be created.
@@ -699,7 +726,9 @@ class ServerManager:
                     self.cog.lavalink_connection_aborted = True
                     return await self.shutdown()
             except InvalidArchitectureException:
-                log.critical("Invalid machine architecture, cannot run a managed Lavalink node.")
+                log.critical(
+                    "Invalid machine architecture, cannot run a managed Lavalink node."
+                )
                 self.cog.lavalink_connection_aborted = True
                 return await self.shutdown()
             except (UnsupportedJavaException, UnexpectedJavaResponseException) as exc:

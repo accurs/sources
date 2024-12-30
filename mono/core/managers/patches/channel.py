@@ -1,7 +1,6 @@
+import config
 from discord import Embed, Message
 from discord.channel import TextChannel
-
-import config
 
 
 async def neutral(

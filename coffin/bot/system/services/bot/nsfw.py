@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 THRESHOLD = 0.70
 SEXUAL_THRESHOLD = 0.30
 
+
 class Request(BaseModel):
     id: Optional[str] = None
     timestamp: Optional[float] = None
@@ -132,11 +133,11 @@ class Text(BaseModel):
     medical: Optional[List] = None
     drug: Optional[List] = None
     weapon: Optional[List] = None
-    content_trade: Optional[List] = Field(None, alias='content-trade')
-    money_transaction: Optional[List] = Field(None, alias='money-transaction')
+    content_trade: Optional[List] = Field(None, alias="content-trade")
+    money_transaction: Optional[List] = Field(None, alias="money-transaction")
     spam: Optional[List] = None
     violence: Optional[List] = None
-    self_harm: Optional[List] = Field(None, alias='self-harm')
+    self_harm: Optional[List] = Field(None, alias="self-harm")
 
 
 class Classes3(BaseModel):
@@ -203,21 +204,23 @@ class ImageModeration(BaseModel):
     faces: Optional[List] = None
     gore: Optional[Gore] = None
     violence: Optional[Violence] = None
-    self_harm: Optional[SelfHarm] = Field(None, alias='self-harm')
+    self_harm: Optional[SelfHarm] = Field(None, alias="self-harm")
     media: Optional[Media] = None
 
     @property
     def nsfw(self) -> bool:
-        return any([
-            self.nudity.none < 0.80,
-            self.nudity.erotica > THRESHOLD,
-            self.nudity.sexual_activity > SEXUAL_THRESHOLD,
-            self.nudity.sexual_display > SEXUAL_THRESHOLD,
-            self.gore.prob > THRESHOLD,
-            self.medical.prob > THRESHOLD,
-            self.recreational_drug.prob > THRESHOLD,
-            self.weapon.classes.firearm > THRESHOLD,
-            self.weapon.classes.knife > THRESHOLD,
-            self.offensive.prob > THRESHOLD,
-            self.self_harm.prob > THRESHOLD
-        ])
+        return any(
+            [
+                self.nudity.none < 0.80,
+                self.nudity.erotica > THRESHOLD,
+                self.nudity.sexual_activity > SEXUAL_THRESHOLD,
+                self.nudity.sexual_display > SEXUAL_THRESHOLD,
+                self.gore.prob > THRESHOLD,
+                self.medical.prob > THRESHOLD,
+                self.recreational_drug.prob > THRESHOLD,
+                self.weapon.classes.firearm > THRESHOLD,
+                self.weapon.classes.knife > THRESHOLD,
+                self.offensive.prob > THRESHOLD,
+                self.self_harm.prob > THRESHOLD,
+            ]
+        )

@@ -1,10 +1,9 @@
-import discord
 import aiohttp
+import discord
+from config import color, emoji
+from discord.ext import commands
+from system.base import Context
 
-from discord.ext        import commands
-
-from system.base        import Context
-from config             import emoji, color
 
 class LastFm(commands.Cog):
     def __init__(self, client):
@@ -36,11 +35,16 @@ class LastFm(commands.Cog):
                 {
                     "artist": track["artist"]["name"],
                     "name": track["name"],
-                    "playcount": track["playcount"]
-                } for track in top_tracks
+                    "playcount": track["playcount"],
+                }
+                for track in top_tracks
             ]
 
-    @commands.command(name="nowplaying", aliases=["np"], description="Shows the current playing track.")
+    @commands.command(
+        name="nowplaying",
+        aliases=["np"],
+        description="Shows the current playing track.",
+    )
     async def nowplaying(self, ctx):
         await self.lastfm_nowplaying(ctx)
 
@@ -49,50 +53,75 @@ class LastFm(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command.qualified_name)
 
-    @lastfm.command(name="nowplaying", description="Check what's currently playing", aliases=["np"])
+    @lastfm.command(
+        name="nowplaying", description="Check what's currently playing", aliases=["np"]
+    )
     async def lastfm_nowplaying(self, ctx):
-        username = await self.client.pool.fetchval("SELECT username FROM lastfm WHERE user_id = $1", ctx.author.id)
+        username = await self.client.pool.fetchval(
+            "SELECT username FROM lastfm WHERE user_id = $1", ctx.author.id
+        )
         if not username:
-            await ctx.warn(f"**You** didn't set a username, use `{ctx.prefix}lastfm set [username]` to set one")
+            await ctx.warn(
+                f"**You** didn't set a username, use `{ctx.prefix}lastfm set [username]` to set one"
+            )
             return
 
-        artist, track_name, album, track_url, image_url = await self.fetch_now_playing(username)
+        artist, track_name, album, track_url, image_url = await self.fetch_now_playing(
+            username
+        )
         if artist and track_name:
             embed = discord.Embed(
                 description=f"> **You** are listening to `{track_name}`",
-                color=color.default
+                color=color.default,
             )
-            user_pfp = ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url
+            user_pfp = (
+                ctx.author.avatar.url
+                if ctx.author.avatar
+                else ctx.author.default_avatar.url
+            )
             embed.set_author(name=f"{ctx.author.name} | now playing", icon_url=user_pfp)
             embed.add_field(name="Artist", value=f"> {artist}", inline=True)
             embed.add_field(name="Album", value=f"> {album}", inline=True)
             embed.set_thumbnail(url=image_url)
             view = discord.ui.View()
-            view.add_item(discord.ui.Button(label="Listen", url=track_url, style=discord.ButtonStyle.link))
+            view.add_item(
+                discord.ui.Button(
+                    label="Listen", url=track_url, style=discord.ButtonStyle.link
+                )
+            )
             await ctx.send(embed=embed, view=view)
         else:
             await ctx.deny("**No** currently playing track found")
 
-    @lastfm.command(name="topweek", description="Check the top tracks played this week", aliases=["tw"])
+    @lastfm.command(
+        name="topweek",
+        description="Check the top tracks played this week",
+        aliases=["tw"],
+    )
     async def lastfm_topweek(self, ctx):
-        username = await self.client.pool.fetchval("SELECT username FROM lastfm WHERE user_id = $1", ctx.author.id)
+        username = await self.client.pool.fetchval(
+            "SELECT username FROM lastfm WHERE user_id = $1", ctx.author.id
+        )
         if not username:
-            await ctx.warn(f"**You** didn't set a username, use `{ctx.prefix}lastfm set [username]` to set one")
+            await ctx.warn(
+                f"**You** didn't set a username, use `{ctx.prefix}lastfm set [username]` to set one"
+            )
             return
 
         top_tracks = await self.fetch_top_week(username)
         if top_tracks:
-            embed = discord.Embed(
-                title="",
-                color=color.default
+            embed = discord.Embed(title="", color=color.default)
+            user_pfp = (
+                ctx.author.avatar.url
+                if ctx.author.avatar
+                else ctx.author.default_avatar.url
             )
-            user_pfp = ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url
             embed.set_author(name=f"{ctx.author.name} | top week", icon_url=user_pfp)
             for track in top_tracks:
                 embed.add_field(
                     name=f"",
                     value=f"> **{track['artist']} - {track['name']}** Plays: `{track['playcount']}`",
-                    inline=False
+                    inline=False,
                 )
             await ctx.send(embed=embed)
         else:
@@ -106,14 +135,20 @@ class LastFm(commands.Cog):
             VALUES ($1, $2)
             ON CONFLICT (user_id) DO UPDATE SET username = $2
             """,
-            ctx.author.id, username
+            ctx.author.id,
+            username,
         )
         await ctx.agree(f"**Set** your LastFm user to: `{username}`")
 
-    @lastfm.command(name="remove", description="Remove your LastFm username", aliases=["delete"])
+    @lastfm.command(
+        name="remove", description="Remove your LastFm username", aliases=["delete"]
+    )
     async def lastfm_remove(self, ctx):
-        await self.client.pool.execute("UPDATE lastfm SET username = NULL WHERE user_id = $1", ctx.author.id)
+        await self.client.pool.execute(
+            "UPDATE lastfm SET username = NULL WHERE user_id = $1", ctx.author.id
+        )
         await ctx.agree("**Removed** your LastFm username")
+
 
 async def setup(client):
     await client.add_cog(LastFm(client))

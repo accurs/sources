@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Union, Any
+from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel
 

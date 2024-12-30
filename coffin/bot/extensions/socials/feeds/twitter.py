@@ -1,17 +1,20 @@
 import asyncio
-import orjson
 import traceback
-
 from collections import defaultdict
 from contextlib import suppress
 from datetime import timedelta
 from random import uniform
 from typing import Dict, List, Optional, cast
-from discord import AllowedMentions, Color, Embed, HTTPException, TextChannel, Thread, Client
+
+import orjson
+from DataProcessing.models.Twitter.tweets import BasicUser, Tweet, Tweets
+from discord import (AllowedMentions, Client, Color, Embed, HTTPException,
+                     TextChannel, Thread)
 from discord.utils import get, utcnow
 from typing_extensions import Self
-from DataProcessing.models.Twitter.tweets import BasicUser, Tweet, Tweets
+
 from .base import BaseRecord, Feed
+
 
 class Record(BaseRecord):
     username: str
@@ -38,7 +41,6 @@ class Twitter(Feed):
             "{post.author.name}": user.name,
             "{post.author.avatar}": user.avatar_url,
             "{post.author.url}": user.url,
-
         }
         return REPLACEMENTS
 
@@ -116,7 +118,9 @@ class Twitter(Feed):
                 continue
 
             if await self.bot.redis.sismember(self.key, str(tweet.id)):
-                self.log.info(f"skipping {str(tweet.id)} due to it already have been sent")
+                self.log.info(
+                    f"skipping {str(tweet.id)} due to it already have been sent"
+                )
                 continue
 
             await self.bot.redis.sadd(self.key, str(tweet.id))
@@ -187,7 +191,6 @@ class Twitter(Feed):
                             allowed_mentions=AllowedMentions.all(),
                         )
                         continue
-
 
                 await channel.send(
                     embed=embed,

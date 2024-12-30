@@ -1,17 +1,15 @@
 import os
+from asyncio import create_subprocess_shell
+from copy import copy
+from subprocess import PIPE
 
-from discord import Message, Member, Interaction, ButtonStyle, Embed
-from discord.ui import View, button, Button
-
+from discord import ButtonStyle, Embed, Interaction, Member, Message
 from discord.ext import commands
 from discord.ext.commands import hybrid_command, hybrid_group
-
+from discord.ui import Button, View, button
 from helpers.bot import PretendInstances
 from helpers.context import Context
 
-from copy import copy
-from asyncio import create_subprocess_shell
-from subprocess import PIPE
 
 class ConfirmView(View):
     def __init__(self, ctx: Context, id: int):
@@ -21,36 +19,33 @@ class ConfirmView(View):
 
     async def interaction_check(self, interaction: Interaction):
         if interaction.user.id != self.ctx.author.id:
-            await interaction.followup.send(f"You can't manage this embed.", ephemeral=True)
+            await interaction.followup.send(
+                f"You can't manage this embed.", ephemeral=True
+            )
             return False
         return True
-    
+
     @button(label="Approve", style=ButtonStyle.green)
     async def approve(self, interaction: Interaction, button: Button):
         try:
             os.system(f"pm2 stop {self.id}")
         except Exception as e:
             return await interaction.response.edit_message(
-                content=f"Couldn't stop `{self.id}`: {e}",
-                view=None,
-                embed=None
+                content=f"Couldn't stop `{self.id}`: {e}", view=None, embed=None
             )
 
         await interaction.response.edit_message(
             embed=Embed(
                 description=f"{interaction.user.mention}: Stopped instance with ID `{self.id}`",
-                color=0x808080
+                color=0x808080,
             ),
-            view=None
+            view=None,
         )
 
     @button(label="Decline", style=ButtonStyle.danger)
     async def decline(self, interaction: Interaction, button: Button):
-        await interaction.response.edit_message(
-            content="ok bai",
-            view=None,
-            embed=None
-        )
+        await interaction.response.edit_message(content="ok bai", view=None, embed=None)
+
 
 class Instances(commands.Cog):
     def __init__(self, bot: PretendInstances):
@@ -60,11 +55,8 @@ class Instances(commands.Cog):
         if not ctx.author.id in self.bot.owner_ids:
             return False
         return True
-    
-    @hybrid_command(
-        name="createinstance",
-        brief="owner only"
-    )
+
+    @hybrid_command(name="createinstance", brief="owner only")
     async def createinstance(
         self,
         ctx: Context,
@@ -72,14 +64,15 @@ class Instances(commands.Cog):
         name: str,
         owner: Member,
         avatar: str,
-        banner: str = None
+        banner: str = None,
     ):
         """
         Create an instance of pretend
         """
 
         async with ctx.channel.typing():
-            await create_subprocess_shell(f"""
+            await create_subprocess_shell(
+                f"""
                 cd ..
                 mkdir instance-{name}
                 cd instance-{name}
@@ -106,8 +99,8 @@ class Instances(commands.Cog):
                 pm2 start main.py --interpreter=python3 --name=instance-{name}
                 """,
                 stdout=PIPE,
-                stderr=PIPE
-            )   
+                stderr=PIPE,
+            )
             # os.system("cd ..")
             # os.system(f"mkdir {name}")
             # os.system(f"cd {name}")
@@ -136,10 +129,7 @@ class Instances(commands.Cog):
             # os.system("exit")
             # os.system(f"pm2 start main.py --interpreter=python3 --name=instance-{name}")
 
-    @hybrid_command(
-        name="instances",
-        brief="owner only"
-    )
+    @hybrid_command(name="instances", brief="owner only")
     async def instances(self, ctx: Context):
         """
         Get a list of active instances
@@ -152,11 +142,7 @@ class Instances(commands.Cog):
 
         await self.bot.process_commands(message)
 
-    @hybrid_group(
-        name="instance",
-        brief="owner only",
-        invoke_without_command=True
-    )
+    @hybrid_group(name="instance", brief="owner only", invoke_without_command=True)
     async def instance(self, ctx: Context):
         """
         Manage instances
@@ -164,10 +150,7 @@ class Instances(commands.Cog):
 
         await ctx.send(f"`;instance stop <id>` `;instance start <id>`")
 
-    @instance.command(
-        name="start",
-        brief="owner only"
-    )
+    @instance.command(name="start", brief="owner only")
     async def instance_start(self, ctx: Context, id: int):
         try:
             os.system(f"pm2 start {id}")
@@ -176,10 +159,7 @@ class Instances(commands.Cog):
 
         await ctx.send_success(f"Started instance `{id}`")
 
-    @instance.command(
-        name="stop",
-        brief="owner only"
-    )
+    @instance.command(name="stop", brief="owner only")
     async def instance_stop(self, ctx: Context, id: int):
         """
         Stop an instance with pm2
@@ -189,15 +169,12 @@ class Instances(commands.Cog):
         await ctx.send(
             embed=Embed(
                 description=f"Are you sure you want to **stop** the instance with ID `{id}`?",
-                color=0x808080
+                color=0x808080,
             ),
-            view=view
+            view=view,
         )
 
-    @instance.command(
-        name="restart",
-        brief="owner only"
-    )
+    @instance.command(name="restart", brief="owner only")
     async def instance_restart(self, ctx: Context, id: int):
         """
         Restart an instance
@@ -206,6 +183,7 @@ class Instances(commands.Cog):
         async with ctx.channel.typing():
             os.system(f"pm2 restart {id}")
             await ctx.message.add_reaction("✅")
+
 
 async def setup(bot: PretendInstances):
     await bot.add_cog(Instances(bot))

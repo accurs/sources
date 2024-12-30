@@ -1,11 +1,11 @@
-
-
 import datetime
 import re
 from collections import Counter
-from typing import Any, Callable, Dict, List, Optional, Pattern, Tuple, TypeVar, Union
+from typing import (Any, Callable, Dict, List, Optional, Pattern, Tuple,
+                    TypeVar, Union)
 
 import discord
+
 from grief.core import commands
 from grief.core.bot import Grief
 from grief.core.utils.chat_formatting import humanize_number
@@ -37,7 +37,12 @@ async def _cleanup(
     before: Optional[int] = None,
     after: Optional[int] = None,
     channel: Optional[  # type: ignore
-        Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+        Union[
+            discord.Thread,
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+        ]
     ] = None,
 ):
     channel: Union[
@@ -49,7 +54,9 @@ async def _cleanup(
     passed_before: Union[discord.Message, discord.Object] = (
         ctx.message if before is None else discord.Object(id=before)
     )
-    two_weeks_before: datetime.datetime = ctx.message.created_at - datetime.timedelta(weeks=2)
+    two_weeks_before: datetime.datetime = ctx.message.created_at - datetime.timedelta(
+        weeks=2
+    )
     two_weeks_before_snowflake: int = discord.utils.time_snowflake(two_weeks_before)
 
     if after:
@@ -127,9 +134,9 @@ async def get_message_from_reference(
     reference: discord.MessageReference,
 ) -> Optional[discord.Message]:
     message: Optional[discord.Message] = None
-    resolved: Optional[
-        Union[discord.Message, discord.DeletedReferencedMessage]
-    ] = reference.resolved
+    resolved: Optional[Union[discord.Message, discord.DeletedReferencedMessage]] = (
+        reference.resolved
+    )
     if resolved and isinstance(resolved, discord.Message):
         message: Optional[discord.Message] = resolved
     elif message := reference.cached_message:
@@ -158,13 +165,15 @@ async def get_messages_for_deletion(
     after: Optional[Union[discord.Message, datetime.datetime]] = None,
     delete_pinned: Optional[bool] = False,
 ) -> List[discord.Message]:
-    date: datetime.datetime = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
-        days=14, minutes=-5
-    )
+    date: datetime.datetime = datetime.datetime.now(
+        datetime.timezone.utc
+    ) - datetime.timedelta(days=14, minutes=-5)
 
     def predicate(message: discord.Message) -> bool:
         return (
-            check(message) and message.created_at > date and (delete_pinned or not message.pinned)
+            check(message)
+            and message.created_at > date
+            and (delete_pinned or not message.pinned)
         )
 
     if after:

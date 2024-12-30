@@ -1,15 +1,17 @@
-from reddash.app import app
-from reddash.app.api import blueprint
-from flask import render_template, redirect, url_for, session, request, jsonify, Response, g
+import datetime
+import json
+import logging
+import random
+import time
+import traceback
+
+import websocket
+from flask import (Response, g, jsonify, redirect, render_template, request,
+                   session, url_for)
 from flask_babel import _, refresh
 from jinja2 import TemplateNotFound
-import traceback
-import websocket
-import json
-import time
-import random
-import logging
-import datetime
+from reddash.app import app
+from reddash.app.api import blueprint
 
 dashlog = logging.getLogger("reddash")
 
@@ -22,7 +24,9 @@ def get_result(app, requeststr):
             return jsonify({"status": 0, "message": _("Not connected to bot")})
         dashlog.error(result["error"])
         return jsonify({"status": 0, "message": _("Something went wrong")})
-    if isinstance(result["result"], dict) and result["result"].get("disconnected", False):
+    if isinstance(result["result"], dict) and result["result"].get(
+        "disconnected", False
+    ):
         return jsonify({"status": 0, "message": _("Not connected to bot")})
     return jsonify({"status": 1, "data": result["result"]})
 
@@ -60,9 +64,9 @@ def serverprefix(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
     app.cooldowns["serverprefix"][
@@ -108,14 +112,14 @@ def adminroles(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
-    app.cooldowns["adminroles"][session.get("id")] = datetime.datetime.now() + datetime.timedelta(
-        seconds=5
-    )
+    app.cooldowns["adminroles"][
+        session.get("id")
+    ] = datetime.datetime.now() + datetime.timedelta(seconds=5)
 
     data = request.json
     userid = g.id
@@ -153,14 +157,14 @@ def modroles(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
-    app.cooldowns["modroles"][session.get("id")] = datetime.datetime.now() + datetime.timedelta(
-        seconds=5
-    )
+    app.cooldowns["modroles"][
+        session.get("id")
+    ] = datetime.datetime.now() + datetime.timedelta(seconds=5)
 
     data = request.json
     userid = g.id
@@ -198,14 +202,14 @@ def fetchrules(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
-    app.cooldowns["fetchrules"][session.get("id")] = datetime.datetime.now() + datetime.timedelta(
-        seconds=5
-    )
+    app.cooldowns["fetchrules"][
+        session.get("id")
+    ] = datetime.datetime.now() + datetime.timedelta(seconds=5)
 
     userid = g.id
 
@@ -240,9 +244,9 @@ def fetchtargets(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
     app.cooldowns["fetchtargets"][
@@ -282,9 +286,9 @@ def fetchcogcommands(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
     app.cooldowns["fetchcogcommands"][
@@ -324,14 +328,14 @@ def addrule(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
-    app.cooldowns["addrule"][session.get("id")] = datetime.datetime.now() + datetime.timedelta(
-        seconds=5
-    )
+    app.cooldowns["addrule"][
+        session.get("id")
+    ] = datetime.datetime.now() + datetime.timedelta(seconds=5)
 
     data = request.json
 
@@ -350,7 +354,13 @@ def addrule(guild):
             "jsonrpc": "2.0",
             "id": 0,
             "method": "DASHBOARDRPC_PERMISSIONS__ADD_RULE",
-            "params": [str(guild), str(userid), allow_or_deny, str(who_or_what), cog_or_command],
+            "params": [
+                str(guild),
+                str(userid),
+                allow_or_deny,
+                str(who_or_what),
+                cog_or_command,
+            ],
         }
         with app.lock:
             return get_result(app, requeststr)
@@ -371,9 +381,9 @@ def adddefaultrule(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
     app.cooldowns["adddefaultrule"][
@@ -417,14 +427,14 @@ def removerule(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
-    app.cooldowns["removerule"][session.get("id")] = datetime.datetime.now() + datetime.timedelta(
-        seconds=5
-    )
+    app.cooldowns["removerule"][
+        session.get("id")
+    ] = datetime.datetime.now() + datetime.timedelta(seconds=5)
 
     data = request.json
 
@@ -463,9 +473,9 @@ def removedefaultrule(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
     app.cooldowns["removedefaultrule"][
@@ -508,9 +518,9 @@ def fetchaliases(guild):
         return jsonify(
             {
                 "status": 0,
-                "message": _("You are doing that too much.  Try again in {wait} seconds").format(
-                    wait=(end - datetime.datetime.now()).seconds
-                ),
+                "message": _(
+                    "You are doing that too much.  Try again in {wait} seconds"
+                ).format(wait=(end - datetime.datetime.now()).seconds),
             }
         )
     app.cooldowns["fetchaliases"][
@@ -548,7 +558,10 @@ def webhook_route():
     if not request.is_json:
         # reject any requests that aren't json for now
         return jsonify(
-            {"status": 0, "message": "Invalid formatting. This endpoint receives JSON only."}
+            {
+                "status": 0,
+                "message": "Invalid formatting. This endpoint receives JSON only.",
+            }
         )
     payload = request.get_json()
     payload["origin"] = request.origin
@@ -602,12 +615,16 @@ def third_party_spotify_callback():
         with app.lock:
             result = get_result(app, requeststr).json
         if result["status"] == 0:
-            return render_template("third_party/spotify.html", context="2", msg=result["message"])
+            return render_template(
+                "third_party/spotify.html", context="2", msg=result["message"]
+            )
         if result["data"]["status"] == 0:
             return render_template(
                 "third_party/spotify.html", context="3", msg=result["data"]["message"]
             )
         return render_template("third_party/spotify.html", context="1", msg="")
     except Exception as e:
-        app.progress.print("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+        app.progress.print(
+            "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        )
         return render_template("third_party/spotify.html", context="2", msg=str(e))

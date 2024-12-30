@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import discord
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+import discord
 from discord.ext.commands import BadArgument
-from typing import TYPE_CHECKING, Any, List, Optional, Union, Dict
+
+from grief.core.commands.converter import get_dict_converter
 from grief.core.i18n import Translator
 from grief.vendored.discord.ext import menus
-from grief.core.commands.converter import get_dict_converter
 
 if TYPE_CHECKING:
     from grief.core.commands import Context
@@ -43,7 +44,10 @@ class _SelectMenu(discord.ui.Select):
 
 class _NavigateButton(discord.ui.Button):
     def __init__(
-        self, style: discord.ButtonStyle, emoji: Union[str, discord.PartialEmoji], direction: int
+        self,
+        style: discord.ButtonStyle,
+        emoji: Union[str, discord.PartialEmoji],
+        direction: int,
     ):
         super().__init__(style=style, emoji=emoji)
         self.direction = direction
@@ -60,7 +64,9 @@ class _NavigateButton(discord.ui.Button):
 
 
 class _StopButton(discord.ui.Button):
-    def __init__(self, style: discord.ButtonStyle, emoji: Union[str, discord.PartialEmoji]):
+    def __init__(
+        self, style: discord.ButtonStyle, emoji: Union[str, discord.PartialEmoji]
+    ):
         super().__init__(style=style, emoji=emoji)
 
     async def callback(self, interaction: discord.Interaction):
@@ -249,7 +255,11 @@ class SimpleMenu(discord.ui.View):
             self.current_page = 0
             page = await self.source.get_page(self.current_page)
         value = await self.source.format_page(self, page)
-        if self.use_select_menu and len(self.select_options) > 25 and self.source.is_paginating():
+        if (
+            self.use_select_menu
+            and len(self.select_options) > 25
+            and self.source.is_paginating()
+        ):
             self.remove_item(self.select_menu)
             self.select_menu = self._get_select_menu()
             self.add_item(self.select_menu)
@@ -267,7 +277,8 @@ class SimpleMenu(discord.ui.View):
         allowed_ids = (getattr(self.author, "id", None),)
         if interaction.user.id not in allowed_ids:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -304,7 +315,9 @@ class SetApiModal(discord.ui.Modal):
             self.default_keys = list(default_keys.keys())
         self.default_keys_fmt = self._format_keys(default_keys)
 
-        _placeholder_token = "client_id YOUR_CLIENT_ID\nclient_secret YOUR_CLIENT_SECRET"
+        _placeholder_token = (
+            "client_id YOUR_CLIENT_ID\nclient_secret YOUR_CLIENT_SECRET"
+        )
         _placeholder_service = "service"
         if self.default_service is not None:
             _placeholder_service = self.default_service
@@ -312,7 +325,9 @@ class SetApiModal(discord.ui.Modal):
         self.title = _("Set API Keys")
         self.keys_label = _("Keys and tokens")
         if self.default_service is not None:
-            self.title = _("Set API Keys for {service}").format(service=self.default_service)
+            self.title = _("Set API Keys for {service}").format(
+                service=self.default_service
+            )
             self.keys_label = _("Keys and tokens for {service}").format(
                 service=self.default_service
             )
@@ -377,9 +392,13 @@ class SetApiModal(discord.ui.Modal):
             )
 
         if self.default_service is not None:  # Check is there is a service set.
-            await interaction.client.set_shared_api_tokens(self.default_service, **tokens)
+            await interaction.client.set_shared_api_tokens(
+                self.default_service, **tokens
+            )
             return await interaction.response.send_message(
-                _("`{service}` API tokens have been set.").format(service=self.default_service),
+                _("`{service}` API tokens have been set.").format(
+                    service=self.default_service
+                ),
                 ephemeral=True,
             )
         else:
@@ -431,7 +450,9 @@ class SetApiView(discord.ui.View):
         label=_("Set API token"),
         style=discord.ButtonStyle.grey,
     )
-    async def auth_button(self, interaction: discord.Interaction, button: discord.Button):
+    async def auth_button(
+        self, interaction: discord.Interaction, button: discord.Button
+    ):
         return await interaction.response.send_modal(
             SetApiModal(self.default_service, self.default_keys)
         )
@@ -537,7 +558,9 @@ class ConfirmView(discord.ui.View):
             pass
 
     @discord.ui.button(label=_("Yes"), style=discord.ButtonStyle.green)
-    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def confirm_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         # Warning: The Sphinx documentation for this method/attribute does not use this docstring.
         """
         A `discord.ui.Button` to confirm the message.
@@ -570,7 +593,9 @@ class ConfirmView(discord.ui.View):
         await self.on_timeout()
 
     @discord.ui.button(label=_("No"), style=discord.ButtonStyle.secondary)
-    async def dismiss_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def dismiss_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         # Warning: The Sphinx documentation for this method/attribute does not use this docstring.
         """
         A `discord.ui.Button` to dismiss the message.
@@ -623,7 +648,8 @@ class ConfirmView(discord.ui.View):
             self.message = interaction.message
         if self.author and interaction.user.id != self.author.id:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True

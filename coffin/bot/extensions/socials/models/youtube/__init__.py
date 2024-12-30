@@ -1,2 +1,2 @@
-from .feed import *
 from .channel import *
+from .feed import *

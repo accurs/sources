@@ -2,6 +2,7 @@ import logging
 
 import discord
 import TagScriptEngine as tse
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.utils.chat_formatting import box, humanize_list
@@ -63,7 +64,9 @@ class JoinPing(commands.Cog):
             if channel.permissions_for(member.guild.me).send_messages is False:
                 continue
 
-            if channel.permissions_for(member.guild.me).embed_links is False and isinstance(
+            if channel.permissions_for(
+                member.guild.me
+            ).embed_links is False and isinstance(
                 emb := resp.actions.get("embed"), discord.Embed
             ):
                 await channel.send(f"{member.mention} {emb.description or ''}")
@@ -128,8 +131,11 @@ class JoinPing(commands.Cog):
     @jpset_channels.command(name="remove", aliases=["r"])
     async def jpsetchan_remove(self, ctx, *channels: discord.TextChannel):
         """
-        Add the channels to the list of channels where the pings will be sent on member join."""
-        cached_chans = self.cache.setdefault(ctx.guild.id, guild_defaults).get("ping_channels")
+        Add the channels to the list of channels where the pings will be sent on member join.
+        """
+        cached_chans = self.cache.setdefault(ctx.guild.id, guild_defaults).get(
+            "ping_channels"
+        )
         channels = {x.id for x in channels}
         not_present = []
         for i in channels:
@@ -155,7 +161,9 @@ class JoinPing(commands.Cog):
         """
         Remove the channels from the list of channels where the pings will be sent on member join.
         """
-        cached_chans = self.cache.setdefault(ctx.guild.id, guild_defaults).get("ping_channels")
+        cached_chans = self.cache.setdefault(ctx.guild.id, guild_defaults).get(
+            "ping_channels"
+        )
         al_present = (channels := {a.id for a in channels}) & set(cached_chans)
         channels -= al_present
         cached_chans += channels
@@ -190,11 +198,15 @@ class JoinPing(commands.Cog):
                 color=await ctx.embed_colour(),
             )
             .add_field(
-                name="Channels", value=" ".join([f"<#{i}>" for i in channels]), inline=False
+                name="Channels",
+                value=" ".join([f"<#{i}>" for i in channels]),
+                inline=False,
             )
             .add_field(name="Message", value=box(message, "py"), inline=False)
             .add_field(
-                name="Delete After (seconds)", value=box(f"{delete_after} seconds"), inline=False
+                name="Delete After (seconds)",
+                value=box(f"{delete_after} seconds"),
+                inline=False,
             )
         )
 

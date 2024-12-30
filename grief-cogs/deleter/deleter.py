@@ -1,11 +1,10 @@
-
-
 import asyncio
 import time
 from collections import defaultdict
 from copy import deepcopy as dc
 
 import discord
+
 from grief.core import Config, checks, commands
 from grief.core.utils import AsyncIter
 from grief.core.utils.chat_formatting import humanize_list
@@ -70,7 +69,8 @@ class Deleter(commands.Cog):
     async def deleter(self, ctx):
         """Group command for commands dealing with auto-timed deletion.
 
-        To see what channels are currently being tracked, use this command with no subcommands passed."""
+        To see what channels are currently being tracked, use this command with no subcommands passed.
+        """
         if ctx.invoked_subcommand is None:
             async with self.lock:
                 channels = await self.conf.all_channels()
@@ -130,25 +130,34 @@ class Deleter(commands.Cog):
         else:
             wt = 0
         if wt < 5 and wt != 0:
-            return await ctx.send("Wait times must be greater than or equal to 5 seconds.")
+            return await ctx.send(
+                "Wait times must be greater than or equal to 5 seconds."
+            )
         if not channel.permissions_for(ctx.guild.me).manage_messages:
-            return await ctx.send("I do not have permission to delete messages in that channel.")
+            return await ctx.send(
+                "I do not have permission to delete messages in that channel."
+            )
         if not channel.permissions_for(ctx.author).manage_messages:
-            return await ctx.send("You do not have permission to delete messages in that channel.")
+            return await ctx.send(
+                "You do not have permission to delete messages in that channel."
+            )
         await self.conf.channel(channel).wait.set(str(wt))
         if wt:
             await ctx.send(
                 f"Messages in {channel.mention} will now be deleted after {og} {ttype}{'s' if og != '1' else ''}."
             )
         else:
-            await ctx.send("Messages will not be auto-deleted after a specific amount of time.")
+            await ctx.send(
+                "Messages will not be auto-deleted after a specific amount of time."
+            )
 
     @deleter.command()
     async def remove(self, ctx, channel: discord.TextChannel, *messages: str):
         """Remove messages in the specified channel from the auto-timed deletion.
 
         Helpful for announcements that you want to stay in the channel.
-        The messages to be removed must be the IDs of the messages you wish to remove."""
+        The messages to be removed must be the IDs of the messages you wish to remove.
+        """
         failed = []
         success = []
         msgs = await self.conf.channel(channel).messages()

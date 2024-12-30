@@ -5,13 +5,14 @@ from typing import Callable, List, Optional, Set, Union
 
 import discord
 
-from grief.core import commands, Config
+from grief.core import Config, commands
 from grief.core.bot import Grief
-from grief.core.commands import positive_int, RawUserIdConverter
+from grief.core.commands import RawUserIdConverter, positive_int
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils.chat_formatting import humanize_number
-from grief.core.utils.mod import slow_deletion, mass_purge
+from grief.core.utils.mod import mass_purge, slow_deletion
 from grief.core.utils.predicates import MessagePredicate
+
 from .checks import check_self_permissions
 from .converters import RawMessageIds
 
@@ -22,8 +23,7 @@ log = logging.getLogger("grief.cleanup")
 
 @cog_i18n(_)
 class Cleanup(commands.Cog):
-    """This cog contains commands used for deleting messages.
-    """
+    """This cog contains commands used for deleting messages."""
 
     def __init__(self, bot: Grief):
         super().__init__()
@@ -50,7 +50,9 @@ class Cleanup(commands.Cog):
             )
             + " (yes/no)"
         )
-        response = await ctx.bot.wait_for("message", check=MessagePredicate.same_context(ctx))
+        response = await ctx.bot.wait_for(
+            "message", check=MessagePredicate.same_context(ctx)
+        )
 
         if response.content.lower().startswith("y"):
             with contextlib.suppress(discord.NotFound):
@@ -152,7 +154,10 @@ class Cleanup(commands.Cog):
     @staticmethod
     async def get_message_from_reference(
         channel: Union[
-            discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.Thread,
         ],
         reference: discord.MessageReference,
     ) -> Optional[discord.Message]:
@@ -179,7 +184,11 @@ class Cleanup(commands.Cog):
     @commands.mod_or_permissions(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
     async def text(
-        self, ctx: commands.Context, text: str, number: positive_int, delete_pinned: bool = False
+        self,
+        ctx: commands.Context,
+        text: str,
+        number: positive_int,
+        delete_pinned: bool = False,
     ):
         """Delete the last X messages matching the specified text in the current channel.
 
@@ -228,7 +237,9 @@ class Cleanup(commands.Cog):
         log.info(reason)
 
         await mass_purge(to_delete, channel, reason=reason)
-        await self.send_optional_notification(len(to_delete), channel, subtract_invoking=True)
+        await self.send_optional_notification(
+            len(to_delete), channel, subtract_invoking=True
+        )
 
     @cleanup.command()
     @commands.guild_only()
@@ -299,7 +310,9 @@ class Cleanup(commands.Cog):
         log.info(reason)
 
         await mass_purge(to_delete, channel, reason=reason)
-        await self.send_optional_notification(len(to_delete), channel, subtract_invoking=True)
+        await self.send_optional_notification(
+            len(to_delete), channel, subtract_invoking=True
+        )
 
     @cleanup.command()
     @commands.guild_only()
@@ -408,7 +421,9 @@ class Cleanup(commands.Cog):
         log.info(reason)
 
         await mass_purge(to_delete, channel, reason=reason)
-        await self.send_optional_notification(len(to_delete), channel, subtract_invoking=True)
+        await self.send_optional_notification(
+            len(to_delete), channel, subtract_invoking=True
+        )
 
     @cleanup.command()
     @commands.guild_only()
@@ -461,7 +476,9 @@ class Cleanup(commands.Cog):
         log.info(reason)
 
         await mass_purge(to_delete, channel, reason=reason)
-        await self.send_optional_notification(len(to_delete), channel, subtract_invoking=True)
+        await self.send_optional_notification(
+            len(to_delete), channel, subtract_invoking=True
+        )
 
     @cleanup.command()
     @commands.guild_only()
@@ -490,7 +507,10 @@ class Cleanup(commands.Cog):
                 return
 
         to_delete = await self.get_messages_for_deletion(
-            channel=channel, number=number, before=ctx.message, delete_pinned=delete_pinned
+            channel=channel,
+            number=number,
+            before=ctx.message,
+            delete_pinned=delete_pinned,
         )
         to_delete.append(ctx.message)
 
@@ -500,7 +520,9 @@ class Cleanup(commands.Cog):
         log.info(reason)
 
         await mass_purge(to_delete, channel, reason=reason)
-        await self.send_optional_notification(len(to_delete), channel, subtract_invoking=True)
+        await self.send_optional_notification(
+            len(to_delete), channel, subtract_invoking=True
+        )
 
     @cleanup.command(name="bot")
     @commands.guild_only()
@@ -527,7 +549,9 @@ class Cleanup(commands.Cog):
             if not cont:
                 return
 
-        prefixes = await self.bot.get_prefix(ctx.message)  # This returns all server prefixes
+        prefixes = await self.bot.get_prefix(
+            ctx.message
+        )  # This returns all server prefixes
         if isinstance(prefixes, str):
             prefixes = [prefixes]
 
@@ -545,7 +569,9 @@ class Cleanup(commands.Cog):
         if alias_cog is not None:
             alias_names: Set[str] = set(
                 a.name for a in await alias_cog._aliases.get_global_aliases()
-            ) | set(a.name for a in await alias_cog._aliases.get_guild_aliases(ctx.guild))
+            ) | set(
+                a.name for a in await alias_cog._aliases.get_guild_aliases(ctx.guild)
+            )
             is_alias = lambda name: name in alias_names
         else:
             is_alias = lambda name: False
@@ -561,7 +587,9 @@ class Cleanup(commands.Cog):
             if p and len(p) > 0:
                 cmd_name = m.content[len(p) :].split(" ")[0]
                 return (
-                    bool(self.bot.get_command(cmd_name)) or is_alias(cmd_name) or is_cc(cmd_name)
+                    bool(self.bot.get_command(cmd_name))
+                    or is_alias(cmd_name)
+                    or is_cc(cmd_name)
                 )
             return False
 
@@ -587,7 +615,9 @@ class Cleanup(commands.Cog):
         log.info(reason)
 
         await mass_purge(to_delete, channel, reason=reason)
-        await self.send_optional_notification(len(to_delete), channel, subtract_invoking=True)
+        await self.send_optional_notification(
+            len(to_delete), channel, subtract_invoking=True
+        )
 
     @cleanup.command(name="self")
     @check_self_permissions()
@@ -680,7 +710,9 @@ class Cleanup(commands.Cog):
     @commands.guild_only()
     @commands.mod_or_permissions(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
-    async def cleanup_duplicates(self, ctx: commands.Context, number: positive_int = 50):
+    async def cleanup_duplicates(
+        self, ctx: commands.Context, number: positive_int = 50
+    ):
         """Deletes duplicate messages in the channel from the last X messages and keeps only one copy.
 
         Defaults to 50.
@@ -728,7 +760,9 @@ class Cleanup(commands.Cog):
 
         to_delete.append(ctx.message)
         await mass_purge(to_delete, ctx.channel, reason="Duplicate message cleanup")
-        await self.send_optional_notification(len(to_delete), ctx.channel, subtract_invoking=True)
+        await self.send_optional_notification(
+            len(to_delete), ctx.channel, subtract_invoking=True
+        )
 
     @commands.group()
     @commands.admin_or_permissions(manage_messages=True)

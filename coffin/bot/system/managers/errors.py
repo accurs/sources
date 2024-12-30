@@ -1,30 +1,26 @@
-from discord.ext.commands import (
-    CommandError,
-    UserInputError,
-    CheckFailure,  
-    MaxConcurrencyReached
-)
-from typing import Union
-import discord
 import traceback
-from discord.ext import commands
-from ..classes.exceptions import SnipeError, EmbedError  
+from typing import Union
 
-from ..patch.alias import handle_aliases, CommandAlias, AliasConverter
-from pomice import TrackLoadError
-from ..patch.context import Context
-from loguru import logger
+import discord
+from aiohttp.client_exceptions import (ClientConnectorError,
+                                       ClientHttpProxyError,
+                                       ClientProxyConnectionError,
+                                       ClientResponseError, ContentTypeError)
 from discord.errors import HTTPException, NotPermitted
-from aiohttp.client_exceptions import (
-    ClientConnectorError,
-    ClientResponseError,
-    ContentTypeError,
-    ClientProxyConnectionError,
-    ClientHttpProxyError,
-)
+from discord.ext import commands
+from discord.ext.commands import (CheckFailure, CommandError,
+                                  MaxConcurrencyReached, UserInputError)
+from loguru import logger
+from pomice import TrackLoadError
+
+from ..classes.exceptions import EmbedError, SnipeError
+from ..patch.alias import AliasConverter, CommandAlias, handle_aliases
+from ..patch.context import Context
+
 
 def codeblock(value: str):
     return f"```{value}```"
+
 
 def multi_replace(text: str, to_replace: dict, once: bool = False) -> str:
     for r1, r2 in to_replace.items():
@@ -114,7 +110,9 @@ class Errors:
             ):
                 return
             if "member_channel_role" in exception.args[0].lower():
-                return await ctx.warning("could not find that **member** / **channel** / **role**")
+                return await ctx.warning(
+                    "could not find that **member** / **channel** / **role**"
+                )
             return await ctx.warning(
                 multi_replace(
                     exception.args[0].lower(),
@@ -184,7 +182,9 @@ class Errors:
             return await ctx.warning("The **API** returned malformed content!")
         elif isinstance(exception, discord.Forbidden):
             if exception.code == 50101:
-                return await ctx.warning("this server doesn't have enough boosts to perform this action")
+                return await ctx.warning(
+                    "this server doesn't have enough boosts to perform this action"
+                )
         if isinstance(exception, commands.CommandOnCooldown):
             if ctx.author.name == "aiohttp":
                 return await ctx.reinvoke()
@@ -199,7 +199,10 @@ class Errors:
             return await ctx.warning(
                 f"Command is on a ``{self.get_rl(exception) or 5:.2f}s`` **cooldown**"
             )
-        if isinstance(exception, (discord.errors.NotPermitted, NotPermitted)) or "NotPermitted" in exception.__repr__():
+        if (
+            isinstance(exception, (discord.errors.NotPermitted, NotPermitted))
+            or "NotPermitted" in exception.__repr__()
+        ):
             if await self.bot.object_cache.ratelimited(
                 f"rl:error_message:{ctx.author.id}", 3, 5
             ):
@@ -234,7 +237,9 @@ class Errors:
                 f"rl:error_message:{ctx.author.id}", 3, 5
             ):
                 return
-            return await ctx.warning(get_message(exception.param.name.replace("role_input", "role")))
+            return await ctx.warning(
+                get_message(exception.param.name.replace("role_input", "role"))
+            )
         if isinstance(exception, commands.BadArgument):
             error = exception
             tb = "".join(
@@ -290,7 +295,9 @@ class Errors:
         if isinstance(exception, HTTPException):
             code: int = exception.code
             if code == 0:
-                if await self.bot.object_cache.ratelimited(f"rl:error_message:{ctx.author.id}", 3, 5):
+                if await self.bot.object_cache.ratelimited(
+                    f"rl:error_message:{ctx.author.id}", 3, 5
+                ):
                     return
                 return await ctx.warning("Webhooks are **ratelimited** for this guild")
             if code == 50045:
@@ -305,7 +312,9 @@ class Errors:
                     f"rl:error_message:{ctx.author.id}", 3, 5
                 ):
                     return
-                return await ctx.warning("I need `Administrative_Permissions` to work properly")
+                return await ctx.warning(
+                    "I need `Administrative_Permissions` to work properly"
+                )
 
             elif code == 60003 and self.application:
                 if await self.bot.object_cache.ratelimited(
@@ -340,7 +349,9 @@ class Errors:
                 f"rl:error_message:{ctx.author.id}", 3, 5
             ):
                 return
-            return await ctx.warning(f"the task `{ctx.command.qualified_name}` is already being ran")
+            return await ctx.warning(
+                f"the task `{ctx.command.qualified_name}` is already being ran"
+            )
         if isinstance(exception, self.ignored):
             return
         if isinstance(error, self.ignored):
@@ -355,7 +366,11 @@ class Errors:
             ):
                 return
             return await ctx.warning(str(exception))
-        if isinstance(error, discord.ext.commands.errors.CommandError) or isinstance(error, CommandError) or isinstance(error, discord.ext.commands.errors.CommandError):
+        if (
+            isinstance(error, discord.ext.commands.errors.CommandError)
+            or isinstance(error, CommandError)
+            or isinstance(error, discord.ext.commands.errors.CommandError)
+        ):
             if await self.bot.object_cache.ratelimited(
                 f"rl:error_message:{ctx.author.id}", 3, 5
             ):
@@ -366,9 +381,7 @@ class Errors:
                 f"rl:error_message:{ctx.author.id}", 3, 5
             ):
                 return
-            return await ctx.warning(
-                str(exception)
-            )
+            return await ctx.warning(str(exception))
         if await self.bot.object_cache.ratelimited(
             f"rl:error_message:{ctx.author.id}", 3, 5
         ):
@@ -403,6 +416,4 @@ class Errors:
             self.log_error(ctx, exception)
         if not isinstance(exception, (discord.errors.NotPermitted, NotPermitted)):
             logger.info(f"type of {exception} ({type(exception)}) is not NotPermitted")
-        return await self.bot.send_exception(
-            ctx, exception
-        )
+        return await self.bot.send_exception(ctx, exception)

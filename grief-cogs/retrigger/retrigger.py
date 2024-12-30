@@ -7,30 +7,18 @@ from typing import Dict, List, Optional, Union
 import discord
 from discord.ext import tasks
 from red_commons.logging import getLogger
+
 from grief.core import Config, checks, commands, modlog
 from grief.core.commands import TimedeltaConverter
 from grief.core.i18n import Translator, cog_i18n
-
 # from redbot.core.utils import menus
 from grief.core.utils.chat_formatting import humanize_list, pagify
 
-from .converters import (
-    ChannelUserRole,
-    MultiFlags,
-    Trigger,
-    TriggerExists,
-    TriggerResponse,
-    TriggerStarExists,
-    ValidEmoji,
-    ValidRegex,
-)
-from .menus import (
-    BaseMenu,
-    ConfirmView,
-    ExplainReTriggerPages,
-    ReTriggerMenu,
-    ReTriggerPages,
-)
+from .converters import (ChannelUserRole, MultiFlags, Trigger, TriggerExists,
+                         TriggerResponse, TriggerStarExists, ValidEmoji,
+                         ValidRegex)
+from .menus import (BaseMenu, ConfirmView, ExplainReTriggerPages,
+                    ReTriggerMenu, ReTriggerPages)
 from .slash import ReTriggerSlash
 from .triggerhandler import ALLOW_OCR, ALLOW_RESIZE, TriggerHandler
 
@@ -188,7 +176,9 @@ class ReTrigger(
                 try:
                     new_trigger.compile()
                 except Exception:
-                    log.exception("Error trying to compile regex pattern in guild %s.", guild)
+                    log.exception(
+                        "Error trying to compile regex pattern in guild %s.", guild
+                    )
                     new_trigger.disable()
                     # I might move this to DM the author of the trigger
                     # before this becomes actually breaking
@@ -237,7 +227,9 @@ class ReTrigger(
         else:
             await ctx.send(msg)
 
-    async def _no_trigger(self, ctx: Union[commands.Context, discord.Interaction], trigger: str):
+    async def _no_trigger(
+        self, ctx: Union[commands.Context, discord.Interaction], trigger: str
+    ):
         msg = _("Trigger `{name}` doesn't exist.").format(name=trigger)
         if isinstance(ctx, discord.Interaction):
             if ctx.response.is_done():
@@ -247,7 +239,9 @@ class ReTrigger(
         else:
             await ctx.send(msg)
 
-    async def _already_exists(self, ctx: Union[commands.Context, discord.Interaction], name: str):
+    async def _already_exists(
+        self, ctx: Union[commands.Context, discord.Interaction], name: str
+    ):
         msg = _("{name} is already a trigger name.").format(name=name)
         if isinstance(ctx, discord.Interaction):
             if ctx.response.is_done():
@@ -257,7 +251,9 @@ class ReTrigger(
         else:
             await ctx.send(msg)
 
-    async def _trigger_set(self, ctx: Union[commands.Context, discord.Interaction], name: str):
+    async def _trigger_set(
+        self, ctx: Union[commands.Context, discord.Interaction], name: str
+    ):
         msg = _("Trigger `{name}` set.").format(name=name)
         if isinstance(ctx, discord.Interaction):
             if ctx.response.is_done():
@@ -442,7 +438,9 @@ class ReTrigger(
             # await ctx.send(msg)
         else:
             await self.config.guild(ctx.guild).add_role_logs.set(True)
-            msg = _("Custom add role events will now appear in the modlog if it's setup.")
+            msg = _(
+                "Custom add role events will now appear in the modlog if it's setup."
+            )
         await ctx.send(msg)
 
     @_modlog.command(name="removeroles", aliases=["removerole", "remrole", "rolerem"])
@@ -458,7 +456,9 @@ class ReTrigger(
             # await ctx.send(msg)
         else:
             await self.config.guild(ctx.guild).remove_role_logs.set(True)
-            msg = _("Custom remove role events will now appear in the modlog if it's setup.")
+            msg = _(
+                "Custom remove role events will now appear in the modlog if it's setup."
+            )
         await ctx.send(msg)
 
     @_modlog.command(name="channel")
@@ -491,7 +491,9 @@ class ReTrigger(
                     await ctx.send(msg)
                     return
             else:
-                await ctx.send(_('Channel "{channel}" not found.').format(channel=channel))
+                await ctx.send(
+                    _('Channel "{channel}" not found.').format(channel=channel)
+                )
                 return
             await self.config.guild(ctx.guild).modlog.set(channel)
         msg = _("Modlog set to {channel}").format(channel=channel)
@@ -518,7 +520,10 @@ class ReTrigger(
         if type(trigger) is str:
             return await self._no_trigger(ctx, trigger)
         if style not in ["guild", "server", "channel", "user", "member"]:
-            msg = _("Style must be either `guild`, " "`server`, `channel`, `user`, or `member`.")
+            msg = _(
+                "Style must be either `guild`, "
+                "`server`, `channel`, `user`, or `member`."
+            )
             await ctx.send(msg)
             return
         msg = _("Cooldown of {time}s per {style} set for Trigger `{name}`.")
@@ -566,7 +571,9 @@ class ReTrigger(
         if not isinstance(channel_user_role, (list, tuple)):
             channel_user_role = (channel_user_role,)
         if len(channel_user_role) < 1:
-            await ctx.send(_("You must supply 1 or more channels users or roles to be allowed"))
+            await ctx.send(
+                _("You must supply 1 or more channels users or roles to be allowed")
+            )
             return
         async with self.config.guild(ctx.guild).trigger_list() as trigger_list:
             for trigger in triggers:
@@ -581,7 +588,9 @@ class ReTrigger(
         # self.triggers[ctx.guild.id].append(trigger)
         msg = _("Trigger(s) {name} added `{list_type}` to its allowlist.")
         list_type = humanize_list([c.name for c in channel_user_role])
-        msg = msg.format(list_type=list_type, name=humanize_list([t.name for t in triggers]))
+        msg = msg.format(
+            list_type=list_type, name=humanize_list([t.name for t in triggers])
+        )
         await ctx.send(msg)
 
     @whitelist.command(name="remove", aliases=["rem", "del"])
@@ -625,7 +634,9 @@ class ReTrigger(
         # self.triggers[ctx.guild.id].append(trigger)
         msg = _("Trigger(s) {name} removed `{list_type}` from its allowlist.")
         list_type = humanize_list([c.name for c in channel_user_role])
-        msg = msg.format(list_type=list_type, name=humanize_list([t.name for t in triggers]))
+        msg = msg.format(
+            list_type=list_type, name=humanize_list([t.name for t in triggers])
+        )
         await ctx.send(msg)
 
     @blacklist.command(name="add")
@@ -647,7 +658,9 @@ class ReTrigger(
         if not isinstance(channel_user_role, (list, tuple)):
             channel_user_role = (channel_user_role,)
         if len(channel_user_role) < 1:
-            await ctx.send(_("You must supply 1 or more channels users or roles to be blocked."))
+            await ctx.send(
+                _("You must supply 1 or more channels users or roles to be blocked.")
+            )
             return
         async with self.config.guild(ctx.guild).trigger_list() as trigger_list:
             for trigger in triggers:
@@ -662,7 +675,9 @@ class ReTrigger(
         # self.triggers[ctx.guild.id].append(trigger)
         msg = _("Trigger(s) {name} added `{list_type}` to its blocklist.")
         list_type = humanize_list([c.name for c in channel_user_role])
-        msg = msg.format(list_type=list_type, name=humanize_list([t.name for t in triggers]))
+        msg = msg.format(
+            list_type=list_type, name=humanize_list([t.name for t in triggers])
+        )
         await ctx.send(msg)
 
     @blacklist.command(name="remove", aliases=["rem", "del"])
@@ -704,7 +719,9 @@ class ReTrigger(
             # self.triggers[ctx.guild.id].append(trigger)
         msg = _("Trigger(s) {name} removed `{list_type}` from its blocklist.") + "\n"
         list_type = humanize_list([c.name for c in channel_user_role])
-        msg = msg.format(list_type=list_type, name=humanize_list([t.name for t in triggers]))
+        msg = msg.format(
+            list_type=list_type, name=humanize_list([t.name for t in triggers])
+        )
         await ctx.send(msg)
 
     @_edit.command(name="regex")
@@ -744,7 +761,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def toggle_ocr_search(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Toggle whether to use Optical Character Recognition to search for text within images.
@@ -769,7 +788,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def toggle_nsfw(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Toggle whether a trigger is considered NSFW.
@@ -785,14 +806,18 @@ class ReTrigger(
             trigger_list[trigger.name] = await trigger.to_json()
         # await self.remove_trigger_from_cache(ctx.guild.id, trigger)
         # self.triggers[ctx.guild.id].append(trigger)
-        msg = _("Trigger {name} NSFW set to: {nsfw}").format(name=trigger.name, nsfw=trigger.nsfw)
+        msg = _("Trigger {name} NSFW set to: {nsfw}").format(
+            name=trigger.name, nsfw=trigger.nsfw
+        )
         await ctx.send(msg)
 
     @_edit.command(name="readembeds")
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def toggle_read_embeds(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Toggle whether a trigger will check embeds.
@@ -803,7 +828,9 @@ class ReTrigger(
             return await self._no_trigger(ctx, trigger)
 
         # trigger.read_embeds = not trigger.read_embeds
-        trigger.modify("read_embeds", not trigger.read_embeds, ctx.author, ctx.message.id)
+        trigger.modify(
+            "read_embeds", not trigger.read_embeds, ctx.author, ctx.message.id
+        )
         async with self.config.guild(ctx.guild).trigger_list() as trigger_list:
             trigger_list[trigger.name] = await trigger.to_json()
         # await self.remove_trigger_from_cache(ctx.guild.id, trigger)
@@ -817,7 +844,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def toggle_read_threads(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Toggle whether a filter trigger will check thread titles.
@@ -835,7 +864,10 @@ class ReTrigger(
 
         # trigger.read_thread_title = not trigger.read_thread_title
         trigger.modify(
-            "read_thread_title", not trigger.read_thread_title, ctx.author, ctx.message.id
+            "read_thread_title",
+            not trigger.read_thread_title,
+            ctx.author,
+            ctx.message.id,
         )
         async with self.config.guild(ctx.guild).trigger_list() as trigger_list:
             trigger_list[trigger.name] = await trigger.to_json()
@@ -850,7 +882,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def toggle_filename_search(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Toggle whether to search message attachment filenames.
@@ -864,7 +898,9 @@ class ReTrigger(
             return await self._no_trigger(ctx, trigger)
 
         # trigger.read_filenames = not trigger.read_filenames
-        trigger.modify("read_filenames", not trigger.read_filenames, ctx.author, ctx.message.id)
+        trigger.modify(
+            "read_filenames", not trigger.read_filenames, ctx.author, ctx.message.id
+        )
         async with self.config.guild(ctx.guild).trigger_list() as trigger_list:
             trigger_list[trigger.name] = await trigger.to_json()
         # await self.remove_trigger_from_cache(ctx.guild.id, trigger)
@@ -941,7 +977,9 @@ class ReTrigger(
             view = ConfirmView(ctx.author)
             view.result = True
             view.message = await ctx.send(
-                _("Would you like non-moderators to be able to add users to the created thread?"),
+                _(
+                    "Would you like non-moderators to be able to add users to the created thread?"
+                ),
                 view=view,
             )
             await view.wait()
@@ -1079,7 +1117,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def toggle_check_edits(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Toggle whether the bot will listen to edited messages as well as on_message for
@@ -1092,7 +1132,9 @@ class ReTrigger(
             return await self._no_trigger(ctx, trigger)
 
         # trigger.check_edits = not trigger.check_edits
-        trigger.modify("check_edits", not trigger.check_edits, ctx.author, ctx.message.id)
+        trigger.modify(
+            "check_edits", not trigger.check_edits, ctx.author, ctx.message.id
+        )
         async with self.config.guild(ctx.guild).trigger_list() as trigger_list:
             trigger_list[trigger.name] = await trigger.to_json()
         # await self.remove_trigger_from_cache(ctx.guild.id, trigger)
@@ -1132,7 +1174,9 @@ class ReTrigger(
             trigger_list[trigger.name] = await trigger.to_json()
         # await self.remove_trigger_from_cache(ctx.guild.id, trigger)
         # self.triggers[ctx.guild.id].append(trigger)
-        msg = _("Trigger {name} text changed to `{text}`").format(name=trigger.name, text=text)
+        msg = _("Trigger {name} text changed to `{text}`").format(
+            name=trigger.name, text=text
+        )
         await ctx.send(msg)
 
     @_edit.command(name="chance", aliases=["chances"])
@@ -1168,7 +1212,9 @@ class ReTrigger(
                 name=trigger.name, chance=str(chance)
             )
         else:
-            msg = _("Trigger {name} chance changed to always.").format(name=trigger.name)
+            msg = _("Trigger {name} chance changed to always.").format(
+                name=trigger.name
+            )
         await ctx.send(msg)
 
     @_edit.command(name="deleteafter", aliases=["autodelete", "delete"])
@@ -1218,7 +1264,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def edit_ignore_commands(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Toggle the trigger ignoring command messages entirely.
@@ -1230,7 +1278,9 @@ class ReTrigger(
             return await self._no_trigger(ctx, trigger)
 
         # trigger.ignore_commands = not trigger.ignore_commands
-        trigger.modify("ignore_commands", not trigger.ignore_commands, ctx.author, ctx.message.id)
+        trigger.modify(
+            "ignore_commands", not trigger.ignore_commands, ctx.author, ctx.message.id
+        )
         async with self.config.guild(ctx.guild).trigger_list() as trigger_list:
             trigger_list[trigger.name] = await trigger.to_json()
         # await self.remove_trigger_from_cache(ctx.guild.id, trigger)
@@ -1265,7 +1315,9 @@ class ReTrigger(
         cmd_list = command.split(" ")
         existing_cmd = self.bot.get_command(cmd_list[0])
         if existing_cmd is None:
-            msg = _("`{command}` doesn't seem to be an available command.").format(command=command)
+            msg = _("`{command}` doesn't seem to be an available command.").format(
+                command=command
+            )
             await ctx.send(msg)
             return
         if TriggerResponse.command not in trigger.response_type:
@@ -1389,7 +1441,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def enable_trigger(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Enable a trigger
@@ -1410,7 +1464,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def disable_trigger(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Disable a trigger
@@ -1467,7 +1523,9 @@ class ReTrigger(
                 timeout = 1
             await self.config.trigger_timeout.set(timeout)
             self.trigger_timeout = timeout
-            await ctx.send(_("Regex search timeout set to {timeout}").format(timeout=timeout))
+            await ctx.send(
+                _("Regex search timeout set to {timeout}").format(timeout=timeout)
+            )
 
     @retrigger.command(hidden=True)
     @checks.is_owner()
@@ -1556,7 +1614,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
     async def remove(
-        self, ctx: commands.Context, trigger: Trigger = commands.parameter(converter=TriggerExists)
+        self,
+        ctx: commands.Context,
+        trigger: Trigger = commands.parameter(converter=TriggerExists),
     ) -> None:
         """
         Remove a specified trigger
@@ -1685,7 +1745,9 @@ class ReTrigger(
     @retrigger.command()
     @checks.mod_or_permissions(manage_messages=True)
     @wrapped_additional_help()
-    async def dm(self, ctx: commands.Context, name: str, regex: ValidRegex, *, text: str) -> None:
+    async def dm(
+        self, ctx: commands.Context, name: str, regex: ValidRegex, *, text: str
+    ) -> None:
         """
         Add a dm response trigger
 
@@ -1834,7 +1896,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @commands.bot_has_permissions(attach_files=True)
     @wrapped_additional_help()
-    async def randomimage(self, ctx: commands.Context, name: str, regex: ValidRegex) -> None:
+    async def randomimage(
+        self, ctx: commands.Context, name: str, regex: ValidRegex
+    ) -> None:
         """
         Add a random image/file response trigger
 
@@ -2079,7 +2143,9 @@ class ReTrigger(
     @checks.mod_or_permissions(manage_messages=True)
     @commands.bot_has_permissions(add_reactions=True)
     @wrapped_additional_help()
-    async def publish(self, ctx: commands.Context, name: str, regex: ValidRegex) -> None:
+    async def publish(
+        self, ctx: commands.Context, name: str, regex: ValidRegex
+    ) -> None:
         """
         Add a trigger to automatically publish content in news channels.
 
@@ -2258,7 +2324,9 @@ class ReTrigger(
             if ctx.author.id == ctx.guild.owner_id:
                 continue
             if role >= ctx.author.top_role:
-                await ctx.send(_("I can't assign roles higher than you are able to assign."))
+                await ctx.send(
+                    _("I can't assign roles higher than you are able to assign.")
+                )
                 return
         role_ids = [r.id for r in roles]
         guild = ctx.guild
@@ -2305,7 +2373,9 @@ class ReTrigger(
             if ctx.author.id == ctx.guild.owner_id:
                 continue
             if role >= ctx.author.top_role:
-                await ctx.send(_("I can't remove roles higher than you are able to remove."))
+                await ctx.send(
+                    _("I can't remove roles higher than you are able to remove.")
+                )
                 return
         role_ids = [r.id for r in roles]
         guild = ctx.guild
@@ -2360,7 +2430,9 @@ class ReTrigger(
             await ctx.send(e)
             return
         if not multi_response:
-            await ctx.send(_("You need to provide at least one of the multi responses."))
+            await ctx.send(
+                _("You need to provide at least one of the multi responses.")
+            )
             return
 
         if ctx.guild.id in self.triggers and name in self.triggers[ctx.guild.id]:
@@ -2371,9 +2443,13 @@ class ReTrigger(
             await ctx.send(_("You have no actions provided for this trigger."))
             return
         remove_roles = [
-            r.response for r in multi_response if r.action is TriggerResponse.remove_role
+            r.response
+            for r in multi_response
+            if r.action is TriggerResponse.remove_role
         ]
-        add_roles = [r.response for r in multi_response if r.action is TriggerResponse.add_role]
+        add_roles = [
+            r.response for r in multi_response if r.action is TriggerResponse.add_role
+        ]
         reactions = [
             discord.PartialEmoji.from_str(str(r.response))
             for r in multi_response

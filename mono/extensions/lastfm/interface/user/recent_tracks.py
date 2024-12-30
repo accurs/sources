@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, cast
-from aiohttp import ClientSession
 
+from aiohttp import ClientSession
+from core.client.cache.redis import Redis
 from discord import Color
 from discord.ext.commands import CommandError
+from extensions.lastfm import http
 from pydantic import BaseModel, Field
 from xxhash import xxh64_hexdigest
-
-from extensions.lastfm import http
-from core.client.cache.redis import Redis
 
 if TYPE_CHECKING:
     from extensions.lastfm.interface.track.info import Track

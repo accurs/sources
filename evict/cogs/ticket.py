@@ -1,8 +1,11 @@
-import discord, os, asyncio
+import asyncio
+import os
+
+import discord
+from bot.managers.emojis import Colors, Emojis
 from discord.ext import commands
 from patches.permissions import Permissions
 from utils.utils import EmbedBuilder
-from bot.managers.emojis import Emojis, Colors
 
 
 def get_ticket():
@@ -97,9 +100,7 @@ class CreateTicket(discord.ui.View):
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     color=(
-                        int(check["color"])
-                        if check[4] is not None
-                        else Colors.color
+                        int(check["color"]) if check[4] is not None else Colors.color
                     ),
                     description=f"{Emojis.warn} {interaction.user.mention}: You already have a ticket opened",
                 ),
@@ -171,11 +172,7 @@ class CreateTicket(discord.ui.View):
             )
 
         embed = discord.Embed(
-            color=(
-                int(check["color"])
-                if check["color"] is not None
-                else Colors.color
-            ),
+            color=(int(check["color"]) if check["color"] is not None else Colors.color),
             description="🔍 Please choose a topic",
         )
         select = discord.ui.Select(options=options, placeholder="select a topic...")
@@ -210,9 +207,7 @@ class CreateTicket(discord.ui.View):
             )
             e = discord.Embed(
                 color=(
-                    int(check["color"])
-                    if check["color"] is not None
-                    else Colors.color
+                    int(check["color"]) if check["color"] is not None else Colors.color
                 ),
                 title=f"{select.values[0]}",
                 description="Support will be with you shortly, please be patient.\n\nTo close the ticket press the button down below.",

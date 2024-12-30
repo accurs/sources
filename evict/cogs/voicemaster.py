@@ -1,12 +1,9 @@
 import discord
-
+from bot.helpers import EvictContext
+from bot.managers.emojis import Colors, Emojis
 from discord.ext import commands
 from discord.ui import Modal
-
 from patches.permissions import Permissions
-from bot.helpers import EvictContext
-
-from bot.managers.emojis import Emojis, Colors
 
 
 async def check_owner(ctx: EvictContext):

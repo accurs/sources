@@ -1,38 +1,22 @@
-from discord.ext.commands import (
-    Cog,  
-    group, 
-    CommandError,
-    CooldownMapping,
-    BucketType,
-    cooldown,
-    Region,
-    Bitrate,
-    has_permissions
-)
-from discord.utils import format_dt
+from typing import Any, Dict, List, Optional, Union
 
-from discord import (
-    Client, 
-    Embed, 
-    HTTPException,
-    RateLimited,
-    CategoryChannel,
-    Role,
-    Message,
-    Member
-)
-from discord.ext import tasks
 from data.config import CONFIG as config
-from typing import Any, Dict, Optional, List, Union
-from system.patch.context import Context
+from discord import (CategoryChannel, Client, Embed, HTTPException, Member,
+                     Message, RateLimited, Role)
+from discord.ext import tasks
+from discord.ext.commands import (Bitrate, BucketType, Cog, CommandError,
+                                  CooldownMapping, Region, cooldown, group,
+                                  has_permissions)
+from discord.utils import format_dt
 from system.classes.views.voicemaster import Interface
+from system.patch.context import Context
+
 mappings: Dict[str, CooldownMapping] = {}
 
 
 class Voicemaster(Cog):
     def __init__(self: "Voicemaster", bot: Client):
         self.bot = bot
-
 
     async def cog_load(self) -> None:
         schedule_deletion: List[int] = list()
@@ -67,7 +51,7 @@ class Voicemaster(Cog):
             )
         self.voicemaster_clear_loop.start()
 
-    @tasks.loop(minutes = 1)
+    @tasks.loop(minutes=1)
     async def voicemaster_clear_loop(self):
         schedule_deletion: List[int] = list()
 
@@ -190,7 +174,7 @@ class Voicemaster(Cog):
             send_messages=False,
             send_messages_in_threads=False,
             create_public_threads=False,
-            create_private_threads=False
+            create_private_threads=False,
         )
 
         await channel.set_permissions(
@@ -198,13 +182,13 @@ class Voicemaster(Cog):
             send_messages=False,
             send_messages_in_threads=False,
             create_public_threads=False,
-            create_private_threads=False
+            create_private_threads=False,
         )
 
         embed = Embed(
             title="VoiceMaster Interface",
             description="Click the buttons below to control your voice channel",
-            color=0x6e879c,
+            color=0x6E879C,
         )
         embed.set_author(
             name=ctx.guild.name,
@@ -553,7 +537,9 @@ class Voicemaster(Cog):
                 reason=f"VoiceMaster: {ctx.author} renamed voice channel",
             )
         except HTTPException:
-            return await ctx.success("Voice channel name cannot contain **vulgar words**")
+            return await ctx.success(
+                "Voice channel name cannot contain **vulgar words**"
+            )
         except RateLimited:
             return await ctx.success(
                 "Voice channel is being **rate limited**, try again later"
@@ -727,5 +713,6 @@ class Voicemaster(Cog):
             f"Removed **connect permission** from {target.mention} to join"
         )
 
-#async def setup(bot: Client):
-    #await bot.add_cog(Voicemaster(bot))
+
+# async def setup(bot: Client):
+# await bot.add_cog(Voicemaster(bot))

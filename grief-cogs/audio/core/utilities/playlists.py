@@ -6,7 +6,6 @@ import math
 import random
 import time
 from pathlib import Path
-
 from typing import List, MutableMapping, Optional, Tuple, Union
 
 import aiohttp
@@ -22,7 +21,8 @@ from grief.core.utils.chat_formatting import box
 from grief.core.utils.menus import start_adding_reactions
 from grief.core.utils.predicates import ReactionPredicate
 
-from ...apis.playlist_interface import Playlist, PlaylistCompat23, create_playlist
+from ...apis.playlist_interface import (Playlist, PlaylistCompat23,
+                                        create_playlist)
 from ...audio_dataclasses import _PARTIALLY_SUPPORTED_MUSIC_EXT, Query
 from ...errors import TooManyMatches, TrackEnqueueError
 from ...utils import Notifier, PlaylistScope
@@ -31,9 +31,7 @@ from ..cog_utils import CompositeMetaClass
 
 log = getLogger("red.cogs.Audio.cog.Utilities.playlists")
 _ = Translator("Audio", Path(__file__))
-CURATED_DATA = (
-    "https://gist.githubusercontent.com/aikaterna/4b5de6c420cd6f12b83cb895ca2de16a/raw/json"
-)
+CURATED_DATA = "https://gist.githubusercontent.com/aikaterna/4b5de6c420cd6f12b83cb895ca2de16a/raw/json"
 
 
 class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
@@ -58,7 +56,9 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
         )
 
         is_different_user = len({playlist.author, user_to_query.id, ctx.author.id}) != 1
-        is_different_guild = True if guild_to_query is None else ctx.guild.id != guild_to_query.id
+        is_different_guild = (
+            True if guild_to_query is None else ctx.guild.id != guild_to_query.id
+        )
         if getattr(playlist, "id", 0) == 42069:
             has_perms = bypass
         elif is_owner:
@@ -88,11 +88,15 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
                     id=playlist.id,
                     scope=self.humanize_scope(
                         playlist.scope,
-                        ctx=guild_to_query
-                        if playlist.scope == PlaylistScope.GUILD.value
-                        else playlist_author
-                        if playlist.scope == PlaylistScope.USER.value
-                        else None,
+                        ctx=(
+                            guild_to_query
+                            if playlist.scope == PlaylistScope.GUILD.value
+                            else (
+                                playlist_author
+                                if playlist.scope == PlaylistScope.USER.value
+                                else None
+                            )
+                        ),
                     ),
                 )
             elif playlist.scope == PlaylistScope.GUILD.value and (
@@ -113,7 +117,9 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
                     "You do not have the permissions to manage playlists in {scope} scope."
                 ).format(scope=self.humanize_scope(scope, the=True))
 
-            await self.send_embed_msg(ctx, title=_("No access to playlist."), description=msg)
+            await self.send_embed_msg(
+                ctx, title=_("No access to playlist."), description=msg
+            )
             return False
         return True
 
@@ -169,9 +175,13 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
             return None, original_input, scope or PlaylistScope.GUILD.value
         if lazy_match or (scope == PlaylistScope.USER.value):
             correct_scope_matches_user = [
-                p for p in matches.get(PlaylistScope.USER.value) if user_to_query == p.scope_id
+                p
+                for p in matches.get(PlaylistScope.USER.value)
+                if user_to_query == p.scope_id
             ]
-        if lazy_match or (scope == PlaylistScope.GUILD.value and not correct_scope_matches_user):
+        if lazy_match or (
+            scope == PlaylistScope.GUILD.value and not correct_scope_matches_user
+        ):
             if specified_user:
                 correct_scope_matches_guild = [
                     p
@@ -191,10 +201,14 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
         ):
             if specified_user:
                 correct_scope_matches_global = [
-                    p for p in matches.get(PlaylistScope.GLOBAL.value) if p.author == user_to_query
+                    p
+                    for p in matches.get(PlaylistScope.GLOBAL.value)
+                    if p.author == user_to_query
                 ]
             else:
-                correct_scope_matches_global = [p for p in matches.get(PlaylistScope.GLOBAL.value)]
+                correct_scope_matches_global = [
+                    p for p in matches.get(PlaylistScope.GLOBAL.value)
+                ]
 
         correct_scope_matches = [
             *correct_scope_matches_global,
@@ -204,13 +218,17 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
         match_count = len(correct_scope_matches)
         if match_count > 1:
             correct_scope_matches2 = [
-                p for p in correct_scope_matches if p.name == str(original_input).strip()
+                p
+                for p in correct_scope_matches
+                if p.name == str(original_input).strip()
             ]
             if correct_scope_matches2:
                 correct_scope_matches = correct_scope_matches2
             elif original_input.isnumeric():
                 arg = int(original_input)
-                correct_scope_matches3 = [p for p in correct_scope_matches if p.id == arg]
+                correct_scope_matches3 = [
+                    p for p in correct_scope_matches if p.id == arg
+                ]
                 if correct_scope_matches3:
                     correct_scope_matches = correct_scope_matches3
         match_count = len(correct_scope_matches)
@@ -218,7 +236,9 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
         if match_count > 10:
             if original_input.isnumeric():
                 arg = int(original_input)
-                correct_scope_matches = [p for p in correct_scope_matches if p.id == arg]
+                correct_scope_matches = [
+                    p for p in correct_scope_matches if p.id == arg
+                ]
             if match_count > 10:
                 raise TooManyMatches(
                     _(
@@ -227,7 +247,11 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
                     ).format(match_count=match_count, original_input=original_input)
                 )
         elif match_count == 1:
-            return correct_scope_matches[0], original_input, correct_scope_matches[0].scope
+            return (
+                correct_scope_matches[0],
+                original_input,
+                correct_scope_matches[0].scope,
+            )
         elif match_count == 0:
             return None, original_input, scope or PlaylistScope.GUILD.value
 
@@ -235,9 +259,15 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
         pos_len = 3
         playlists = f"{'#':{pos_len}}\n"
         number = 0
-        correct_scope_matches = sorted(correct_scope_matches, key=lambda x: x.name.lower())
-        async for number, playlist in AsyncIter(correct_scope_matches).enumerate(start=1):
-            author = self.bot.get_user(playlist.author) or playlist.author or _("Unknown")
+        correct_scope_matches = sorted(
+            correct_scope_matches, key=lambda x: x.name.lower()
+        )
+        async for number, playlist in AsyncIter(correct_scope_matches).enumerate(
+            start=1
+        ):
+            author = (
+                self.bot.get_user(playlist.author) or playlist.author or _("Unknown")
+            )
             line = _(
                 "{number}."
                 "    <{playlist.name}>\n"
@@ -291,7 +321,11 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
         )
 
     async def _build_playlist_list_page(
-        self, ctx: commands.Context, page_num: int, abc_names: List, scope: Optional[str]
+        self,
+        ctx: commands.Context,
+        page_num: int,
+        abc_names: List,
+        scope: Optional[str],
     ) -> discord.Embed:
         plist_num_pages = math.ceil(len(abc_names) / 5)
         plist_idx_start = (page_num - 1) * 5
@@ -382,7 +416,10 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
             if uri:
                 t = {"loadType": "V2_COMPAT", "tracks": [t], "query": uri}
                 data = json.dumps(t)
-                if all(k in data for k in ["loadType", "playlistInfo", "isSeekable", "isStream"]):
+                if all(
+                    k in data
+                    for k in ["loadType", "playlistInfo", "isSeekable", "isStream"]
+                ):
                     database_entries.append(
                         {
                             "query": uri,
@@ -411,12 +448,18 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
 
         embed1 = discord.Embed(title=_("Please wait, adding tracks..."))
         playlist_msg = await self.send_embed_msg(ctx, embed=embed1)
-        notifier = Notifier(ctx, playlist_msg, {"playlist": _("Loading track {num}/{total}...")})
-        async for track_count, song_url in AsyncIter(uploaded_track_list).enumerate(start=1):
+        notifier = Notifier(
+            ctx, playlist_msg, {"playlist": _("Loading track {num}/{total}...")}
+        )
+        async for track_count, song_url in AsyncIter(uploaded_track_list).enumerate(
+            start=1
+        ):
             try:
                 try:
                     result, called_api = await self.api_interface.fetch_track(
-                        ctx, player, Query.process_input(song_url, self.local_folder_current_path)
+                        ctx,
+                        player,
+                        Query.process_input(song_url, self.local_folder_current_path),
                     )
                 except TrackEnqueueError:
                     self.update_player_lock(ctx, False)
@@ -469,7 +512,9 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
             msg = _(
                 "Added {num} tracks from the {playlist_name} playlist. {num_bad} track(s) "
                 "could not be loaded."
-            ).format(num=successful_count, playlist_name=playlist.name, num_bad=bad_tracks)
+            ).format(
+                num=successful_count, playlist_name=playlist.name, num_bad=bad_tracks
+            )
         else:
             msg = _("Added {num} tracks from the {playlist_name} playlist.").format(
                 num=successful_count, playlist_name=playlist.name
@@ -545,13 +590,17 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
                     return False
                 await lavalink.connect(
                     ctx.author.voice.channel,
-                    self_deaf=await self.config.guild_from_id(ctx.guild.id).auto_deafen(),
+                    self_deaf=await self.config.guild_from_id(
+                        ctx.guild.id
+                    ).auto_deafen(),
                 )
             except NodeNotFound:
                 await self.send_embed_msg(
                     ctx,
                     title=_("Unable To Get Playlists"),
-                    description=_("Connection to Lavalink node has not yet been established."),
+                    description=_(
+                        "Connection to Lavalink node has not yet been established."
+                    ),
                 )
                 return False
             except AttributeError:
@@ -569,7 +618,9 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
             await self.send_embed_msg(
                 ctx,
                 title=_("Unable To Get Playlists"),
-                description=_("You must be in the voice channel to use the playlist command."),
+                description=_(
+                    "You must be in the voice channel to use the playlist command."
+                ),
             )
             return False
         await self._eq_check(ctx, player)
@@ -674,7 +725,10 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
         return tracklist
 
     def humanize_scope(
-        self, scope: str, ctx: Union[discord.Guild, discord.abc.User, str] = None, the: bool = None
+        self,
+        scope: str,
+        ctx: Union[discord.Guild, discord.abc.User, str] = None,
+        the: bool = None,
     ) -> Optional[str]:
         if scope == PlaylistScope.GLOBAL.value:
             return _("the Global") if the else _("Global")
@@ -695,7 +749,8 @@ class PlaylistUtilities(MixinMeta, metaclass=CompositeMetaClass):
                     data = json.loads(await response.read())
                 except Exception as exc:
                     log.error(
-                        "Curated playlist couldn't be parsed, report this error.", exc_info=exc
+                        "Curated playlist couldn't be parsed, report this error.",
+                        exc_info=exc,
                     )
                     data = {}
                 web_version = data.get("version", 0)

@@ -1,15 +1,7 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    Category,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    pagify,
-    get_category_page_mapper_chunk,
-)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, Category,
+                              Context, EmbedField, HelpSettings, _,
+                              get_category_page_mapper_chunk, pagify)
 
 
 class TwinHelp(ThemesMeta):
@@ -29,9 +21,13 @@ class TwinHelp(ThemesMeta):
                     ):
                         continue
                     cog_names = "`" + "` `".join(cat.cogs) + "`" if cat.cogs else ""
-                    for i, page in enumerate(pagify(cog_names, page_length=1000, shorten_by=0)):
+                    for i, page in enumerate(
+                        pagify(cog_names, page_length=1000, shorten_by=0)
+                    ):
                         if i == 0:
-                            title = (str(cat.reaction) or "") + f"  __{cat.name.capitalize()}:__ "
+                            title = (
+                                str(cat.reaction) or ""
+                            ) + f"  __{cat.name.capitalize()}:__ "
                         else:
                             title = EMPTY_STRING
                         emb["fields"].append(EmbedField(title, cog_names, False))
@@ -67,7 +63,9 @@ class TwinHelp(ThemesMeta):
 
             for cog_name, data in coms:
                 title = f"__**{cog_name}**__" if cog_name else _("**No Category:**")
-                cog_text = ", ".join(f"`{name}`" for name, command in sorted(data.items()))
+                cog_text = ", ".join(
+                    f"`{name}`" for name, command in sorted(data.items())
+                )
                 for i, page in enumerate(
                     pagify(cog_text, page_length=1000, delims=[","], shorten_by=0)
                 ):
@@ -82,6 +80,8 @@ class TwinHelp(ThemesMeta):
             if get_pages:
                 return pages
             else:
-                await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
+                await self.send_pages(
+                    ctx, pages, embed=True, help_settings=help_settings
+                )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))

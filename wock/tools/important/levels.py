@@ -1,22 +1,18 @@
-from asyncio import (
-    Lock,
-    ensure_future as do_soon,
-    Future,
-    iscoroutinefunction,
-    Task,
-    create_task,
-    as_completed,
-)
-from collections import defaultdict as collection
 import math
 import random
 import traceback
+from asyncio import Future, Lock, Task, as_completed, create_task
+from asyncio import ensure_future as do_soon
+from asyncio import iscoroutinefunction
+from collections import defaultdict as collection
+from datetime import datetime
+from typing import Any, Callable, Coroutine, Dict, Optional, TypeVar
+
+from discord import (Client, Embed, Guild, Member, Message, VoiceChannel,
+                     VoiceState)
 from discord.ext import tasks
 from discord.ext.commands import Context
-from discord import Message, Client, Guild, VoiceChannel, Member, VoiceState, Embed
-from datetime import datetime
 from humanize import naturaltime
-from typing import Optional, Coroutine, Callable, Any, Dict, TypeVar
 from loguru import logger
 from typing_extensions import Self
 from xxhash import xxh64_hexdigest as hash_

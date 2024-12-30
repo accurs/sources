@@ -5,18 +5,12 @@ class ShardStatus:
 
 
 class SCARE:
-    token: str = (
-        ""
-    )
-    verified_scare: str = (
-        ""
-    )
+    token: str = ""
+    verified_scare: str = ""
     owners: list = [
         1,
     ]
-    workers: list = [
-        ""
-    ]
+    workers: list = [""]
     captcha: str = ""
     proxy: str = ""
 

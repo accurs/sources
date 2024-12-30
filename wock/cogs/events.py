@@ -1,29 +1,30 @@
 from __future__ import annotations
-from asyncio import ensure_future, gather, sleep
-import json
-from base64 import b64decode
-from datetime import datetime, timedelta
-from typing import Any, List, Union, Optional
-from discord.ext import tasks
-from discord import Guild, Message, Embed
-import random
-import discord
-import humanize
-from contextlib import suppress
-import orjson
+
 import asyncio
-import humanfriendly
-from boltons.cacheutils import LRI
-from discord.ext import commands
 import contextlib
+import io
+import json
+import random
+import re  # type: ignore
 import unicodedata
+from asyncio import ensure_future, gather, sleep
+from base64 import b64decode
+from collections import defaultdict
+from contextlib import suppress
+from datetime import datetime, timedelta
+from typing import Any, List, Optional, Union
+
+import aiohttp
+import discord
+import humanfriendly
+import humanize
+import orjson
+from boltons.cacheutils import LRI
+from discord import Embed, Guild, Message
+from discord.ext import commands, tasks
+from loguru import logger
 from rival_tools import ratelimit, timeit  # type: ignore
 from tools import expressions
-from collections import defaultdict
-import aiohttp
-import io
-import re  # type: ignore
-from loguru import logger
 
 SPECIAL_ = re.compile(r"[@_!#$%^&*()<>?/\|}{~:]")
 
@@ -180,14 +181,16 @@ class Events(commands.Cog):
     async def moderation_logs(self, entry: discord.AuditLogEntry):
         return await self.bot.modlogs.do_log(entry)
 
-#    @commands.Cog.listener("on_socket_raw_receive")
+    #    @commands.Cog.listener("on_socket_raw_receive")
     async def test_interactions(self, payload: str):
-        if "1203455800236965958" not in payload: return
+        if "1203455800236965958" not in payload:
+            return
         payload = json.loads(payload)
         logger.info(payload)
         return
         if guild_id := payload.get("guild_id"):
-            if int(guild_id) == 1203455800236965958: logger.info(payload)
+            if int(guild_id) == 1203455800236965958:
+                logger.info(payload)
 
     @commands.Cog.listener("on_command_completion")
     async def command_moderation_logs(self, ctx: commands.Context):
@@ -542,11 +545,13 @@ class Events(commands.Cog):
                     not in (message.guild.owner_id, message.guild.me.id),
                     not message.author.guild_permissions.administrator,
                     (
-                        message.author.top_role.position
-                        <= message.guild.me.top_role.position
-                    )
-                    if message.author.top_role
-                    else True,
+                        (
+                            message.author.top_role.position
+                            <= message.guild.me.top_role.position
+                        )
+                        if message.author.top_role
+                        else True
+                    ),
                     not any(
                         (
                             message.author.id in whitelist,
@@ -723,11 +728,13 @@ class Events(commands.Cog):
                     not in (message.guild.owner_id, message.guild.me.id),
                     not message.author.guild_permissions.administrator,
                     (
-                        message.author.top_role.position
-                        <= message.guild.me.top_role.position
-                    )
-                    if message.author.top_role
-                    else True,
+                        (
+                            message.author.top_role.position
+                            <= message.guild.me.top_role.position
+                        )
+                        if message.author.top_role
+                        else True
+                    ),
                     not any(
                         (
                             message.author.id in whitelist,
@@ -898,11 +905,8 @@ class Events(commands.Cog):
             is True
             and block_command_execution is False
         ):
-            if (
-                len(find_emojis(message.content))
-                >= (
-                    self.bot.cache.filter_event[context.guild.id]["emojis"]["threshold"]
-                )
+            if len(find_emojis(message.content)) >= (
+                self.bot.cache.filter_event[context.guild.id]["emojis"]["threshold"]
             ):
                 # if await check():
                 reason = "muted by the emoji filter"
@@ -932,9 +936,8 @@ class Events(commands.Cog):
             is True
             and block_command_execution is False
         ):
-            if (
-                len(tuple(c for c in message.content if c.isupper()))
-                >= (self.bot.cache.filter_event[context.guild.id]["caps"]["threshold"])
+            if len(tuple(c for c in message.content if c.isupper())) >= (
+                self.bot.cache.filter_event[context.guild.id]["caps"]["threshold"]
             ):
                 reason = "muted by the cap filter"
                 await self.do_timeout(message, reason, context)
@@ -949,13 +952,10 @@ class Events(commands.Cog):
             is True
             and block_command_execution is False
         ):
-            if (
-                len(message.mentions)
-                >= (
-                    self.bot.cache.filter_event[context.guild.id]["massmention"][
-                        "threshold"
-                    ]
-                )
+            if len(message.mentions) >= (
+                self.bot.cache.filter_event[context.guild.id]["massmention"][
+                    "threshold"
+                ]
             ):
                 reason = "muted by the mention filter"
                 await self.do_timeout(message, reason, context)
@@ -1191,18 +1191,16 @@ class Events(commands.Cog):
                 await asyncio.sleep(4)
             await member.add_roles(*roles, atomic=False)
 
-    @tasks.loop(minutes = 1)
+    @tasks.loop(minutes=1)
     async def voicemaster_clear(self):
-        async for row in self.bot.db.fetchiter("""SELECT guild_id, channel_id FROM voicemaster_data"""):
+        async for row in self.bot.db.fetchiter(
+            """SELECT guild_id, channel_id FROM voicemaster_data"""
+        ):
             if guild := self.bot.get_guild(row.guild_id):
                 if channel := guild.get_channel(row.channel_id):
                     members = [c for c in channel.members if c != self.bot.user]
                     if len(members) == 0:
-                        await channel.delete(reason = "voicemaster cleanup")
-
-
-
-
+                        await channel.delete(reason="voicemaster cleanup")
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -1364,7 +1362,6 @@ class Events(commands.Cog):
                                 )
                                 await before.channel.delete()
 
+
 async def setup(bot):
     await bot.add_cog(Events(bot))
-
-

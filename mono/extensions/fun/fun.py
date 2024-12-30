@@ -1,31 +1,25 @@
 import asyncio
-from io import BytesIO
-from typing import Any, Dict, List, Optional, cast, Literal
 from asyncio import sleep
+from io import BytesIO
 from random import choice, randint
-from discord import Embed, Member, Message, NotFound, Reaction, File
-from discord.ext.commands import (
-    BucketType,
-    Cog,
-    command,
-    group,
-    max_concurrency,
-    Range,
-    cooldown,
-)
+from typing import Any, Dict, List, Literal, Optional, cast
+
+import config
+from core.client.cache.redis import Redis
+from core.client.context import Context
+from core.Mono import Mono
+from core.tools import eightball_responses, plural, valid_flavors
+from discord import Embed, File, Member, Message, NotFound, Reaction
+from discord.ext.commands import (BucketType, Cog, Range, command, cooldown,
+                                  group, max_concurrency)
 from discord.ext.commands.context import Context
+from loguru import logger
 from pydantic import BaseModel
 from typing_extensions import Self
 from xxhash import xxh64_hexdigest
 from yarl import URL
 
-from core.Mono import Mono
-from core.client.context import Context
-from core.client.cache.redis import Redis
-from core.tools import plural, eightball_responses, valid_flavors
-from loguru import logger
 from .views import RPS, TicTacToe
-import config
 
 
 class Blacktea(BaseModel):
@@ -638,6 +632,3 @@ class Fun(Cog):
             color=config.Color.approve,
         )
         await loading_message.edit(embed=approve_embed)
-
-
-

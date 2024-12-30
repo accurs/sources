@@ -1,5 +1,7 @@
 """Sticky - Sticky messages to a channel."""
+
 import asyncio
+
 from grief.core.bot import Grief
 
 from .sticky import Sticky

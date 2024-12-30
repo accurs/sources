@@ -1,44 +1,52 @@
 import log
+
 log.make_dask_sink("rival")
 
-import discord_ios  # type: ignore # noqa: F401
-import traceback
-import os
-import discord
-import datetime
-import orjson
-
 import asyncio  # type: ignore
+import datetime
+import os
+import traceback
+# from loguru import logger
+from logging import getLogger
+
+import discord
+import discord_ios  # type: ignore # noqa: F401
+import orjson
 import tuuid
 from tools.views import VoicemasterInterface
-#from loguru import logger
-from logging import getLogger
-logger = getLogger(__name__)
-from typing import Any, Dict, Optional, Union, Callable
-from psutil import Process
-from aiohttp import ClientSession
-from discord import Color, Message, Guild, AuditLogEntry
-from discord.ext import commands
-from discord.ext.commands import AutoShardedBot as Bot, when_mentioned_or, BotMissingPermissions
-from tools.aliases import handle_aliases, CommandAlias, fill_commands  # type: ignore
-from tools.modlogs import Handler  # type: ignore
 
+logger = getLogger(__name__)
+from sys import stdout
+from typing import Any, Callable, Dict, Optional, Union
+
+from aiohttp import ClientSession
+from cogs.voicemaster import VmButtons
+from discord import AuditLogEntry, Color, Guild, Message
+from discord.ext import commands
+from discord.ext.commands import AutoShardedBot as Bot
+from discord.ext.commands import BotMissingPermissions, when_mentioned_or
+from psutil import Process
+# from tools import MemberConverter
+from rival_tools import lock, ratelimit  # type: ignore
+from tools.aliases import (CommandAlias, fill_commands,  # type: ignore
+                           handle_aliases)
+from tools.important import (Cache, Context, Database,  # type: ignore
+                             MyHelpCommand, Red)
+from tools.important.runner import RebootRunner  # type: ignore
+from tools.important.subclasses.command import RolePosition  # type: ignore
+from tools.important.subclasses.context import NonRetardedCache  # type: ignore
+from tools.important.subclasses.interaction import \
+    WockInteraction  # type: ignore # noqa: F401
+from tools.important.subclasses.parser import Script  # type: ignore
+from tools.modlogs import Handler  # type: ignore
+from tools.paginate import Paginate  # type: ignore
 # from cogs.tickets import TicketView
 from tools.processing import Transformers
-from cogs.voicemaster import VmButtons
-from tools.important import Cache, Context, Database, MyHelpCommand, Red  # type: ignore
-from tools.important.subclasses.parser import Script  # type: ignore
-from tools.important.subclasses.context import NonRetardedCache  # type: ignore
-from tools.important.runner import RebootRunner  # type: ignore
+from tools.rival import RivalAPI, Statistics
+from tools.rival import get_statistics as get_stats  # type: ignore
 from tools.snipe import Snipe, SnipeError  # type: ignore
-from tools.important.subclasses.command import RolePosition  # type: ignore
-from tools.views import GiveawayView, PrivacyConfirmation  # type: ignore # type: ignore
-from tools.important.subclasses.interaction import WockInteraction  # type: ignore # noqa: F401
-# from tools import MemberConverter
-from rival_tools import ratelimit, lock  # type: ignore
-from tools.rival import RivalAPI, get_statistics as get_stats, Statistics  # type: ignore
-from tools.paginate import Paginate  # type: ignore
-from sys import stdout
+from tools.views import (GiveawayView,  # type: ignore # type: ignore
+                         PrivacyConfirmation)
 
 discord.Interaction.success = WockInteraction.success
 discord.Interaction.fail = WockInteraction.fail
@@ -103,7 +111,7 @@ class Wock(Bot):
             case_insensitive=True,
             owner_ids=config["owners"],
             anti_cloudflare_ban=True,
-            enable_debug_events = True,
+            enable_debug_events=True,
             delay_ready=True,
             help_command=MyHelpCommand(),
             #            proxy=f"{user_pass}{ips[1]}",
@@ -177,7 +185,11 @@ class Wock(Bot):
         ctx.timer = datetime.datetime.now().timestamp()
         if ctx.command is not None:
             if "purge" not in ctx.command.qualified_name:
-                if ctx.channel.permissions_for(ctx.guild.me).send_messages and ctx.channel.permissions_for(ctx.guild.me).embed_links and ctx.channel.permissions_for(ctx.guild.me).attach_files:
+                if (
+                    ctx.channel.permissions_for(ctx.guild.me).send_messages
+                    and ctx.channel.permissions_for(ctx.guild.me).embed_links
+                    and ctx.channel.permissions_for(ctx.guild.me).attach_files
+                ):
                     try:
                         await ctx.typing()
                     except Exception:
@@ -203,8 +215,6 @@ class Wock(Bot):
                 if i.startswith("http"):
                     return i
         return None
-
-
 
     async def on_command_completion(self, ctx: Context):
         await self.db.execute(
@@ -366,20 +376,23 @@ class Wock(Bot):
         return await channels[0].send(
             embed=discord.Embed(
                 title="Need Help?",
-                url='https://wock.bot',
+                url="https://wock.bot",
                 description="Join our [support server](https://discord.gg/kuwitty) for help",
                 color=self.color,
-            ).add_field(
+            )
+            .add_field(
                 name="Wock's default prefix is set to `,`",
                 value="> To change the prefix use `,prefix (prefix)`\n> Ensure the bot's role is within the guild's top 5 roles for Wock to function correctly",
-                inline=False
-            ).add_field(
+                inline=False,
+            )
+            .add_field(
                 name="Commands to help you get started:",
                 value="> **,setup** - Creates a jail and log channel along with the jail role \n> **,voicemaster setup** - Creates join to create voice channels\n> **,filter setup** - Initializes a setup for automod to moderate\n> **,antinuke setup** - Creates the antinuke setup to keep your server safe",
-                inline=False
-            ).set_author(
+                inline=False,
+            )
+            .set_author(
                 name="Wock",
-                icon_url=self.user.avatar.url  # Assuming self.user is your bot user object
+                icon_url=self.user.avatar.url,  # Assuming self.user is your bot user object
             )
         )
 
@@ -503,9 +516,13 @@ class Wock(Bot):
                 limit, interval = cooldown_args.get("limit", (1, 5))
 
                 if bucket_type.lower() == "guild":
-                    key = f"rl:user_commands:{ctx.guild.id}:{ctx.command.qualified_name}"
+                    key = (
+                        f"rl:user_commands:{ctx.guild.id}:{ctx.command.qualified_name}"
+                    )
                 else:
-                    key = f"rl:user_commands:{ctx.author.id}:{ctx.command.qualified_name}"
+                    key = (
+                        f"rl:user_commands:{ctx.author.id}:{ctx.command.qualified_name}"
+                    )
                 rl = await ctx.bot.glory_cache.ratelimited(key, limit, interval)
                 if rl != 0:
                     raise commands.CommandOnCooldown(None, rl, None)
@@ -513,19 +530,25 @@ class Wock(Bot):
                 if cog_name := ctx.command.cog_name:
                     if cog_name.lower() == "premium":
                         rl = await ctx.bot.glory_cache.ratelimited(
-                        f"rl:user_commands:{ctx.author.id}:{ctx.command.qualified_name}", 1, 5
+                            f"rl:user_commands:{ctx.author.id}:{ctx.command.qualified_name}",
+                            1,
+                            5,
                         )
                         if rl != 0:
                             raise commands.CommandOnCooldown(None, rl, None)
                     else:
                         rl = await ctx.bot.glory_cache.ratelimited(
-                            f"rl:user_commands:{ctx.author.id}:{ctx.command.qualified_name}", 2, 5
+                            f"rl:user_commands:{ctx.author.id}:{ctx.command.qualified_name}",
+                            2,
+                            5,
                         )
                         if rl != 0:
                             raise commands.CommandOnCooldown(None, rl, None)
                 else:
                     rl = await ctx.bot.glory_cache.ratelimited(
-                        f"rl:user_commands:{ctx.author.id}:{ctx.command.qualified_name}", 2, 5
+                        f"rl:user_commands:{ctx.author.id}:{ctx.command.qualified_name}",
+                        2,
+                        5,
                     )
                     if rl != 0:
                         raise commands.CommandOnCooldown(None, rl, None)
@@ -694,7 +717,7 @@ class Wock(Bot):
         view = kwargs.pop("view", None)
         builder = await self.create_embed(code, **kwargs)
         try:
-            return await builder.send(destination, view = view)
+            return await builder.send(destination, view=view)
         except discord.HTTPException as exc:
             if exc.code == 50006:
                 return await destination.send(
@@ -963,15 +986,15 @@ class Wock(Bot):
 
     async def dump_command_page(self):
         def get_usage(command):
-            if not command.clean_params: 
+            if not command.clean_params:
                 return "None"
             return ", ".join(m for m in [str(c) for c in command.clean_params.keys()])
 
         def get_aliases(command):
-            if len(command.aliases) == 0: 
+            if len(command.aliases) == 0:
                 return ["None"]
             return command.aliases
-        
+
         def get_category(command):
             if "settings" not in command.qualified_name:
                 return command.cog_name
@@ -990,8 +1013,28 @@ class Wock(Bot):
                     permissions = ["send_messages"]
                 else:
                     permissions = command.permissions
-                commands.append({"name": command.qualified_name, "help": command.brief or "", "brief": [permissions.replace("_", " ").title()] if not isinstance(permissions, list) else [_.replace("_", " ").title() for _ in permissions], "usage": get_usage(command), "description": "", "aliases": get_aliases(command), "category": get_category(command).title()})
-        with open("/root/wock.web/src/app/(routes)/commands/commands.json", "wb") as file:
+                commands.append(
+                    {
+                        "name": command.qualified_name,
+                        "help": command.brief or "",
+                        "brief": (
+                            [permissions.replace("_", " ").title()]
+                            if not isinstance(permissions, list)
+                            else [_.replace("_", " ").title() for _ in permissions]
+                        ),
+                        "usage": get_usage(command),
+                        "description": "",
+                        "aliases": get_aliases(command),
+                        "category": get_category(command).title(),
+                    }
+                )
+        with open(
+            "/root/wock.web/src/app/(routes)/commands/commands.json", "wb"
+        ) as file:
             file.write(orjson.dumps(commands))
-        proc = await asyncio.create_subprocess_shell("cd ~/wock.web ; npm run build ; pm2 restart website", stderr = asyncio.subprocess.PIPE, stdout = asyncio.subprocess.PIPE)
+        proc = await asyncio.create_subprocess_shell(
+            "cd ~/wock.web ; npm run build ; pm2 restart website",
+            stderr=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+        )
         await proc.communicate()

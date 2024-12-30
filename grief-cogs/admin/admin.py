@@ -1,19 +1,21 @@
 import asyncio
+import importlib
 import logging
+import sys
+import typing
 from typing import Tuple, Union
-from AAA3A_utils import Cog, CogsUtils, Menu
 
 import discord
+import emoji
+from AAA3A_utils import Cog, CogsUtils, Menu
+
 from grief.core import Config, commands
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils.chat_formatting import box
 from grief.core.utils.mod import get_audit_reason
 from grief.core.utils.predicates import MessagePredicate
-import importlib
+
 from .converters import SelfRole
-import typing
-import sys
-import emoji
 
 try:
     from emoji import UNICODE_EMOJI_ENGLISH as EMOJI_DATA
@@ -26,7 +28,6 @@ from .editguild import EditGuild
 from .edittextchannel import EditTextChannel
 from .editthread import EditThread
 from .editvoicechannel import EditVoiceChannel
-
 
 log = logging.getLogger("grief.admin")
 
@@ -76,7 +77,9 @@ ROLE_USER_HIERARCHY_ISSUE = _(
 
 NEED_MANAGE_ROLES = _('I need the "Manage Roles" permission to do that.')
 
-ERROR_MESSAGE = _("I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}")
+ERROR_MESSAGE = _(
+    "I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}"
+)
 
 _ = T_
 
@@ -85,9 +88,9 @@ _ = T_
 class EmojiOrUrlConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         try:
-            return await discord.ext.commands.converter.CONVERTER_MAPPING[discord.Emoji]().convert(
-                ctx, argument
-            )
+            return await discord.ext.commands.converter.CONVERTER_MAPPING[
+                discord.Emoji
+            ]().convert(ctx, argument)
         except commands.BadArgument:
             pass
         if argument.startswith("<") and argument.endswith(">"):
@@ -117,11 +120,14 @@ class PositionConverter(commands.Converter):
 class PermissionConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str) -> str:
         permissions = [
-            key for key, value in dict(discord.Permissions.all_channel()).items() if value
+            key
+            for key, value in dict(discord.Permissions.all_channel()).items()
+            if value
         ]
         if argument not in permissions:
             raise commands.BadArgument(_("This permission is invalid."))
         return argument
+
 
 class Admin(commands.Cog):
     """A collection of server administration utilities."""
@@ -139,7 +145,7 @@ class Admin(commands.Cog):
         )
 
         self.__current_announcer = None
-    
+
     async def cog_load(self) -> None:
         await self.handle_migrations()
 
@@ -225,7 +231,12 @@ class Admin(commands.Cog):
         return ctx.author.top_role > role or ctx.author == ctx.guild.owner
 
     async def _addrole(
-        self, ctx: commands.Context, member: discord.Member, role: discord.Role, *, check_user=True
+        self,
+        ctx: commands.Context,
+        member: discord.Member,
+        role: discord.Role,
+        *,
+        check_user=True,
     ):
         if member.get_role(role.id) is not None:
             await ctx.send(
@@ -256,7 +267,12 @@ class Admin(commands.Cog):
             )
 
     async def _removerole(
-        self, ctx: commands.Context, member: discord.Member, role: discord.Role, *, check_user=True
+        self,
+        ctx: commands.Context,
+        member: discord.Member,
+        role: discord.Role,
+        *,
+        check_user=True,
     ):
         if member.get_role(role.id) is None:
             await ctx.send(
@@ -266,7 +282,9 @@ class Admin(commands.Cog):
             )
             return
         if check_user and not self.pass_user_hierarchy_check(ctx, role):
-            await ctx.send(_(USER_HIERARCHY_ISSUE_REMOVE).format(role=role, member=member))
+            await ctx.send(
+                _(USER_HIERARCHY_ISSUE_REMOVE).format(role=role, member=member)
+            )
             return
         if not self.pass_hierarchy_check(ctx, role):
             await ctx.send(_(HIERARCHY_ISSUE_REMOVE).format(role=role, member=member))
@@ -281,9 +299,9 @@ class Admin(commands.Cog):
             await ctx.send(_(GENERIC_FORBIDDEN))
         else:
             await ctx.send(
-                _("I successfully removed {role.name} from {member.display_name}").format(
-                    role=role, member=member
-                )
+                _(
+                    "I successfully removed {role.name} from {member.display_name}"
+                ).format(role=role, member=member)
             )
 
     @commands.group()
@@ -308,9 +326,9 @@ class Admin(commands.Cog):
             `[p]editrole colour Test #ff9900`
         """
         author = ctx.author
-        reason = _("{author} ({author.id}) changed the colour of role '{role.name}'").format(
-            author=author, role=role.name
-        )
+        reason = _(
+            "{author} ({author.id}) changed the colour of role '{role.name}'"
+        ).format(author=author, role=role.name)
 
         if not self.pass_user_hierarchy_check(ctx, role):
             await ctx.send(_(ROLE_USER_HIERARCHY_ISSUE).format(role=role))
@@ -330,7 +348,9 @@ class Admin(commands.Cog):
             await ctx.send(_("Done."))
 
     @editrole.command(name="name")
-    async def edit_role_name(self, ctx: commands.Context, role: discord.Role, name: str):
+    async def edit_role_name(
+        self, ctx: commands.Context, role: discord.Role, name: str
+    ):
         """
         Edit a role's name.
 
@@ -488,7 +508,8 @@ class Admin(commands.Cog):
             return await ctx.send(_("There are currently no selfroles."))
 
         await ctx.send(
-            _("Are you sure you want to clear this server's selfrole list?") + " (yes/no)"
+            _("Are you sure you want to clear this server's selfrole list?")
+            + " (yes/no)"
         )
         try:
             pred = MessagePredicate.yes_or_no(ctx, user=ctx.author)
@@ -535,7 +556,9 @@ class Admin(commands.Cog):
                     "temporarily disable serverlock by starting up the bot with the --no-cogs flag."
                 )
             else:
-                log.info(f"Leaving guild '{guild.name}' ({guild.id}) due to serverlock.")
+                log.info(
+                    f"Leaving guild '{guild.name}' ({guild.id}) due to serverlock."
+                )
             await guild.leave()
 
 

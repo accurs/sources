@@ -1,11 +1,11 @@
+import datetime
+from collections import namedtuple
+from typing import List, Tuple
 
+import discord
 
-from typing import Tuple, List
 from ..enums import Action, QAAction
 from ..exceptions import MisconfigurationError
-from collections import namedtuple
-import datetime
-import discord
 
 ACTIONS_VERBS = {
     Action.Ban: "banned",
@@ -29,9 +29,12 @@ QUICK_ACTION_EMOJIS = {
 
 QuickAction = namedtuple("QuickAction", ("target", "reason"))
 
+
 async def get_external_invite(guild: discord.Guild, invites: List[Tuple]):
     if not guild.me.guild_permissions.manage_guild:
-        raise MisconfigurationError("I need 'manage guild' permissions to fetch this server's invites.")
+        raise MisconfigurationError(
+            "I need 'manage guild' permissions to fetch this server's invites."
+        )
 
     has_vanity_url = "VANITY_URL" in guild.features
     vanity_url = await guild.vanity_invite() if has_vanity_url else ""
@@ -53,11 +56,13 @@ async def get_external_invite(guild: discord.Guild, invites: List[Tuple]):
 
     return None
 
+
 def utcnow():
     if discord.version_info.major >= 2:
         return datetime.datetime.now(datetime.timezone.utc)
     else:
         return datetime.datetime.utcnow()
+
 
 def timestamp(ts: datetime.datetime, relative=False):
     # Discord assumes UTC timestamps

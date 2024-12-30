@@ -1,7 +1,6 @@
 import asyncio
 import itertools
 from pathlib import Path
-
 from typing import Optional
 
 import lavalink
@@ -39,22 +38,31 @@ class StartUpTasks(MixinMeta, metaclass=CompositeMetaClass):
                 str(cog_data_path(self.bot.get_cog("Audio")) / "Audio.db")
             )
             self.api_interface = AudioAPIInterface(
-                self.bot, self.config, self.session, self.db_conn, self.bot.get_cog("Audio")
+                self.bot,
+                self.config,
+                self.session,
+                self.db_conn,
+                self.bot.get_cog("Audio"),
             )
             self.playlist_api = PlaylistWrapper(self.bot, self.config, self.db_conn)
             await self.playlist_api.init()
             await self.api_interface.initialize()
             self.global_api_user = await self.api_interface.global_cache_api.get_perms()
             await self.data_schema_migration(
-                from_version=await self.config.schema_version(), to_version=_SCHEMA_VERSION
+                from_version=await self.config.schema_version(),
+                to_version=_SCHEMA_VERSION,
             )
             await self.playlist_api.delete_scheduled()
             await self.api_interface.persistent_queue_api.delete_scheduled()
             await self._build_bundled_playlist()
             self.lavalink_restart_connect()
-            self.player_automated_timer_task = asyncio.create_task(self.player_automated_timer())
+            self.player_automated_timer_task = asyncio.create_task(
+                self.player_automated_timer()
+            )
         except Exception as exc:
-            log.critical("Audio failed to start up, please report this issue.", exc_info=exc)
+            log.critical(
+                "Audio failed to start up, please report this issue.", exc_info=exc
+            )
             return
 
         self.cog_ready_event.set()
@@ -68,13 +76,17 @@ class StartUpTasks(MixinMeta, metaclass=CompositeMetaClass):
             log.trace("Waiting for node to be available")
             tries += 1
             if tries > 600:  # Give 10 minutes from node creation date.
-                log.warning("Unable to restore players, couldn't connect to Lavalink node.")
+                log.warning(
+                    "Unable to restore players, couldn't connect to Lavalink node."
+                )
                 return
         try:
             for node in lavalink.get_all_nodes():
                 if not node.ready:
                     log.trace("Waiting for node: %r", node)
-                    await node.wait_until_ready(timeout=60)  # In theory this should be instant.
+                    await node.wait_until_ready(
+                        timeout=60
+                    )  # In theory this should be instant.
         except asyncio.TimeoutError:
             log.error(
                 "Restoring player task aborted due to a timeout waiting for Lavalink node to be ready."
@@ -89,9 +101,13 @@ class StartUpTasks(MixinMeta, metaclass=CompositeMetaClass):
                     notify_channel, vc_id = guild_data["currently_auto_playing_in"]
                     metadata[guild_id] = (notify_channel, vc_id)
         if self.lavalink_connection_aborted:
-            log.warning("Aborting player restore due to Lavalink connection being aborted.")
+            log.warning(
+                "Aborting player restore due to Lavalink connection being aborted."
+            )
             return
-        for guild_id, track_data in itertools.groupby(tracks_to_restore, key=lambda x: x.guild_id):
+        for guild_id, track_data in itertools.groupby(
+            tracks_to_restore, key=lambda x: x.guild_id
+        ):
             await asyncio.sleep(0)
             tries = 0
             try:
@@ -100,7 +116,8 @@ class StartUpTasks(MixinMeta, metaclass=CompositeMetaClass):
                 guild = self.bot.get_guild(guild_id)
                 if not guild:
                     log.verbose(
-                        "Skipping player restore - Bot is no longer in Guild (%s)", guild_id
+                        "Skipping player restore - Bot is no longer in Guild (%s)",
+                        guild_id,
                     )
                     continue
                 persist_cache = self._persist_queue_cache.setdefault(
@@ -147,7 +164,9 @@ class StartUpTasks(MixinMeta, metaclass=CompositeMetaClass):
                         except Exception as exc:
                             tries += 1
                             log.debug(
-                                "Failed to restore music voice channel %s", vc_id, exc_info=exc
+                                "Failed to restore music voice channel %s",
+                                vc_id,
+                                exc_info=exc,
                             )
                             if vc is None:
                                 break
@@ -182,7 +201,10 @@ class StartUpTasks(MixinMeta, metaclass=CompositeMetaClass):
                     await player.set_volume(volume)
                 for track in track_data:
                     track = track.track_object
-                    player.add(guild.get_member(track.extras.get("requester")) or guild.me, track)
+                    player.add(
+                        guild.get_member(track.extras.get("requester")) or guild.me,
+                        track,
+                    )
                 player.maybe_shuffle()
                 if not player.is_playing:
                     await player.play()
@@ -230,7 +252,11 @@ class StartUpTasks(MixinMeta, metaclass=CompositeMetaClass):
                         tries += 1
                     except Exception as exc:
                         tries += 1
-                        log.debug("Failed to restore music voice channel %s", vc_id, exc_info=exc)
+                        log.debug(
+                            "Failed to restore music voice channel %s",
+                            vc_id,
+                            exc_info=exc,
+                        )
                         if vc is None:
                             break
                         else:

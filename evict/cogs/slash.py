@@ -1,9 +1,13 @@
-import discord, datetime, aiohttp, io
-from discord.ext import commands
-from discord import app_commands
-from discord.ui import Modal, View
-from deep_translator import GoogleTranslator
+import datetime
+import io
+
+import aiohttp
+import discord
 from bot.managers.emojis import Colors, Emojis
+from deep_translator import GoogleTranslator
+from discord import app_commands
+from discord.ext import commands
+from discord.ui import Modal, View
 
 
 @app_commands.context_menu(name="translate")

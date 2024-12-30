@@ -1,80 +1,65 @@
 from __future__ import annotations
+
 from contextlib import suppress
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, List, Optional
+
+from aiohttp import ClientSession
 from cashews import cache
-from discord import ClientException, Embed, Guild, HTTPException, Member, Message, Client
+from discord import (Client, ClientException, Embed, Guild, HTTPException,
+                     Member, Message)
 from discord.opus import OpusNotLoaded
 from discord.utils import escape_markdown
-from wavelink.filters import Equalizer, Timescale, Karaoke, Rotation, Vibrato, LowPass
-from wavelink.filters import Filters
-from wavelink import Player as BasePlayer
-from wavelink import Playable as Track
-from yarl import URL
-from .utils import format_duration
-from .panel import Panel
-from aiohttp import ClientSession
 from system.patch.context import Context as BaseContext
+from wavelink import Playable as Track
+from wavelink import Player as BasePlayer
+from wavelink.filters import (Equalizer, Filters, Karaoke, LowPass, Rotation,
+                              Timescale, Vibrato)
+from yarl import URL
+
+from .panel import Panel
+from .utils import format_duration
+
+
 class Context(BaseContext):
     voice_client: CoffinPlayer
+
+
 @property
 def nightcore() -> Timescale:
-    return Timescale(
-        speed=1.3,
-        pitch=1.3,
-        rate=1,
-        tag="NightCore"
-    )
+    return Timescale(speed=1.3, pitch=1.3, rate=1, tag="NightCore")
+
 
 @property
 def chipmunk() -> Timescale:
-    return Timescale(
-        speed=1.05,
-        pitch=1.35,
-        rate=1.25,
-        tag="ChipMunk"
-    )
+    return Timescale(speed=1.05, pitch=1.35, rate=1.25, tag="ChipMunk")
+
 
 @property
 def karaoke() -> Karaoke:
     return Karaoke(
-        level=1.0,
-        mono_level=1.0,
-        filter_band=220.0,
-        filter_width=100.0,
-        tag="Karaoke_"
+        level=1.0, mono_level=1.0, filter_band=220.0, filter_width=100.0, tag="Karaoke_"
     )
+
 
 @property
 def eightd() -> Rotation:
-    return Rotation(
-        rotation_hertz=0.2,
-        tag="8D"
-    )
+    return Rotation(rotation_hertz=0.2, tag="8D")
+
 
 @property
 def vaporwave() -> Equalizer:
-    return Equalizer(
-        levels=[
-            (0, 0.3),
-            (1, 0.3)
-        ],
-        tag="Vaporwave"
-    )
+    return Equalizer(levels=[(0, 0.3), (1, 0.3)], tag="Vaporwave")
+
 
 @property
 def vibrato() -> Vibrato:
-    return Vibrato(
-        frequency=10,
-        depth=0.9,
-        tag="Vibrato"
-    )
+    return Vibrato(frequency=10, depth=0.9, tag="Vibrato")
+
 
 @property
 def soft() -> LowPass:
-    return LowPass(
-        smoothing=20.0,
-        tag="Soft"
-    )
+    return LowPass(smoothing=20.0, tag="Soft")
+
 
 @property
 def boost() -> Equalizer:
@@ -93,10 +78,11 @@ def boost() -> Equalizer:
             (10, 0.05),
             (11, 0.05),
             (12, 0.10),
-            (13, 0.10)
+            (13, 0.10),
         ],
-        tag="Boost"
+        tag="Boost",
     )
+
 
 @property
 def metal() -> Equalizer:
@@ -116,17 +102,16 @@ def metal() -> Equalizer:
             (11, 0.100),
             (12, 0.200),
             (13, 0.250),
-            (14, 0.300)
+            (14, 0.300),
         ],
-        tag="Metal"
+        tag="Metal",
     )
+
 
 @property
 def flat() -> Equalizer:
-    return Equalizer(
-        levels=[(i, 0.0) for i in range(15)],
-        tag="Flat"
-    )
+    return Equalizer(levels=[(i, 0.0) for i in range(15)], tag="Flat")
+
 
 @property
 def piano() -> Equalizer:
@@ -145,10 +130,12 @@ def piano() -> Equalizer:
             (10, 0.0),
             (11, 0.5),
             (12, 0.25),
-            (13, -0.025)
+            (13, -0.025),
         ],
-        tag="Piano"
+        tag="Piano",
     )
+
+
 class CoffinPlayer(BasePlayer):
     bot: Client
     guild: Guild
@@ -168,13 +155,13 @@ class CoffinPlayer(BasePlayer):
     @property
     def dj(self) -> Member:
         return self.context.author
-    
+
     @property
     def requester(self) -> Optional[Member]:
         track = self.current
         if not track:
             return
-        
+
         return self.guild.get_member(getattr(track.extras, "requester_id") or 0)
 
     @classmethod

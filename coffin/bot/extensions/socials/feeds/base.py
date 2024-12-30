@@ -1,10 +1,12 @@
 import asyncio
-from typing import List, Optional, TypedDict, Any, Union
-from discord import TextChannel, Thread
-from xxhash import xxh32_hexdigest
 from collections import defaultdict
+from typing import Any, List, Optional, TypedDict, Union
+
+from discord import TextChannel, Thread
+from system.managers.logger import configure_logger, make_dask_sink
 from typing_extensions import Self
-from system.managers.logger import make_dask_sink, configure_logger
+from xxhash import xxh32_hexdigest
+
 
 class BaseRecord(TypedDict):
     guild_id: int
@@ -43,7 +45,7 @@ class Feed:
     @property
     def redis(self: Self):
         return self.bot.redis
-    
+
     @property
     def logger(self: Self):
         return configure_logger(f"Feeds/{self.name.title()}")

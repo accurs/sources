@@ -6,6 +6,7 @@ from red_commons.logging import getLogger
 
 from grief.core import data_manager
 from grief.core.i18n import Translator
+
 from ...manager import ServerManager
 from ..abc import MixinMeta
 from ..cog_utils import CompositeMetaClass
@@ -30,7 +31,9 @@ class LavalinkTasks(MixinMeta, metaclass=CompositeMetaClass):
             self.lavalink_attempt_connect(manual=manual)
         )
 
-    async def lavalink_attempt_connect(self, timeout: int = 50, manual: bool = False) -> None:
+    async def lavalink_attempt_connect(
+        self, timeout: int = 50, manual: bool = False
+    ) -> None:
         self.lavalink_connection_aborted = False
         max_retries = 5
         retry_count = 0
@@ -56,7 +59,9 @@ class LavalinkTasks(MixinMeta, metaclass=CompositeMetaClass):
                 password = configs["yaml"]["lavalink"]["server"]["password"]
                 secured = False
                 # Make this timeout customizable for lower powered machines?
-                self.managed_node_controller = ServerManager(self.config, timeout=60, cog=self)
+                self.managed_node_controller = ServerManager(
+                    self.config, timeout=60, cog=self
+                )
                 try:
                     await self.managed_node_controller.start(java_exec)
                     # timeout is the same as ServerManager.timeout -

@@ -3,23 +3,16 @@ from contextlib import suppress
 from typing import Optional, cast
 
 from discord import Embed, File, HTTPException, Member, Message, Reaction, User
-from discord.ext.commands import (
-    BucketType,
-    Cog,
-    command,
-    cooldown,
-    group,
-    has_permissions,
-)
+from discord.ext.commands import (BucketType, Cog, command, cooldown, group,
+                                  has_permissions)
 from discord.utils import format_dt, utcnow
 from humanize import naturaldelta
-
-from tools.utilities import CompositeMetaClass, MixinMeta
-from tools.client.context import Context
-from tools.utilities import Plural
-from tools.managers.paginator import Paginator
 from orjson import dumps, loads
-from .models import MessageSnipe, ReactionSnipe, EditSnipe
+from tools.client.context import Context
+from tools.managers.paginator import Paginator
+from tools.utilities import CompositeMetaClass, MixinMeta, Plural
+
+from .models import EditSnipe, MessageSnipe, ReactionSnipe
 
 INVITE_PATTERN = re.compile(
     r"(?:(?:https?://)?(?:www)?discord(?:app)?\.(?:(?:com|gg)/invite/[a-z0-9-_]+)|(?:https?://)?(?:www)?discord\.gg/[a-z0-9-_]+)"

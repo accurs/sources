@@ -1,8 +1,11 @@
-import datetime, math, asyncio
-from discord.ext import commands
+import asyncio
+import datetime
+import math
+
 import discord
-from utils.utils import EmbedBuilder
 from discord import Member
+from discord.ext import commands
+from utils.utils import EmbedBuilder
 
 poj_cache = {}
 
@@ -639,6 +642,7 @@ class listeners(commands.Cog):
                         await member.remove_roles(role, reason="reactionroles")
             except TypeError:
                 pass
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(listeners(bot))

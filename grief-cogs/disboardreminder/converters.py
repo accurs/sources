@@ -1,13 +1,12 @@
-
-
 from typing import Tuple
 
 import discord
 from rapidfuzz import process
+from unidecode import unidecode
+
 from grief.core import commands
 from grief.core.bot import Grief
 from grief.core.commands import BadArgument, RoleConverter
-from unidecode import unidecode
 
 
 async def is_allowed_by_role_hierarchy(
@@ -20,7 +19,9 @@ async def is_allowed_by_role_hierarchy(
         return (False, f"I am not higher than `{role}` in hierarchy.")
     else:
         return (
-            (mod.top_role > role) or mod.id == mod.guild.owner.id or await bot.is_owner(mod),
+            (mod.top_role > role)
+            or mod.id == mod.guild.owner.id
+            or await bot.is_owner(mod),
             f"You are not higher than `{role}` in hierarchy.",
         )
 
@@ -59,7 +60,9 @@ class FuzzyRole(RoleConverter):
             result.append((r[2], r[1]))
 
         if not result:
-            raise BadArgument(f'Role "{argument}" not found.' if self.response else None)
+            raise BadArgument(
+                f'Role "{argument}" not found.' if self.response else None
+            )
 
         sorted_result = sorted(result, key=lambda r: r[1], reverse=True)
         return sorted_result[0][0]
@@ -78,7 +81,9 @@ class StrictRole(FuzzyRole):
                 if self.response
                 else None
             )
-        allowed, message = await is_allowed_by_role_hierarchy(ctx.bot, ctx.me, ctx.author, role)
+        allowed, message = await is_allowed_by_role_hierarchy(
+            ctx.bot, ctx.me, ctx.author, role
+        )
         if not allowed:
             raise BadArgument(message if self.response else None)
         return role

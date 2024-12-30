@@ -1,21 +1,27 @@
-from .base import Feed, BaseRecord
-from random import uniform
-from typing import Optional, Union, Dict, List, Any, cast
-from collections import defaultdict
-from datetime import datetime, timedelta, timezone
-from DataProcessing.models.Instagram.instagram import UserPostItem, EdgeFelixVideoTimelineClass as Timeline, InstagramProfileModelResponse # type: ignore
-from ..util import download_data
-from aiohttp import ClientSession
-from discord import File, Embed, Color, Client
-from io import BytesIO
-from unidecode_rs import decode as unidecode_rs
-from loguru import logger
 #
 import asyncio
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from io import BytesIO
+from random import uniform
+from typing import Any, Dict, List, Optional, Union, cast
+
+from aiohttp import ClientSession
+from DataProcessing.models.Instagram.instagram import \
+    EdgeFelixVideoTimelineClass as Timeline  # type: ignore
+from DataProcessing.models.Instagram.instagram import (
+    InstagramProfileModelResponse, UserPostItem)
+from discord import Client, Color, Embed, File
+from loguru import logger
+from unidecode_rs import decode as unidecode_rs
+
+from ..util import download_data
+from .base import BaseRecord, Feed
 
 
 class Record(BaseRecord):
     username: str
+
 
 class Instagram(Feed):
     def __init__(self, bot: Client):
@@ -41,13 +47,15 @@ class Instagram(Feed):
                 result[record["username"]].append(record)
 
             return result
-    
+
     async def get_posts(self, username: str, records: List[Record]):
-        shifted = datetime.now(tz=timezone.utc) - timedelta(minutes = 62)
-        shifted_ts  = shifted.timestamp()
+        shifted = datetime.now(tz=timezone.utc) - timedelta(minutes=62)
+        shifted_ts = shifted.timestamp()
         for i in range(10):
             try:
-                user = await self.bot.services.instagram.get_user(username, cached = False)
+                user = await self.bot.services.instagram.get_user(
+                    username, cached=False
+                )
                 posts = user.post_items
                 break
             except Exception as error:
@@ -66,9 +74,13 @@ class Instagram(Feed):
 
         self.log.info(f"Successfully dispatched {self.posted} tiktok posts")
 
-    
-    async def dispatch(self, user: InstagramProfileModelResponse, post: UserPostItem, records: List[Record]):
-        
+    async def dispatch(
+        self,
+        user: InstagramProfileModelResponse,
+        post: UserPostItem,
+        records: List[Record],
+    ):
+
         async def send(embeds: List[Embed], record: Record, *, file: bytes = None):
             if not (guild := self.bot.get_guild(record.guild_id)):
                 return
@@ -78,23 +90,32 @@ class Instagram(Feed):
                 return
             kwargs = {}
             if file:
-                kwargs["file"] = File(fp = BytesIO(file), filename = "tiktok.mp4")
-            return await channel.send(embeds = embeds, **kwargs)
-        
+                kwargs["file"] = File(fp=BytesIO(file), filename="tiktok.mp4")
+            return await channel.send(embeds=embeds, **kwargs)
+
         args = {}
-        embed = Embed(title = "New Post", description = unidecode_rs(post.title or "No Description Provided"), color = Color.from_str("#DD829B"))
+        embed = Embed(
+            title="New Post",
+            description=unidecode_rs(post.title or "No Description Provided"),
+            color=Color.from_str("#DD829B"),
+        )
         footer_text = f"""❤️ {post.like_count.humanize()} 👀 {post.view_count.humanize()} 💬 {post.comment_count.humanize()} ∙ Instagram"""
-        embed.set_footer(text = footer_text, icon_url = "https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png")
-        embed.set_author(name = f"{user.full_name} (@{user.username})", icon_url = user.avatar_url)
+        embed.set_footer(
+            text=footer_text,
+            icon_url="https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png",
+        )
+        embed.set_author(
+            name=f"{user.full_name} (@{user.username})", icon_url=user.avatar_url
+        )
         embed.url = post.url
         if post.video_url:
             args["file"] = await download_data(post.video_url)
         else:
-            embed.set_image(url = post.display_url)
+            embed.set_image(url=post.display_url)
         for record in records:
             await send(embed, record, **args)
         await self.redis.sadd(self.key, str(post.id))
-            
+
     async def start(self) -> None:
         self.log = self.logger
         self.log.info("Started Feed!")
@@ -116,9 +137,8 @@ class Instagram(Feed):
                     """
                     DELETE FROM feeds.instagram
                     WHERE channel_id = ANY($1::BIGINT[])
-                    """, 
-                    self.scheduled_deletion
+                    """,
+                    self.scheduled_deletion,
                 )
                 self.scheduled_deletion.clear()
             await asyncio.sleep(3600)
-

@@ -169,7 +169,7 @@ class Item(BaseModel):
     ig_media_sharing_disabled: Optional[bool] = None
     can_reply: Optional[bool] = None
     can_reshare: Optional[bool] = None
-    field__typename: Optional[str] = Field(None, alias='__typename')
+    field__typename: Optional[str] = Field(None, alias="__typename")
 
 
 class FriendshipStatus(BaseModel):
@@ -180,7 +180,7 @@ class User1(BaseModel):
     username: Optional[str] = None
     id: Optional[str] = None
     pk: Optional[str] = None
-    field__typename: Optional[str] = Field(None, alias='__typename')
+    field__typename: Optional[str] = Field(None, alias="__typename")
     friendship_status: Optional[FriendshipStatus] = None
     interop_messaging_user_fbid: Optional[str] = None
     user_id: None = None

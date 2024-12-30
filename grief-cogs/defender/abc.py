@@ -1,24 +1,27 @@
-
-
+import asyncio
+import datetime
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Dict, List, Optional
+
+import discord
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
-from .enums import Rank, EmergencyModules
+
+from .core.utils import QuickAction
 from .core.warden.enums import Event as WardenEvent
 from .core.warden.rule import WardenRule
-from .core.utils import QuickAction
-from typing import List, Dict
-import datetime
-import discord
-import asyncio
+from .enums import EmergencyModules, Rank
+
 
 class CompositeMetaClass(type(commands.Cog), type(ABC)):
     """
     This allows the metaclass used for proper type detection to
     coexist with discord.py's metaclass
     """
+
     pass
+
 
 class MixinMeta(ABC):
     """
@@ -47,12 +50,21 @@ class MixinMeta(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def is_role_privileged(self, role: discord.Role, issuers_top_role: discord.Role=None) -> bool:
+    def is_role_privileged(
+        self, role: discord.Role, issuers_top_role: discord.Role = None
+    ) -> bool:
         raise NotImplementedError()
 
     @abstractmethod
-    async def make_message_log(self, obj, *, guild: discord.Guild, requester: discord.Member=None,
-                               replace_backtick=False, pagify_log=False):
+    async def make_message_log(
+        self,
+        obj,
+        *,
+        guild: discord.Guild,
+        requester: discord.Member = None,
+        replace_backtick=False,
+        pagify_log=False
+    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -96,19 +108,42 @@ class MixinMeta(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def create_modlog_case(self, bot, guild, created_at, action_type, user, moderator=None, reason=None,
-                                 until=None, channel=None, last_known_username=None):
+    async def create_modlog_case(
+        self,
+        bot,
+        guild,
+        created_at,
+        action_type,
+        user,
+        moderator=None,
+        reason=None,
+        until=None,
+        channel=None,
+        last_known_username=None,
+    ):
         raise NotImplementedError()
 
     @abstractmethod
-    async def send_notification(self, destination: discord.abc.Messageable, description: str, *,
-                                title: str=None, fields: list=[], footer: str=None,
-                                thumbnail: str=None,
-                                ping=False, file: discord.File=None, react: str=None,
-                                jump_to: discord.Message=None,
-                                allow_everyone_ping=False, force_text_only=False, heat_key: str=None,
-                                no_repeat_for: datetime.timedelta=None,
-                                quick_action: QuickAction=None, view: discord.ui.View=None)->Optional[discord.Message]:
+    async def send_notification(
+        self,
+        destination: discord.abc.Messageable,
+        description: str,
+        *,
+        title: str = None,
+        fields: list = [],
+        footer: str = None,
+        thumbnail: str = None,
+        ping=False,
+        file: discord.File = None,
+        react: str = None,
+        jump_to: discord.Message = None,
+        allow_everyone_ping=False,
+        force_text_only=False,
+        heat_key: str = None,
+        no_repeat_for: datetime.timedelta = None,
+        quick_action: QuickAction = None,
+        view: discord.ui.View = None
+    ) -> Optional[discord.Message]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -140,7 +175,9 @@ class MixinMeta(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_warden_rules_by_event(self, guild: discord.Guild, event: WardenEvent)->List[WardenRule]:
+    def get_warden_rules_by_event(
+        self, guild: discord.Guild, event: WardenEvent
+    ) -> List[WardenRule]:
         raise NotImplementedError()
 
     @abstractmethod

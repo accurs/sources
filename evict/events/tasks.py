@@ -1,8 +1,12 @@
-from discord.ext import tasks, commands
-from discord.ext.commands import check
-import discord, datetime
-import datetime, arrow, random, json
+import datetime
+import json
+import random
+
+import arrow
+import discord
 from bot.managers.emojis import Colors
+from discord.ext import commands, tasks
+from discord.ext.commands import check
 
 
 class task(commands.Cog):

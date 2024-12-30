@@ -8,12 +8,15 @@ from typing import Literal, Mapping, Optional, Tuple
 import discord
 import tekore
 from red_commons.logging import getLogger
+
 from grief.core import Config, commands
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils.chat_formatting import humanize_list
 
-from .helpers import SPOTIFY_RE, InvalidEmoji, song_embed, spotify_emoji_handler
-from .menus import SpotifyPages, SpotifySearchMenu, SpotifyTrackPages, SpotifyUserMenu
+from .helpers import (SPOTIFY_RE, InvalidEmoji, song_embed,
+                      spotify_emoji_handler)
+from .menus import (SpotifyPages, SpotifySearchMenu, SpotifyTrackPages,
+                    SpotifyUserMenu)
 from .spotify_commands import SpotifyCommands
 
 try:
@@ -53,7 +56,9 @@ class Spotify(
         super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=218773382617890828)
-        self.config.register_user(token={}, listen_for={}, show_private=False, default_device=None)
+        self.config.register_user(
+            token={}, listen_for={}, show_private=False, default_device=None
+        )
         self.config.register_guild(
             clear_reactions_after=True,
             delete_message_after=False,
@@ -303,7 +308,9 @@ class Spotify(
             return
 
         if author.id in self.dashboard_authed:
-            msg = _("Detected authentication via dashboard for {user}.").format(user=author.name)
+            msg = _("Detected authentication via dashboard for {user}.").format(
+                user=author.name
+            )
             if is_slash:
                 await ctx.send(msg, ephemeral=True)
             else:
@@ -357,7 +364,9 @@ class Spotify(
         if service_name == "spotify":
             await self.cog_load()
 
-    async def play_from_message(self, interaction: discord.Interaction, message: discord.Message):
+    async def play_from_message(
+        self, interaction: discord.Interaction, message: discord.Message
+    ):
         queue = interaction.command.name == "Queue on Spotify"
         user = interaction.user
         ctx = await self.bot.get_context(interaction)
@@ -369,7 +378,9 @@ class Spotify(
         content = message.content + " "
         if message.embeds:
             em_dict = message.embeds[0].to_dict()
-            content += " ".join(v for k, v in em_dict.items() if k in ["title", "description"])
+            content += " ".join(
+                v for k, v in em_dict.items() if k in ["title", "description"]
+            )
             if "title" in em_dict:
                 if "url" in em_dict["title"]:
                     content += " " + em_dict["title"]["url"]
@@ -433,7 +444,9 @@ class Spotify(
                 tracks.append(items[0].id)
         # play the song if it exists
         user_menu = SpotifyUserMenu(
-            source=SpotifyPages(user_token=user_token, sender=self._sender, detailed=False),
+            source=SpotifyPages(
+                user_token=user_token, sender=self._sender, detailed=False
+            ),
             cog=self,
             user_token=user_token,
             ctx=ctx,
@@ -471,12 +484,16 @@ class Spotify(
                             track=track_name, artist=artist, device=device.name
                         )
                     else:
-                        await user_spotify.playback_start_tracks(tracks, device_id=device.id)
+                        await user_spotify.playback_start_tracks(
+                            tracks, device_id=device.id
+                        )
                         msg = _("Now playing {track} by {artist} on {device}.").format(
                             track=track_name, artist=artist, device=device.name
                         )
                     await asyncio.sleep(1)
-                    await user_menu.send_initial_message(ctx, content=msg, ephemeral=True)
+                    await user_menu.send_initial_message(
+                        ctx, content=msg, ephemeral=True
+                    )
                     return
                 elif new_uri:
                     log.debug("new uri is %s", new_uri)
@@ -503,9 +520,9 @@ class Spotify(
                         artist_id = new_uri.split(":")[-1]
                         cur_tracks = await user_spotify.artist(artist_id)
                         track_name = cur_tracks.name
-                        msg = _("Now playing top tracks by {track} on {device}.").format(
-                            track=track_name, device=device.name
-                        )
+                        msg = _(
+                            "Now playing top tracks by {track} on {device}."
+                        ).format(track=track_name, device=device.name)
                     if uri_type == "album":
                         if queue:
                             await interaction.response.send_message(
@@ -522,9 +539,13 @@ class Spotify(
                         msg = _("Now playing {track} by {artist} on {device}.").format(
                             track=track_name, artist=track_artist, device=device.name
                         )
-                    await user_spotify.playback_start_context(new_uri, device_id=device.id)
+                    await user_spotify.playback_start_context(
+                        new_uri, device_id=device.id
+                    )
                     await asyncio.sleep(1)
-                    await user_menu.send_initial_message(ctx, content=msg, ephemeral=True)
+                    await user_menu.send_initial_message(
+                        ctx, content=msg, ephemeral=True
+                    )
                     return
                 elif message.embeds:
                     em = message.embeds[0]
@@ -539,7 +560,9 @@ class Spotify(
                     if not query or query == "-":
                         return
                     log.verbose("play_from_message query: %s", query)
-                    search = await user_spotify.search(query, ("track",), "from_token", limit=50)
+                    search = await user_spotify.search(
+                        query, ("track",), "from_token", limit=50
+                    )
                     # log.debug(search)
                     tracks = search[0].items
                     if tracks:
@@ -549,23 +572,33 @@ class Spotify(
                         if queue:
                             await user_spotify.playback_queue_add(tracks[0].id)
                             msg = _("Queueing {track} by {artist} on {device}.").format(
-                                track=track_name, artist=track_artist, device=device.name
+                                track=track_name,
+                                artist=track_artist,
+                                device=device.name,
                             )
                         else:
                             await user_spotify.playback_start_tracks(
                                 [t.id for t in tracks], device_id=device.id
                             )
-                            msg = _("Now playing {track} by {artist} on {device}.").format(
-                                track=track_name, artist=track_artist, device=device.name
+                            msg = _(
+                                "Now playing {track} by {artist} on {device}."
+                            ).format(
+                                track=track_name,
+                                artist=track_artist,
+                                device=device.name,
                             )
-                        await user_menu.send_initial_message(ctx, content=msg, ephemeral=True)
+                        await user_menu.send_initial_message(
+                            ctx, content=msg, ephemeral=True
+                        )
                     else:
                         await interaction.response.send_message(
-                            _("No Spotify track could be found on that message."), ephemeral=True
+                            _("No Spotify track could be found on that message."),
+                            ephemeral=True,
                         )
                 else:
                     await interaction.response.send_message(
-                        _("No Spotify track could be found on that message."), ephemeral=True
+                        _("No Spotify track could be found on that message."),
+                        ephemeral=True,
                     )
         except tekore.Unauthorised:
             await self.not_authorized(ctx)

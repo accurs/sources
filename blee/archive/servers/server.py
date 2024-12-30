@@ -9,67 +9,33 @@ from re import compile as re_compile
 from tempfile import TemporaryDirectory
 from typing import List, Optional
 
+import config
 from aiofiles import open as async_open
-from discord import (
-    CategoryChannel,
-    Embed,
-    File,
-    Forbidden,
-    HTTPException,
-    Member,
-    Message,
-    PartialMessage,
-    Reaction,
-    Status,
-    TextChannel,
-    Thread,
-    User,
-)
-from discord.ext.commands import (
-    BucketType,
-    MissingPermissions,
-    Range,
-    command,
-    cooldown,
-    flag,
-    group,
-    has_permissions,
-    max_concurrency,
-    param,
-)
+from discord import (CategoryChannel, Embed, File, Forbidden, HTTPException,
+                     Member, Message, PartialMessage, Reaction, Status,
+                     TextChannel, Thread, User)
+from discord.ext.commands import (BucketType, Cog, MissingPermissions, Range,
+                                  command, cooldown, flag, group,
+                                  has_permissions, max_concurrency, param)
 from discord.ext.tasks import loop
-from discord.utils import (
-    as_chunks,
-    escape_markdown,
-    escape_mentions,
-    find,
-    format_dt,
-    utcnow,
-)
+from discord.utils import (as_chunks, escape_markdown, escape_mentions, find,
+                           format_dt, utcnow)
 from jishaku.codeblocks import Codeblock, codeblock_converter
-from discord.ext.commands import Cog
 from munch import Munch
 from orjson import dumps, loads
-from xxhash import xxh128_hexdigest
-from yarl import URL
-
-import config
-from tools.converters.basic import (
-    ImageFinderStrict,
-    Language,
-    SynthEngine,
-    TimeConverter,
-)
-from tools.converters.embed import EmbedScript, EmbedScriptValidator
-from tools.client.context import Context
 from tools import Bleed
+from tools.client.context import Context
+from tools.client.database.settings import Settings
+from tools.converters.basic import (Command, ImageFinderStrict, Language,
+                                    SynthEngine, TimeConverter)
+from tools.converters.embed import EmbedScript, EmbedScriptValidator
 from tools.utilities import donator, require_dm, shorten
 from tools.utilities.humanize import human_timedelta
 from tools.utilities.process import ensure_future
-from tools.utilities.text import hash, Plural
-from tools.client.database.settings import Settings
 from tools.utilities.regex import STRING
-from tools.converters.basic import Command
+from tools.utilities.text import Plural, hash
+from xxhash import xxh128_hexdigest
+from yarl import URL
 
 
 class Servers(Cog):

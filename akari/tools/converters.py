@@ -1,17 +1,12 @@
 import re
-import emoji
 import string
+
+import emoji
 import matplotlib
-
-from discord.ext.commands import (
-    Converter,
-    BadArgument,
-    MemberConverter,
-    RoleConverter,
-    BotMissingPermissions,
-)
-
+from discord.ext.commands import (BadArgument, BotMissingPermissions,
+                                  Converter, MemberConverter, RoleConverter)
 from pydantic import BaseModel
+
 from .helpers import AkariContext
 
 

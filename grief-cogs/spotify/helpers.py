@@ -11,10 +11,11 @@ import tekore
 from discord.ext.commands.converter import Converter
 from discord.ext.commands.errors import BadArgument
 from red_commons.logging import getLogger
+from tabulate import tabulate
+
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.core.utils.chat_formatting import humanize_list, humanize_timedelta
-from tabulate import tabulate
 
 log = getLogger("red.trusty-cogs.spotify")
 
@@ -25,7 +26,9 @@ SPOTIFY_RE = re.compile(
 
 SPOTIFY_LOGO = "https://imgur.com/Ig4VuuJ.png"
 
-_RE_TIME_CONVERTER: Final[Pattern] = re.compile(r"(?:(\d+):)?([0-5]?[0-9]):([0-5][0-9])")
+_RE_TIME_CONVERTER: Final[Pattern] = re.compile(
+    r"(?:(\d+):)?([0-5]?[0-9]):([0-5][0-9])"
+)
 
 _ = Translator("Spotify", __file__)
 
@@ -68,7 +71,9 @@ class GenresConverter(discord.app_commands.Transformer):
             raise commands.BadArgument
         return ret
 
-    async def transform(self, interaction: discord.Interaction, argument: str) -> List[str]:
+    async def transform(
+        self, interaction: discord.Interaction, argument: str
+    ) -> List[str]:
         ctx = await interaction.client.get_context(interaction)
         return await self.convert(ctx, argument)
 
@@ -94,12 +99,19 @@ class GenresConverter(discord.app_commands.Transformer):
         ]
         if supplied_genres:
             # ret.insert(0, {"name": supplied_genres, "value": supplied_genres})
-            ret.insert(0, discord.app_commands.Choice(name=supplied_genres, value=supplied_genres))
+            ret.insert(
+                0,
+                discord.app_commands.Choice(
+                    name=supplied_genres, value=supplied_genres
+                ),
+            )
         return ret[:25]
 
 
 class TracksConverter:
-    track_re = re.compile(r"(https?:\/\/open\.spotify\.com\/|spotify:?)track\/?:?([A-Za-z0-9]+)")
+    track_re = re.compile(
+        r"(https?:\/\/open\.spotify\.com\/|spotify:?)track\/?:?([A-Za-z0-9]+)"
+    )
 
     @classmethod
     async def convert(cls, ctx: commands.Context, argument: str) -> List[str]:
@@ -113,7 +125,9 @@ class TracksConverter:
 
 
 class ArtistsConverter:
-    track_re = re.compile(r"(https?:\/\/open\.spotify\.com\/|spotify:?)artist\/?:?([A-Za-z0-9]+)")
+    track_re = re.compile(
+        r"(https?:\/\/open\.spotify\.com\/|spotify:?)artist\/?:?([A-Za-z0-9]+)"
+    )
 
     @classmethod
     async def convert(cls, ctx: commands.Context, argument: str) -> List[str]:
@@ -140,7 +154,9 @@ class Mode(Enum):
         if argument.lower() == "minor":
             return cls(0)
         else:
-            raise BadArgument(_("`{argument}` is not a valid mode.").format(argument=argument))
+            raise BadArgument(
+                _("`{argument}` is not a valid mode.").format(argument=argument)
+            )
 
 
 class RecommendationsFlags(discord.ext.commands.FlagConverter, case_insensitive=True):
@@ -165,69 +181,89 @@ class RecommendationsFlags(discord.ext.commands.FlagConverter, case_insensitive=
         converter=ArtistsConverter,
         description="Any Spotify artist URL used as the seed.",
     )
-    acousticness: Optional[discord.ext.commands.Range[int, 0, 100]] = discord.ext.commands.flag(
-        name="acousticness",
-        aliases=["acoustic"],
-        description="A value from 0 to 100 the target acousticness of the tracks.",
+    acousticness: Optional[discord.ext.commands.Range[int, 0, 100]] = (
+        discord.ext.commands.flag(
+            name="acousticness",
+            aliases=["acoustic"],
+            description="A value from 0 to 100 the target acousticness of the tracks.",
+        )
     )
-    danceability: Optional[discord.ext.commands.Range[int, 0, 100]] = discord.ext.commands.flag(
-        name="danceability",
-        aliases=["dance"],
-        description="A value from 0 to 100 describing how danceable the tracks are.",
+    danceability: Optional[discord.ext.commands.Range[int, 0, 100]] = (
+        discord.ext.commands.flag(
+            name="danceability",
+            aliases=["dance"],
+            description="A value from 0 to 100 describing how danceable the tracks are.",
+        )
     )
     duration_ms: Optional[int] = discord.ext.commands.flag(
-        name="duration_ms", aliases=["duration"], description="The target duration of the tracks"
+        name="duration_ms",
+        aliases=["duration"],
+        description="The target duration of the tracks",
     )
-    energy: Optional[discord.ext.commands.Range[int, 0, 100]] = discord.ext.commands.flag(
-        name="energy",
-        description="Energy is a measure from 0 to 100 and represents a perceptual measure of intensity and activity",
+    energy: Optional[discord.ext.commands.Range[int, 0, 100]] = (
+        discord.ext.commands.flag(
+            name="energy",
+            description="Energy is a measure from 0 to 100 and represents a perceptual measure of intensity and activity",
+        )
     )
-    instrumentalness: Optional[
-        discord.ext.commands.Range[int, 0, 100]
-    ] = discord.ext.commands.flag(
-        name="instrumentalness",
-        aliases=["instrument"],
-        description="A value from 0 to 100 representing whether or not a track contains vocals.",
+    instrumentalness: Optional[discord.ext.commands.Range[int, 0, 100]] = (
+        discord.ext.commands.flag(
+            name="instrumentalness",
+            aliases=["instrument"],
+            description="A value from 0 to 100 representing whether or not a track contains vocals.",
+        )
     )
     key: Optional[int] = discord.ext.commands.flag(
         name="key", description="The target key of the tracks."
     )
-    liveness: Optional[discord.ext.commands.Range[int, 0, 100]] = discord.ext.commands.flag(
-        name="liveness",
-        aliases=["live"],
-        description="A value from 0-100 representing the presence of an audience in the recording.",
+    liveness: Optional[discord.ext.commands.Range[int, 0, 100]] = (
+        discord.ext.commands.flag(
+            name="liveness",
+            aliases=["live"],
+            description="A value from 0-100 representing the presence of an audience in the recording.",
+        )
     )
-    loudness: Optional[discord.ext.commands.Range[int, -60, 0]] = discord.ext.commands.flag(
-        name="loudness",
-        aliases=["loud"],
-        description="The overall loudness of a track in decibels (dB) between -60 and 0 db.",
+    loudness: Optional[discord.ext.commands.Range[int, -60, 0]] = (
+        discord.ext.commands.flag(
+            name="loudness",
+            aliases=["loud"],
+            description="The overall loudness of a track in decibels (dB) between -60 and 0 db.",
+        )
     )
     mode: Optional[Mode] = discord.ext.commands.flag(
         name="mode",
         description="The target modality (major or minor) of the track.",
     )
-    popularity: Optional[discord.ext.commands.Range[int, 0, 100]] = discord.ext.commands.flag(
-        name="popularity",
-        description="A value from 0-100 the target popularity of the tracks.",
+    popularity: Optional[discord.ext.commands.Range[int, 0, 100]] = (
+        discord.ext.commands.flag(
+            name="popularity",
+            description="A value from 0-100 the target popularity of the tracks.",
+        )
     )
-    speechiness: Optional[discord.ext.commands.Range[int, 0, 100]] = discord.ext.commands.flag(
-        name="speechiness",
-        aliases=["speech"],
-        description="A value from 0-100 Speechiness is the presence of spoken words in a track.",
+    speechiness: Optional[discord.ext.commands.Range[int, 0, 100]] = (
+        discord.ext.commands.flag(
+            name="speechiness",
+            aliases=["speech"],
+            description="A value from 0-100 Speechiness is the presence of spoken words in a track.",
+        )
     )
-    tempo: Optional[discord.ext.commands.Range[int, 0, 500]] = discord.ext.commands.flag(
-        name="tempo",
-        description="The overall estimated tempo of a track in beats per minute (BPM).",
+    tempo: Optional[discord.ext.commands.Range[int, 0, 500]] = (
+        discord.ext.commands.flag(
+            name="tempo",
+            description="The overall estimated tempo of a track in beats per minute (BPM).",
+        )
     )
     time_signature: Optional[int] = discord.ext.commands.flag(
         name="time_signature",
         aliases=["signature"],
         description="The time signature ranges from 3 to 7 indicating time signatures of '3/4', to '7/4'.",
     )
-    valence: Optional[discord.ext.commands.Range[int, 0, 100]] = discord.ext.commands.flag(
-        name="valence",
-        aliases=["happiness"],
-        description="A measure from 0 to 100 describing the musical positiveness conveyed by a track",
+    valence: Optional[discord.ext.commands.Range[int, 0, 100]] = (
+        discord.ext.commands.flag(
+            name="valence",
+            aliases=["happiness"],
+            description="A measure from 0 to 100 describing the musical positiveness conveyed by a track",
+        )
     )
 
 
@@ -329,7 +365,9 @@ async def song_embed(track: tekore.model.FullTrack, detailed: bool) -> discord.E
     return em
 
 
-async def make_details(track: tekore.model.FullTrack, details: tekore.model.AudioFeatures) -> str:
+async def make_details(
+    track: tekore.model.FullTrack, details: tekore.model.AudioFeatures
+) -> str:
     """
     {
       "duration_ms" : 255349,
@@ -440,7 +478,9 @@ class SearchTypes(Converter):
         ]
         find = argument.lower()
         if find not in valid_types:
-            raise BadArgument(_("{argument} is not a valid genre.").format(argument=argument))
+            raise BadArgument(
+                _("{argument} is not a valid genre.").format(argument=argument)
+            )
         return find
 
 
@@ -470,7 +510,9 @@ class ScopeConverter(Converter):
         ]
         find = argument.lower()
         if find not in valid_types:
-            raise BadArgument(_("{argument} is not a valid scope.").format(argument=argument))
+            raise BadArgument(
+                _("{argument} is not a valid scope.").format(argument=argument)
+            )
         return find
 
 
@@ -483,6 +525,8 @@ class SpotifyURIConverter(Converter):
         match = SPOTIFY_RE.finditer(argument)
         if not match:
             raise BadArgument(
-                _("{argument} is not a valid Spotify URL or URI.").format(argument=argument)
+                _("{argument} is not a valid Spotify URL or URI.").format(
+                    argument=argument
+                )
             )
         return match

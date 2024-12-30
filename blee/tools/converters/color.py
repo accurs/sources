@@ -1,5 +1,5 @@
 from discord import Color as DiscordColor
-from discord.ext.commands import CommandError, Context, Converter, BadArgument
+from discord.ext.commands import BadArgument, CommandError, Context, Converter
 
 colors = {
     "#4c4f56": "Abbey",

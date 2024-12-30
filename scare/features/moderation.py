@@ -9,30 +9,15 @@ from typing import Annotated, List, Literal, Optional, Union
 import humanize
 from discord import ButtonStyle, Color, Embed, Forbidden, Interaction
 from discord import Member as DefaultMember
-from discord import (
-    Message,
-    NotFound,
-    PartialEmoji,
-    PermissionOverwrite,
-    Role,
-    TextChannel,
-    User,
-)
-from discord.ext.commands import (
-    Cog,
-    CurrentChannel,
-    antinuke_owner,
-    bot_has_permissions,
-    command,
-    group,
-    has_permissions,
-    param,
-)
+from discord import (Message, NotFound, PartialEmoji, PermissionOverwrite,
+                     Role, TextChannel, User)
+from discord.ext.commands import (Cog, CurrentChannel, antinuke_owner,
+                                  bot_has_permissions, command, group,
+                                  has_permissions, param)
 from discord.ui import Button, View, button
 from discord.utils import utcnow
-
-from structure.scare import Scare
 from structure.managers import Context
+from structure.scare import Scare
 from structure.utilities import AssignableRole, Channel
 from structure.utilities import Color as ValidColor
 from structure.utilities import DiscordEmoji, Member, Time
@@ -939,7 +924,7 @@ class Moderation(Cog):
     )
     @antinuke_owner()
     async def nuke(
-        self: "Moderation", 
+        self: "Moderation",
         ctx: Context,
     ):
         """
@@ -953,7 +938,7 @@ class Moderation(Cog):
                 return await interaction.alert(
                     f"Unable to nuke {interaction.channel.mention}!"
                 )
-    
+
             chnl = await interaction.channel.clone()
             await chnl.edit(position=interaction.channel.position)
             args = [chnl.id, interaction.channel.id]
@@ -968,10 +953,9 @@ class Moderation(Cog):
             )
             await self.entry(interaction, interaction.channel, "Nuke", "N/A")
             return await chnl.send("first")
-        
+
         return await ctx.confirmation(
-            "Are you sure you want to **nuke** this channel?",
-            channel_nuke
+            "Are you sure you want to **nuke** this channel?", channel_nuke
         )
 
     @group(name="role", aliases=["r"], invoke_without_command=True)

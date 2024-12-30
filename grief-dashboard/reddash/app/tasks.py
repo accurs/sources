@@ -1,8 +1,9 @@
-import time
-import websocket
 import threading
+import time
 
-from reddash.app.utils import initialize_websocket, secure_send, check_for_disconnect
+import websocket
+from reddash.app.utils import (check_for_disconnect, initialize_websocket,
+                               secure_send)
 
 
 class TaskManager:
@@ -121,7 +122,9 @@ class TaskManager:
             if not self.app.running:
                 self.app.ws.close()
                 del self.app.ws
-                self.progress.update(task, status="[bold red]Websocket Killed[/bold red]")
+                self.progress.update(
+                    task, status="[bold red]Websocket Killed[/bold red]"
+                )
                 self.progress.refresh()
                 return
             time.sleep(0.1)
@@ -148,10 +151,14 @@ class TaskManager:
             )
         )
         self.threads.append(
-            threading.Thread(target=self.update_version, args=[tasks["ver"]], daemon=True)
+            threading.Thread(
+                target=self.update_version, args=[tasks["ver"]], daemon=True
+            )
         )
         self.threads.append(
-            threading.Thread(target=self.check_if_connected, args=[tasks["con"]], daemon=True)
+            threading.Thread(
+                target=self.check_if_connected, args=[tasks["con"]], daemon=True
+            )
         )
 
         for t in self.threads:

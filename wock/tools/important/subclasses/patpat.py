@@ -1,11 +1,12 @@
-from PIL.Image import Image as IMG
-import aiohttp
-from PIL import Image
-from io import BytesIO
-from typing import Any, Union
 from collections import defaultdict
+from io import BytesIO
 from itertools import chain
 from random import randrange
+from typing import Any, Union
+
+import aiohttp
+from PIL import Image
+from PIL.Image import Image as IMG
 
 
 class PatPatCreator:

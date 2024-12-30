@@ -1,13 +1,20 @@
-import random, string, asyncio, imagehash as ih, discord, aiohttp, json
+import asyncio
+import json
+import random
+import string
+from functools import partial, wraps
 from io import BytesIO
 from math import sqrt
+
+import aiohttp
+import discord
+import imagehash as ih
 from PIL import Image
-from functools import partial, wraps
-from xxhash import xxh64_hexdigest
 from redis.asyncio import StrictRedis as AsyncStrictRedis
 from redis.asyncio.connection import BlockingConnectionPool
 from redis.backoff import EqualJitterBackoff
 from redis.retry import Retry
+from xxhash import xxh64_hexdigest
 
 
 class Redis(AsyncStrictRedis):

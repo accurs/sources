@@ -87,7 +87,9 @@ async def interactive_config(red, token_set, prefix_set, *, print_header=True):
         while not prefix:
             prefix = input("Prefix> ")
             if len(prefix) > 10:
-                if not confirm("Your prefix seems overly long. Are you sure that it's correct?"):
+                if not confirm(
+                    "Your prefix seems overly long. Are you sure that it's correct?"
+                ):
                     prefix = ""
             if prefix.startswith("/"):
                 print(
@@ -106,7 +108,9 @@ def non_negative_int(arg: str) -> int:
     except ValueError:
         raise argparse.ArgumentTypeError("The argument has to be a number.")
     if x < 0:
-        raise argparse.ArgumentTypeError("The argument has to be a non-negative integer.")
+        raise argparse.ArgumentTypeError(
+            "The argument has to be a non-negative integer."
+        )
     if x > sys.maxsize:
         raise argparse.ArgumentTypeError(
             f"The argument has to be lower than or equal to {sys.maxsize}."
@@ -127,8 +131,12 @@ def parse_cli_flags(args):
     parser = argparse.ArgumentParser(
         description="Grief - Discord Bot", usage="redbot <instance_name> [arguments]"
     )
-    parser.add_argument("--version", "-V", action="store_true", help="Show Red's current version")
-    parser.add_argument("--debuginfo", action="store_true", help="Show debug information.")
+    parser.add_argument(
+        "--version", "-V", action="store_true", help="Show Red's current version"
+    )
+    parser.add_argument(
+        "--debuginfo", action="store_true", help="Show debug information."
+    )
     parser.add_argument(
         "--list-instances",
         action="store_true",
@@ -186,7 +194,11 @@ def parse_cli_flags(args):
         "multiple.",
     )
     parser.add_argument(
-        "--prefix", "-p", action="append", help="Global prefix. Can be multiple", default=[]
+        "--prefix",
+        "-p",
+        action="append",
+        help="Global prefix. Can be multiple",
+        default=[],
     )
     parser.add_argument(
         "--no-prompt",
@@ -196,7 +208,9 @@ def parse_cli_flags(args):
         "result",
     )
     parser.add_argument(
-        "--no-cogs", action="store_true", help="Starts Red with no cogs loaded, only core"
+        "--no-cogs",
+        action="store_true",
+        help="Starts Red with no cogs loaded, only core",
     )
     parser.add_argument(
         "--load-cogs",
@@ -257,7 +271,9 @@ def parse_cli_flags(args):
         ),
     )
     parser.add_argument(
-        "instance_name", nargs="?", help="Name of the bot instance created during `redbot-setup`."
+        "instance_name",
+        nargs="?",
+        help="Name of the bot instance created during `redbot-setup`.",
     )
     parser.add_argument(
         "--team-members-are-owners",
@@ -278,7 +294,9 @@ def parse_cli_flags(args):
         help="Set the maximum number of messages to store in the internal message cache.",
     )
     parser.add_argument(
-        "--no-message-cache", action="store_true", help="Disable the internal message cache."
+        "--no-message-cache",
+        action="store_true",
+        help="Disable the internal message cache.",
     )
     parser.add_argument(
         "--disable-intent",

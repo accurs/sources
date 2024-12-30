@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+
 class Authorization(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -13,7 +14,7 @@ class Authorization(commands.Cog):
             try:
                 await connection.execute(
                     "INSERT INTO authorized_servers (server_id) VALUES ($1) ON CONFLICT DO NOTHING",
-                    server_id
+                    server_id,
                 )
                 await ctx.send(f"Server {server_id} has been authorized.")
             except Exception as e:
@@ -27,8 +28,7 @@ class Authorization(commands.Cog):
         async with self.bot.db.acquire() as connection:
             try:
                 await connection.execute(
-                    "DELETE FROM authorized_servers WHERE server_id = $1",
-                    server_id
+                    "DELETE FROM authorized_servers WHERE server_id = $1", server_id
                 )
                 await ctx.send(f"Server {server_id} has been deauthorized.")
                 guild = self.bot.get_guild(server_id)
@@ -38,5 +38,6 @@ class Authorization(commands.Cog):
                 await ctx.send("An error occurred while deauthorizing the server.")
                 print(e)
 
+
 async def setup(bot) -> None:
-    await bot.add_cog(Authorization(bot))   
+    await bot.add_cog(Authorization(bot))

@@ -1,6 +1,9 @@
-from discord import Guild, AutoModTrigger, AutoModAction, AutoModTriggerType, utils, TextChannel, ForumChannel, Member, User, Role
+from typing import Literal, Optional, Union
+
+from discord import (AutoModAction, AutoModTrigger, AutoModTriggerType,
+                     ForumChannel, Guild, Member, Role, TextChannel, User,
+                     utils)
 from discord.ext.commands import CommandError
-from typing import Union, Optional, Literal
 
 invite_regex = r"(?:https?://)?discord(?:app)?\.(?:com/invite|gg)/[a-zA-Z0-9]+/?"
 

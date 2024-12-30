@@ -2,7 +2,6 @@ from typing import Any, Dict, Optional
 
 from discord.ext.commands import CooldownMapping
 
-
 mappings: Dict[str, CooldownMapping] = {}
 
 

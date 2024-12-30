@@ -1,23 +1,14 @@
-from .services import (
-    BingService, 
-    TranslationService, 
-    InstagramService, 
-    WikipediaService, 
-    FandomService, 
-    DuckDuckGoService,
-    KickService,
-    YouTubeService,
-    SoundCloudService,
-    BraveService,
-    TikTokService,
-    BlackBoxService,
-    TwitterService,
-    GoogleService,
-    PinterestService,
-    TwitchService
-)
 from typing import Optional
+
 from redis.asyncio import Redis
+
+from .services import (BingService, BlackBoxService, BraveService,
+                       DuckDuckGoService, FandomService, GoogleService,
+                       InstagramService, KickService, PinterestService,
+                       SoundCloudService, TikTokService, TranslationService,
+                       TwitchService, TwitterService, WikipediaService,
+                       YouTubeService)
+
 
 class ServiceManager:
     def __init__(self: "ServiceManager", redis: Redis, ttl: Optional[int] = None):

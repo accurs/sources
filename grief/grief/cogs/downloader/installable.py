@@ -4,16 +4,17 @@ import functools
 import shutil
 from enum import IntEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Union, cast
-
-from .log import log
-from .info_schemas import INSTALLABLE_SCHEMA, update_mixin
-from .json_mixins import RepoJSONMixin
+from typing import (TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Union,
+                    cast)
 
 from grief.core import VersionInfo
 
+from .info_schemas import INSTALLABLE_SCHEMA, update_mixin
+from .json_mixins import RepoJSONMixin
+from .log import log
+
 if TYPE_CHECKING:
-    from .repo_manager import RepoManager, Repo
+    from .repo_manager import Repo, RepoManager
 
 
 class InstallableType(IntEnum):
@@ -129,7 +130,9 @@ class Installable(RepoJSONMixin):
 
         # noinspection PyBroadException
         try:
-            copy_func(src=str(self._location), dst=str(target_dir / self._location.name))
+            copy_func(
+                src=str(self._location), dst=str(target_dir / self._location.name)
+            )
         except:  # noqa: E722
             log.exception("Error occurred when copying path: %s", self._location)
             return False
@@ -196,11 +199,20 @@ class InstalledModule(Installable):
         location = repo_folder / cog_name
 
         return cls(
-            location=location, repo=repo, commit=commit, pinned=pinned, json_repo_name=repo_name
+            location=location,
+            repo=repo,
+            commit=commit,
+            pinned=pinned,
+            json_repo_name=repo_name,
         )
 
     @classmethod
-    def from_installable(cls, module: Installable, *, pinned: bool = False) -> InstalledModule:
+    def from_installable(
+        cls, module: Installable, *, pinned: bool = False
+    ) -> InstalledModule:
         return cls(
-            location=module._location, repo=module.repo, commit=module.commit, pinned=pinned
+            location=module._location,
+            repo=module.repo,
+            commit=module.commit,
+            pinned=pinned,
         )

@@ -1,9 +1,8 @@
-from typing import Any, List, Sequence
-
 import random
 import string
 import urllib.parse
 from collections.abc import Sequence
+from typing import Any, List, Sequence
 
 
 def remove(value: str, *args: str) -> str:

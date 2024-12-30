@@ -1,18 +1,20 @@
-from fast_string_match import closest_match
-from discord.ext.commands import Command, Group
-from ..classes.converters.custom import CommandConverter
-from discord.ext.commands.errors import CommandError
-from discord.ext.commands.converter import Converter
-from typing import Optional, Union, List
-from .context import Context
+from typing import List, Optional, Union
+
 from discord import Message
+from discord.ext.commands import Command, Group
+from discord.ext.commands.converter import Converter
+from discord.ext.commands.errors import CommandError
 from discord.ext.commands.view import StringView
+from fast_string_match import closest_match
+
+from ..classes.converters.custom import CommandConverter
+from .context import Context
+
 
 class CommandAlias(object):
     def __init__(self, command: Union[Command, Group, str], alias: str):
         self.command = command
         self.alias = alias
-
 
     def get_extra_args_from_alias(self, message: Message, prefix: str) -> str:
         """When an alias is executed by a user in chat this function tries to get
@@ -75,8 +77,12 @@ class AliasConverter(Converter):
                 cmd = CommandAlias(command=c, alias=a)
                 return cmd
 
-async def handle_aliases(ctx: Context, aliases: List[CommandAlias], exception: Exception):
+
+async def handle_aliases(
+    ctx: Context, aliases: List[CommandAlias], exception: Exception
+):
     from loguru import logger
+
     for a in aliases:
         msg = ctx.message.content.lower()
         msg = msg.replace(ctx.prefix, "")
@@ -86,14 +92,16 @@ async def handle_aliases(ctx: Context, aliases: List[CommandAlias], exception: E
                 b = a.command
             else:
                 b = a.command.qualified_name
-            message.content = message.content.lower().replace(a.alias.lower(), b.lower())
-            ctx = await ctx.bot.get_context(message, cached = False)
+            message.content = message.content.lower().replace(
+                a.alias.lower(), b.lower()
+            )
+            ctx = await ctx.bot.get_context(message, cached=False)
             ctx.aliased = True
             logger.info(f"{ctx.message.content}")
             c = await ctx.bot.invoke(ctx)  # noqa: F841
             if ctx.valid:
                 return True
-            
+
     raise exception
-            
-    #raise exception
+
+    # raise exception

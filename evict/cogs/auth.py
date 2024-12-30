@@ -1,13 +1,12 @@
-import discord, datetime
-
-from discord.ext import commands
+import datetime
 from typing import Union
 
-from patches.permissions import Permissions
-
-from bot.helpers import EvictContext
+import discord
 from bot.bot import Evict
+from bot.helpers import EvictContext
 from bot.managers.emojis import Colors
+from discord.ext import commands
+from patches.permissions import Permissions
 
 
 class auth(commands.Cog):
@@ -32,37 +31,18 @@ class auth(commands.Cog):
             color=Colors.color,
             description="The following server has been authorized",
             title="Authorization",
-            timestamp=datetime.datetime.now()
+            timestamp=datetime.datetime.now(),
         )
 
+        embed.add_field(name="Server ID", value=f"{guild}", inline=False)
+        embed.add_field(name="Buyer Mention", value=f"{buyer.mention}", inline=False)
+        embed.add_field(name="Buyer ID", value=f"{buyer.id}", inline=False)
         embed.add_field(
-            name="Server ID", 
-            value=f"{guild}", 
-            inline=False
+            name="Staff Mention", value=f"{ctx.author.mention}", inline=False
         )
-        embed.add_field(
-            name="Buyer Mention", 
-            value=f"{buyer.mention}", 
-            inline=False
-        )
-        embed.add_field(
-            name="Buyer ID", 
-            value=f"{buyer.id}", 
-            inline=False
-        )
-        embed.add_field(
-            name="Staff Mention", 
-            value=f"{ctx.author.mention}", 
-            inline=False
-        )
-        embed.add_field(
-            name="Staff ID", 
-            value=f"{ctx.author.id}", 
-            inline=False)
+        embed.add_field(name="Staff ID", value=f"{ctx.author.id}", inline=False)
 
-        embed.set_thumbnail(
-            url=ctx.author.avatar.url
-        )
+        embed.set_thumbnail(url=ctx.author.avatar.url)
 
         await channel.send(embed=embed)
         await self.bot.db.execute(
@@ -97,7 +77,7 @@ class auth(commands.Cog):
         results = await self.bot.db.fetch(
             "SELECT * FROM authorize WHERE buyer = $1", member.id
         )
-        
+
         if len(results) == 0:
             return await ctx.warning(
                 "There is no server authorized for **{}**.".format(member)
@@ -123,7 +103,7 @@ class auth(commands.Cog):
         check = await self.bot.db.fetchrow(
             "SELECT * FROM authorize WHERE guild_id = $1", id
         )
-        
+
         if check is None:
             return await ctx.warning(f"I am **unable** to find this server.")
 
@@ -134,27 +114,15 @@ class auth(commands.Cog):
             timestamp=datetime.datetime.now(),
         )
 
+        embed.add_field(name="Server ID", value=f"{id}", inline=False)
+
         embed.add_field(
-            name="Server ID", 
-            value=f"{id}", 
-            inline=False
-        )
-        
-        embed.add_field(
-            name="Staff Mention", 
-            value=f"{ctx.author.mention}", 
-            inline=False
-        )
-        
-        embed.add_field(
-            name="Staff ID", 
-            value=f"{ctx.author.id}", 
-            inline=False
+            name="Staff Mention", value=f"{ctx.author.mention}", inline=False
         )
 
-        embed.set_thumbnail(
-            url=ctx.author.avatar.url
-        )
+        embed.add_field(name="Staff ID", value=f"{ctx.author.id}", inline=False)
+
+        embed.set_thumbnail(url=ctx.author.avatar.url)
 
         await channel.send(embed=embed)
         await self.bot.db.execute("DELETE FROM authorize WHERE guild_id = $1", id)

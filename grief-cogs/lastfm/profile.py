@@ -2,6 +2,7 @@ import asyncio
 from typing import Optional
 
 import discord
+
 from grief.core import commands
 from grief.core.utils.predicates import MessagePredicate
 
@@ -46,7 +47,9 @@ class ProfileMixin(MixinMeta):
             return
 
         if ctx.guild:
-            await ctx.send("Check your Direct Messages for instructions on how to log in.")
+            await ctx.send(
+                "Check your Direct Messages for instructions on how to log in."
+            )
 
         params = {"api_key": self.token, "method": "auth.getSession", "token": token}
         hashed = self.hashRequest(params, self.secret)
@@ -57,7 +60,9 @@ class ProfileMixin(MixinMeta):
                 break
             except LastFMError as e:
                 if x == 5:
-                    message = "You took to long to log in. Rerun the command to try again."
+                    message = (
+                        "You took to long to log in. Rerun the command to try again."
+                    )
                     embed = discord.Embed(
                         title="Authorization Timeout",
                         description=message,
@@ -70,7 +75,9 @@ class ProfileMixin(MixinMeta):
         await self.config.user(ctx.author).lastfm_username.set(data["session"]["name"])
         await self.config.user(ctx.author).session_key.set(data["session"]["key"])
         message = f"Your username is now set as: `{data['session']['name']}`"
-        embed = discord.Embed(title="Success!", description=message, color=await ctx.embed_color())
+        embed = discord.Embed(
+            title="Success!", description=message, color=await ctx.embed_color()
+        )
         await ctx.author.send(embed=embed)
 
     @command_fm.command(name="logout", aliases=["unset"])
@@ -107,4 +114,6 @@ class ProfileMixin(MixinMeta):
         user = user or ctx.author
         conf = await self.config.user(user).all()
         self.check_if_logged_in(conf, user == ctx.author)
-        await ctx.send(embed=await self.get_userinfo_embed(ctx, user, conf["lastfm_username"]))
+        await ctx.send(
+            embed=await self.get_userinfo_embed(ctx, user, conf["lastfm_username"])
+        )

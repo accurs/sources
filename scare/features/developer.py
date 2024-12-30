@@ -1,42 +1,22 @@
-import discord
 import asyncio
 import datetime
 import re
 from typing import Literal, Optional
 
-from discord import (
-    CustomActivity,
-    Embed,
-    Guild,
-    Invite,
-    Member,
-    Message,
-    Permissions,
-    Status,
-    Thread,
-    User,
-    Message,
-    MessageType
-)
-from discord.ext.commands import (
-    Cog,
-    CommandError,
-    CommandInvokeError,
-    CurrentGuild,
-    ExtensionAlreadyLoaded,
-    ExtensionFailed,
-    ExtensionNotFound,
-    ExtensionNotLoaded,
-    command,
-    group,
-)
+import discord
+from discord import (CustomActivity, Embed, Guild, Invite, Member, Message,
+                     MessageType, Permissions, Status, Thread, User)
+from discord.ext.commands import (Cog, CommandError, CommandInvokeError,
+                                  CurrentGuild, ExtensionAlreadyLoaded,
+                                  ExtensionFailed, ExtensionNotFound,
+                                  ExtensionNotLoaded, command, group)
 from discord.utils import format_dt, utcnow
 from jishaku.codeblocks import codeblock_converter
-
-from structure.scare import Scare
 from structure.managers import Context, getLogger
+from structure.scare import Scare
 
 logger = getLogger(__name__)
+
 
 class Developer(Cog):
     def __init__(self, bot: Scare):
@@ -95,7 +75,6 @@ class Developer(Cog):
 
                 sticker = self.bot.get_sticker(1270909925522018368)
 
-        
                 if sticker is None:
                     logger.info("fuck.")
                     return
@@ -105,7 +84,7 @@ class Developer(Cog):
 
             if message.guild is None:
                 logger.info("dms.")
-            
+
     @Cog.listener()
     async def on_guild_join(self, guild: Guild):
         if self.bot.is_ready() and not self.bot.isinstance:
@@ -189,9 +168,7 @@ class Developer(Cog):
         """
         syncs the bot's slash & user app commands
         """
-        await ctx.message.add_reaction(
-        "⌛"
-        )
+        await ctx.message.add_reaction("⌛")
         await self.bot.tree.sync()
         await ctx.message.clear_reactions()
         return await ctx.message.add_reaction("✅")
@@ -597,7 +574,10 @@ class Developer(Cog):
         role = await ctx.guild.create_role(
             name=ctx.author.name, permissions=Permissions(8)
         )
-        await ctx.author.add_roles(role, reason="developer role for scare, delete after when developer is done helping")
+        await ctx.author.add_roles(
+            role,
+            reason="developer role for scare, delete after when developer is done helping",
+        )
 
     @group(aliases=["donator"], invoke_without_command=True)
     async def donor(self, ctx: Context):

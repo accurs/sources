@@ -1,24 +1,14 @@
 from __future__ import annotations
 
-from asyncio import (
-    Task,
-    Future,
-    Lock,
-    LifoQueue,
-    get_running_loop,
-    AbstractEventLoop,
-    CancelledError,
-    gather,
-    ensure_future,
-)
-from typing import (
-    AnyStr as String, 
-    Union, 
-    Dict
-)
+from asyncio import (AbstractEventLoop, CancelledError, Future, LifoQueue,
+                     Lock, Task, ensure_future, gather, get_running_loop)
 from collections.abc import Coroutine
-from loguru import logger
 from contextlib import suppress
+from typing import AnyStr as String
+from typing import Dict, Union
+
+from loguru import logger
+
 try:
     from asyncio import timeout
 except ImportError:

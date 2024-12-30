@@ -1,5 +1,6 @@
-import discord
 from contextlib import suppress
+
+import discord
 
 
 class Interaction(discord.Interaction):
@@ -33,11 +34,18 @@ class Interaction(discord.Interaction):
                 ephemeral=True,
             )
 
-        return await self.followup.send(embed=embed, **kwargs,ephemeral=True,)
+        return await self.followup.send(
+            embed=embed,
+            **kwargs,
+            ephemeral=True,
+        )
 
     async def normal(self, text, **kwargs):
         color = self.client.config["colors"]["bleed"]
-        embed = discord.Embed(color=color, description=f"{kwargs.pop('emoji', '')} {self.user.mention}: {text}")
+        embed = discord.Embed(
+            color=color,
+            description=f"{kwargs.pop('emoji', '')} {self.user.mention}: {text}",
+        )
         if footer := kwargs.get("footer"):
             if isinstance(footer, tuple):
                 embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -103,8 +111,12 @@ class Interaction(discord.Interaction):
             await self.response.defer(
                 ephemeral=True,
             )
-        return await self.followup.send(embed=embed, **kwargs, ephemeral=True,)
-    
+        return await self.followup.send(
+            embed=embed,
+            **kwargs,
+            ephemeral=True,
+        )
+
 
 discord.Interaction.success = Interaction.success
 discord.Interaction.warning = Interaction.warning

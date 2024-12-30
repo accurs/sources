@@ -3,24 +3,15 @@ import logging.handlers
 import pathlib
 import re
 import sys
-
-from typing import List, Tuple, Optional
-from logging import LogRecord
 from datetime import datetime  # This clearly never leads to confusion...
+from logging import LogRecord
 from os import isatty
+from typing import List, Optional, Tuple
 
 import rich
 from pygments.styles.monokai import MonokaiStyle  # DEP-WARN
-from pygments.token import (
-    Comment,
-    Error,
-    Keyword,
-    Name,
-    Number,
-    Operator,
-    String,
-    Token,
-)
+from pygments.token import (Comment, Error, Keyword, Name, Number, Operator,
+                            String, Token)
 from rich._log_render import LogRender  # DEP-WARN
 from rich.console import group
 from rich.highlighter import NullHighlighter
@@ -30,7 +21,6 @@ from rich.syntax import ANSISyntaxTheme, PygmentsSyntaxTheme  # DEP-WARN
 from rich.text import Text
 from rich.theme import Theme
 from rich.traceback import PathHighlighter, Traceback  # DEP-WARN
-
 
 MAX_OLD_LOGS = 8
 
@@ -102,7 +92,8 @@ class RotatingFileHandler(logging.handlers.RotatingFileHandler):
             initial_path.replace(self.directory / f"{self.baseStem}-part1.log")
 
         match = re.match(
-            rf"{self.baseStem}(?:-part(?P<part>\d))?\.log", pathlib.Path(self.baseFilename).name
+            rf"{self.baseStem}(?:-part(?P<part>\d))?\.log",
+            pathlib.Path(self.baseFilename).name,
         )
         latest_part_num = int(match.groupdict(default="1").get("part", "1"))
         if self.backupCount < 1:
@@ -190,7 +181,9 @@ class griefLogRender(LogRender):
         output.append(*renderables)
         if self.show_path and path:
             path_text = Text()
-            path_text.append(path, style=f"link file://{link_path}" if link_path else "")
+            path_text.append(
+                path, style=f"link file://{link_path}" if link_path else ""
+            )
             if line_no:
                 path_text.append(f":{line_no}")
             output.append(path_text)
@@ -231,7 +224,11 @@ class griefRichHandler(RichHandler):
         log_time = datetime.fromtimestamp(record.created)
 
         traceback = None
-        if self.rich_tracebacks and record.exc_info and record.exc_info != (None, None, None):
+        if (
+            self.rich_tracebacks
+            and record.exc_info
+            and record.exc_info != (None, None, None)
+        ):
             exc_type, exc_value, exc_traceback = record.exc_info
             assert exc_type is not None
             assert exc_value is not None
@@ -250,7 +247,9 @@ class griefRichHandler(RichHandler):
             )
             message = record.getMessage()
 
-        use_markup = getattr(record, "markup") if hasattr(record, "markup") else self.markup
+        use_markup = (
+            getattr(record, "markup") if hasattr(record, "markup") else self.markup
+        )
         if use_markup:
             message_text = Text.from_markup(message)
         else:
@@ -279,7 +278,9 @@ class griefRichHandler(RichHandler):
             self.console.print(traceback)
 
 
-def init_logging(level: int, location: pathlib.Path, cli_flags: argparse.Namespace) -> None:
+def init_logging(
+    level: int, location: pathlib.Path, cli_flags: argparse.Namespace
+) -> None:
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
     # DEBUG logging for discord.py is a bit too ridiculous :)
@@ -297,7 +298,9 @@ def init_logging(level: int, location: pathlib.Path, cli_flags: argparse.Namespa
                 "logging.level.verbose": Style(color="magenta", italic=True, dim=True),
                 "logging.level.trace": Style(color="white", italic=True, dim=True),
                 "repr.number": Style(color="cyan"),
-                "repr.url": Style(underline=True, italic=True, bold=False, color="cyan"),
+                "repr.url": Style(
+                    underline=True, italic=True, bold=False, color="cyan"
+                ),
             }
         )
     )
@@ -316,7 +319,9 @@ def init_logging(level: int, location: pathlib.Path, cli_flags: argparse.Namespa
         enable_rich_logging = True
 
     file_formatter = logging.Formatter(
-        "[{asctime}] [{levelname}] {name}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{"
+        "[{asctime}] [{levelname}] {name}: {message}",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        style="{",
     )
     if enable_rich_logging is True:
         rich_formatter = logging.Formatter("{message}", datefmt="[%X]", style="{")

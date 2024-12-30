@@ -4,10 +4,9 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from aiohttp import ClientSession
+from config import PIPED_API
 from pydantic import BaseModel
 from yarl import URL
-
-from config import PIPED_API
 
 
 class Video(BaseModel):

@@ -1,10 +1,15 @@
-from loguru import logger
 from discord.globals import set_global
+from loguru import logger
+
 set_global("logger", logger)
 
-from gc import get_referents
 import builtins
-from _types import calculate_, maximum, minimum, maximum_, minimum_, positive, positive_, hyperlink, shorten as shorten_, ObjectTransformer, catch, asDict # type: ignore
+from gc import get_referents
+
+from _types import (ObjectTransformer, asDict, calculate_, catch, hyperlink,
+                    maximum, maximum_, minimum, minimum_, positive, positive_)
+from _types import shorten as shorten_  # type: ignore
+
 # hi
 builtins.calculate = calculate_
 builtins.catch = catch
@@ -30,10 +35,11 @@ __int["minimum"] = minimum_
 __int["positive"] = positive_
 _str["shorten"] = shorten_
 
-from tools.wock import Wock  # type: ignore  # noqa: E402
 from asyncio import run  # noqa: E402
+
 from config import CONFIG_DICT  # noqa: E402
 from discord import utils  # noqa: E402
+from tools.wock import Wock  # type: ignore  # noqa: E402
 
 utils.setup_logging()
 

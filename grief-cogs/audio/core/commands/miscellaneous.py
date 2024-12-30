@@ -39,7 +39,8 @@ class MiscellaneousCommands(MixinMeta, metaclass=CompositeMetaClass):
                 self.get_time_string(
                     int(
                         (
-                            datetime.datetime.now(datetime.timezone.utc) - p.connected_at
+                            datetime.datetime.now(datetime.timezone.utc)
+                            - p.connected_at
                         ).total_seconds()
                     )
                 )
@@ -71,7 +72,8 @@ class MiscellaneousCommands(MixinMeta, metaclass=CompositeMetaClass):
             )
             em.set_footer(
                 text=_("Page {}/{}").format(
-                    humanize_number(pages), humanize_number((math.ceil(len(msg) / 1500)))
+                    humanize_number(pages),
+                    humanize_number((math.ceil(len(msg) / 1500))),
                 )
             )
             pages += 1
@@ -107,12 +109,14 @@ class MiscellaneousCommands(MixinMeta, metaclass=CompositeMetaClass):
             req_user_handle = str(player.current.requester)
             await _usercount(req_user_handle)
         except AttributeError:
-            return await self.send_embed_msg(ctx, title=_("There's nothing in the queue."))
+            return await self.send_embed_msg(
+                ctx, title=_("There's nothing in the queue.")
+            )
 
         async for req_user_handle in AsyncIter(requesters["users"]):
-            percentage = float(requesters["users"][req_user_handle]["songcount"]) / float(
-                requesters["total"]
-            )
+            percentage = float(
+                requesters["users"][req_user_handle]["songcount"]
+            ) / float(requesters["total"])
             requesters["users"][req_user_handle]["percent"] = round(percentage * 100, 1)
 
         top_queue_users = heapq.nlargest(

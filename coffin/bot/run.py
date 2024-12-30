@@ -1,8 +1,16 @@
-from system.coffin import Coffin
-from gc import get_referents
-from system.classes.builtins import calculate_, maximum, minimum, maximum_, minimum_, positive, positive_, hyperlink, shorten as shorten_, ObjectTransformer, catch, asDict, suppress_error, get_error, boolean_to_emoji, shorten__, chunk, number, human_timedelta, human_join, humanize, humanize_
-import warnings
 import builtins
+import warnings
+from gc import get_referents
+
+from system.classes.builtins import (ObjectTransformer, asDict,
+                                     boolean_to_emoji, calculate_, catch,
+                                     chunk, get_error, human_join,
+                                     human_timedelta, humanize, humanize_,
+                                     hyperlink, maximum, maximum_, minimum,
+                                     minimum_, number, positive, positive_)
+from system.classes.builtins import shorten as shorten_
+from system.classes.builtins import shorten__, suppress_error
+from system.coffin import Coffin
 
 warnings.filterwarnings("ignore", category=ResourceWarning)
 warnings.simplefilter("ignore", ResourceWarning)

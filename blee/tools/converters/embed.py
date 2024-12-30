@@ -2,16 +2,16 @@ import random
 import urllib
 
 import dateparser
-from discord import ButtonStyle, Color, Embed, Member, Message, TextChannel, Webhook
+from discord import (ButtonStyle, Color, Embed, Member, Message, TextChannel,
+                     Webhook)
 from discord.ext.commands import CommandError, Converter
 from discord.ui import Button, View  # type: ignore
 from discord.utils import escape_markdown, utcnow
-
 from tools import tagscript
-from tools.converters.color import colors
 from tools.client.context import Context
-from tools.utilities.regex import IMAGE_URL, URL
+from tools.converters.color import colors
 from tools.utilities.humanize import comma, ordinal
+from tools.utilities.regex import IMAGE_URL, URL
 from tools.utilities.text import hidden
 
 

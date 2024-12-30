@@ -1,37 +1,24 @@
+import json
+import os
+import secrets
 from datetime import datetime
 from traceback import format_exception
 from typing import Optional
 
-from discord import Embed, Guild, Member, Message, TextChannel, User, Forbidden
-from discord.ext.commands import (
-    Cog,
-    Command,
-    ExtensionAlreadyLoaded,
-    ExtensionFailed,
-    ExtensionNotFound,
-    ExtensionNotLoaded,
-    CommandOnCooldown,
-    UserNotFound,
-    is_owner,
-    CommandError,
-    CommandInvokeError,
-    BucketType,
-    MissingPermissions,
-    command,
-    group,
-    param,
-)
 import aiohttp
-from discord.errors import HTTPException
-import os
-from discord.utils import format_dt
-from core.Mono import Mono
 from core.client.context import Context
-from discord.ext.commands import command, Group
-import secrets
-import json
-from discord import File
 from core.managers.paginator import Paginator
+from core.Mono import Mono
+from discord import (Embed, File, Forbidden, Guild, Member, Message,
+                     TextChannel, User)
+from discord.errors import HTTPException
+from discord.ext.commands import (BucketType, Cog, Command, CommandError,
+                                  CommandInvokeError, CommandOnCooldown,
+                                  ExtensionAlreadyLoaded, ExtensionFailed,
+                                  ExtensionNotFound, ExtensionNotLoaded, Group,
+                                  MissingPermissions, UserNotFound, command,
+                                  group, is_owner, param)
+from discord.utils import format_dt
 
 
 class CustomError(Exception):
@@ -702,10 +689,9 @@ class Developer(Cog):
         await g.leave()
         return await ctx.approve(f"Left {g.name}")
 
-
     @command()
     async def dm(self, ctx: Context, user: User, *, message: str):
-        """ DM the user of your choice """
+        """DM the user of your choice"""
         try:
             await user.send(message)
             await ctx.add_check()

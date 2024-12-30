@@ -7,16 +7,15 @@ from logging import getLogger
 from random import uniform
 from textwrap import shorten
 from typing import Dict, List, Optional, cast
-from discord.utils import utcnow
-from discord import AllowedMentions, Embed, File, HTTPException, TextChannel, Thread
 
-from extensions.socials.models.instagram.post import Post
-from extensions.socials.reposters.extraction.instagram import (
-    Instagram as InstagramClient,
-    User,
-    Post,
-)
 from core.Mono import Mono
+from discord import (AllowedMentions, Embed, File, HTTPException, TextChannel,
+                     Thread)
+from discord.utils import utcnow
+from extensions.socials.models.instagram.post import Post
+from extensions.socials.reposters.extraction.instagram import \
+    Instagram as InstagramClient
+from extensions.socials.reposters.extraction.instagram import Post, User
 
 from .base import BaseRecord, Feed
 

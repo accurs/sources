@@ -1,16 +1,10 @@
-from grief.core.utils.chat_formatting import box
 from tabulate import tabulate
 
+from grief.core.utils.chat_formatting import box
+
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    Category,
-    Context,
-    EmbedField,
-    HelpSettings,
-    commands,
-    pagify,
-)
+from ..core.base_help import (EMPTY_STRING, Category, Context, EmbedField,
+                              HelpSettings, commands, pagify)
 
 grouper = lambda a, n: [a[k : k + n] for k in range(0, len(a), n)]
 
@@ -44,7 +38,9 @@ class Blocks(ThemesMeta):
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx)
             emb["embed"]["title"] = (
-                (str(obj.reaction) if obj.reaction else "") + " " + obj.name.capitalize()
+                (str(obj.reaction) if obj.reaction else "")
+                + " "
+                + obj.name.capitalize()
             )
 
             if description := obj.long_desc:
@@ -76,7 +72,9 @@ class Blocks(ThemesMeta):
                 help_settings=help_settings,
             )
 
-    async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
+    async def format_cog_help(
+        self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings
+    ):
         coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
         if not (coms or help_settings.verify_exists):
             return

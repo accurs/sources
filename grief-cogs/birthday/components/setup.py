@@ -4,6 +4,7 @@ import datetime
 
 import discord
 from dateutil.parser import ParserError, parse
+
 from grief.core import Config
 from grief.core.bot import Grief
 from grief.core.utils.chat_formatting import box, warning
@@ -22,12 +23,16 @@ class SetupView(discord.ui.View):
         self.config = config
 
     @discord.ui.button(label="Start setup", style=discord.ButtonStyle.blurple)
-    async def btn_start(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def btn_start(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await interaction.response.send_modal(SetupModal(self.bot, self.config))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.author:
-            await interaction.response.send_message("You are not authorized to use this button.")
+            await interaction.response.send_message(
+                "You are not authorized to use this button."
+            )
             return False
         else:
             return True
@@ -78,12 +83,10 @@ class SetupModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         def get_reminder() -> str:
-            return (
-                "Nothing's been set, try again.\n\nHere are your messages so you don't have to"
-                " type them again.\n\nWith age:\n"
-                + box(self.message_w_year.value or "Not set")
-                + "\nWithout age:\n"
-                + box(self.message_wo_year.value or "Not set")
+            return "Nothing's been set, try again.\n\nHere are your messages so you don't have to" " type them again.\n\nWith age:\n" + box(
+                self.message_w_year.value or "Not set"
+            ) + "\nWithout age:\n" + box(
+                self.message_wo_year.value or "Not set"
             )
 
         try:
@@ -98,7 +101,9 @@ class SetupModal(discord.ui.Modal):
 
             time_utc_s = int((time_utc - midnight).total_seconds())
         except ParserError:
-            await interaction.response.send_message("That's not a valid time.", ephemeral=True)
+            await interaction.response.send_message(
+                "That's not a valid time.", ephemeral=True
+            )
             return
 
         try:

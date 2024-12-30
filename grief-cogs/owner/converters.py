@@ -6,11 +6,11 @@ import discord
 from discord.ext.commands.converter import IDConverter
 from discord.ext.commands.errors import BadArgument
 from rapidfuzz import process
-from grief.core import commands
-from grief.core.i18n import Translator
 from unidecode import unidecode
 
+from grief.core import commands
 from grief.core.commands import BadArgument, Converter
+from grief.core.i18n import Translator
 
 _ = Translator("Server", __file__)
 log = logging.getLogger("grief.owner")
@@ -33,7 +33,9 @@ class GuildConverter(discord.app_commands.Transformer):
         result = None
         if not argument.isdigit():
             # Not a mention
-            for g in process.extractOne(argument, {g: unidecode(g.name) for g in bot.guilds}):
+            for g in process.extractOne(
+                argument, {g: unidecode(g.name) for g in bot.guilds}
+            ):
                 result = g
         else:
             guild_id = int(argument)
@@ -47,7 +49,9 @@ class GuildConverter(discord.app_commands.Transformer):
         return result
 
     @classmethod
-    async def transform(cls, interaction: discord.Interaction, argument: str) -> discord.Guild:
+    async def transform(
+        cls, interaction: discord.Interaction, argument: str
+    ) -> discord.Guild:
         ctx = await interaction.client.get_context(interaction)
         return await cls.convert(ctx, argument)
 
@@ -81,7 +85,9 @@ class MultiGuildConverter(IDConverter):
     https://github.com/Cog-Creators/Grief-DiscordBot/blob/V3/develop/redbot/cogs/mod/mod.py#L24
     """
 
-    async def convert(self, ctx: commands.Context, argument: str) -> List[discord.Guild]:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> List[discord.Guild]:
         bot = ctx.bot
         match = self._get_id_match(argument)
         result = []
@@ -92,7 +98,10 @@ class MultiGuildConverter(IDConverter):
         if not match:
             # Not a mention
             for g in process.extract(
-                argument, {g: unidecode(g.name) for g in bot.guilds}, limit=None, score_cutoff=75
+                argument,
+                {g: unidecode(g.name) for g in bot.guilds},
+                limit=None,
+                score_cutoff=75,
             ):
                 result.append(g[2])
         else:

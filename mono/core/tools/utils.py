@@ -14,17 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from abc import ABC
-from discord.ext import commands
-import io
-import re
-import inspect
 import asyncio
+import inspect
+import io
 import logging
-import aiohttp
+import re
+from abc import ABC
+from typing import (Any, Callable, Coroutine, Dict, List, Optional, Tuple,
+                    TypeVar, Union)
 
+import aiohttp
 from cashews import cache
-from typing import Callable, Dict, Any, Optional, Union, List, Tuple, Coroutine, TypeVar
+from discord.ext import commands
 
 METHOD_LOCKERS: Dict[str, asyncio.Lock] = {}
 

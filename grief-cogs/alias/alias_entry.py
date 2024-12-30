@@ -1,9 +1,10 @@
-from typing import Tuple, Dict, Optional, List, Union
 from re import findall
+from typing import Dict, List, Optional, Tuple, Union
 
 import discord
 from discord.ext.commands.view import StringView  # DEP-WARN
-from grief.core import commands, Config
+
+from grief.core import Config, commands
 from grief.core.i18n import Translator
 from grief.core.utils import AsyncIter
 
@@ -24,7 +25,11 @@ class AliasEntry:
     uses: int
 
     def __init__(
-        self, name: str, command: Union[Tuple[str], str], creator: int, guild: Optional[int]
+        self,
+        name: str,
+        command: Union[Tuple[str], str],
+        creator: int,
+        guild: Optional[int],
     ):
         super().__init__()
         self.name = name
@@ -145,7 +150,10 @@ class AliasCache:
                 for _, alias in self._aliases[guild.id].items():
                     aliases.append(alias)
         else:
-            aliases = [AliasEntry.from_json(d) for d in await self.config.guild(guild).entries()]
+            aliases = [
+                AliasEntry.from_json(d)
+                for d in await self.config.guild(guild).entries()
+            ]
         return aliases
 
     async def get_global_aliases(self) -> List[AliasEntry]:
@@ -174,9 +182,12 @@ class AliasCache:
         else:
             if guild:
                 server_aliases = [
-                    AliasEntry.from_json(d) for d in await self.config.guild(guild.id).entries()
+                    AliasEntry.from_json(d)
+                    for d in await self.config.guild(guild.id).entries()
                 ]
-            global_aliases = [AliasEntry.from_json(d) for d in await self.config.entries()]
+            global_aliases = [
+                AliasEntry.from_json(d) for d in await self.config.entries()
+            ]
             all_aliases = global_aliases + server_aliases
 
             for alias in all_aliases:
@@ -208,7 +219,11 @@ class AliasCache:
         return command
 
     async def add_alias(
-        self, ctx: commands.Context, alias_name: str, command: str, global_: bool = False
+        self,
+        ctx: commands.Context,
+        alias_name: str,
+        command: str,
+        global_: bool = False,
     ) -> AliasEntry:
         command = self.format_command_for_alias(command)
 
@@ -231,7 +246,11 @@ class AliasCache:
         return alias
 
     async def edit_alias(
-        self, ctx: commands.Context, alias_name: str, command: str, global_: bool = False
+        self,
+        ctx: commands.Context,
+        alias_name: str,
+        command: str,
+        global_: bool = False,
     ) -> bool:
         command = self.format_command_for_alias(command)
 
@@ -251,7 +270,9 @@ class AliasCache:
                         if global_:
                             self._aliases[None][alias_edited.name] = alias_edited
                         else:
-                            self._aliases[ctx.guild.id][alias_edited.name] = alias_edited
+                            self._aliases[ctx.guild.id][
+                                alias_edited.name
+                            ] = alias_edited
                     return True
 
         return False

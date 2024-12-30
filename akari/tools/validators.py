@@ -1,12 +1,12 @@
 import json
+
 import emoji
 import humanfriendly
-
 from discord.ext import commands
 from tools.helpers import AkariContext
 
-from .handlers.lastfmhandler import Handler
 from .exceptions import LastFmException, WrongMessageLink
+from .handlers.lastfmhandler import Handler
 
 
 class ValidNickname(commands.Converter):

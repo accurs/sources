@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import textwrap
-from typing import Any, Optional, List
+from typing import Any, List, Optional
 
 import arrow
 import discord  # noqa

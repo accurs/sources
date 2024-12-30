@@ -1,5 +1,5 @@
-import json
 import asyncio
+import json
 from collections import defaultdict
 from io import BytesIO
 from typing import Annotated, List, Literal, Optional, Union
@@ -7,17 +7,12 @@ from typing import Annotated, List, Literal, Optional, Union
 import numpy as np
 import pandas as pd
 from discord import Embed, File, Member, Message, User, app_commands
-from discord.ext.commands import (
-    Author, 
-    Cog, 
-    hybrid_command, 
-    hybrid_group, 
-    is_donator
-)
-
-from structure.scare import Scare
+from discord.ext.commands import (Author, Cog, hybrid_command, hybrid_group,
+                                  is_donator)
 from structure.managers import Context, ratelimiter
+from structure.scare import Scare
 from structure.utilities import ChartSize, FMHandler, Playing, plural
+
 
 class LastFM(Cog):
     def __init__(self, bot: Scare):
@@ -42,12 +37,7 @@ class LastFM(Cog):
     @hybrid_command(name="nowplaying", aliases=["fm", "np"])
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def nowplaying(
-        self: "LastFM", 
-        ctx: Context, 
-        *, 
-        member: Member = Author
-    ):
+    async def nowplaying(self: "LastFM", ctx: Context, *, member: Member = Author):
         """
         View a users currently playing track
         """
@@ -68,12 +58,10 @@ class LastFM(Cog):
             )
 
         data: Playing = await self.handler.playing(result["username"])
-        
-        if result['embed']:
+
+        if result["embed"]:
             kwargs = await self.bot.embed.convert(
-                member, 
-                result['embed'], 
-                {'lastfm': data}
+                member, result["embed"], {"lastfm": data}
             )
         else:
             e = Embed(
@@ -83,11 +71,11 @@ class LastFM(Cog):
                     f"on **{data.album.name}**"
                 ),
             )
-    
+
             e.set_author(name=data.user.username, icon_url=data.user.avatar)
-    
+
             e.set_thumbnail(url=data.track.image)
-            kwargs = {'embed': e}
+            kwargs = {"embed": e}
 
         msg = await ctx.send(**kwargs)
 
@@ -609,11 +597,11 @@ class LastFM(Cog):
             return await ctx.confirm("Removed your LastFM custom command")
 
         return await ctx.confirm(f"Updated your LastFM custom command to **{cmd}**")
-    
+
     @lastfm.group(name="embed", invoke_without_command=True)
     async def lf_embed(self, ctx: Context):
         return await ctx.send_help(ctx.command)
-    
+
     @lf_embed.command(name="variables")
     async def embed_variables(self, ctx: Context):
         """
@@ -626,28 +614,29 @@ class LastFM(Cog):
                 [
                     [
                         "{lastfm." + f"{m}.{h}" + "}"
-                        for h in json.loads(getattr(model, m).schema_json())['properties'].keys() 
+                        for h in json.loads(getattr(model, m).schema_json())[
+                            "properties"
+                        ].keys()
                     ]
-                    for m in json.loads(model.schema_json())['properties'].keys()
+                    for m in json.loads(model.schema_json())["properties"].keys()
                 ]
             ),
-            Embed(title="Last.Fm embeds")
+            Embed(title="Last.Fm embeds"),
         )
-    
-    @lf_embed.command(name="steal", aliases=['copy'])
+
+    @lf_embed.command(name="steal", aliases=["copy"])
     @is_donator()
     async def embed_steal(self, ctx: Context, *, member: User):
         """
         Steal someone else's lastfm custom embed
         """
-        
+
         if member == ctx.author:
             return await ctx.alert("Stealing your own embed is absurd")
 
         if not (
             em := await self.bot.db.fetchval(
-                "SELECT embed FROM lastfm.user WHERE user_id = $1",
-                member.id
+                "SELECT embed FROM lastfm.user WHERE user_id = $1", member.id
             )
         ):
             return await ctx.alert("This user has no custom lastfm embed")
@@ -657,10 +646,11 @@ class LastFM(Cog):
             INSERT INTO lastfm VALUES ($1,$2) 
             ON CONFLICT (user_id) DO UPDATE SET embed = $2
             """,
-            ctx.author.id, em
-        ) 
+            ctx.author.id,
+            em,
+        )
 
-    @lf_embed.command(name="view") 
+    @lf_embed.command(name="view")
     async def embed_view(self, ctx: Context, *, member: Member | User = Author):
         """
         View your or someone else's lastfm custom embed
@@ -668,19 +658,17 @@ class LastFM(Cog):
 
         if not (
             em := await self.bot.db.fetchval(
-                "SELECT embed FROM lastfm.user WHERE user_id = $1",
-                member.id
+                "SELECT embed FROM lastfm.user WHERE user_id = $1", member.id
             )
         ):
             return await ctx.alert("There's no embed to show")
-        
+
         embed = Embed(
-            title=f"{member.display_name}'s custom embed",
-            description=f"```{em}```"
+            title=f"{member.display_name}'s custom embed", description=f"```{em}```"
         )
         return await ctx.reply(embed=embed)
-    
-    @lf_embed.command(name="remove", aliases=['del', 'rm', 'delete'])
+
+    @lf_embed.command(name="remove", aliases=["del", "rm", "delete"])
     async def embed_delete(self, ctx: Context):
         """
         Delete your lastfm custom embed
@@ -692,12 +680,13 @@ class LastFM(Cog):
             SET embed = $1
             WHERE user_id = $2
             """,
-            None, ctx.author.id
+            None,
+            ctx.author.id,
         )
 
         return await ctx.confirm("Removed your lastfm custom embed")
 
-    @lf_embed.command(name="set", aliases=['configure'])
+    @lf_embed.command(name="set", aliases=["configure"])
     @is_donator()
     async def embed_set(self, ctx: Context, *, code: str):
         """
@@ -709,15 +698,14 @@ class LastFM(Cog):
             INSERT INTO lastfm.user VALUES ($1,$2)
             ON CONFLICT (user_id) DO UPDATE SET embed = $2  
             """,
-            ctx.author.id, code
+            ctx.author.id,
+            code,
         )
 
         return await ctx.confirm("Assigned your new lastfm embed")
 
     @lastfm.group(
-        name="collage", 
-        aliases=["chart", "collages", "c"], 
-        invoke_without_command=True
+        name="collage", aliases=["chart", "collages", "c"], invoke_without_command=True
     )
     async def lastfm_collage(self, ctx: Context):
         return await ctx.send_help(ctx.command)

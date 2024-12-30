@@ -16,9 +16,14 @@ TimedeltaConverter = get_timedelta_converter(
     minimum=datetime.timedelta(seconds=0),
 )
 
+
 def _(untranslated: str) -> str:  # `redgettext` will found these strings.
     return untranslated
-ERROR_MESSAGE = _("I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}")
+
+
+ERROR_MESSAGE = _(
+    "I attempted to do something that Discord denied me permissions for. Your command failed to successfully complete.\n{error}"
+)
 
 _ = Translator("DiscordEdit", __file__)
 
@@ -46,7 +51,6 @@ class EditGuild(Cog):
     async def editguild(self, ctx: commands.Context) -> None:
         """Commands for edit a guild."""
         pass
-
 
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
@@ -102,7 +106,10 @@ class EditGuild(Cog):
     @commands.has_permissions(manage_guild=True)
     @editguild.command(name="afkchannel")
     async def editguild_afk_channel(
-        self, ctx: commands.Context, *, afk_channel: typing.Optional[discord.VoiceChannel] = None
+        self,
+        ctx: commands.Context,
+        *,
+        afk_channel: typing.Optional[discord.VoiceChannel] = None,
     ) -> None:
         """Edit guild afkchannel."""
         guild = ctx.guild
@@ -119,7 +126,9 @@ class EditGuild(Cog):
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     @editguild.command(name="afktimeout")
-    async def editguild_afk_timeout(self, ctx: commands.Context, afk_timeout: int) -> None:
+    async def editguild_afk_timeout(
+        self, ctx: commands.Context, afk_timeout: int
+    ) -> None:
         """Edit guild afktimeout."""
         guild = ctx.guild
         try:
@@ -191,7 +200,9 @@ class EditGuild(Cog):
     @commands.has_permissions(manage_guild=True)
     @editguild.command(name="systemchannel")
     async def editguild_system_channel(
-        self, ctx: commands.Context, system_channel: typing.Optional[discord.TextChannel] = None
+        self,
+        ctx: commands.Context,
+        system_channel: typing.Optional[discord.TextChannel] = None,
     ) -> None:
         """Edit guild system channel."""
         guild = ctx.guild
@@ -224,12 +235,14 @@ class EditGuild(Cog):
             raise commands.UserFeedbackCheckFailure(
                 _(ERROR_MESSAGE).format(error=box(e, lang="py"))
             )
-        
+
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     @editguild.command(name="ruleschannel")
     async def editguild_rules_channel(
-        self, ctx: commands.Context, rules_channel: typing.Optional[discord.TextChannel] = None
+        self,
+        ctx: commands.Context,
+        rules_channel: typing.Optional[discord.TextChannel] = None,
     ) -> None:
         """Edit guild rules channel."""
         guild = ctx.guild
@@ -286,7 +299,9 @@ class EditGuild(Cog):
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     @editguild.command(name="discoverable")
-    async def editguild_discoverable(self, ctx: commands.Context, discoverable: bool) -> None:
+    async def editguild_discoverable(
+        self, ctx: commands.Context, discoverable: bool
+    ) -> None:
         """Edit guild discoverable state."""
         guild = ctx.guild
         try:

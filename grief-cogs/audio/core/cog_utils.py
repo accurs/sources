@@ -1,15 +1,17 @@
+import struct
 from abc import ABC
-from typing import Final
 from base64 import b64decode
 from io import BytesIO
-import struct
+from typing import Final
 
 from grief import VersionInfo
 from grief.core import commands
 
 from ..converters import get_lazy_converter, get_playlist_converter
 
-__version__ = VersionInfo.from_json({"major": 2, "minor": 5, "micro": 0, "releaselevel": "final"})
+__version__ = VersionInfo.from_json(
+    {"major": 2, "minor": 5, "micro": 0, "releaselevel": "final"}
+)
 
 __author__ = ["aikaterna", "Draper"]
 _SCHEMA_VERSION: Final[int] = 3

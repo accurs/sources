@@ -1,11 +1,10 @@
 import discord
-from discord.ext import commands
-
-from utils.utils import EmbedBuilder
-from patches.permissions import Permissions
-from bot.helpers import EvictContext
 from bot.bot import Evict
-from bot.managers.emojis import Emojis, Colors
+from bot.helpers import EvictContext
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
+from patches.permissions import Permissions
+from utils.utils import EmbedBuilder
 
 
 class greet(commands.Cog):

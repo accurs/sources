@@ -1,5 +1,7 @@
-import discord, datetime, io
+import datetime
+import io
 
+import discord
 from discord.ext.commands import Cog
 from tools.bot import Akari
 

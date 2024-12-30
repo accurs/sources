@@ -7,7 +7,6 @@ from typing import List, Optional, cast
 from discord import Guild
 from discord.ext.commands import BadArgument
 from discord.ext.commands.view import ExpectedClosingQuoteError, StringView
-
 from tools import Bleed
 from tools.client.context import Context
 

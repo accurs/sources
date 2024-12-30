@@ -1,4 +1,6 @@
-import discord, re
+import re
+
+import discord
 
 
 class DynamicRoleButton(

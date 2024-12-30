@@ -1,26 +1,20 @@
 from __future__ import annotations
 
 import asyncio
-from abc import ABC, abstractmethod
 from abc import ABC, ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import discord
 from aiohttp.abc import AbstractMatchInfo
 from red_commons.logging import getLogger
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.commands import Context
 from grief.core.i18n import Translator
 
-from .converter import (
-    ButtonStyleConverter,
-    RawUserIds,
-    RoleEmojiConverter,
-    RoleHierarchyConverter,
-    SelfRoleConverter,
-)
-
+from .converter import (ButtonStyleConverter, RawUserIds, RoleEmojiConverter,
+                        RoleHierarchyConverter, SelfRoleConverter)
 
 log = getLogger("grief.roletools")
 _ = Translator("Roletools", __file__)
@@ -97,7 +91,9 @@ class RoleToolsMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def viewroles(self, ctx: commands.Context, *, role: Optional[discord.Role]) -> None:
+    async def viewroles(
+        self, ctx: commands.Context, *, role: Optional[discord.Role]
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -127,7 +123,9 @@ class RoleToolsMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def mutual_inclusive_add(self, ctx: Context, *roles: RoleHierarchyConverter) -> None:
+    async def mutual_inclusive_add(
+        self, ctx: Context, *roles: RoleHierarchyConverter
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -159,7 +157,9 @@ class RoleToolsMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def mutual_exclusive_add(self, ctx: Context, *roles: RoleHierarchyConverter) -> None:
+    async def mutual_exclusive_add(
+        self, ctx: Context, *roles: RoleHierarchyConverter
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -176,35 +176,35 @@ class RoleToolsMixin(ABC):
     # settings.py                                                         #
     #######################################################################
 
-      #   @abstractmethod
-      #   async def selfadd(
-      #       self,
-     #       ctx: commands.Context,
-     #        true_or_false: Optional[bool] = None,
-     #        *,
+    #   @abstractmethod
+    #   async def selfadd(
+    #       self,
+    #       ctx: commands.Context,
+    #        true_or_false: Optional[bool] = None,
+    #        *,
     #             role: RoleHierarchyConverter,
-      #   ) -> None:
-      #       raise NotImplementedError()
+    #   ) -> None:
+    #       raise NotImplementedError()
 
-     #    @abstractmethod
-     #    async def selfrem(
-       #      self,
-     #            ctx: commands.Context,
-     #        true_or_false: Optional[bool] = None,
-     #        *,
-     #        role: RoleHierarchyConverter,
-     #    ) -> None:
-          #   raise NotImplementedError()
+    #    @abstractmethod
+    #    async def selfrem(
+    #      self,
+    #            ctx: commands.Context,
+    #        true_or_false: Optional[bool] = None,
+    #        *,
+    #        role: RoleHierarchyConverter,
+    #    ) -> None:
+    #   raise NotImplementedError()
 
-       #  @abstractmethod
-        # async def atomic(
-            # self, ctx: commands.Context, true_or_false: Optional[Union[bool, str]] = None
-        # ) -> None:
-            # raise NotImplementedError()
+    #  @abstractmethod
+    # async def atomic(
+    # self, ctx: commands.Context, true_or_false: Optional[Union[bool, str]] = None
+    # ) -> None:
+    # raise NotImplementedError()
 
-       #  @abstractmethod
-      #   async def globalatomic(self, ctx: Context, true_or_false: Optional[bool] = None) -> None:
-      #       raise NotImplementedError()
+    #  @abstractmethod
+    #   async def globalatomic(self, ctx: Context, true_or_false: Optional[bool] = None) -> None:
+    #       raise NotImplementedError()
 
     @abstractmethod
     async def sticky(
@@ -237,12 +237,15 @@ class RoleToolsMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def wait_for_verification(self, member: discord.Member, guild: discord.Guild) -> None:
+    async def wait_for_verification(
+        self, member: discord.Member, guild: discord.Guild
+    ) -> None:
         raise NotImplementedError()
 
         # @abstractmethod
-       #  async def check_atomicity(self, guild: discord.Guild) -> bool:
-       #      raise NotImplementedError()
+
+    #  async def check_atomicity(self, guild: discord.Guild) -> bool:
+    #      raise NotImplementedError()
 
     @abstractmethod
     async def give_roles(

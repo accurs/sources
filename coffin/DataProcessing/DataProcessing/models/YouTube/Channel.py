@@ -1,23 +1,25 @@
 from __future__ import annotations
 
-from typing import List, Optional
-from typing_extensions import Self
-from pydantic import BaseModel
 import re
+from typing import List, Optional
+
 from aiohttp import ClientSession
 from loguru import logger as log
+from pydantic import BaseModel
+from typing_extensions import Self
 
 CHANNEL_LOOKUPS = {
     "BY_ID": "https://pipedapi.kavin.rocks/channel/",
-    "BY_USERNAME": "https://pipedapi.kavin.rocks/c/"
+    "BY_USERNAME": "https://pipedapi.kavin.rocks/c/",
 }
 
 REGEXES = [
-    re.compile(r'channel/([a-zA-Z0-9_-]+)'),  # Matches channel URLs
-    re.compile(r'c/([a-zA-Z0-9_-]+)'),        # Matches custom URLs (short form)
-    re.compile(r'user/([a-zA-Z0-9_-]+)'),      # Matches legacy user URLs
-    re.compile(r'@([a-zA-Z0-9_-]+)')           # Matches YouTube handles
+    re.compile(r"channel/([a-zA-Z0-9_-]+)"),  # Matches channel URLs
+    re.compile(r"c/([a-zA-Z0-9_-]+)"),  # Matches custom URLs (short form)
+    re.compile(r"user/([a-zA-Z0-9_-]+)"),  # Matches legacy user URLs
+    re.compile(r"@([a-zA-Z0-9_-]+)"),  # Matches YouTube handles
 ]
+
 
 class RelatedStream(BaseModel):
     url: Optional[str] = None
@@ -76,10 +78,12 @@ class YouTubeChannel(BaseModel):
             async with session.get(f"{url}{snowflake}") as response:
                 data = await response.read()
         return cls.parse_raw(data)
-    
+
     @classmethod
     async def from_id(cls, channel_id: str) -> Optional[Self]:
         async with ClientSession() as session:
-            async with session.get(f"{CHANNEL_LOOKUPS['BY_ID']}{channel_id}") as response:
+            async with session.get(
+                f"{CHANNEL_LOOKUPS['BY_ID']}{channel_id}"
+            ) as response:
                 data = await response.read()
         return cls.parse_raw(data)

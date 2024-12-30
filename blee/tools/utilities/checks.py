@@ -1,8 +1,10 @@
-import discord
 import json
+
+import config
+import discord
 from discord.ext import commands
 from discord.ext.commands import CommandError, MissingPermissions
-import config
+
 
 def has_permissions(**permissions):
     """
@@ -120,5 +122,6 @@ def require_boost():
         return True
 
     return commands.check(predicate)
+
 
 commands.has_permissions = has_permissions

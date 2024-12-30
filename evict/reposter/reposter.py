@@ -1,11 +1,16 @@
-import io, aiohttp, yt_dlp, asyncio
-import discord, re
-from discord.ext import commands
-from discord.ui import View, Button
-from discord import Embed, File, Message
+import asyncio
+import io
+import re
 from collections import defaultdict
+
+import aiohttp
+import discord
+import yt_dlp
 from bot.headers import Session
-from bot.managers.emojis import Emojis, Colors
+from bot.managers.emojis import Colors, Emojis
+from discord import Embed, File, Message
+from discord.ext import commands
+from discord.ui import Button, View
 
 
 class Reposter:

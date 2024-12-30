@@ -6,9 +6,11 @@ from cashews import cache
 from discord.ext.commands import CommandError
 from pydantic import BaseModel
 from typing_extensions import Self
-cache.setup('mem://')
-from .base import API, ClientSession
+
+cache.setup("mem://")
 from discord.ext.commands import Context
+
+from .base import API, ClientSession
 
 ENDPOINT = API["graphql"]["UserByScreenName"]
 

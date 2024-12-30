@@ -6,6 +6,7 @@ from typing import Any, List, Optional, Tuple, Union
 
 import discord
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.vendored.discord.ext import menus
@@ -27,7 +28,9 @@ class AvatarDisplay(Enum):
             AvatarDisplay.guild: _("Server Avatar"),
         }.get(self, _("Global Avatar"))
 
-    def get_asset(self, member: Union[discord.Member, discord.User]) -> Optional[discord.Asset]:
+    def get_asset(
+        self, member: Union[discord.Member, discord.User]
+    ) -> Optional[discord.Asset]:
         if self is AvatarDisplay.default:
             return member.default_avatar
         elif self is AvatarDisplay.guild:
@@ -41,7 +44,9 @@ class AvatarPages(menus.ListPageSource):
         self.use_display_avatar: bool = True
         self.avatar_display: AvatarDisplay = None
 
-    def adjust_buttons(self, menu: BaseView, member: Union[discord.Member, discord.User]):
+    def adjust_buttons(
+        self, menu: BaseView, member: Union[discord.Member, discord.User]
+    ):
         for style in AvatarDisplay:
             if style is self.avatar_display or style.get_asset(member) is None:
                 menu.avatar_swap[style.value].disabled = True
@@ -66,11 +71,15 @@ class AvatarPages(menus.ListPageSource):
             formats.append("gif")
         if url != member.default_avatar:
             description = (
-                " | ".join(f"[{a.upper()}]({url.replace(size=4096, format=a)})" for a in formats)
+                " | ".join(
+                    f"[{a.upper()}]({url.replace(size=4096, format=a)})"
+                    for a in formats
+                )
                 + "\n"
             )
             description += " | ".join(
-                f"[{a}]({url.replace(size=a)})" for a in [32, 64, 128, 256, 512, 1024, 2048, 4096]
+                f"[{a}]({url.replace(size=a)})"
+                for a in [32, 64, 128, 256, 512, 1024, 2048, 4096]
             )
             em.description = description
         if isinstance(member, discord.Member):
@@ -85,7 +94,9 @@ class AvatarPages(menus.ListPageSource):
 
 class SwapAvatarButton(discord.ui.Button):
     def __init__(self, avatar_display: AvatarDisplay):
-        super().__init__(style=discord.ButtonStyle.grey, label=avatar_display.get_name())
+        super().__init__(
+            style=discord.ButtonStyle.grey, label=avatar_display.get_name()
+        )
         self.view: BaseView
         self.avatar_display = avatar_display
 
@@ -198,6 +209,7 @@ class FirstItemButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         await self.view.show_page(0, interaction)
+
 
 class StopButton(discord.ui.Button):
     def __init__(
@@ -329,7 +341,9 @@ class BaseView(discord.ui.View):
         return self.message
 
     async def _get_kwargs_from_page(self, page):
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         if isinstance(value, dict):
             return value
         elif isinstance(value, str):
@@ -347,7 +361,9 @@ class BaseView(discord.ui.View):
         kwargs = await self._get_kwargs_from_page(page)
         await interaction.response.edit_message(**kwargs, view=self)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None:
@@ -367,7 +383,8 @@ class BaseView(discord.ui.View):
         """Just extends the default reaction_check to use owner_ids"""
         if interaction.user.id not in (*self.ctx.bot.owner_ids, self.ctx.author.id):
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -407,7 +424,9 @@ class ConfirmView(discord.ui.View):
             await self.message.edit(view=None)
 
     @discord.ui.button(label=_("Yes"), style=discord.ButtonStyle.green)
-    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def confirm_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.result = True
         self.stop()
         # respond to the interaction so the user does not see "interaction failed".
@@ -416,7 +435,9 @@ class ConfirmView(discord.ui.View):
         await self.on_timeout()
 
     @discord.ui.button(label=_("No"), style=discord.ButtonStyle.secondary)
-    async def dismiss_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def dismiss_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.result = False
         self.stop()
         # respond to the interaction so the user does not see "interaction failed".
@@ -429,7 +450,8 @@ class ConfirmView(discord.ui.View):
             self.message = interaction.message
         if self.author and interaction.user.id != self.author.id:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True

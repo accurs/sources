@@ -1,5 +1,6 @@
-from cashews import cache
-from typing import Coroutine, Callable, Any
 import functools
+from typing import Any, Callable, Coroutine
+
+from cashews import cache
 
 cache.setup("mem://")

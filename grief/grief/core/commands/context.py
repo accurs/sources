@@ -4,16 +4,19 @@ import asyncio
 import contextlib
 import os
 import re
-from typing import Iterable, List, Union, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable, List, Optional, Union
+
 import discord
 from discord.ext.commands import Context as DPYContext
 
-from .requires import PermState
 from grief.core.utils.__init__ import can_user_react_in
 
+from .requires import PermState
+
 if TYPE_CHECKING:
-    from .commands import Command
     from grief.core.bot import Grief
+
+    from .commands import Command
 
 TICK = "\<:grief_check:1107472942830456892>"
 
@@ -251,12 +254,16 @@ class Context(DPYContext):
             raise ValueError("Message length must be between 1 and 2000")
         if await self.embed_requested():
             return await self.send(
-                embed=discord.Embed(description=message, color=(await self.embed_colour()))
+                embed=discord.Embed(
+                    description=message, color=(await self.embed_colour())
+                )
             )
         else:
             return await self.send(
                 message,
-                allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False),
+                allowed_mentions=discord.AllowedMentions(
+                    everyone=False, roles=False, users=False
+                ),
             )
 
     @property
@@ -285,20 +292,16 @@ if TYPE_CHECKING or os.getenv("BUILDING_DOCS", False):
         """
 
         @property
-        def author(self) -> discord.User:
-            ...
+        def author(self) -> discord.User: ...
 
         @property
-        def channel(self) -> discord.DMChannel:
-            ...
+        def channel(self) -> discord.DMChannel: ...
 
         @property
-        def guild(self) -> None:
-            ...
+        def guild(self) -> None: ...
 
         @property
-        def me(self) -> discord.ClientUser:
-            ...
+        def me(self) -> discord.ClientUser: ...
 
     class GuildContext(Context):
         """
@@ -311,24 +314,23 @@ if TYPE_CHECKING or os.getenv("BUILDING_DOCS", False):
         """
 
         @property
-        def author(self) -> discord.Member:
-            ...
+        def author(self) -> discord.Member: ...
 
         @property
         def channel(
             self,
         ) -> Union[
-            discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread
-        ]:
-            ...
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.Thread,
+        ]: ...
 
         @property
-        def guild(self) -> discord.Guild:
-            ...
+        def guild(self) -> discord.Guild: ...
 
         @property
-        def me(self) -> discord.Member:
-            ...
+        def me(self) -> discord.Member: ...
 
 else:
     GuildContext = Context

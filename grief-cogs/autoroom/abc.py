@@ -1,13 +1,12 @@
-
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Union
 
 import discord
+from autoroom.pcx_template import Template
 from discord.ext.commands import CooldownMapping
+
 from grief.core import Config
 from grief.core.bot import Grief
-
-from autoroom.pcx_template import Template
 
 
 class MixinMeta(ABC):

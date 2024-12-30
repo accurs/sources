@@ -1,58 +1,46 @@
-import uwuify
-import random
 import asyncio
-import discord
 import datetime
-import humanize
-import humanfriendly
-import dateutil.parser
-import validators
-import os
-import aiohttp
 import json
+import os
+import random
 
+import aiohttp
+import dateutil.parser
+import discord
+import humanfriendly
+import humanize
+import uwuify
+import validators
 from nudenet import NudeDetector
 
 nude_detector = NudeDetector()
 
-from discord.ext import commands
-from discord.ext.commands import has_guild_permissions
-from discord import TextChannel
-
-from playwright.async_api import async_playwright
+import re
 from io import BytesIO
-from typing import Union, Optional, Any
-from shazamio import Shazam
+from typing import Any, Optional, Union
 
-from tools.bot import Akari
-from tools.misc.views import Donate
-from tools.validators import ValidTime
-from tools.helpers import AkariContext
-from tools.predicates import is_afk, is_there_a_reminder, reminder_exists
-from tools.misc.utils import (
-    Timezone,
-    BdayDate,
-    BdayMember,
-    TimezoneMember,
-    TimezoneLocation,
-    get_color,
-)
-
-from tools.handlers.socials.github import GithubUser
-from tools.handlers.socials.snapchat import SnapUser
-from tools.handlers.socials.roblox import RobloxUser
-from tools.handlers.socials.tiktok import TikTokUser
-from tools.handlers.socials.cashapp import CashappUser
-from tools.handlers.socials.instagram import InstagramUser
-from tools.handlers.socials.weather import WeatherLocation
-
+import rembg
 from deep_translator import GoogleTranslator
 from deep_translator.exceptions import LanguageNotSupportedException
-
-from io import BytesIO
-
-import re
-import rembg
+from discord import TextChannel
+from discord.ext import commands
+from discord.ext.commands import has_guild_permissions
+from playwright.async_api import async_playwright
+from shazamio import Shazam
+from tools.bot import Akari
+from tools.handlers.socials.cashapp import CashappUser
+from tools.handlers.socials.github import GithubUser
+from tools.handlers.socials.instagram import InstagramUser
+from tools.handlers.socials.roblox import RobloxUser
+from tools.handlers.socials.snapchat import SnapUser
+from tools.handlers.socials.tiktok import TikTokUser
+from tools.handlers.socials.weather import WeatherLocation
+from tools.helpers import AkariContext
+from tools.misc.utils import (BdayDate, BdayMember, Timezone, TimezoneLocation,
+                              TimezoneMember, get_color)
+from tools.misc.views import Donate
+from tools.predicates import is_afk, is_there_a_reminder, reminder_exists
+from tools.validators import ValidTime
 
 
 class Color(commands.Converter):

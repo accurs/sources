@@ -1,10 +1,13 @@
-from discord import Embed, Message, Member, User, Object, AuditLogEntry, utils, VoiceState, Role, abc  # type: ignore # type: ignore # type: ignore # type: ignore
 from datetime import datetime
 from enum import Enum, auto
+from typing import Any, Optional, Union
+
+from discord import (  # type: ignore # type: ignore # type: ignore # type: ignore
+    AuditLogEntry, Embed, Member, Message, Object, Role, User, VoiceState, abc,
+    utils)
 from discord.ext.commands import Context
-from typing import Union, Optional, Any
 from loguru import logger
-from rival_tools import ratelimit, lock  # type: ignore
+from rival_tools import lock, ratelimit  # type: ignore
 
 change_type = Union[Role, AuditLogEntry]
 
@@ -190,7 +193,9 @@ class Handler:
                     )
         return embed
 
-    async def get_embed(self, ctx: Union[Context, Message, AuditLogEntry], event: EventType):
+    async def get_embed(
+        self, ctx: Union[Context, Message, AuditLogEntry], event: EventType
+    ):
         ts = utils.format_dt(datetime.now(), style="R")
         embed = Embed(color=self.bot.color)
         if isinstance(ctx, Context):
@@ -234,33 +239,27 @@ class Handler:
             elif event == EventType.command_disable:
                 embed.title = "Bot Settings Updated"
                 args = ctx.kwargs
-                embed.description = (
-                    f"**Moderator:** {ctx.author.mention}\n> **Action:** Disabled a command\n> **Command:** `{args['command']}`\n> **When:** {ts}"
-                )
+                embed.description = f"**Moderator:** {ctx.author.mention}\n> **Action:** Disabled a command\n> **Command:** `{args['command']}`\n> **When:** {ts}"
             elif event == EventType.command_enable:
                 embed.title = "Bot Settings Updated"
                 args = ctx.kwargs
-                embed.description = (
-                    f"**Moderator:** {ctx.author.mention}\n> **Action:** Enabled a command\n> **Command:** `{args['command']}`\n> **When:** {ts}"
-                )
+                embed.description = f"**Moderator:** {ctx.author.mention}\n> **Action:** Enabled a command\n> **Command:** `{args['command']}`\n> **When:** {ts}"
             elif event == EventType.ban:
                 embed.title = "Member Punished"
                 args = ctx.kwargs
                 #                logger.info(args)
-                embed.description = (
-                    f"**Moderator:** {ctx.author.mention}\n> **Punishment:** `BANNED`\n> **User:** {str(args['user'])}\n> **When:** {ts}"
-                )
+                embed.description = f"**Moderator:** {ctx.author.mention}\n> **Punishment:** `BANNED`\n> **User:** {str(args['user'])}\n> **When:** {ts}"
             elif event == EventType.kick:
                 embed.title = "user kicked"
                 args = ctx.kwargs
-                embed.description = (
-                    f"**Moderator:** {ctx.author.mention}\n> **Punishment:** `KICKED`\n> **User:** {str(args['user'])}\n> **When:** {ts}"
-                )
+                embed.description = f"**Moderator:** {ctx.author.mention}\n> **Punishment:** `KICKED`\n> **User:** {str(args['user'])}\n> **When:** {ts}"
             elif event == EventType.time_out:
                 embed.title = "Member Punished"
                 args = ctx.kwargs
                 embed.description = f"**Moderator:** {ctx.author.mention}\n> **User:** {str(args.get('user','member'))}\n> **Punishment:** member timeout\n> **When:** {ts}"
-                embed.add_field(name="Timeout Duration", value=f'**{args["time"]}**', inline=False)
+                embed.add_field(
+                    name="Timeout Duration", value=f'**{args["time"]}**', inline=False
+                )
             elif event == EventType.role_assign:
                 embed.title = "Role(s) Assigned to user"
                 args = ctx.kwargs
@@ -274,9 +273,7 @@ class Handler:
             elif event == EventType.role_create:
                 embed.title = "Role Created"
                 args = ctx.kwargs
-                embed.description = (
-                    f"**Moderator:** {ctx.author.mention}\n> **Role:** {args['name']}\n> **When:** {ts}"
-                )
+                embed.description = f"**Moderator:** {ctx.author.mention}\n> **Role:** {args['name']}\n> **When:** {ts}"
             elif event == EventType.role_update:
                 embed.title = "Role Updated"
                 args = ctx.kwargs
@@ -329,9 +326,7 @@ class Handler:
                             -1
                         ]
                         title = "member stripped"
-                        description = (
-                            f"**Moderator:** {ctx.user.mention}\n> **User Stripped:** {str(ctx.target)}\n> **Reason:** {reason}\n> **When:** {ts}"
-                        )
+                        description = f"**Moderator:** {ctx.user.mention}\n> **User Stripped:** {str(ctx.target)}\n> **Reason:** {reason}\n> **When:** {ts}"
                     else:
                         if ctx.user == self.bot.user:
                             return None
@@ -366,9 +361,7 @@ class Handler:
                     t = ""
                     m = ""
                 embed.title = "Channel Updated"
-                embed.description = (
-                    f"**Moderator:** {ctx.user.mention}\n> **Channel:** {str(ctx.target)}{t}\n> **When:**{ts}{m}"
-                )
+                embed.description = f"**Moderator:** {ctx.user.mention}\n> **Channel:** {str(ctx.target)}{t}\n> **When:**{ts}{m}"
             elif event == EventType.category_channel_create:
                 if ctx.user == self.bot.user:
                     return None
@@ -398,15 +391,11 @@ class Handler:
                             return None
                         reason = ctx.reason or "no reason provided"
                         title = "Member Punished"
-                        description = (
-                            f"**Moderator:** {ctx.user.mention}\n> **User Punished:** {str(ctx.target)}\n> **Punishment:** `member banned`\n> **Reason:** {reason}\n> **When:** {ts}"
-                        )
+                        description = f"**Moderator:** {ctx.user.mention}\n> **User Punished:** {str(ctx.target)}\n> **Punishment:** `member banned`\n> **Reason:** {reason}\n> **When:** {ts}"
                 else:
                     reason = ctx.reason or "no reason provided"
                     title = "Member Punished"
-                    description = (
-                        f"**Moderator:** {ctx.user.mention}\n> **User Punished:** {str(ctx.target)}\n> **Punishment:** `member banned`\n> **When:** {ts}"
-                    )
+                    description = f"**Moderator:** {ctx.user.mention}\n> **User Punished:** {str(ctx.target)}\n> **Punishment:** `member banned`\n> **When:** {ts}"
                 embed.title = title
                 embed.description = description
             elif event == EventType.kick:
@@ -422,17 +411,13 @@ class Handler:
                             return None
                         reason = ctx.reason or "no reason provided"
                         title = "Member Punished"
-                        description = (
-                            f"**Moderator:** {ctx.user.mention}\n> **User Punished:** {await self.check_user(ctx.target)}\n> **Punishment:** `member kicked`\n> **Reason:** {reason}\n> **When:** {ts}"
-                        )
+                        description = f"**Moderator:** {ctx.user.mention}\n> **User Punished:** {await self.check_user(ctx.target)}\n> **Punishment:** `member kicked`\n> **Reason:** {reason}\n> **When:** {ts}"
                 else:
                     if ctx.user == self.bot.user:
                         return None
                     reason = ctx.reason or "no reason provided"
                     title = "Member Punished"
-                    description = (
-                        f"**Moderator:** {ctx.user.mention}\n> **User Punished:** {await self.check_user(ctx.target)}\n> **Punishment:** `member kicked`\n> **When:** {ts}"
-                    )
+                    description = f"**Moderator:** {ctx.user.mention}\n> **User Punished:** {await self.check_user(ctx.target)}\n> **Punishment:** `member kicked`\n> **When:** {ts}"
                 embed.title = title
                 embed.description = description
             elif event == EventType.time_out:
@@ -446,7 +431,7 @@ class Handler:
                         embed.description = f"**Moderator:** {str(ctx.user)}\n> **User Punished**: {str(ctx.target)}\n> **Punishment:** `member timed out`\n> **Reason:** {ctx.reason}\n> **When:** {ts}"
                 else:
                     embed.title = "Member Timed Out"
-                    reason = f'> **Reason:** {ctx.reason}' + '\n' if ctx.reason else ''
+                    reason = f"> **Reason:** {ctx.reason}" + "\n" if ctx.reason else ""
                     embed.description = f"**Moderator:** {str(ctx.user)}\n> **User Punished**: {str(ctx.target)}\n> **Punishment:** `member timed out`\n{reason}> **When:** {ts}"
             else:
                 return None
@@ -562,9 +547,9 @@ class Handler:
             if _type is None:
                 return
             embed = await self.get_embed(c, _type)
-#        if isinstance(c, AuditLogEntry):
-#            if c.user.bot:
-#                return
+        #        if isinstance(c, AuditLogEntry):
+        #            if c.user.bot:
+        #                return
         if embed:
 
             @ratelimit("modlogs:{c.guild.id}", 3, 5, True)

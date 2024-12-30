@@ -4,35 +4,20 @@ from json import loads
 from pathlib import Path
 from typing import Annotated, Optional, cast
 
-from discord import Color, Embed, HTTPException, Member, Message, PartialEmoji, Role
-from discord.ext.commands import (
-    BadArgument,
-    BucketType,
-    Cog,
-    Range,
-    group,
-    has_permissions,
-    max_concurrency,
-    parameter,
-)
-from rapidfuzz import process
-from rapidfuzz.distance import DamerauLevenshtein
-
 import extensions.server.extended.boosterrole as boosterrole
-from core.tools import (
-    CompositeMetaClass,
-    MixinMeta,
-    convert_image,
-    dominant_color,
-    plural,
-)
 from core.client.context import Context
-
 from core.client.database.settings import Settings
-
+from core.tools import (CompositeMetaClass, MixinMeta, convert_image,
+                        dominant_color, plural)
 from core.tools.converters.discord import StrictRole
 from core.tools.converters.kayo import PartialAttachment
 from core.tools.logging import logger as log
+from discord import (Color, Embed, HTTPException, Member, Message,
+                     PartialEmoji, Role)
+from discord.ext.commands import (BadArgument, BucketType, Cog, Range, group,
+                                  has_permissions, max_concurrency, parameter)
+from rapidfuzz import process
+from rapidfuzz.distance import DamerauLevenshtein
 
 
 def build_colors() -> dict[str, str]:

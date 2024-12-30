@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, List, Optional
 
 import discord
+
 from grief.core import commands
 
 if discord.__version__.startswith("1"):
@@ -49,7 +50,9 @@ class _PredView(ui.View):
 
 
 class _PredButton(ui.Button):
-    def __init__(self, ref: Any, style: ButtonStyle, label: str, row: Optional[int] = None):
+    def __init__(
+        self, ref: Any, style: ButtonStyle, label: str, row: Optional[int] = None
+    ):
         super().__init__(style=style, label=label, row=row)
         self.ref = ref
 

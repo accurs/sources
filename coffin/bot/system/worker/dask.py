@@ -1,10 +1,11 @@
-import distributed
 import asyncio
-import psutil
 from typing import Callable
 
+import distributed
+import psutil
+
 try:
-    GLOBAL_DASK  
+    GLOBAL_DASK
 except NameError:
     GLOBAL_DASK = {}
 
@@ -32,6 +33,7 @@ async def sstart_dask(bot, address: str) -> distributed.Client:
 
 async def start_dask(bot, address: str) -> distributed.Client:
     from loguru import logger
+
     scheduler_file = "scheduler.json"
 
     # Check if port 8787 is already in use

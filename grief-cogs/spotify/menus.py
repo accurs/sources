@@ -6,39 +6,20 @@ from typing import Any, List, Optional, Tuple
 import discord
 import tekore
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.core.utils.chat_formatting import box, humanize_list
 from grief.vendored.discord.ext import menus
 
-from .components import (
-    BackButton,
-    FirstItemButton,
-    ForwardButton,
-    LastItemButton,
-    LikeButton,
-    NextTrackButton,
-    PlayAllButton,
-    PlayPauseButton,
-    PreviousTrackButton,
-    QueueTrackButton,
-    RepeatButton,
-    ShuffleButton,
-    SpotifySelectOption,
-    SpotifySelectTrack,
-    StopButton,
-    VolumeButton,
-)
-from .helpers import (
-    PITCH,
-    REPEAT_STATES,
-    SPOTIFY_LOGO,
-    Mode,
-    NotPlaying,
-    _draw_play,
-    make_details,
-    spotify_emoji_handler,
-)
+from .components import (BackButton, FirstItemButton, ForwardButton,
+                         LastItemButton, LikeButton, NextTrackButton,
+                         PlayAllButton, PlayPauseButton, PreviousTrackButton,
+                         QueueTrackButton, RepeatButton, ShuffleButton,
+                         SpotifySelectOption, SpotifySelectTrack, StopButton,
+                         VolumeButton)
+from .helpers import (PITCH, REPEAT_STATES, SPOTIFY_LOGO, Mode, NotPlaying,
+                      _draw_play, make_details, spotify_emoji_handler)
 
 log = getLogger("red.Trusty-cogs.spotify")
 _ = Translator("Spotify", __file__)
@@ -95,19 +76,26 @@ class SpotifyTrackPages(menus.ListPageSource):
                 details = await sp.track_audio_features(track.id)
 
             msg = await make_details(track, details)
-            em.add_field(name="Details", value=box(msg[:1000], lang="css"), inline=False)
+            em.add_field(
+                name="Details", value=box(msg[:1000], lang="css"), inline=False
+            )
         if self.recommendations:
             recs_msg = ""
             for key, value in self.recommendations.items():
                 if key in ["market", "limit"] or value is None:
                     continue
                 if key == "genres":
-                    recs_msg += _("Genres: {genres}\n").format(genres=humanize_list(value))
+                    recs_msg += _("Genres: {genres}\n").format(
+                        genres=humanize_list(value)
+                    )
                     continue
                 if key == "track_ids":
                     recs_msg += _("Tracks: {tracks}\n").format(
                         tracks=humanize_list(
-                            [f"https://open.spotify.com/track/{track_id}\n" for track_id in value]
+                            [
+                                f"https://open.spotify.com/track/{track_id}\n"
+                                for track_id in value
+                            ]
                         )
                     )
                     continue
@@ -127,7 +115,9 @@ class SpotifyTrackPages(menus.ListPageSource):
                     )
                     continue
                 if key == "target_key":
-                    recs_msg += _("Target Key: {pitch_key}\n").format(pitch_key=PITCH[value])
+                    recs_msg += _("Target Key: {pitch_key}\n").format(
+                        pitch_key=PITCH[value]
+                    )
                     continue
                 if value is not None:
                     recs_msg += f"{key.replace('_', ' ').title()}: {value}\n"
@@ -261,9 +251,7 @@ class SpotifyPlaylistPages(menus.ListPageSource):
         with user_spotify.token_as(view.user_token):
             cur = await user_spotify.playlist_items(playlist.id)
             for track in cur.items[:10]:
-                description += (
-                    f"[{track.track.name}](https://open.spotify.com/track/{track.track.id})\n"
-                )
+                description += f"[{track.track.name}](https://open.spotify.com/track/{track.track.id})\n"
 
         em.description = description
         if playlist.images:
@@ -319,7 +307,9 @@ class SpotifyNewPages(menus.ListPageSource):
                 album = await user_spotify.album(playlist.id)
                 cur = album.tracks
                 for track in cur.items[:10]:
-                    description += f"[{track.name}](https://open.spotify.com/album/{track.id})\n"
+                    description += (
+                        f"[{track.name}](https://open.spotify.com/album/{track.id})\n"
+                    )
 
         em.description = description
         if playlist.images:
@@ -519,7 +509,9 @@ class SpotifyTopArtistsPages(menus.ListPageSource):
 
 
 class SpotifyPages(menus.PageSource):
-    def __init__(self, user_token: tekore.Token, sender: tekore.AsyncSender, detailed: bool):
+    def __init__(
+        self, user_token: tekore.Token, sender: tekore.AsyncSender, detailed: bool
+    ):
         super().__init__()
         self.user_token = user_token
         self.sender = sender
@@ -573,9 +565,13 @@ class SpotifyPages(menus.PageSource):
             url=url,
         )
         repeat = (
-            f"Repeat: {REPEAT_STATES[state.repeat_state]} |" if state.repeat_state != "off" else ""
+            f"Repeat: {REPEAT_STATES[state.repeat_state]} |"
+            if state.repeat_state != "off"
+            else ""
         )
-        shuffle = "Shuffle: \N{TWISTED RIGHTWARDS ARROWS} |" if state.shuffle_state else ""
+        shuffle = (
+            "Shuffle: \N{TWISTED RIGHTWARDS ARROWS} |" if state.shuffle_state else ""
+        )
         liked = "Liked: \N{GREEN HEART}" if is_liked else ""
         footer = f"{repeat}{shuffle}{liked}"
         em.set_footer(text=footer, icon_url=SPOTIFY_LOGO)
@@ -654,7 +650,11 @@ class SpotifyPages(menus.PageSource):
                     tracks = []
                     if cur_state.context.type == "playlist":
                         cur_tracks = await user_spotify.playlist(playlist_id)
-                        tracks = [t.track for t in cur_tracks.tracks.items if t.track is not None]
+                        tracks = [
+                            t.track
+                            for t in cur_tracks.tracks.items
+                            if t.track is not None
+                        ]
                     if cur_state.context.type == "album":
                         cur_tracks = await user_spotify.album(playlist_id)
                         tracks = [t for t in cur_tracks.tracks.items if t is not None]
@@ -668,7 +668,9 @@ class SpotifyPages(menus.PageSource):
                         cur_tracks = await user_spotify.saved_tracks(limit=50)
                         tracks = [t.track for t in cur_tracks.items if t is not None]
                     if cur_tracks:
-                        self.context_name = getattr(cur_tracks, "name", _("Saved Tracks"))
+                        self.context_name = getattr(
+                            cur_tracks, "name", _("Saved Tracks")
+                        )
                     for track in tracks:
                         if track.id is not None:
                             self.select_options.append(track)
@@ -706,14 +708,24 @@ class SpotifyUserMenu(discord.ui.View):
         self.previous_button = PreviousTrackButton(
             discord.ButtonStyle.grey, 0, cog, source, user_token
         )
-        self.next_button = NextTrackButton(discord.ButtonStyle.grey, 0, cog, source, user_token)
+        self.next_button = NextTrackButton(
+            discord.ButtonStyle.grey, 0, cog, source, user_token
+        )
         self.play_pause_button = PlayPauseButton(
             discord.ButtonStyle.primary, 0, cog, source, user_token
         )
-        self.shuffle_button = ShuffleButton(discord.ButtonStyle.grey, 1, cog, source, user_token)
-        self.repeat_button = RepeatButton(discord.ButtonStyle.grey, 1, cog, source, user_token)
-        self.like_button = LikeButton(discord.ButtonStyle.grey, 1, cog, source, user_token)
-        self.volume_button = VolumeButton(discord.ButtonStyle.grey, 1, cog, source, user_token)
+        self.shuffle_button = ShuffleButton(
+            discord.ButtonStyle.grey, 1, cog, source, user_token
+        )
+        self.repeat_button = RepeatButton(
+            discord.ButtonStyle.grey, 1, cog, source, user_token
+        )
+        self.like_button = LikeButton(
+            discord.ButtonStyle.grey, 1, cog, source, user_token
+        )
+        self.volume_button = VolumeButton(
+            discord.ButtonStyle.grey, 1, cog, source, user_token
+        )
         self.stop_button = StopButton(discord.ButtonStyle.red, 0)
         self.add_item(self.stop_button)
         self.add_item(self.previous_button)
@@ -763,7 +775,9 @@ class SpotifyUserMenu(discord.ui.View):
                 await self.show_checked_page(0)
 
     async def _get_kwargs_from_page(self, page):
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         if isinstance(value, dict):
             return value
         elif isinstance(value, str):
@@ -772,7 +786,10 @@ class SpotifyUserMenu(discord.ui.View):
             return {"embeds": [value], "content": None}
 
     async def send_initial_message(
-        self, ctx: commands.Context, content: Optional[str] = None, ephemeral: bool = False
+        self,
+        ctx: commands.Context,
+        content: Optional[str] = None,
+        ephemeral: bool = False,
     ):
         """|coro|
         The default implementation of :meth:`Menu.send_initial_message`
@@ -835,7 +852,9 @@ class SpotifyUserMenu(discord.ui.View):
             self.remove_item(self.select_view)
             options = self.source.select_options[:25]
             if len(self.source.select_options) > 25 and page_number > 12:
-                options = self.source.select_options[page_number - 12 : page_number + 13]
+                options = self.source.select_options[
+                    page_number - 12 : page_number + 13
+                ]
 
             self.select_view = SpotifySelectTrack(
                 options,
@@ -853,7 +872,9 @@ class SpotifyUserMenu(discord.ui.View):
         elif self.message is not None:
             await self.message.edit(**kwargs, view=self)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None:
@@ -869,7 +890,9 @@ class SpotifyUserMenu(discord.ui.View):
             # An error happened that can be handled, so ignore it.
             pass
 
-    async def on_error(self, error, interaction: discord.Interaction, button: discord.ui.Button):
+    async def on_error(
+        self, error, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         log.verbose(
             "SpotifyUserMenu on_error: error=%s button=%s interaction=%s",
             error,
@@ -882,7 +905,8 @@ class SpotifyUserMenu(discord.ui.View):
         log.debug("Checking interaction")
         if self.author and interaction.user.id != self.author.id:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -920,8 +944,12 @@ class SpotifySearchMenu(discord.ui.View):
         self.play_pause_button = PlayPauseButton(
             discord.ButtonStyle.primary, 1, cog, source, user_token
         )
-        self.play_all = PlayAllButton(discord.ButtonStyle.grey, 1, cog, source, user_token)
-        self.queue_track = QueueTrackButton(discord.ButtonStyle.grey, 1, cog, source, user_token)
+        self.play_all = PlayAllButton(
+            discord.ButtonStyle.grey, 1, cog, source, user_token
+        )
+        self.queue_track = QueueTrackButton(
+            discord.ButtonStyle.grey, 1, cog, source, user_token
+        )
         self.stop_button = StopButton(discord.ButtonStyle.red, 0)
         self.add_item(self.stop_button)
         self.add_item(self.first_item)
@@ -949,7 +977,9 @@ class SpotifySearchMenu(discord.ui.View):
             await self.message.delete()
 
     async def _get_kwargs_from_page(self, page):
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         if isinstance(value, dict):
             return value
         elif isinstance(value, str):
@@ -958,7 +988,10 @@ class SpotifySearchMenu(discord.ui.View):
             return {"embeds": [value], "content": None}
 
     async def send_initial_message(
-        self, ctx: commands.Context, content: Optional[str] = None, ephemeral: bool = False
+        self,
+        ctx: commands.Context,
+        content: Optional[str] = None,
+        ephemeral: bool = False,
     ):
         """|coro|
         The default implementation of :meth:`Menu.send_initial_message`
@@ -991,7 +1024,9 @@ class SpotifySearchMenu(discord.ui.View):
         else:
             await interaction.followup.edit(**kwargs, view=self)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None:
@@ -1012,7 +1047,8 @@ class SpotifySearchMenu(discord.ui.View):
 
         if interaction.user.id != self.author.id:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -1078,7 +1114,9 @@ class SpotifyBaseMenu(discord.ui.View):
             await self.message.delete()
 
     async def _get_kwargs_from_page(self, page):
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         if isinstance(value, dict):
             return value
         elif isinstance(value, str):
@@ -1087,7 +1125,10 @@ class SpotifyBaseMenu(discord.ui.View):
             return {"embeds": [value], "content": None}
 
     async def send_initial_message(
-        self, ctx: commands.Context, content: Optional[str] = None, ephemeral: bool = False
+        self,
+        ctx: commands.Context,
+        content: Optional[str] = None,
+        ephemeral: bool = False,
     ):
         """|coro|
         The default implementation of :meth:`Menu.send_initial_message`
@@ -1119,7 +1160,9 @@ class SpotifyBaseMenu(discord.ui.View):
         else:
             await interaction.followup.edit(**kwargs, view=self)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None:
@@ -1139,7 +1182,8 @@ class SpotifyBaseMenu(discord.ui.View):
         """Just extends the default reaction_check to use owner_ids"""
         if self.author and interaction.user.id != self.author.id:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
@@ -1159,7 +1203,9 @@ class SpotifyBaseMenu(discord.ui.View):
         style=discord.ButtonStyle.grey,
         emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
     )
-    async def go_to_first_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def go_to_first_page(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         """go to the first page"""
         await self.show_page(0, interaction)
 
@@ -1177,7 +1223,9 @@ class SpotifyBaseMenu(discord.ui.View):
         style=discord.ButtonStyle.grey,
         emoji="\N{BLACK RIGHT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}",
     )
-    async def go_to_next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def go_to_next_page(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         """go to the next page"""
         await self.show_checked_page(self.current_page + 1, interaction)
 
@@ -1185,7 +1233,9 @@ class SpotifyBaseMenu(discord.ui.View):
         style=discord.ButtonStyle.grey,
         emoji="\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
     )
-    async def go_to_last_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def go_to_last_page(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         """go to the last page"""
         # The call here is safe because it's guarded by skip_if
         await self.show_page(self._source.get_max_pages() - 1, interaction)

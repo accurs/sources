@@ -1,7 +1,8 @@
-from discord.ext import commands
-from ...helpers import AkariContext
 from AkariAPI.errors import HTTPError
 from AkariAPI.models import InstagramUser
+from discord.ext import commands
+
+from ...helpers import AkariContext
 
 
 class InstagramUser(commands.Converter):

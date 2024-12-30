@@ -5,7 +5,6 @@ from asyncpg import Connection, Pool
 from asyncpg import Record as DefaultRecord
 from asyncpg import create_pool
 from munch import DefaultMunch, Munch
-
 from structure.config import Database
 
 

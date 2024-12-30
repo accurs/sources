@@ -6,6 +6,7 @@ from red_commons.logging import getLogger
 
 from grief.core import commands
 from grief.core.i18n import Translator
+
 from ..abc import MixinMeta
 from ..cog_utils import CompositeMetaClass
 
@@ -46,7 +47,9 @@ class RedEvents(MixinMeta, metaclass=CompositeMetaClass):
                 if not c % 100:
                     await asyncio.sleep(0)
 
-                for preset_name, preset in guild_equalizers.get("eq_presets", {}).items():
+                for preset_name, preset in guild_equalizers.get(
+                    "eq_presets", {}
+                ).items():
                     c += 1
                     if not c % 100:
                         await asyncio.sleep(0)

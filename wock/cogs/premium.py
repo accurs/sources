@@ -1,46 +1,47 @@
-from discord import User, Asset, Member, Embed, File, Message # type: ignore
-from discord.ext.commands import ( # type: ignore
-    Cog,
-    Context,
-    check,
-    hybrid_group,
-)
-from discord.ext import commands # type: ignore
-from typing import Any
-from rival_tools import thread, lock  # type: ignore
-from tools.pinterest import Pinterest # type: ignore
-from tools.pinpostmodels import Model # type: ignore
-from PIL import Image # type: ignore # type: ignore
-import imagehash as ih  # type: ignore
 from io import BytesIO
 from logging import getLogger
+from typing import Any
+
+import imagehash as ih  # type: ignore
+from discord import Asset, Embed, File, Member, Message, User  # type: ignore
+from discord.ext import commands  # type: ignore
+from discord.ext.commands import (Cog, Context, check,  # type: ignore
+                                  hybrid_group)
+from PIL import Image  # type: ignore # type: ignore
+from rival_tools import lock, thread  # type: ignore
+from tools.pinpostmodels import Model  # type: ignore
+from tools.pinterest import Pinterest  # type: ignore
+
 logger = getLogger(__name__)
-from typing import Union, Optional # type: ignore
-from asyncio.subprocess import PIPE # type: ignore
-from aiohttp import ClientSession # type: ignore # type: ignore
-from contextlib import suppress # type: ignore
-import os # type: ignore
-import string # type: ignore
-import random # type: ignore
-from aiomisc.backoff import asyncretry # type: ignore # type: ignore
+import asyncio  # type: ignore
 import datetime  # type: ignore
-import asyncio # type: ignore
-import aiohttp # type: ignore # type: ignore
-import discord # type: ignore # type: ignore
-from tools.important.services.TikTok.client import tiktok_video1, tiktok_video2 # type: ignore
-from discord.utils import chunk_list # type: ignore # type: ignore
+import io  # type: ignore
+import os  # type: ignore
+import random  # type: ignore
+import string  # type: ignore
+from asyncio.subprocess import PIPE  # type: ignore
+from contextlib import suppress  # type: ignore
+from typing import Optional, Union  # type: ignore
+
+import aiohttp  # type: ignore # type: ignore
+import discord  # type: ignore # type: ignore
+import humanize  # type: ignore # type: ignore
+from aiohttp import ClientSession  # type: ignore # type: ignore
+from aiohttp import ClientSession as Session
+from aiomisc.backoff import asyncretry  # type: ignore # type: ignore
+from cashews import cache  # type: ignore # type: ignore
+from cogs.information import get_instagram_user  # type: ignore
+from discord.utils import chunk_list  # type: ignore # type: ignore
 from rust_chart_generator import create_chart  # type: ignore
 from tools.expressions import YOUTUBE_WILDCARD  # type: ignore
-import humanize # type: ignore # type: ignore
-from cogs.information import get_instagram_user # type: ignore
-from tuuid import tuuid # type: ignore # type: ignore
-import io # type: ignore
-from tools.important.services.Eros import PostResponse # type: ignore
-from tools.processing.media import MediaHandler # type: ignore
-from cashews import cache # type: ignore # type: ignore
-from aiohttp import ClientSession as Session # type: ignore # type: ignore
+from tools.important.services.Eros import PostResponse  # type: ignore
+from tools.important.services.TikTok.client import (  # type: ignore
+    tiktok_video1, tiktok_video2)
+from tools.processing.media import MediaHandler  # type: ignore
+from tuuid import tuuid  # type: ignore # type: ignore
 
 cache.setup("mem://")
+
 
 def format_int(n: int) -> str:
     m = humanize.intword(n)
@@ -76,9 +77,7 @@ async def donator_check(ctx: Context, member: Optional[Union[Member, User]] = No
             m = f"{member.mention} doesn't have [**Wock's Pass**](https://discord.gg/kuwitty)"
         else:
             m = "[**Wock's Pass**](https://discord.gg/kuwitty) is **required for this command**"
-        await ctx.fail(
-            m
-        )
+        await ctx.fail(m)
         return False
     return True
 
@@ -98,9 +97,12 @@ def is_donator():
             """SELECT * FROM donators WHERE user_id = $1""", ctx.author.id
         )
         if not data:
-            if await ctx.bot.glory_cache.ratelimited(
-                f"rl:donator_message:{ctx.author.id}", 2, 10
-            ) != 0:
+            if (
+                await ctx.bot.glory_cache.ratelimited(
+                    f"rl:donator_message:{ctx.author.id}", 2, 10
+                )
+                != 0
+            ):
                 return
             await ctx.fail(
                 "[**Wock's Pass**](https://discord.gg/kuwitty) is **required for this command**"
@@ -253,7 +255,9 @@ class Premium(Cog):
     )
     @is_donator()
     @lock("avh-{ctx.guild.id}")
-    async def avatarh(self, ctx: Context, *, member: Optional[Union[User, Member]] = None):
+    async def avatarh(
+        self, ctx: Context, *, member: Optional[Union[User, Member]] = None
+    ):
         if await donator_check(ctx, member) is False:
             return
         if member is None:
@@ -271,8 +275,13 @@ class Premium(Cog):
             "DELETE FROM avatarhistory WHERE user_id = $1", ctx.author.id
         )
         return await ctx.success("**Cleared** your **avatar history**")
-    
-    @commands.command(name="youtube", aliases=["yt"], brief="Repost a youtube short video", example=",youtube {link}")
+
+    @commands.command(
+        name="youtube",
+        aliases=["yt"],
+        brief="Repost a youtube short video",
+        example=",youtube {link}",
+    )
     @is_donator()
     async def youtube(self, ctx: Context, *, url: str):
         try:
@@ -297,7 +306,7 @@ class Premium(Cog):
             )
         else:
             return await ctx.fail(f"could not find a video with the url {url}")
-        
+
     async def youtube_embed(self, message: Message, url: str) -> Message:
         data = await self.bot.rival.youtube(url)
         embed = (
@@ -326,12 +335,14 @@ class Premium(Cog):
         if message.content.lower().startswith(self.bot.user.name.lower()):
             try:
                 if match := YOUTUBE_WILDCARD.match(message.content.split(" ")[1]):
-                    if await donator_check(await self.bot.get_context(message), message.author):
+                    if await donator_check(
+                        await self.bot.get_context(message), message.author
+                    ):
                         return await self.youtube_embed(message, match.string)
             except Exception:
                 pass
 
-    @asyncretry(max_tries = 3, pause = 0.1)
+    @asyncretry(max_tries=3, pause=0.1)
     async def get_asset(self, url: str) -> discord.File:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
@@ -339,12 +350,13 @@ class Premium(Cog):
                     raise TypeError(f"{url} wasn't a valid asset")
                 data = await response.read()
         return data
-    
+
     @cache(ttl=300, key="compress:{data}")
     async def compress(self, data: bytes, size: int) -> bytes:
         size = f"{int(size/1000000)}m"
         async with aiohttp.ClientSession() as session:
-            async with session.request("POST",
+            async with session.request(
+                "POST",
                 f"https://api.rival.rocks/video/compress?identifier={tuuid()}&size={size}",
                 data={"file": data},
                 headers={"api-key": self.bot.config["rival_api"]},
@@ -357,24 +369,31 @@ class Premium(Cog):
             async with session.get(url) as resp:
                 data = await resp.read()
         return data
-#
-    
+
+    #
+
     async def write_file(self, filename: str, data: bytes):
         def write_file_(filename: str, data: bytes):
             with open(filename, "wb") as file:
                 file.write(data)
             return filename
+
         return await asyncio.to_thread(write_file_, filename, data)
-    
-    async def compress_and_send(self, ctx: Context, data: PostResponse, filename: str, embed: Embed, raw: bytes) -> discord.Message: # type: ignore
-        from discord.http import handle_message_parameters # type: ignore
+
+    async def compress_and_send(self, ctx: Context, data: PostResponse, filename: str, embed: Embed, raw: bytes) -> discord.Message:  # type: ignore
+        from discord.http import handle_message_parameters  # type: ignore
+
         logger.info("compressing tiktok....")
         with suppress(FileNotFoundError):
             os.remove("wocktiktok.mp4")
             os.remove("wocktiktoka.mp4")
         filename = filename.split(".")[0]
         await self.write_file(f"{filename}a.mp4", raw)
-        process = await asyncio.create_subprocess_shell(f'ffmpeg -i {filename}a.mp4 -fs 6M -preset ultrafast {filename}.mp4 -y', stderr = PIPE, stdout = PIPE)
+        process = await asyncio.create_subprocess_shell(
+            f"ffmpeg -i {filename}a.mp4 -fs 6M -preset ultrafast {filename}.mp4 -y",
+            stderr=PIPE,
+            stdout=PIPE,
+        )
         await process.communicate()
         try:
             await process.wait()
@@ -382,15 +401,15 @@ class Premium(Cog):
             pass
         file = discord.File(f"{filename}.mp4")
         if len(file.fp.read()) > ctx.guild.filesize_limit:
-            await ctx.fail("that **tiktok** is **to large**", return_embed = True)
+            await ctx.fail("that **tiktok** is **to large**", return_embed=True)
         else:
             self.bot.last_tiktok = file.fp.read()
             logger.info(len(file.fp.read()))
             kwargs = {"headers": {"Authorization": f"Bot {self.bot.config['token']}"}}
-            for i in range(5): # type: ignore
+            for i in range(5):  # type: ignore
                 try:
                     file = discord.File(f"{filename}.mp4")
-                    with handle_message_parameters(file = file, embed = embed) as params:
+                    with handle_message_parameters(file=file, embed=embed) as params:
                         for tries in range(5):
                             if params.files:
                                 for f in params.files:
@@ -400,17 +419,23 @@ class Premium(Cog):
                             if params.multipart:
                                 for params in params.multipart:
                                     form_data.add_field(**params)
-                                kwargs['data'] = form_data
+                                kwargs["data"] = form_data
                             async with aiohttp.ClientSession() as session:
-                                async with session.request("POST", f"https://discord.com/api/v10/channels/{ctx.channel.id}/messages", **kwargs) as response:
-                                    await response.json() # pointless but do it here anyways to end off the async enter
+                                async with session.request(
+                                    "POST",
+                                    f"https://discord.com/api/v10/channels/{ctx.channel.id}/messages",
+                                    **kwargs,
+                                ) as response:
+                                    await response.json()  # pointless but do it here anyways to end off the async enter
                 except AttributeError:
                     break
             return
-            await ctx.send(file = file) # type: ignore
+            await ctx.send(file=file)  # type: ignore
             self.bot.last_tiktok = file.fp.read()
 
-    async def repost_tiktok(self, message: Message, url: str, debug: Optional[bool] = False):
+    async def repost_tiktok(
+        self, message: Message, url: str, debug: Optional[bool] = False
+    ):
         ctx = await self.bot.get_context(message)
         if not await donator_check(ctx):
             return
@@ -418,21 +443,36 @@ class Premium(Cog):
         try:
             _data = await PostResponse.from_response(url, self.bot.eros)
             if not _data:
-                return await message.channel.send(embed = await ctx.fail("**TikTok's API** returned a **corrupted** tiktok", return_embed = True))
+                return await message.channel.send(
+                    embed=await ctx.fail(
+                        "**TikTok's API** returned a **corrupted** tiktok",
+                        return_embed=True,
+                    )
+                )
             filedata = await self.get_asset(_data.data.play)
         except Exception as e:
-            await message.channel.send(embed = await ctx.fail("**TikTok's API** returned a **corrupted** tiktok", return_embed = True))
+            await message.channel.send(
+                embed=await ctx.fail(
+                    "**TikTok's API** returned a **corrupted** tiktok",
+                    return_embed=True,
+                )
+            )
             raise e
         data = _data.data
         if data.images:
             return await ctx.fail("Only **VIDEOS** are supported")
-        video = discord.File(fp = BytesIO(filedata), filename = "wocktiktok.mp4")
+        video = discord.File(fp=BytesIO(filedata), filename="wocktiktok.mp4")
         self.bot.last_tiktok = filedata
         self.last_tiktok_class = _data
         ctx = await self.bot.get_context(message)
-        embed = Embed(description = f"<:socials_tiktok:1253113073917759550> {data.title[:1000]}", color = self.bot.color)
-        embed.set_footer(text = f"👁️ {data.play_count} views | 👍🏼 {data.digg_count} likes | 💬 {data.comment_count} comments")
-        embed.set_author(name = data.author.unique_id, icon_url = data.author.avatar)
+        embed = Embed(
+            description=f"<:socials_tiktok:1253113073917759550> {data.title[:1000]}",
+            color=self.bot.color,
+        )
+        embed.set_footer(
+            text=f"👁️ {data.play_count} views | 👍🏼 {data.digg_count} likes | 💬 {data.comment_count} comments"
+        )
+        embed.set_author(name=data.author.unique_id, icon_url=data.author.avatar)
         if debug:
             return video, data
         return await self.compress_and_send(ctx, _data, video.filename, embed, filedata)
@@ -441,23 +481,29 @@ class Premium(Cog):
         if "@" not in content:
             try:
                 return tiktok_video2.search(content).string
-            except Exception: # type: ignore
+            except Exception:  # type: ignore
                 return None
         else:
             try:
                 return (tiktok_video1.find_all(content))[0]
-            except Exception: # type: ignore
+            except Exception:  # type: ignore
                 return None
+
     @commands.Cog.listener("on_message")
     async def tiktok_repost(self, message: Message):
         if message.content.lower().startswith(self.bot.user.name.lower()):
-            content = message.content.split(self.bot.user.name.lower(), 1)[-1].split(" ")[-1]
+            content = message.content.split(self.bot.user.name.lower(), 1)[-1].split(
+                " "
+            )[-1]
             if "tiktok" in content.lower():
                 return await self.repost_tiktok(message, content.lstrip().rstrip())
 
-
-
-    @commands.command(name = "tiktok", aliases = ["tt"], brief = "View a tiktok user account", example = ",tiktok icy")
+    @commands.command(
+        name="tiktok",
+        aliases=["tt"],
+        brief="View a tiktok user account",
+        example=",tiktok icy",
+    )
     @is_donator()
     async def tiktok(self, ctx: Context, *, username: str):
         if "https://" in username:
@@ -471,26 +517,32 @@ class Premium(Cog):
                 embed.title = f"{user.display_name} (@{username})"
                 embed.url = f"https://tiktok.com/@{username}"
                 embed.description = user.bio
-                embed.set_thumbnail(url = user.avatar)
-                embed.add_field(name = "likes", value = format_int(user.likes), inline = True)
-                embed.add_field(name = "followers", value = format_int(user.followers), inline = True)
-                embed.add_field(name = "following", value = format_int(user.following), inline = True)
-                embed.set_author(name = ctx.author.display_name, icon_url = ctx.author.display_avatar.url)
-                embed.set_footer(text = "TikTok", icon_url = user.tiktok_logo)
+                embed.set_thumbnail(url=user.avatar)
+                embed.add_field(name="likes", value=format_int(user.likes), inline=True)
+                embed.add_field(
+                    name="followers", value=format_int(user.followers), inline=True
+                )
+                embed.add_field(
+                    name="following", value=format_int(user.following), inline=True
+                )
+                embed.set_author(
+                    name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
+                )
+                embed.set_footer(text="TikTok", icon_url=user.tiktok_logo)
                 embed.color = discord.Color.from_str(user.avatar_color)
-                return await ctx.send(embed = embed)
+                return await ctx.send(embed=embed)
             except Exception as e:
                 if ctx.author.name == "aiohttp":
                     raise e
-                return await ctx.fail(f"tiktok user [**@{username}**](https://tiktok.com/@{username}) could not be found")
-
-
+                return await ctx.fail(
+                    f"tiktok user [**@{username}**](https://tiktok.com/@{username}) could not be found"
+                )
 
     @commands.command(
         name="pinterest",
         aliases=["pin"],
         brief="get a user, post, or reverse search an image on pinterest",
-        example=",pinterest {link}"
+        example=",pinterest {link}",
     )
     @is_donator()
     async def pinterest(self, ctx: Context, *, username_or_url: str):
@@ -569,27 +621,29 @@ class Premium(Cog):
                 raise e
             return await ctx.fail("only URLS and usernames are accepted")
 
-
-
-
-
-
-
-
-
-
-    @commands.command(name = "google", brief = "get google search results", example = ",google what is space?")
+    @commands.command(
+        name="google",
+        brief="get google search results",
+        example=",google what is space?",
+    )
     @is_donator()
     async def google(self, ctx: Context, *, query: str):
         safe = ctx.channel.is_nsfw()
-        message = await ctx.send(embed = discord.Embed(description = f"<a:wockloading:1251040305529094144> {ctx.author.mention}: **Searching the web..**", color = self.bot.color))
+        message = await ctx.send(
+            embed=discord.Embed(
+                description=f"<a:wockloading:1251040305529094144> {ctx.author.mention}: **Searching the web..**",
+                color=self.bot.color,
+            )
+        )
         try:
             results = await self.bot.rival.google_search(query, safe)
         except Exception as e:
             if ctx.author.id == 352190010998390796:
                 raise e
-            embed = await ctx.fail(f"**{query[:20]}** has **no results**", return_embed = True)
-            return await message.edit(embed = embed)
+            embed = await ctx.fail(
+                f"**{query[:20]}** has **no results**", return_embed=True
+            )
+            return await message.edit(embed=embed)
         res = chunk_list(results.results, 3)
         pages = len(res)
         embeds = [
@@ -600,20 +654,22 @@ class Premium(Cog):
                     for result in page
                 ),
                 color=self.bot.color,
-            ).set_footer(
+            )
+            .set_footer(
                 text=f"Page {i}/{pages} of Google Search {'(S00000000000afe Mode)' if safe else ''}",
-                icon_url="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png"
-            ).set_author(
-                name=ctx.author.display_name,
-                icon_url=ctx.author.display_avatar.url
+                icon_url="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png",
+            )
+            .set_author(
+                name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
             )
             for i, page in enumerate(res, start=1)
         ]
         asyncio.ensure_future(ctx.paginate(embeds, message))
         return
 
-
-    @commands.command(name="image", brief="get results from google images", example=",image car")
+    @commands.command(
+        name="image", brief="get results from google images", example=",image car"
+    )
     @is_donator()
     async def image(self, ctx: Context, *, query: str):
         if ctx.channel.is_nsfw():
@@ -647,7 +703,7 @@ class Premium(Cog):
         name="instagram",
         description="lookup an instagram account",
         aliases=["ig", "insta"],
-        example=",instagram icy"
+        example=",instagram icy",
     )
     @is_donator()
     async def instagram(self, ctx: Context, *, username: str):
@@ -703,7 +759,11 @@ class Premium(Cog):
 
         return await ctx.send(embed=embed)
 
-    @commands.command(name="transcribe", brief="return the text from a voice message", example=',transcribe [audio_reply]')
+    @commands.command(
+        name="transcribe",
+        brief="return the text from a voice message",
+        example=",transcribe [audio_reply]",
+    )
     @is_donator()
     async def transcribe(self, ctx: Context, message: Optional[Message] = None):
         if not message:
@@ -750,7 +810,9 @@ class Premium(Cog):
             text = await self.bot.rival.transcribe(message)
 
         if text.text is None:
-            return await ctx.fail(f"**Failed to transcribe** [**this message**]({message.url})")
+            return await ctx.fail(
+                f"**Failed to transcribe** [**this message**]({message.url})"
+            )
 
         return await msg.edit(
             embed=discord.Embed(description=text.text, color=self.bot.color)
@@ -764,4 +826,3 @@ class Premium(Cog):
 
 async def setup(bot):
     await bot.add_cog(Premium(bot))
-

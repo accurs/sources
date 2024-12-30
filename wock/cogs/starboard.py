@@ -2,15 +2,15 @@ import asyncio
 import contextlib
 import re
 import sys
-from loguru import logger
+import traceback
 from weakref import WeakValueDictionary
 
 import discord
-import traceback
-
 from asyncpg import Record
 from discord.ext import commands
 from discord.ext.commands import Context
+from loguru import logger
+
 
 def shorten(value: str, length: int = 20):
     if len(value) > length:
@@ -53,11 +53,11 @@ class starboard(commands.Cog, name="Starboard"):
             return
 
         try:
-            await method(starboard, starboard_channel, guild, channel, member, payload.message_id)
-        except Exception as e:
-            exc = "".join(
-                traceback.format_exception(type(e), e, e.__traceback__)
+            await method(
+                starboard, starboard_channel, guild, channel, member, payload.message_id
             )
+        except Exception as e:
+            exc = "".join(traceback.format_exception(type(e), e, e.__traceback__))
             logger.info(f"starboard error: {exc}")
             return
 
@@ -110,7 +110,9 @@ class starboard(commands.Cog, name="Starboard"):
             return
 
         with contextlib.suppress(discord.HTTPException):
-            await starboard_channel.delete_messages([discord.Object(id=starboard_entry["starboard_message_id"])])
+            await starboard_channel.delete_messages(
+                [discord.Object(id=starboard_entry["starboard_message_id"])]
+            )
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
@@ -125,7 +127,9 @@ class starboard(commands.Cog, name="Starboard"):
         )
 
     @commands.Cog.listener()
-    async def on_raw_bulk_message_delete(self, payload: discord.RawBulkMessageDeleteEvent):
+    async def on_raw_bulk_message_delete(
+        self, payload: discord.RawBulkMessageDeleteEvent
+    ):
         if payload.message_ids <= self._about_to_be_deleted:
             self._about_to_be_deleted.difference_update(payload.message_ids)
             return
@@ -146,12 +150,13 @@ class starboard(commands.Cog, name="Starboard"):
         message_id: int,
     ):
         try:
-            return await self._star_message(starboard, starboard_channel, guild, channel, member, message_id)
-        except Exception as e:
-            exc = "".join(
-                traceback.format_exception(type(e), e, e.__traceback__)
+            return await self._star_message(
+                starboard, starboard_channel, guild, channel, member, message_id
             )
+        except Exception as e:
+            exc = "".join(traceback.format_exception(type(e), e, e.__traceback__))
             logger.info(f"starboard error: {exc}")
+
     async def _star_message(
         self,
         starboard: Record,
@@ -172,7 +177,7 @@ class starboard(commands.Cog, name="Starboard"):
                 return
             if message.author.id is self.bot.user.id:
                 return
-            
+
             ctx = await self.bot.get_context(message)
             if ctx.valid:
                 return
@@ -180,13 +185,19 @@ class starboard(commands.Cog, name="Starboard"):
             if message.author.id == member.id and not starboard.get("self_star", True):
                 return
 
-            if (len(message.content) == 0 and len(message.attachments) == 0) or message.type not in (
+            if (
+                len(message.content) == 0 and len(message.attachments) == 0
+            ) or message.type not in (
                 discord.MessageType.default,
                 discord.MessageType.reply,
             ):
                 return
 
-            reaction = [reaction for reaction in message.reactions if str(reaction.emoji) == starboard["emoji"]]
+            reaction = [
+                reaction
+                for reaction in message.reactions
+                if str(reaction.emoji) == starboard["emoji"]
+            ]
             if reaction:
                 reaction = reaction[0]
             else:
@@ -205,9 +216,15 @@ class starboard(commands.Cog, name="Starboard"):
                 starboard["emoji"],
             )
 
-            content, embed, files = await self.render_starboard_entry(starboard, reaction, message)
+            content, embed, files = await self.render_starboard_entry(
+                starboard, reaction, message
+            )
 
-            if starboard_message_id and (starboard_message := starboard_channel.get_partial_message(starboard_message_id)):
+            if starboard_message_id and (
+                starboard_message := starboard_channel.get_partial_message(
+                    starboard_message_id
+                )
+            ):
                 try:
                     await starboard_message.edit(
                         content=content,
@@ -267,12 +284,18 @@ class starboard(commands.Cog, name="Starboard"):
             ctx = await self.bot.get_context(message)
             if ctx.valid:
                 return
-            reaction = [reaction for reaction in message.reactions if str(reaction.emoji) == starboard["emoji"]]
+            reaction = [
+                reaction
+                for reaction in message.reactions
+                if str(reaction.emoji) == starboard["emoji"]
+            ]
             if reaction:
                 reaction = reaction[0]
             else:
                 with contextlib.suppress(discord.HTTPException):
-                    await starboard_channel.delete_messages([discord.Object(id=starboard_message_id)])
+                    await starboard_channel.delete_messages(
+                        [discord.Object(id=starboard_message_id)]
+                    )
 
                 await self.bot.db.execute(
                     "DELETE FROM starboard_entries WHERE starboard_message_id = $1",
@@ -280,7 +303,9 @@ class starboard(commands.Cog, name="Starboard"):
                 )
                 return
 
-            content, embed, files = await self.render_starboard_entry(starboard, reaction, message)
+            content, embed, files = await self.render_starboard_entry(
+                starboard, reaction, message
+            )
 
             try:
                 await starboard_channel.get_partial_message(starboard_message_id).edit(
@@ -298,7 +323,11 @@ class starboard(commands.Cog, name="Starboard"):
         reaction: discord.Reaction,
         message: discord.Message,
     ):
-        if message.embeds and (embed := message.embeds[0]) and embed.type not in ("image", "gif", "gifv"):
+        if (
+            message.embeds
+            and (embed := message.embeds[0])
+            and embed.type not in ("image", "gif", "gifv")
+        ):
             embed = embed
         else:
             embed = discord.Embed(color=self.bot.color)
@@ -308,11 +337,13 @@ class starboard(commands.Cog, name="Starboard"):
             icon_url=message.author.display_avatar,
             url=message.jump_url,
         )
-        embed.description = (
-            f"{shorten(message.content, 2048) if message.system_content else ''}\n{shorten(embed.description, 2048) if embed.description else ''}"
-        )
+        embed.description = f"{shorten(message.content, 2048) if message.system_content else ''}\n{shorten(embed.description, 2048) if embed.description else ''}"
 
-        if message.embeds and (_embed := message.embeds[0]) and (_embed.url and _embed.type in ("image", "gifv")):
+        if (
+            message.embeds
+            and (_embed := message.embeds[0])
+            and (_embed.url and _embed.type in ("image", "gifv"))
+        ):
             embed.description = embed.description.replace(_embed.url, "")
             if _embed.type == "image":
                 embed.set_image(url=_embed.url)
@@ -321,9 +352,10 @@ class starboard(commands.Cog, name="Starboard"):
                 if response.status == 200:
                     data = await response.text()
                     try:
-                        tenor_url = re.findall(r"(?i)\b((https?://c[.]tenor[.]com/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))[.]gif)", data)[
-                            0
-                        ][0]
+                        tenor_url = re.findall(
+                            r"(?i)\b((https?://c[.]tenor[.]com/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))[.]gif)",
+                            data,
+                        )[0][0]
                     except IndexError:
                         pass
                     else:
@@ -333,9 +365,13 @@ class starboard(commands.Cog, name="Starboard"):
 
         files = list()
         for attachment in message.attachments:
-            if attachment.url.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
+            if attachment.url.lower().endswith(
+                (".png", ".jpg", ".jpeg", ".gif", ".webp")
+            ):
                 embed.set_image(url=attachment.url)
-            elif attachment.url.lower().endswith((".mp4", ".mov", ".webm", "mp3", ".ogg", ".wav")):
+            elif attachment.url.lower().endswith(
+                (".mp4", ".mov", ".webm", "mp3", ".ogg", ".wav")
+            ):
                 attachment = await attachment.to_file()
                 if not sys.getsizeof(attachment.fp) > message.guild.filesize_limit:
                     files.append(attachment)
@@ -374,7 +410,7 @@ class starboard(commands.Cog, name="Starboard"):
         usage="(subcommand) <args>",
         example=",starboard",
         aliases=["board", "star", "skullboard", "clownboard", "cb", "skull"],
-        brief='Create a channel saved of messsages reacted to with said reaction',
+        brief="Create a channel saved of messsages reacted to with said reaction",
         invoke_without_command=True,
     )
     @commands.has_permissions(manage_guild=True)
@@ -386,7 +422,7 @@ class starboard(commands.Cog, name="Starboard"):
         name="add",
         usage="(channel) (emoji)",
         example=",starboard add #shame 🤡 2",
-        brief='Add a channel for the starboard to be set to, add an emoji for it to be saved when a message is reacted to with said emoji',
+        brief="Add a channel for the starboard to be set to, add an emoji for it to be saved when a message is reacted to with said emoji",
         parameters={
             "threshold": {
                 "converter": int,
@@ -405,7 +441,7 @@ class starboard(commands.Cog, name="Starboard"):
         ctx: Context,
         channel: discord.TextChannel | discord.Thread,
         emoji: str,
-        brief='',
+        brief="",
     ):
         self.bot.p = ctx
         try:
@@ -428,13 +464,15 @@ class starboard(commands.Cog, name="Starboard"):
         except Exception:
             await ctx.fail(f"There is already a **starboard** using **{emoji}**")
         else:
-            await ctx.success(f"Added a **starboard** for {channel.mention} using **{emoji}** {m}")
+            await ctx.success(
+                f"Added a **starboard** for {channel.mention} using **{emoji}** {m}"
+            )
 
     @starboard.command(
         name="remove",
         usage="(channel) (emoji)",
         example=",starboard remove #shame 🤡",
-        brief='remove a starboard from the starboard channel',
+        brief="remove a starboard from the starboard channel",
         aliases=["delete", "del", "rm"],
     )
     @commands.has_permissions(manage_guild=True)
@@ -456,13 +494,15 @@ class starboard(commands.Cog, name="Starboard"):
         except Exception:
             await ctx.fail(f"There isn't a **starboard** using **{emoji}**")
         else:
-            await ctx.success(f"Removed the **starboard** for {channel.mention} using **{emoji}**")
+            await ctx.success(
+                f"Removed the **starboard** for {channel.mention} using **{emoji}**"
+            )
 
     @starboard.command(
         name="list",
         aliases=["show", "all"],
-        brief='List all the Starboards currently set to the starboard channel',
-        example=',starboard list'
+        brief="List all the Starboards currently set to the starboard channel",
+        example=",starboard list",
     )
     @commands.has_permissions(manage_guild=True)
     async def starboard_list(self, ctx: Context):
@@ -477,7 +517,9 @@ class starboard(commands.Cog, name="Starboard"):
         if not starboards:
             return await ctx.fail("No **starboards** have been set up")
 
-        await self.bot.dummy_paginator(ctx, discord.Embed(title = "Starboards", color = self.bot.color), starboards)
+        await self.bot.dummy_paginator(
+            ctx, discord.Embed(title="Starboards", color=self.bot.color), starboards
+        )
 
 
 async def setup(bot):

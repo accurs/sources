@@ -1,56 +1,29 @@
-
-from discord.ext.commands import (
-    CommandError,
-    Cog,
-    group,
-    command,
-    MaxConcurrencyReached,
-    bot_has_permissions,
-    has_permissions,
-    MultipleRoles,
-    BucketType,
-    Range,
-    SafeRoleConverter,
-    max_concurrency,
-    Timeframe,
-    hybrid_group,
-    Emoji,
-    TextChannelConverter
-)
-from discord import (
-    Client,
-    Role,
-    NotFound,
-    Embed,
-    File,
-    User,
-    VoiceChannel,
-    Object,
-    PermissionOverwrite,
-    Forbidden,
-    PartialEmoji,
-    Member,
-    Guild,
-    TextChannel,
-    Thread,
-    Message,
-    Color,
-    Interaction
-)
-from system.classes.builtins import human_join
-from loguru import logger
-from asyncio import Lock, ensure_future, Event
-from discord.utils import utcnow
-from collections import defaultdict
-from system.patch.context import Context
-from typing import Optional, Callable, List, Annotated, Union, Literal, Any, Dict
-from datetime import datetime, timedelta
-from system.managers.flags import ModerationFlags
-from .views import Confirm
-
-import humanize
 import asyncio
 import re
+from asyncio import Event, Lock, ensure_future
+from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import (Annotated, Any, Callable, Dict, List, Literal, Optional,
+                    Union)
+
+import humanize
+from discord import (Client, Color, Embed, File, Forbidden, Guild, Interaction,
+                     Member, Message, NotFound, Object, PartialEmoji,
+                     PermissionOverwrite, Role, TextChannel, Thread, User,
+                     VoiceChannel)
+from discord.ext.commands import (BucketType, Cog, CommandError, Emoji,
+                                  MaxConcurrencyReached, MultipleRoles, Range,
+                                  SafeRoleConverter, TextChannelConverter,
+                                  Timeframe, bot_has_permissions, command,
+                                  group, has_permissions, hybrid_group,
+                                  max_concurrency)
+from discord.utils import utcnow
+from loguru import logger
+from system.classes.builtins import human_join
+from system.managers.flags import ModerationFlags
+from system.patch.context import Context
+
+from .views import Confirm
 
 
 class Channel(TextChannelConverter):
@@ -59,6 +32,7 @@ class Channel(TextChannelConverter):
             return argument
 
         return await super().convert(ctx, argument)
+
 
 class Moderation(Cog):
     def __init__(self, bot: Client):
@@ -84,8 +58,8 @@ class Moderation(Cog):
             "unlockall": "ended the lockdown",
             "unlock": "ended a channel lockdown",
             "imagemute": "image muted",
-            "imageunmute": "undid an image mute"
-        } # this is just encase anyone wants to customize the behavior in the future
+            "imageunmute": "undid an image mute",
+        }  # this is just encase anyone wants to customize the behavior in the future
 
     async def get_user(self, user_id: int):
         if user := self.bot.get_user(user_id):
@@ -98,11 +72,13 @@ class Moderation(Cog):
             reason = kwargs.pop("reason", "No Reason Provided")
             if not (action := self.action_map.get(ctx.command.qualified_name.lower())):
                 return
-            target = kwargs.pop("member", kwargs.pop("user", kwargs.pop("channel", kwargs.pop("user_id", "all"))))
+            target = kwargs.pop(
+                "member",
+                kwargs.pop("user", kwargs.pop("channel", kwargs.pop("user_id", "all"))),
+            )
             if isinstance(target, int):
                 target = await self.get_user(target)
             self.bot.dispatch("moderation_case", ctx, target, action, reason, **kwargs)
-    
 
     async def do_removal(
         self,
@@ -122,7 +98,7 @@ class Moderation(Cog):
 
         if not before:
             before = ctx.message
-            
+
         def check(message: Message) -> bool:
             if message.created_at < (utcnow() - timedelta(weeks=2)):
                 return False
@@ -170,8 +146,6 @@ class Moderation(Cog):
             list(map(lambda r: r.id, member.roles)),
         )
 
-
-
     @Cog.listener("on_member_update")
     async def on_forcenick(self, before: Member, after: Member):
         if before.guild.me.guild_permissions.manage_nicknames:
@@ -216,7 +190,6 @@ class Moderation(Cog):
         except Exception:
             return "Couldn't DM member"
 
-
     @command(aliases=["bc", "botpurge", "botclear", "botclean", "bp"])
     @has_permissions(manage_messages=True)
     async def cleanup(
@@ -237,7 +210,23 @@ class Moderation(Cog):
             lambda message: (
                 message.author.bot
                 or message.content.startswith(
-                    (ctx.clean_prefix, self.bot.user.mention, ",", ";", ".", "!", "$", "?", "-", "/", ">", "*", "+", "#", "â€¢")
+                    (
+                        ctx.clean_prefix,
+                        self.bot.user.mention,
+                        ",",
+                        ";",
+                        ".",
+                        "!",
+                        "$",
+                        "?",
+                        "-",
+                        "/",
+                        ">",
+                        "*",
+                        "+",
+                        "#",
+                        "â€¢",
+                    )
                 )
             ),
         )
@@ -256,14 +245,12 @@ class Moderation(Cog):
 
         overwrite.send_messages = False
         await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
-        ensure_future(self.moderation_entry(ctx, channel = channel))
+        ensure_future(self.moderation_entry(ctx, channel=channel))
         return await ctx.send("👍")
 
     @command()
     @has_permissions(manage_channels=True)
-    async def unlock(
-        self: "Moderation", ctx: Context, channel: TextChannel = None
-    ):
+    async def unlock(self: "Moderation", ctx: Context, channel: TextChannel = None):
         """
         unlock a channel
         """
@@ -275,7 +262,7 @@ class Moderation(Cog):
 
         overwrite.send_messages = True
         await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
-        ensure_future(self.moderation_entry(ctx, channel = channel))
+        ensure_future(self.moderation_entry(ctx, channel=channel))
         return await ctx.send("👍")
 
     @command()
@@ -298,20 +285,24 @@ class Moderation(Cog):
             reason,
             utcnow(),
         )
-        ensure_future(self.moderation_entry(ctx, member = member, reason = reason))
+        ensure_future(self.moderation_entry(ctx, member=member, reason=reason))
         return await ctx.success(f"{member.mention} has been warned - **{reason}**")
 
-    @command(name = "reactionmute", aliases = ["rmute"])
-    @has_permissions(moderate_members = True)
+    @command(name="reactionmute", aliases=["rmute"])
+    @has_permissions(moderate_members=True)
     async def reactionmute(self, ctx: Context, *, member: Member):
-        await ctx.channel.set_permissions(member, add_reactions=False, use_external_emojis=False) #type: ignore
-        return await ctx.success(f"Removed {member.mention}'s permissions to **react** and use **external emotes**.")
+        await ctx.channel.set_permissions(member, add_reactions=False, use_external_emojis=False)  # type: ignore
+        return await ctx.success(
+            f"Removed {member.mention}'s permissions to **react** and use **external emotes**."
+        )
 
-    @command(name = "reactionunmute", aliases = ["runmute"])
-    @has_permissions(moderate_members = True)
+    @command(name="reactionunmute", aliases=["runmute"])
+    @has_permissions(moderate_members=True)
     async def reactionunmute(self, ctx: Context, *, member: Member):
-        await ctx.channel.set_permissions(member, add_reactions=True, use_external_emojis=True) #type: ignore
-        return await ctx.success(f"Restored {member.mention}'s permissions to **react** and use **external emotes**.")
+        await ctx.channel.set_permissions(member, add_reactions=True, use_external_emojis=True)  # type: ignore
+        return await ctx.success(
+            f"Restored {member.mention}'s permissions to **react** and use **external emotes**."
+        )
 
     @command()
     @has_permissions(manage_messages=True)
@@ -368,7 +359,12 @@ class Moderation(Cog):
 
     @hybrid_group(aliases=["c", "clear"], invoke_without_command=True)
     @has_permissions(manage_messages=True)
-    async def purge(self: "Moderation", ctx: Context, member: Optional[Member] = None, amount: int = 15) -> Message:
+    async def purge(
+        self: "Moderation",
+        ctx: Context,
+        member: Optional[Member] = None,
+        amount: int = 15,
+    ) -> Message:
         """
         Clear a certain amount of messages
         """
@@ -386,10 +382,10 @@ class Moderation(Cog):
                 )
             else:
                 await ctx.channel.purge(
-                    limit = amount,
-                    bulk = True,
-                    check = lambda m: m.author == member and not m.pinned,
-                    reason = f"Purged by {ctx.author.name}",
+                    limit=amount,
+                    bulk=True,
+                    check=lambda m: m.author == member and not m.pinned,
+                    reason=f"Purged by {ctx.author.name}",
                 )
             await ctx.send("👍", delete_after=2)
 
@@ -749,12 +745,12 @@ class Moderation(Cog):
                     await ctx.success(
                         f"{banned_entry.user.mention} has been **unbanned**"
                     )
-                    ensure_future(self.moderation_entry(ctx, user_id = user_id))
+                    ensure_future(self.moderation_entry(ctx, user_id=user_id))
                 else:
                     return await ctx.fail("That User is **not banned**")
             else:
                 banned_entry = await self.do_unban(ctx, user_id)
-                ensure_future(self.moderation_entry(ctx, user_id = user_id))
+                ensure_future(self.moderation_entry(ctx, user_id=user_id))
                 await ctx.success(f"`{user_id}` **user** has been **unbanned**")
         except Forbidden:
             return await ctx.warning(
@@ -764,7 +760,7 @@ class Moderation(Cog):
             return await ctx.fail("That User is **not banned**")
 
     @command(aliases=["massunban"])
-    @has_permissions(ban_members = True)
+    @has_permissions(ban_members=True)
     @bot_has_permissions(ban_members=True)
     async def unbanall(self: "Moderation", ctx: Context):
         """
@@ -820,7 +816,7 @@ class Moderation(Cog):
                 nick,
             )
             await member.edit(nick=nick, reason="Forcenickname")
-            ensure_future(self.moderation_entry(ctx, member = member))
+            ensure_future(self.moderation_entry(ctx, member=member))
             return await ctx.success(f"Force nicknamed {member.mention} to `{nick}`")
 
     @command(aliases=["nick"])
@@ -838,33 +834,25 @@ class Moderation(Cog):
 
         if nickname == "none":
             await member.edit(nick=None)
-            ensure_future(self.moderation_entry(ctx, member = member))
+            ensure_future(self.moderation_entry(ctx, member=member))
             return await ctx.success(f"Removed **{member.name}'s** nickname")
         else:
             await member.edit(nick=nickname)
-            ensure_future(self.moderation_entry(ctx, member = member))
+            ensure_future(self.moderation_entry(ctx, member=member))
             return await ctx.success(
                 f"Changed **{member.name}'s** nickname to {nickname}"
             )
-    
+
     @command()
     @has_permissions(ban_members=True)
-    async def softban(
-        self,
-        ctx: Context,
-        *,
-        member: Annotated[Member, Member]
-    ):
+    async def softban(self, ctx: Context, *, member: Annotated[Member, Member]):
         """
         Ban an user just to purge their messages
         """
 
-        await member.ban(
-            delete_message_days=7,
-            reason=f"Softbanned by {ctx.author}"
-        )
+        await member.ban(delete_message_days=7, reason=f"Softbanned by {ctx.author}")
         await ctx.guild.unban(member)
-        ensure_future(self.moderation_entry(ctx, member = member))
+        ensure_future(self.moderation_entry(ctx, member=member))
         return await ctx.reply("👍")
 
     @command(aliases=["banish"])
@@ -899,7 +887,7 @@ class Moderation(Cog):
 
         await ctx.guild.ban(member, reason=reason)
 
-        ensure_future(self.moderation_entry(ctx, member = member, reason = reason))
+        ensure_future(self.moderation_entry(ctx, member=member, reason=reason))
         return await ctx.send(f"👍 {f'- {notify}' if notify else ''}")
 
     @command(aliases=["untimeout", "unt"])
@@ -920,7 +908,7 @@ class Moderation(Cog):
 
         await member.timeout(None, reason=f"Untimed out by {ctx.author} - {reason}")
 
-        ensure_future(self.moderation_entry(ctx, member = member, reason = reason))
+        ensure_future(self.moderation_entry(ctx, member=member, reason=reason))
         return await ctx.reply("👍")
 
     @command(aliases=["timeout", "tm"])
@@ -945,7 +933,7 @@ class Moderation(Cog):
             reason=f"Timed out by {ctx.author} - {reason}",
         )
 
-        ensure_future(self.moderation_entry(ctx, member = member, reason = reason))
+        ensure_future(self.moderation_entry(ctx, member=member, reason=reason))
         return await ctx.reply("👍")
 
     @command(name="kick")
@@ -976,7 +964,7 @@ class Moderation(Cog):
 
         notify = await self.notify(ctx.author, ctx.command.name, member, reason)
 
-        ensure_future(self.moderation_entry(ctx, member = member, reason = reason))
+        ensure_future(self.moderation_entry(ctx, member=member, reason=reason))
         return await ctx.send(f"👍 {f'- {notify}' if notify else ''}")
 
     @command(
@@ -984,7 +972,7 @@ class Moderation(Cog):
     )
     @has_permissions(administrator=True)
     async def nuke(
-        self: "Moderation", 
+        self: "Moderation",
         ctx: Context,
     ):
         """
@@ -998,14 +986,21 @@ class Moderation(Cog):
                 return await interaction.fail(
                     f"Unable to nuke {interaction.channel.mention}!"
                 )
-    
+
             chnl = await interaction.channel.clone()
             await chnl.edit(position=interaction.channel.position)
             args = [chnl.id, interaction.channel.id]
             updates = {}
             tasks = []
-            channels = await self.bot.db.fetchrow("""SELECT welcome_channel, boost_channel, leave_channel FROM config WHERE guild_id = $1""", interaction.guild.id)
-            queries = ["UPDATE config SET welcome_channel = $1 WHERE welcome_channel = $2", "UPDATE config SET leave_channel = $1 WHERE leave_channel = $2", "UPDATE config SET boost_channel = $1 WHERE boost_channel = $2"]
+            channels = await self.bot.db.fetchrow(
+                """SELECT welcome_channel, boost_channel, leave_channel FROM config WHERE guild_id = $1""",
+                interaction.guild.id,
+            )
+            queries = [
+                "UPDATE config SET welcome_channel = $1 WHERE welcome_channel = $2",
+                "UPDATE config SET leave_channel = $1 WHERE leave_channel = $2",
+                "UPDATE config SET boost_channel = $1 WHERE boost_channel = $2",
+            ]
             if channels.welcome_channel == interaction.channel.id:
                 updates["welcome_channel"] = True
                 tasks.append(self.bot.db.execute(queries[0], *args))
@@ -1022,22 +1017,32 @@ class Moderation(Cog):
             else:
                 updates["boost_channel"] = False
 
-            await asyncio.gather(*tasks) 
-            ensure_future(self.moderation_entry(ctx, channel = interaction.channel))
-            updated = [f"**{k.replace('_', ' ')}**" for k, v in updates.items() if v is True]
-            updates_str = human_join(updated, final = "and")
+            await asyncio.gather(*tasks)
+            ensure_future(self.moderation_entry(ctx, channel=interaction.channel))
+            updated = [
+                f"**{k.replace('_', ' ')}**" for k, v in updates.items() if v is True
+            ]
+            updates_str = human_join(updated, final="and")
             if len(updated) > 0:
-                updates_str = "\n" + updates_str + f" {'has' if len(updated) == 1 else 'have'} been reconfigured"
-            return await chnl.normal(f"[**#{interaction.channel.name}**]({interaction.channel.jump_url}) has been **nuked**.{updates_str}", author = interaction.user)
-        
+                updates_str = (
+                    "\n"
+                    + updates_str
+                    + f" {'has' if len(updated) == 1 else 'have'} been reconfigured"
+                )
+            return await chnl.normal(
+                f"[**#{interaction.channel.name}**]({interaction.channel.jump_url}) has been **nuked**.{updates_str}",
+                author=interaction.user,
+            )
+
         return await ctx.confirmation(
-            "Are you sure you want to **nuke** this channel?",
-            channel_nuke
+            "Are you sure you want to **nuke** this channel?", channel_nuke
         )
 
     @group(name="role", aliases=["r"], invoke_without_command=True)
     @has_permissions(manage_roles=True)
-    async def role(self: "Moderation", ctx: Context, member: Member, *, role_input: MultipleRoles):
+    async def role(
+        self: "Moderation", ctx: Context, member: Member, *, role_input: MultipleRoles
+    ):
         """
         Manage roles
         """
@@ -1051,9 +1056,7 @@ class Moderation(Cog):
             else:
                 roles.append(role)
                 added.append(f"{role.mention}")
-        await member.edit(
-            roles=roles, reason=f"invoked by author | {ctx.author.id}"
-        )
+        await member.edit(roles=roles, reason=f"invoked by author | {ctx.author.id}")
         text = ""
         if len(added) > 0:
             if len(added) == 1:
@@ -1075,9 +1078,7 @@ class Moderation(Cog):
 
     @role.command(name="restore")
     @has_permissions(manage_roles=True)
-    async def role_restore(
-        self, ctx: Context, *, member: Annotated[Member, Member]
-    ):
+    async def role_restore(self, ctx: Context, *, member: Annotated[Member, Member]):
         """
         Restore a member's roles
         """
@@ -1106,13 +1107,20 @@ class Moderation(Cog):
 
         return await ctx.success(f"Restored {member.mention}'s roles")
 
-    @role.group(name="all", invoke_without_command = True)
+    @role.group(name="all", invoke_without_command=True)
     async def role_all(self, ctx: Context):
         return await ctx.send_help()
-    
-    @role_all.command(name = "humans", aliases = ["users"], description = "gives a role to all non bots", example = ",role all humans members")
+
+    @role_all.command(
+        name="humans",
+        aliases=["users"],
+        description="gives a role to all non bots",
+        example=",role all humans members",
+    )
     @has_permissions(manage_roles=True)
-    async def role_all_humans(self, ctx: Context, *, role: Annotated[Role, SafeRoleConverter]):
+    async def role_all_humans(
+        self, ctx: Context, *, role: Annotated[Role, SafeRoleConverter]
+    ):
         """
         Add a role to all members
         """
@@ -1140,7 +1148,7 @@ class Moderation(Cog):
             total = len(users)
             # Process users in batches
             for i in range(0, len(users), batch_size):
-                batch = users[i:i + batch_size]
+                batch = users[i : i + batch_size]
                 tasks = []
                 if event.is_set():
                     cancelled = True
@@ -1154,7 +1162,7 @@ class Moderation(Cog):
                 embed = message.embeds[0]
                 embed.description = f"Giving {role.mention} to `{min(i + batch_size, len(users))}/{total + min(i + batch_size, len(users))}` users..."
                 # Optionally update the message with progress
-                await message.edit(embed = embed)
+                await message.edit(embed=embed)
                 # Wait before processing the next batch
                 await asyncio.sleep(delay)
         if cancelled:
@@ -1167,10 +1175,17 @@ class Moderation(Cog):
                 description=f"> {ctx.author.mention}: Finished this task in **{humanize.precisedelta(utcnow() - message.created_at, format='%0.0f')}**",
             )
         )
-    
-    @role_all.command(name = "bots", aliases = ["bot", "robot", "robots"], description = "gives a role to all bots", example = ",role all bots members")
+
+    @role_all.command(
+        name="bots",
+        aliases=["bot", "robot", "robots"],
+        description="gives a role to all bots",
+        example=",role all bots members",
+    )
     @has_permissions(manage_roles=True)
-    async def role_all_bots(self, ctx: Context, *, role: Annotated[Role, SafeRoleConverter]):
+    async def role_all_bots(
+        self, ctx: Context, *, role: Annotated[Role, SafeRoleConverter]
+    ):
         """
         Add a role to all members
         """
@@ -1198,7 +1213,7 @@ class Moderation(Cog):
             total = len(users)
             # Process users in batches
             for i in range(0, len(users), batch_size):
-                batch = users[i:i + batch_size]
+                batch = users[i : i + batch_size]
                 tasks = []
                 if event.is_set():
                     cancelled = True
@@ -1212,7 +1227,7 @@ class Moderation(Cog):
                 embed = message.embeds[0]
                 embed.description = f"Giving {role.mention} to `{min(i + batch_size, len(users))}/{total + min(i + batch_size, len(users))}` bots..."
                 # Optionally update the message with progress
-                await message.edit(embed = embed)
+                await message.edit(embed=embed)
 
                 # Wait before processing the next batch
                 await asyncio.sleep(delay)
@@ -1227,9 +1242,9 @@ class Moderation(Cog):
                 description=f"> {ctx.author.mention}: Finished this task in **{humanize.precisedelta(utcnow() - message.created_at, format='%0.0f')}**",
             )
         )
-    
-    @role_all.command(name = "cancel", description = "cancel a role all task")
-    @has_permissions(manage_roles = True)
+
+    @role_all.command(name="cancel", description="cancel a role all task")
+    @has_permissions(manage_roles=True)
     async def role_all_cancel(self, ctx: Context):
         if not (event := self.events.get(str(ctx.guild.id))):
             raise CommandError("there is no current `role all` task running")
@@ -1523,7 +1538,7 @@ class Moderation(Cog):
             raise CommandError(f"Unable to jail {member.mention}!")
 
         notify = await self.notify(ctx.author, ctx.command.name, member, reason)
-        ensure_future(self.moderation_entry(ctx, member = member, reason = reason))
+        ensure_future(self.moderation_entry(ctx, member=member, reason=reason))
 
         if channel := ctx.guild.get_channel(data["jail_id"]):
             await channel.send(
@@ -1592,9 +1607,9 @@ class Moderation(Cog):
         except Exception:
             raise CommandError(f"Unable to unjail {member.mention}!")
 
-        ensure_future(self.moderation_entry(ctx, member = member, reason = reason))
+        ensure_future(self.moderation_entry(ctx, member=member, reason=reason))
         return await ctx.send("👍")
-    
+
     @command()
     @has_permissions(move_members=True)
     async def drag(
@@ -1602,7 +1617,7 @@ class Moderation(Cog):
         ctx: Context,
         member: Member,
         *,
-        voice_channel: Optional[VoiceChannel] = None
+        voice_channel: Optional[VoiceChannel] = None,
     ):
         """
         Drag a member to a voice channel. If no voice channel is parsed, then the member is going to be dragged in your voice channel
@@ -1610,44 +1625,50 @@ class Moderation(Cog):
 
         if not voice_channel and not ctx.author.voice:
             return await ctx.send_help(ctx.command)
-        
+
         if not member.voice:
             raise CommandError("The member must be in a voice channel to be dragged!")
-        
-        if not voice_channel: 
+
+        if not voice_channel:
             voice_channel = ctx.author.voice.channel
 
         await member.move_to(voice_channel, reason=f"Dragged by {ctx.author}")
-        return await ctx.success(f"Succesfully dragged {member.mention} to {voice_channel.mention}")
+        return await ctx.success(
+            f"Succesfully dragged {member.mention} to {voice_channel.mention}"
+        )
 
-    @command(aliases=['lockall'])
-    @has_permissions(manage_channels = True)
+    @command(aliases=["lockall"])
+    @has_permissions(manage_channels=True)
     async def lockdown(self, ctx: Context):
         """
         Lock all server's text channels
         """
-        
+
         async def yes(interaction: Interaction):
             embed = interaction.message.embeds[0]
 
             for channel in ctx.guild.text_channels:
                 overwrites = channel.overwrites_for(ctx.guild.default_role)
                 overwrites.send_messages = False
-                await channel.set_permissions(ctx.guild.default_role, overwrite=overwrites)
+                await channel.set_permissions(
+                    ctx.guild.default_role, overwrite=overwrites
+                )
 
             embed.description = "The server is now on lockdown"
             ensure_future(self.moderation_entry(ctx))
             return await interaction.response.edit_message(embed=embed, view=None)
-        
-        return await ctx.confirmation("Are you sure you want to put the **entire** server on lockdown?", yes)
+
+        return await ctx.confirmation(
+            "Are you sure you want to put the **entire** server on lockdown?", yes
+        )
 
     @command()
-    @has_permissions(manage_channels = True)
+    @has_permissions(manage_channels=True)
     async def unlockall(self, ctx: Context):
         """
         Unlock all server's text channels
-        """ 
-        
+        """
+
         for channel in ctx.guild.text_channels:
             overwrites = channel.overwrites_for(ctx.guild.default_role)
             overwrites.send_messages = None
@@ -1658,11 +1679,11 @@ class Moderation(Cog):
     @command(aliases=["imute"])
     @has_permissions(moderate_members=True)
     async def imagemute(
-        self, 
-        ctx: Context, 
-        member: Annotated[Member, Member], 
+        self,
+        ctx: Context,
+        member: Annotated[Member, Member],
         *,
-        channel: Optional[Channel] = None
+        channel: Optional[Channel] = None,
     ):
         """
         image mute someone from the channel
@@ -1673,13 +1694,13 @@ class Moderation(Cog):
                 perms = c.overwrites_for(member)
                 perms.attach_files = False
                 await c.set_permissions(member, overwrite=perms)
-            ensure_future(self.moderation_entry(ctx, member = member))
+            ensure_future(self.moderation_entry(ctx, member=member))
             return await ctx.send(":thumbsup:")
         else:
             perms = channel.overwrites_for(member)
             perms.attach_files = False
             await channel.set_permissions(member, overwrite=perms)
-            ensure_future(self.moderation_entry(ctx, member = member))
+            ensure_future(self.moderation_entry(ctx, member=member))
             await ctx.send(":thumbsup:")
 
     @command(aliases=["iunmute"])
@@ -1698,15 +1719,14 @@ class Moderation(Cog):
                 perms = c.overwrites_for(member)
                 perms.attach_files = None
                 await c.set_permissions(member, overwrite=perms)
-            ensure_future(self.moderation_entry(ctx, member = member))
+            ensure_future(self.moderation_entry(ctx, member=member))
             return await ctx.send(":thumbsup:")
         else:
             perms = channel.overwrites_for(member)
             perms.attach_files = None
             await channel.set_permissions(member, overwrite=perms)
-            ensure_future(self.moderation_entry(ctx, member = member))
+            ensure_future(self.moderation_entry(ctx, member=member))
             return await ctx.send(":thumbsup:")
-
 
 
 async def setup(bot: Client):

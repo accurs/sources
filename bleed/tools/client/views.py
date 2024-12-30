@@ -1,10 +1,9 @@
-import discord
-
-from discord.ext import commands
-from discord.ui import View, Button
-from discord import ButtonStyle, Interaction
 from typing import Optional, Union
-from discord import Emoji, PartialEmoji, ui
+
+import discord
+from discord import ButtonStyle, Emoji, Interaction, PartialEmoji, ui
+from discord.ext import commands
+from discord.ui import Button, View
 
 
 class ConfirmViewForUser(View):

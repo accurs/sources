@@ -1,14 +1,21 @@
+from itertools import cycle, islice
+from typing import Any, Dict, List, Optional
+
+from aiohttp import ClientSession
 from lxml import html
 from playwright.async_api import async_playwright
 from redis.asyncio import Redis
-from .Base import BaseService, cache
-from typing import Optional, List, Dict, Any
-from ..utils import _text_extract_json, _extract_vqd, _normalize_url, _normalize, json_loads
-from aiohttp import ClientSession
-from ..models.DuckDuckGo import DuckDuckGoImageResponse, DuckDuckGoSearchResponse
-from itertools import cycle, islice
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36", "Referer": "https://duckduckgo.com/"}
+from ..models.DuckDuckGo import (DuckDuckGoImageResponse,
+                                 DuckDuckGoSearchResponse)
+from ..utils import (_extract_vqd, _normalize, _normalize_url,
+                     _text_extract_json, json_loads)
+from .Base import BaseService, cache
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+    "Referer": "https://duckduckgo.com/",
+}
 
 
 class DuckDuckGoService(BaseService):
@@ -21,7 +28,10 @@ class DuckDuckGoService(BaseService):
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=False)
             page = await browser.new_page()
-            await page.goto(f"https://duckduckgo.com?q={query.replace(' ', '+')}&hps=1&ia=web", wait_until="networkidle")
+            await page.goto(
+                f"https://duckduckgo.com?q={query.replace(' ', '+')}&hps=1&ia=web",
+                wait_until="networkidle",
+            )
             html = await page.content()
             try:
                 await browser.close()
@@ -29,26 +39,28 @@ class DuckDuckGoService(BaseService):
             except Exception:
                 pass
         return html
-    
+
     async def get_json(self, url: str, params: dict, keywords: Optional[str] = None):
         async with ClientSession() as session:
-            async with session.get(url, params = params, headers = HEADERS) as response:
+            async with session.get(url, params=params, headers=HEADERS) as response:
                 data = await response.read()
 
         if keywords:
             return _text_extract_json(data, keywords)
         else:
             return json_loads(data)
-    
 
     async def _get_vqd(self, keywords: str):
         async with ClientSession() as session:
-            async with session.get(f"https://duckduckgo.com?q={keywords.replace(' ', '+')}&hps=1&ia=web", headers = HEADERS) as response:
+            async with session.get(
+                f"https://duckduckgo.com?q={keywords.replace(' ', '+')}&hps=1&ia=web",
+                headers=HEADERS,
+            ) as response:
                 data = await response.read()
         return _extract_vqd(data, keywords)
-    
+
     async def image_search(
-        self, 
+        self,
         keywords: str,
         region: str = "us-en",
         safesearch: str = "moderate",
@@ -58,7 +70,7 @@ class DuckDuckGoService(BaseService):
         type_image: Optional[str] = None,
         layout: Optional[str] = None,
         license_image: Optional[str] = None,
-        max_results: Optional[int] = None
+        max_results: Optional[int] = None,
     ) -> DuckDuckGoImageResponse:
         vqd = await self._get_vqd(keywords)
         safesearch_base = {"on": "1", "moderate": "1", "off": "-1"}
@@ -81,7 +93,9 @@ class DuckDuckGoService(BaseService):
 
         async def _images_page(s: int) -> list[dict[str, str]]:
             payload["s"] = f"{s}"
-            resp_content = await self.get_json("https://duckduckgo.com/i.js", params=payload)
+            resp_content = await self.get_json(
+                "https://duckduckgo.com/i.js", params=payload
+            )
             resp_json = json_loads(resp_content)
 
             page_data = resp_json.get("results", [])
@@ -113,8 +127,8 @@ class DuckDuckGoService(BaseService):
         except Exception as e:
             raise e
 
-        return DuckDuckGoImageResponse(results = list(islice(results, max_results)))
-    
+        return DuckDuckGoImageResponse(results=list(islice(results, max_results)))
+
     async def search(
         self,
         keywords: str,
@@ -170,11 +184,17 @@ class DuckDuckGoService(BaseService):
 
         async def _text_api_page(s: int) -> List[Dict[str, str]]:
             payload["s"] = f"{s}"
-            page_data = await self.get_json("https://links.duckduckgo.com/d.js", params=payload, keywords = keywords)
+            page_data = await self.get_json(
+                "https://links.duckduckgo.com/d.js", params=payload, keywords=keywords
+            )
             page_results = []
             for row in page_data:
                 href = row.get("u", None)
-                if href and href not in c and href != f"http://www.google.com/search?q={keywords}":
+                if (
+                    href
+                    and href not in c
+                    and href != f"http://www.google.com/search?q={keywords}"
+                ):
                     c.add(href)
                     body = _normalize(row["a"])
                     if body:
@@ -197,5 +217,4 @@ class DuckDuckGoService(BaseService):
         except Exception as e:
             raise e
 
-        return DuckDuckGoSearchResponse(results = list(islice(results, max_results)))
-    
+        return DuckDuckGoSearchResponse(results=list(islice(results, max_results)))

@@ -1,40 +1,41 @@
 import asyncio
+import datetime
 from abc import ABC
 from collections import defaultdict
-from typing import Literal
-import discord
+from concurrent.futures import ThreadPoolExecutor
 from copy import copy
-from typing import List, Literal, Optional, Union, TYPE_CHECKING
+from datetime import timedelta
 from random import choice
+from typing import (TYPE_CHECKING, Any, Dict, Final, List, Literal, Optional,
+                    Union, cast)
+
+import discord
+from disboardreminder.disboardreminder import DisboardReminder
+from discord.channel import TextChannel
+from discord.utils import utcnow
+# from vanity.__init__ import Vanity
+from sticky.sticky import Sticky
+
 from grief.core import Config, commands
 from grief.core.bot import Grief
+from grief.core.commands.converter import TimedeltaConverter
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils import AsyncIter
-from grief.core.utils._internal_utils import send_to_owners_with_prefix_replaced
-from grief.core.utils.chat_formatting import inline
+from grief.core.utils._internal_utils import \
+    send_to_owners_with_prefix_replaced
+from grief.core.utils.chat_formatting import (box, humanize_list,
+                                              humanize_timedelta, inline)
+from grief.core.utils.mod import get_audit_reason
+from grief.core.utils.predicates import MessagePredicate
 from grief.core.utils.views import ConfirmView
+
+from .components.setup import SetupModal, StartSetupView
+from .converters import ChannelToggle, LockableChannel, LockableRole
 from .events import Events
 from .kickban import KickBanMixin
-from grief.core.utils.chat_formatting import box, humanize_list
-from grief.core.utils.mod import get_audit_reason
-from datetime import timedelta
-from grief.core.utils.chat_formatting import humanize_timedelta
-from .converters import ChannelToggle, LockableChannel, LockableRole
-from grief.core.utils.predicates import MessagePredicate
-from discord.utils import utcnow
-from grief.core.commands.converter import TimedeltaConverter
-import datetime
-from typing import Any, Dict, Final, List, Literal, Optional, cast
-from .components.setup import SetupModal, StartSetupView
 from .poll import Poll
 from .vexutils import format_help, format_info, get_vex_logger
 from .vexutils.loop import VexLoop
-from concurrent.futures import ThreadPoolExecutor
-from discord.channel import TextChannel
-
-# from vanity.__init__ import Vanity
-from sticky.sticky import Sticky
-from disboardreminder.disboardreminder import DisboardReminder
 
 _ = T_ = Translator("Mod", __file__)
 
@@ -81,7 +82,11 @@ class Mod(
 
     default_channel_settings = {"ignored": False}
 
-    default_member_settings = {"past_nicks": [], "perms_cache": {}, "banned_until": False}
+    default_member_settings = {
+        "past_nicks": [],
+        "perms_cache": {},
+        "banned_until": False,
+    }
 
     default_user_settings = {"past_names": []}
 
@@ -90,7 +95,11 @@ class Mod(
         self.bot = bot
         self.config = Config.get_conf(self, 4961522000, force_registration=True)
         self.config.register_global(**self.default_global_settings)
-        self.config.register_guild(**self.default_guild_settings, poll_settings={}, poll_user_choices={},)
+        self.config.register_guild(
+            **self.default_guild_settings,
+            poll_settings={},
+            poll_user_choices={},
+        )
         self.config.register_channel(**self.default_channel_settings)
         self.config.register_member(**self.default_member_settings)
         self.config.register_user(**self.default_user_settings)
@@ -100,8 +109,10 @@ class Mod(
         self.loop = bot.loop.create_task(self.buttonpoll_loop())
         self.loop_meta = VexLoop("ButtonPoll", 60.0)
         self.polls: List[Poll] = []
-        self.plot_executor = ThreadPoolExecutor(max_workers=16, thread_name_prefix="buttonpoll_plot")
-        
+        self.plot_executor = ThreadPoolExecutor(
+            max_workers=16, thread_name_prefix="buttonpoll_plot"
+        )
+
         default_guild: Dict[str, Union[bool, List[int]]] = {
             "toggle": False,
             "ignored_channels": [],
@@ -113,13 +124,14 @@ class Mod(
 
     def cog_unload(self):
         self.tban_expiry_task.cancel()
-    
+
     async def timeout_user(
         self,
         ctx: commands.Context,
         member: discord.Member,
         time: Optional[datetime.timedelta],
-        reason: Optional[str] = None,) -> None:
+        reason: Optional[str] = None,
+    ) -> None:
         await member.timeout(time, reason=reason)
 
     async def _maybe_update_config(self):
@@ -136,33 +148,45 @@ class Mod(
             await self.config.version.set("1.0.0")  # set version of last update
         if await self.config.version() < "1.1.0":
             message_sent = False
-            async for e in AsyncIter((await self.config.all_channels()).values(), steps=25):
+            async for e in AsyncIter(
+                (await self.config.all_channels()).values(), steps=25
+            ):
                 if e["ignored"] is not False:
                     msg = _(
                         "Ignored guilds and channels have been moved. "
                         "Please use {command} to migrate the old settings."
                     ).format(command=inline("[p]moveignoredchannels"))
-                    asyncio.create_task(send_to_owners_with_prefix_replaced(self.bot, msg))
+                    asyncio.create_task(
+                        send_to_owners_with_prefix_replaced(self.bot, msg)
+                    )
                     message_sent = True
                     break
             if message_sent is False:
-                async for e in AsyncIter((await self.config.all_guilds()).values(), steps=25):
+                async for e in AsyncIter(
+                    (await self.config.all_guilds()).values(), steps=25
+                ):
                     if e["ignored"] is not False:
                         msg = _(
                             "Ignored guilds and channels have been moved. "
                             "Please use {command} to migrate the old settings."
                         ).format(command=inline("[p]moveignoredchannels"))
-                        asyncio.create_task(send_to_owners_with_prefix_replaced(self.bot, msg))
+                        asyncio.create_task(
+                            send_to_owners_with_prefix_replaced(self.bot, msg)
+                        )
                         break
             await self.config.version.set("1.1.0")
         if await self.config.version() < "1.2.0":
-            async for e in AsyncIter((await self.config.all_guilds()).values(), steps=25):
+            async for e in AsyncIter(
+                (await self.config.all_guilds()).values(), steps=25
+            ):
                 if e["delete_delay"] != -1:
                     msg = _(
                         "Delete delay settings have been moved. "
                         "Please use {command} to migrate the old settings."
                     ).format(command=inline("[p]movedeletedelay"))
-                    asyncio.create_task(send_to_owners_with_prefix_replaced(self.bot, msg))
+                    asyncio.create_task(
+                        send_to_owners_with_prefix_replaced(self.bot, msg)
+                    )
                     break
             await self.config.version.set("1.2.0")
         if await self.config.version() < "1.3.0":
@@ -220,10 +244,14 @@ class Mod(
         all_guilds = await self.config.all_guilds()
         all_channels = await self.config.all_channels()
         for guild_id, settings in all_guilds.items():
-            await self.bot._config.guild_from_id(guild_id).ignored.set(settings["ignored"])
+            await self.bot._config.guild_from_id(guild_id).ignored.set(
+                settings["ignored"]
+            )
             await self.config.guild_from_id(guild_id).ignored.clear()
         for channel_id, settings in all_channels.items():
-            await self.bot._config.channel_from_id(channel_id).ignored.set(settings["ignored"])
+            await self.bot._config.channel_from_id(channel_id).ignored.set(
+                settings["ignored"]
+            )
             await self.config.channel_from_id(channel_id).clear()
         await ctx.send(_("Ignored channels and guilds restored."))
 
@@ -245,18 +273,26 @@ class Mod(
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.guild)
     @commands.has_permissions(administrator=True)
-    async def massunban(self, ctx: commands.Context, *, ban_reason: Optional[str] = None):
+    async def massunban(
+        self, ctx: commands.Context, *, ban_reason: Optional[str] = None
+    ):
         """
         Mass unban everyone, or specific people.
         """
         try:
-            banlist: List[discord.BanEntry] = [entry async for entry in ctx.guild.bans()]
+            banlist: List[discord.BanEntry] = [
+                entry async for entry in ctx.guild.bans()
+            ]
         except discord.errors.Forbidden:
-            msg = _("I need the `Ban Members` permission to fetch the ban list for the guild.")
+            msg = _(
+                "I need the `Ban Members` permission to fetch the ban list for the guild."
+            )
             await ctx.send(msg)
             return
         except (discord.HTTPException, TypeError):
-            await ctx.send("Something went wrong while fetching the ban list!", exc_info=True)
+            await ctx.send(
+                "Something went wrong while fetching the ban list!", exc_info=True
+            )
             return
 
         bancount: int = len(banlist)
@@ -280,7 +316,9 @@ class Mod(
                         for ban_entry in banlist:
                             await ctx.guild.unban(
                                 ban_entry.user,
-                                reason=_("Mass Unban requested by {name} ({id})").format(
+                                reason=_(
+                                    "Mass Unban requested by {name} ({id})"
+                                ).format(
                                     name=str(ctx.author.display_name), id=ctx.author.id
                                 ),
                             )
@@ -309,7 +347,9 @@ class Mod(
                         await asyncio.sleep(1)
                         unban_count += 1
 
-        await ctx.send(_("Done. Unbanned {unban_count} users.").format(unban_count=unban_count))
+        await ctx.send(
+            _("Done. Unbanned {unban_count} users.").format(unban_count=unban_count)
+        )
 
     @commands.group(aliases=["aph", "autopub"])
     @commands.guild_only()
@@ -417,9 +457,9 @@ class Mod(
             **Ignored Channels:** {ignored_channels}
             """.format(
                 toggle=toggle,
-                ignored_channels=humanize_list(ignored_channels)
-                if ignored_channels
-                else "None",
+                ignored_channels=(
+                    humanize_list(ignored_channels) if ignored_channels else "None"
+                ),
             ),
             color=await ctx.embed_color(),
         )
@@ -455,35 +495,43 @@ class Mod(
         guild: discord.Guild = ctx.guild
 
         pos = int(channel.position)
-        new_channel: discord.TextChannel = await channel.clone(reason=f"Channel nuke requested by {ctx.author}")
-        
+        new_channel: discord.TextChannel = await channel.clone(
+            reason=f"Channel nuke requested by {ctx.author}"
+        )
+
         if guild.system_channel and guild.system_channel.id == channel.id:
             await guild.edit(system_channel=new_channel)
             reconfigured_svcs.append("system channel")
-        
-        if guild.public_updates_channel and guild.public_updates_channel.id == channel.id:
+
+        if (
+            guild.public_updates_channel
+            and guild.public_updates_channel.id == channel.id
+        ):
             await guild.edit(public_updates_channel=new_channel)
             reconfigured_svcs.append("updates channel")
-        
+
         if guild.rules_channel and guild.rules_channel.id == channel.id:
             await guild.edit(rules_channel=new_channel)
             reconfigured_svcs.append("rules channel")
-        
-        if ctx.guild.id in disboard.channel_cache and channel.id == disboard.channel_cache[ctx.guild.id]:
+
+        if (
+            ctx.guild.id in disboard.channel_cache
+            and channel.id == disboard.channel_cache[ctx.guild.id]
+        ):
             await disboard.config.guild(ctx.guild).channel.set(new_channel.id)
             disboard.channel_cache[ctx.guild.id] = int(new_channel.id)
             reconfigured_svcs.append("disboard reminder")
-        
+
         # if vanity:
-            # if channel.id and int(channel.id) == channel.id:
-               # await vanity.config.guild(ctx.guild).channel.set(new_channel.id)
-            # reconfigured_svcs.append("vanity award channel")
+        # if channel.id and int(channel.id) == channel.id:
+        # await vanity.config.guild(ctx.guild).channel.set(new_channel.id)
+        # reconfigured_svcs.append("vanity award channel")
 
         if sticky:
             async with sticky.conf.channel(channel).all() as conf:
                 if conf["last"]:
-                   async with sticky.conf.channel(new_channel).all() as data:
-                       data.update(conf)
+                    async with sticky.conf.channel(new_channel).all() as data:
+                        data.update(conf)
                 reconfigured_svcs.append("sticky message")
 
         await ctx.channel.delete()
@@ -533,7 +581,9 @@ class Mod(
                 else:
                     current_perms.update(send_messages=False)
                     try:
-                        await channel.set_permissions(role, overwrite=current_perms, reason=reason)
+                        await channel.set_permissions(
+                            role, overwrite=current_perms, reason=reason
+                        )
                         succeeded.append(inline(role.name))
                     except:
                         failed.append(inline(role.name))
@@ -545,14 +595,18 @@ class Mod(
                 else:
                     current_perms.update(connect=False)
                     try:
-                        await channel.set_permissions(role, overwrite=current_perms, reason=reason)
+                        await channel.set_permissions(
+                            role, overwrite=current_perms, reason=reason
+                        )
                         succeeded.append(inline(role.name))
                     except:
                         failed.append(inline(role.name))
 
         msg = ""
         if succeeded:
-            msg += f"{channel.mention} has been locked for {humanize_list(succeeded)}.\n"
+            msg += (
+                f"{channel.mention} has been locked for {humanize_list(succeeded)}.\n"
+            )
         if cancelled:
             msg += f"{channel.mention} was already locked for {humanize_list(cancelled)}.\n"
         if failed:
@@ -597,7 +651,9 @@ class Mod(
             else:
                 current_perms.update(read_messages=False)
                 try:
-                    await channel.set_permissions(role, overwrite=current_perms, reason=reason)
+                    await channel.set_permissions(
+                        role, overwrite=current_perms, reason=reason
+                    )
                     succeeded.append(inline(role.name))
                 except:
                     failed.append(inline(role.name))
@@ -608,7 +664,9 @@ class Mod(
         if cancelled:
             msg += f"{channel.mention} was already viewlocked for {humanize_list(cancelled)}.\n"
         if failed:
-            msg += f"I failed to viewlock {channel.mention} for {humanize_list(failed)}.\n"
+            msg += (
+                f"I failed to viewlock {channel.mention} for {humanize_list(failed)}.\n"
+            )
         if msg:
             await ctx.send(msg)
 
@@ -644,7 +702,9 @@ class Mod(
         if succeeded:
             await ctx.send(f"The server has locked for {humanize_list(succeeded)}.")
         if cancelled:
-            await ctx.send(f"The server was already locked for {humanize_list(cancelled)}.")
+            await ctx.send(
+                f"The server was already locked for {humanize_list(cancelled)}."
+            )
         if failed:
             await ctx.send(
                 f"I failed to lock the server for {humanize_list(failed)}, probably because I was lower than the roles in heirarchy."
@@ -730,12 +790,17 @@ class Mod(
         if isinstance(channel, discord.TextChannel):
             for role in roles_or_members:
                 current_perms = channel.overwrites_for(role)
-                if current_perms.send_messages != False and current_perms.send_messages == state:
+                if (
+                    current_perms.send_messages != False
+                    and current_perms.send_messages == state
+                ):
                     cancelled.append(inline(role.name))
                 else:
                     current_perms.update(send_messages=state)
                     try:
-                        await channel.set_permissions(role, overwrite=current_perms, reason=reason)
+                        await channel.set_permissions(
+                            role, overwrite=current_perms, reason=reason
+                        )
                         succeeded.append(inline(role.name))
                     except:
                         failed.append(inline(role.name))
@@ -745,7 +810,9 @@ class Mod(
                 if current_perms.connect in [False, state]:
                     current_perms.update(connect=state)
                     try:
-                        await channel.set_permissions(role, overwrite=current_perms, reason=reason)
+                        await channel.set_permissions(
+                            role, overwrite=current_perms, reason=reason
+                        )
                         succeeded.append(inline(role.name))
                     except:
                         failed.append(inline(role.name))
@@ -758,7 +825,9 @@ class Mod(
         if cancelled:
             msg += f"{channel.mention} was already unlocked for {humanize_list(cancelled)} with state `{'true' if state else 'default'}`.\n"
         if failed:
-            msg += f"I failed to unlock {channel.mention} for {humanize_list(failed)}.\n"
+            msg += (
+                f"I failed to unlock {channel.mention} for {humanize_list(failed)}.\n"
+            )
         if msg:
             await ctx.send(msg)
 
@@ -796,12 +865,17 @@ class Mod(
 
         for role in roles_or_members:
             current_perms = channel.overwrites_for(role)
-            if current_perms.read_messages != False and current_perms.read_messages == state:
+            if (
+                current_perms.read_messages != False
+                and current_perms.read_messages == state
+            ):
                 cancelled.append(inline(role.name))
             else:
                 current_perms.update(read_messages=state)
                 try:
-                    await channel.set_permissions(role, overwrite=current_perms, reason=reason)
+                    await channel.set_permissions(
+                        role, overwrite=current_perms, reason=reason
+                    )
                     succeeded.append(inline(role.name))
                 except:
                     failed.append(inline(role.name))
@@ -812,7 +886,9 @@ class Mod(
         if cancelled:
             msg += f"{channel.mention} was already unviewlocked for {humanize_list(cancelled)} with state `{'true' if state else 'default'}`.\n"
         if failed:
-            msg += f"I failed to unlock {channel.mention} for {humanize_list(failed)}.\n"
+            msg += (
+                f"I failed to unlock {channel.mention} for {humanize_list(failed)}.\n"
+            )
         if msg:
             await ctx.send(msg)
 
@@ -847,7 +923,9 @@ class Mod(
         if succeeded:
             msg.append(f"The server has unlocked for {humanize_list(succeeded)}.")
         if cancelled:
-            msg.append(f"The server was already unlocked for {humanize_list(cancelled)}.")
+            msg.append(
+                f"The server was already unlocked for {humanize_list(cancelled)}."
+            )
         if failed:
             msg.append(
                 f"I failed to unlock the server for {humanize_list(failed)}, probably because I was lower than the roles in heirarchy."
@@ -907,7 +985,9 @@ class Mod(
         ctx,
         *,
         interval: commands.TimedeltaConverter(
-            minimum=timedelta(seconds=0), maximum=timedelta(hours=6), default_unit="seconds"
+            minimum=timedelta(seconds=0),
+            maximum=timedelta(hours=6),
+            default_unit="seconds",
         ) = timedelta(seconds=0),
     ):
         """Changes thread's or text channel's slowmode setting.
@@ -944,60 +1024,99 @@ class Mod(
                 del permissions[perm]
         overwrite.update(**permissions)
         if invalid_perms:
-            invalid = (
-                f"\nThe following permissions were invalid:\n{humanize_list(invalid_perms)}\n"
-            )
+            invalid = f"\nThe following permissions were invalid:\n{humanize_list(invalid_perms)}\n"
             possible = humanize_list([f"`{perm}`" for perm in base_perms])
             invalid += f"Possible permissions are:\n{possible}"
         else:
             invalid = ""
         return overwrite, valid_perms, invalid, not_allowed
-    
+
     @commands.command(aliases=["t"])
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.has_permissions(moderate_members=True)
-    async def timeout(self, ctx: commands.Context, member: discord.Member, time: TimedeltaConverter(minimum=datetime.timedelta(minutes=1), maximum=datetime.timedelta(days=28), default_unit="minutes", allowed_units=["minutes", "seconds", "hours", "days"],) = None, *, reason: Optional[str] = None,):
+    async def timeout(
+        self,
+        ctx: commands.Context,
+        member: discord.Member,
+        time: TimedeltaConverter(
+            minimum=datetime.timedelta(minutes=1),
+            maximum=datetime.timedelta(days=28),
+            default_unit="minutes",
+            allowed_units=["minutes", "seconds", "hours", "days"],
+        ) = None,
+        *,
+        reason: Optional[str] = None,
+    ):
         """Timeout users."""
         if not time:
             time = datetime.timedelta(seconds=60)
         timestamp = int(datetime.datetime.timestamp(utcnow() + time))
         if isinstance(member, discord.Member):
             if member.id in self.bot.owner_ids:
-                embed = discord.Embed(description=f"> {ctx.author.mention}: you cannot timeout the bot owner.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: you cannot timeout the bot owner.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
             if member.is_timed_out():
-                embed = discord.Embed(description=f"> {ctx.author.mention}: **{member}** is already timed out.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: **{member}** is already timed out.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
             if not await is_allowed_by_hierarchy(ctx.bot, ctx.author, member):
-                embed = discord.Embed(description=f"> {ctx.author.mention}: you cannot timeout this user due to hierarchy.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: you cannot timeout this user due to hierarchy.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
             if ctx.channel.permissions_for(member).administrator:
-                embed = discord.Embed(description=f"> {ctx.author.mention}: you can't timeout an administrator.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: you can't timeout an administrator.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
             await self.timeout_user(ctx, member, time, reason)
-            embed = discord.Embed(description=f"> {ctx.author.mention}: **{member}** has been timed out until <t:{timestamp}:f>.", color=0x313338)
+            embed = discord.Embed(
+                description=f"> {ctx.author.mention}: **{member}** has been timed out until <t:{timestamp}:f>.",
+                color=0x313338,
+            )
             await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(aliases=["ut"])
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.has_permissions(moderate_members=True)
-    async def untimeout(self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None,):
+    async def untimeout(
+        self,
+        ctx: commands.Context,
+        member: discord.Member,
+        *,
+        reason: Optional[str] = None,
+    ):
         """Untimeout users."""
         if isinstance(member, discord.Member):
-                if not member.is_timed_out():
-                    embed = discord.Embed(description=f"> {ctx.author.mention}: **{member}** is not timed out.", color=0x313338)
-                    return await ctx.reply(embed=embed, mention_author=False)
-                await self.timeout_user(ctx, member, None, reason)
-        embed = discord.Embed(description=f"> {ctx.author.mention}: removed the timeout for **{member}**.", color=0x313338)
+            if not member.is_timed_out():
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: **{member}** is not timed out.",
+                    color=0x313338,
+                )
+                return await ctx.reply(embed=embed, mention_author=False)
+            await self.timeout_user(ctx, member, None, reason)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: removed the timeout for **{member}**.",
+            color=0x313338,
+        )
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_nicknames=True)
     @commands.has_permissions(manage_nicknames=True)
-    async def nick(self, ctx: commands.Context, member: discord.Member, *, nickname: str = ""):
+    async def nick(
+        self, ctx: commands.Context, member: discord.Member, *, nickname: str = ""
+    ):
         """Change a member's server nickname.
 
         Leaving the nickname argument empty will remove it.
@@ -1010,7 +1129,10 @@ class Mod(
             await ctx.send(_("Nicknames must be between 2 and 32 characters long."))
             return
         if not (
-            (me.guild_permissions.manage_nicknames or me.guild_permissions.administrator)
+            (
+                me.guild_permissions.manage_nicknames
+                or me.guild_permissions.administrator
+            )
             and me.top_role > member.top_role
             and member != ctx.guild.owner
         ):
@@ -1020,7 +1142,8 @@ class Mod(
                     "equal to me in the role hierarchy."
                 )
             )
-        elif ctx.author != member and not await is_allowed_by_hierarchy(ctx.guild, ctx.author, member
+        elif ctx.author != member and not await is_allowed_by_hierarchy(
+            ctx.guild, ctx.author, member
         ):
             await ctx.send(
                 _(
@@ -1031,7 +1154,9 @@ class Mod(
             )
         else:
             try:
-                await member.edit(reason=get_audit_reason(ctx.author, None), nick=nickname)
+                await member.edit(
+                    reason=get_audit_reason(ctx.author, None), nick=nickname
+                )
             except discord.Forbidden:
                 # Just in case we missed something in the permissions check above
                 await ctx.send(_("I do not have permission to rename that member."))
@@ -1041,14 +1166,19 @@ class Mod(
                 else:
                     await ctx.send(_("An unexpected error has occurred."))
             else:
-                embed = discord.Embed(description=f"> {ctx.author.mention} updated **{member}**'s nickname.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention} updated **{member}**'s nickname.",
+                    color=0x313338,
+                )
                 await ctx.reply(embed=embed, mention_author=False)
 
     @commands.guild_only()  # type:ignore
     @commands.bot_has_permissions(embed_links=True)
     @commands.has_permissions(manage_messages=True)
     @commands.hybrid_command(name="poll")
-    async def buttonpoll(self, ctx: commands.Context, chan: Optional[TextChannel] = None):
+    async def buttonpoll(
+        self, ctx: commands.Context, chan: Optional[TextChannel] = None
+    ):
         """
         Start a button-based poll
 
@@ -1059,7 +1189,7 @@ class Mod(
         channel = chan or ctx.channel
         if TYPE_CHECKING:
             assert isinstance(channel, (TextChannel, discord.Thread))
-            assert isinstance(ctx.author, discord.Member) 
+            assert isinstance(ctx.author, discord.Member)
 
         # these two checks are untested :)
         if not channel.permissions_for(ctx.author).send_messages:
@@ -1106,6 +1236,7 @@ class Mod(
                 await poll.finish()
                 poll.view.stop()
                 self.polls.remove(poll)
+
 
 async def is_allowed_by_hierarchy(
     bot: Grief, user: discord.Member, member: discord.Member

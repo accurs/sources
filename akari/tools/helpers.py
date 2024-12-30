@@ -1,49 +1,26 @@
-import sys
-import json
 import asyncio
 import datetime
-import humanize
-import discord
+import json
+import sys
+from typing import (Any, Callable, Coroutine, Dict, List, Mapping, Optional,
+                    Sequence, Union)
 
+import discord
+import humanize
+from discord import (Attachment, ButtonStyle, Embed, Guild, Interaction,
+                     Member, Message, Role, StickerItem, TextChannel, Thread,
+                     User, WebhookMessage, utils)
+from discord.ext.commands import AutoShardedBot as AB
+from discord.ext.commands import (BadArgument, Command, Context, FlagConverter,
+                                  Group)
+from discord.ext.commands import HelpCommand as Help
+from discord.ext.commands import MissingPermissions, check
 from discord.ext.commands.cog import Cog
 from discord.interactions import Interaction
-
-from typing import Mapping, Coroutine, List, Any, Callable, Optional, Union, Dict
-from typing import Any, Union, Dict, Optional, List, Sequence
+from discord.ui import View
 from discord_paginator import Paginator
 
 from .misc.views import ConfirmView
-
-from discord.ui import View
-
-from discord.ext.commands import (
-    Context,
-    BadArgument,
-    HelpCommand as Help,
-    Command,
-    MissingPermissions,
-    check,
-    Group,
-    AutoShardedBot as AB,
-    FlagConverter,
-)
-
-from discord import (
-    Role,
-    ButtonStyle,
-    Message,
-    Embed,
-    StickerItem,
-    Interaction,
-    User,
-    Member,
-    Attachment,
-    WebhookMessage,
-    TextChannel,
-    Guild,
-    utils,
-    Thread,
-)
 
 
 def guild_perms(**perms: bool) -> Any:

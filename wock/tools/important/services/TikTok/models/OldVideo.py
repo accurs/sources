@@ -10,10 +10,10 @@ from pydantic import BaseModel, Field
 
 
 class ZoomCover(BaseModel):
-    field_240: Optional[str] = Field(None, alias='240')
-    field_480: Optional[str] = Field(None, alias='480')
-    field_720: Optional[str] = Field(None, alias='720')
-    field_960: Optional[str] = Field(None, alias='960')
+    field_240: Optional[str] = Field(None, alias="240")
+    field_480: Optional[str] = Field(None, alias="480")
+    field_720: Optional[str] = Field(None, alias="720")
+    field_960: Optional[str] = Field(None, alias="960")
 
 
 class VolumeInfo(BaseModel):

@@ -1,10 +1,12 @@
+import asyncio
+import re
+
+import aiohttp
 import discord
 from discord.ext import commands
-import aiohttp
-import re
-import asyncio
 from tools.config import color, emoji
 from tools.context import Context
+
 
 class Emoji(commands.Cog):
     def __init__(self, bot):
@@ -16,7 +18,9 @@ class Emoji(commands.Cog):
             async with session.get(emoji_url) as response:
                 if response.status == 200:
                     image_data = await response.read()
-                    new_emoji = await ctx.guild.create_custom_emoji(name=emoji_name, image=image_data)
+                    new_emoji = await ctx.guild.create_custom_emoji(
+                        name=emoji_name, image=image_data
+                    )
                     added_emojis.append(new_emoji)
                 else:
                     await ctx.send(f"Failed to fetch emoji from {emoji_url}")
@@ -27,12 +31,12 @@ class Emoji(commands.Cog):
     @commands.has_permissions(manage_expressions=True)
     async def steal(self, ctx, emoji, *, name: str):
         """Steals an emoji from another server and adds it to the current server."""
-        emoji_id_match = re.search(r'<(a)?:\w+:(\d+)>', emoji)
+        emoji_id_match = re.search(r"<(a)?:\w+:(\d+)>", emoji)
         if not emoji_id_match:
             await ctx.deny("Invalid emoji format. Please provide a custom emoji.")
             return
 
-        is_animated = emoji_id_match.group(1) == 'a'
+        is_animated = emoji_id_match.group(1) == "a"
         emoji_id = emoji_id_match.group(2)
         emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{'gif' if is_animated else 'png'}"
 
@@ -40,10 +44,14 @@ class Emoji(commands.Cog):
             try:
                 async with session.get(emoji_url) as response:
                     if response.status != 200:
-                        await ctx.deny("Failed to fetch the emoji image. Please check the URL or emoji ID.")
+                        await ctx.deny(
+                            "Failed to fetch the emoji image. Please check the URL or emoji ID."
+                        )
                         return
                     image_data = await response.read()
-                    new_emoji = await ctx.guild.create_custom_emoji(name=name, image=image_data)
+                    new_emoji = await ctx.guild.create_custom_emoji(
+                        name=name, image=image_data
+                    )
                     await ctx.agree(f"Added emoji: {new_emoji}")
             except discord.Forbidden:
                 await ctx.deny("I don't have permission to add emojis in this server.")
@@ -53,11 +61,11 @@ class Emoji(commands.Cog):
     @commands.command(name="enlarge", aliases=["download", "e", "jumbo"])
     async def enlarge(self, ctx, emoji: str):
         """Enlarges an emoji by providing the URL of its image at the highest quality available."""
-        emoji_id_match = re.search(r'<(a)?:\w+:(\d+)>', emoji)
+        emoji_id_match = re.search(r"<(a)?:\w+:(\d+)>", emoji)
         if not emoji_id_match:
             await ctx.warn("Please provide a valid custom emoji.")
             return
-        is_animated = emoji_id_match.group(1) == 'a'
+        is_animated = emoji_id_match.group(1) == "a"
         emoji_id = emoji_id_match.group(2)
         emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{'gif' if is_animated else 'png'}?size=4096"
         embed = discord.Embed(title="Here is the enlarged emoji!", color=color.default)
@@ -76,19 +84,24 @@ class Emoji(commands.Cog):
         async with aiohttp.ClientSession() as session:
             tasks = []
             for emoji in emojis:
-                emoji_id_match = re.search(r'<(a)?:\w+:(\d+)>', emoji)
+                emoji_id_match = re.search(r"<(a)?:\w+:(\d+)>", emoji)
                 if emoji_id_match:
-                    is_animated = emoji_id_match.group(1) == 'a'
+                    is_animated = emoji_id_match.group(1) == "a"
                     emoji_id = emoji_id_match.group(2)
                     emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{'gif' if is_animated else 'png'}"
                     emoji_name = f"emoji_{emoji_id}"
-                    tasks.append(self.add_single_emoji(ctx, session, emoji_url, emoji_name, added_emojis))
+                    tasks.append(
+                        self.add_single_emoji(
+                            ctx, session, emoji_url, emoji_name, added_emojis
+                        )
+                    )
             await asyncio.gather(*tasks)
 
         if added_emojis:
             await ctx.agree(f"Added emojis: {' '.join(str(e) for e in added_emojis)}")
         else:
             await ctx.deny("No emojis were added. Check the format and try again.")
+
 
 async def setup(bot):
     await bot.add_cog(Emoji(bot))

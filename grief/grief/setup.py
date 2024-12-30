@@ -6,24 +6,21 @@ _early_init()
 import asyncio
 import json
 import logging
-import sys
 import re
+import sys
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import click
 
-from grief.core._cli import confirm
-from grief.core.utils._internal_utils import (
-    safe_delete,
-    create_backup as red_create_backup,
-    cli_level_to_log_level,
-)
-from grief.core import config, data_manager, _drivers
-from grief.core._cli import ExitCodes
-from grief.core.data_manager import appdir, config_dir, config_file
+from grief.core import _drivers, config, data_manager
+from grief.core._cli import ExitCodes, confirm
 from grief.core._drivers import BackendType, IdentifierData
+from grief.core.data_manager import appdir, config_dir, config_file
+from grief.core.utils._internal_utils import cli_level_to_log_level
+from grief.core.utils._internal_utils import create_backup as red_create_backup
+from grief.core.utils._internal_utils import safe_delete
 
 conversion_log = logging.getLogger("grief.converter")
 
@@ -51,7 +48,9 @@ def save_config(name, data, remove=False):
         json.dump(_config, fs, indent=4)
 
 
-def get_data_dir(*, instance_name: str, data_path: Optional[Path], interactive: bool) -> str:
+def get_data_dir(
+    *, instance_name: str, data_path: Optional[Path], interactive: bool
+) -> str:
     if data_path is not None:
         return str(data_path.resolve())
     data_path = Path(appdir.user_data_dir) / "data" / instance_name
@@ -392,7 +391,9 @@ async def remove_instance_interaction() -> None:
 )
 @click.option(
     "--data-path",
-    type=click.Path(exists=False, dir_okay=True, file_okay=False, writable=True, path_type=Path),
+    type=click.Path(
+        exists=False, dir_okay=True, file_okay=False, writable=True, path_type=Path
+    ),
     default=None,
     help=(
         "Data path of the new instance. If this option and --no-prompt are omitted,"
@@ -434,7 +435,9 @@ def cli(
     base_logger = logging.getLogger("grief")
     base_logger.setLevel(level)
     formatter = logging.Formatter(
-        "[{asctime}] [{levelname}] {name}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{"
+        "[{asctime}] [{levelname}] {name}: {message}",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        style="{",
     )
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setFormatter(formatter)
@@ -528,7 +531,9 @@ def convert(instance: str, backend: str) -> None:
     default_dirs["DATA_PATH"] = str(Path(instance_data[instance]["DATA_PATH"]))
 
     if current_backend == BackendType.MONGOV1:
-        raise RuntimeError("Please see the 3.2 release notes for upgrading a bot using mongo.")
+        raise RuntimeError(
+            "Please see the 3.2 release notes for upgrading a bot using mongo."
+        )
     else:
         new_storage_details = asyncio.run(do_migration(current_backend, target))
 

@@ -4,38 +4,17 @@ from io import BytesIO
 from logging import getLogger
 from typing import Any, List, Optional, cast
 
-from discord import (
-    AuditLogEntry,
-    Colour,
-    DMChannel,
-    Embed,
-    Emoji,
-    File,
-    GroupChannel,
-    Guild,
-    HTTPException,
-    Invite,
-    Member,
-    Message,
-    Object,
-    PartialMessageable,
-    Permissions,
-    Role,
-    StageChannel,
-    TextChannel,
-    Thread,
-    User,
-    VoiceChannel,
-    VoiceState,
-)
+from core.client.context import Context
+from core.tools import (CompositeMetaClass, MixinMeta, human_join, plural,
+                        shorten)
+from discord import (AuditLogEntry, Colour, DMChannel, Embed, Emoji, File,
+                     GroupChannel, Guild, HTTPException, Invite, Member,
+                     Message, Object, PartialMessageable, Permissions, Role,
+                     StageChannel, TextChannel, Thread, User, VoiceChannel,
+                     VoiceState)
 from discord.abc import GuildChannel
 from discord.ext.commands import Cog, Greedy, group, has_permissions
 from discord.utils import format_dt, utcnow
-
-from core.tools import CompositeMetaClass, MixinMeta
-from core.client.context import Context
-from core.tools import human_join, plural, shorten
-
 
 from .enums import LogType
 

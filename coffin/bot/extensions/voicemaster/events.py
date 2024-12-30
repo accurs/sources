@@ -1,17 +1,10 @@
-from discord.ext.commands import (
-    Cog, 
-    CooldownMapping,
-    BucketType,
-)
-from discord import (
-    Client, 
-    VoiceState,
-    HTTPException,
-    Member, 
-)
-from typing import Optional, Any, Dict
+from typing import Any, Dict, Optional
+
+from discord import Client, HTTPException, Member, VoiceState
+from discord.ext.commands import BucketType, Cog, CooldownMapping
 
 mappings: Dict[str, CooldownMapping] = {}
+
 
 def handle_bucket(key: Any) -> Any:
     """
@@ -19,6 +12,7 @@ def handle_bucket(key: Any) -> Any:
     """
 
     return key
+
 
 def ratelimiter(
     bucket: str,
@@ -38,10 +32,10 @@ def ratelimiter(
     bucket = mapping.get_bucket(key)
     return bucket.update_rate_limit()
 
+
 class VoicemasterEvents(Cog):
     def __init__(self: "VoicemasterEvents", bot: Client):
         self.bot = bot
-
 
     @Cog.listener("on_voice_state_update")
     async def create_channel(
@@ -193,5 +187,5 @@ class VoicemasterEvents(Cog):
             pass
 
 
-#async def setup(bot: Client):
-    #await bot.add_cog(VoicemasterEvents(bot))
+# async def setup(bot: Client):
+# await bot.add_cog(VoicemasterEvents(bot))

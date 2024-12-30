@@ -4,10 +4,10 @@ from asyncio import Queue
 from typing import NoReturn, Optional
 
 import discord
+from cmdlog.objects import Log
+
 from grief.core.bot import Grief
 from grief.core.utils.chat_formatting import box, pagify
-
-from cmdlog.objects import Log
 
 from .vexutils import get_vex_logger
 from .vexutils.loop import VexLoop

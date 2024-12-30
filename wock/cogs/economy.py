@@ -1,67 +1,111 @@
-from discord.ext import commands, tasks # type: ignore
-from discord.ext.commands import Context, check, CommandError # type: ignore
-from discord import ( # type: ignore
-    Member as DiscordMember,
-    Embed,
-)
-from tools.wock import Wock  # type: ignore
-from typing import Union, Optional  # type: ignore # type: ignore
-from tools.important.subclasses.command import (  # type: ignore
-    Member,
-    User,  # type: ignore
-)
-from discord.utils import format_dt # type: ignore
-from collections import defaultdict
-from tools.chart import EconomyCharts  # type: ignore
-import random
 import asyncio
-import discord # type: ignore
-from discord.ui import View, Button # type: ignore
-from rival_tools import thread # type: ignore
-from loguru import logger # type: ignore
-from datetime import datetime, timedelta
-from pytz import timezone # type: ignore
+import random
+from collections import defaultdict
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Optional, Union  # type: ignore # type: ignore
+
+import discord  # type: ignore
+from discord import Embed
+from discord import Member as DiscordMember  # type: ignore
+from discord.ext import commands, tasks  # type: ignore
+from discord.ext.commands import CommandError, Context, check  # type: ignore
+from discord.ui import Button, View  # type: ignore
+from discord.utils import format_dt  # type: ignore
+from loguru import logger  # type: ignore
+from pytz import timezone  # type: ignore
+from rival_tools import thread  # type: ignore
+from tools.chart import EconomyCharts  # type: ignore
+from tools.important.subclasses.command import User  # type: ignore
+from tools.important.subclasses.command import Member  # type: ignore
+from tools.wock import Wock  # type: ignore
 
 log = logger
 
 maximum_gamble = 3001
 
+
 def format_large_number(num: Union[int, float]) -> str:
     # List of suffixes for large numbers
-    suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uv", "Dv", "Tv", "Qav", "Qiv", "Sxv", "Spv", "Ocv", "Nov", "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Octg", "Notg", "Qng"]
-    
+    suffixes = [
+        "",
+        "K",
+        "M",
+        "B",
+        "T",
+        "Qa",
+        "Qi",
+        "Sx",
+        "Sp",
+        "Oc",
+        "No",
+        "Dc",
+        "Ud",
+        "Dd",
+        "Td",
+        "Qad",
+        "Qid",
+        "Sxd",
+        "Spd",
+        "Ocd",
+        "Nod",
+        "Vg",
+        "Uv",
+        "Dv",
+        "Tv",
+        "Qav",
+        "Qiv",
+        "Sxv",
+        "Spv",
+        "Ocv",
+        "Nov",
+        "Tg",
+        "Utg",
+        "Dtg",
+        "Ttg",
+        "Qatg",
+        "Qitg",
+        "Sxtg",
+        "Sptg",
+        "Octg",
+        "Notg",
+        "Qng",
+    ]
+
     # Number of digits in the input number
     num_str = str(num)
     if "." in num_str:
-        num_str = num_str[:num_str.index(".")]    
+        num_str = num_str[: num_str.index(".")]
     num_len = len(num_str)
-    
+
     # Determine the appropriate suffix and scale the number
     if num_len <= 3:
         return num_str  # No suffix needed for numbers with 3 or fewer digits
-    
+
     # Calculate the index for suffixes list
     suffix_index = (num_len - 1) // 3
-    
+
     if suffix_index >= len(suffixes):
         return f"{num} is too large to format."
-    
+
     # Calculate the formatted number
-    scaled_num = int(num_str[:num_len - suffix_index * 3])
-    
+    scaled_num = int(num_str[: num_len - suffix_index * 3])
+
     return f"{scaled_num}{suffixes[suffix_index]}"
+
 
 class OverMaximum(CommandError):
     def __init__(self, m, **kwargs):
         self.m = m
         super().__init__(m)
 
+
 @dataclass
 class Achievement:
     name: str
     description: str
     price: Optional[int] = None
+
 
 @dataclass
 class Item:
@@ -71,12 +115,11 @@ class Item:
     duration: int
     emoji: str
 
+
 @dataclass
 class Chance:
     percentage: float
     total: float
-
-
 
 
 class BlackjackView(View):
@@ -107,6 +150,8 @@ class BlackjackView(View):
             return self.move if self.move is not None else 1
         except Exception:
             return 1
+
+
 def get_hour():
     est = timezone("US/Eastern")
     now = datetime.now(est)
@@ -149,17 +194,20 @@ def _format_int(n: Union[float, str, int]):
         return d[::-1][1:]
     return d[::-1]
 
+
 def format_int(n: Union[float, str, int], disallow_negatives: Optional[bool] = False):
     n = _format_int(n)
     if disallow_negatives is True and n.startswith("-"):
         return 0
     return n
 
+
 def get_chances():
     from config import CHANCES
+
     data = {}
     for key, value in CHANCES.items():
-        data[key] = Chance(percentage = value["percentage"], total = value["total"])
+        data[key] = Chance(percentage=value["percentage"], total=value["total"])
     return data
 
 
@@ -173,6 +221,7 @@ def get_time_next_day():
 
 class BankAmount(commands.Converter):
     name = "BankAmount"
+
     async def convert(self, ctx: Context, argument: Union[int, float, str]):
         if isinstance(argument, str):
             argument = argument.replace(",", "")
@@ -206,12 +255,13 @@ class BankAmount(commands.Converter):
                 argument = float(argument)
             except Exception:
                 await ctx.warning("Please provide an **Amount**")
-                raise OverMaximum("lol") #MissingRequiredArgument(BankAmount)
+                raise OverMaximum("lol")  # MissingRequiredArgument(BankAmount)
         return argument
 
 
 class Amount(commands.Converter):
     name = "Amount"
+
     async def convert(self, ctx: Context, argument: Union[int, float, str]):
         if "," in argument:
             argument = argument.replace(",", "")
@@ -246,11 +296,13 @@ class Amount(commands.Converter):
                 argument = float(argument)
             except Exception:
                 await ctx.warning("Please provide an **Amount**")
-                raise OverMaximum("lol") #MissingRequiredArgument(Amount)
+                raise OverMaximum("lol")  # MissingRequiredArgument(Amount)
         return argument
+
 
 class GambleAmount(commands.Converter):
     name = "GambleAmount"
+
     async def convert(self, ctx: Context, argument: Union[int, float, str]):
         if "," in argument:
             argument = argument.replace(",", "")
@@ -278,9 +330,11 @@ class GambleAmount(commands.Converter):
                 raise commands.CommandError("you can't gamble an amount below 0")
         else:
             if argument.lower() == "all":
-                argument = float(await ctx.bot.db.fetchval(
-                    "SELECT balance FROM economy WHERE user_id = $1", ctx.author.id
-                ))
+                argument = float(
+                    await ctx.bot.db.fetchval(
+                        "SELECT balance FROM economy WHERE user_id = $1", ctx.author.id
+                    )
+                )
                 argument = argument
             try:
                 argument = float(argument)
@@ -302,8 +356,12 @@ def account():
         if ctx.command.name == "steal":
             mentions = [m for m in ctx.message.mentions if m != ctx.bot.user]
             if len(mentions) > 0:
-                if not await ctx.bot.db.fetchrow("""SELECT * FROM economy WHERE user_id = $1""", mentions[0].id):
-                    await ctx.fail(f"**{mentions[0].name}** doesn't have an account opened")
+                if not await ctx.bot.db.fetchrow(
+                    """SELECT * FROM economy WHERE user_id = $1""", mentions[0].id
+                ):
+                    await ctx.fail(
+                        f"**{mentions[0].name}** doesn't have an account opened"
+                    )
                     return False
         check = await ctx.bot.db.fetchval(
             "SELECT COUNT(*) FROM economy WHERE user_id = $1",
@@ -340,57 +398,117 @@ class Economy(commands.Cog):
                 "price": 1000000,
                 "description": "prevents other users from stealing from your wallet for 8 hours",
                 "duration": 28800,
-                "emoji": ""
+                "emoji": "",
             },
             "white powder": {
                 "price": 500000,
                 "description": "allows you to win double from a coinflip for 1 minute",
                 "duration": 60,
-                "emoji": ""
+                "emoji": "",
             },
             "oxy": {
                 "price": 400000,
                 "description": "allows you 2x more bucks when you win a gamble for 30 seconds",
                 "duration": 30,
-                "emoji": ""
+                "emoji": "",
             },
             "meth": {
                 "description": "roll 2x more for 4 minutes",
                 "price": 350000,
                 "duration": 240,
-                "emoji": ""
+                "emoji": "",
             },
             "shrooms": {
                 "description": "increases your chances of winning gamble commands by 10% for 10 minutes",
                 "price": 100000,
                 "duration": 600,
-                "emoji": ""
-            }
+                "emoji": "",
+            },
         }
-        self.symbols = ["♠","♥","♦","♣"]
+        self.symbols = ["♠", "♥", "♦", "♣"]
         self.achievements = {
-            "Lets begin.": {"description": "open an account through wock for gambling", "price": None},
-            "Getting higher": {"description": "accumulate 50,000 bucks through gambling", "price": 50000},
-            "Closer..": {"description": "accumulate 200,000 bucks through gambling", "price": 200000},
-            "Sky high!": {"description": "accumulate 450,000 bucks through gambling", "price": 450000},
-            "less text more gamble": {"description": "accumulate 600,000 bucks", "price": 600000},
-            "run it up": {"description": "accumulate 2,000,000 bucks", "price": 2000000},
+            "Lets begin.": {
+                "description": "open an account through wock for gambling",
+                "price": None,
+            },
+            "Getting higher": {
+                "description": "accumulate 50,000 bucks through gambling",
+                "price": 50000,
+            },
+            "Closer..": {
+                "description": "accumulate 200,000 bucks through gambling",
+                "price": 200000,
+            },
+            "Sky high!": {
+                "description": "accumulate 450,000 bucks through gambling",
+                "price": 450000,
+            },
+            "less text more gamble": {
+                "description": "accumulate 600,000 bucks",
+                "price": 600000,
+            },
+            "run it up": {
+                "description": "accumulate 2,000,000 bucks",
+                "price": 2000000,
+            },
             "richer": {"description": "accumulate 3,500,000 bucks", "price": 3500000},
-            "rich and blind": {"description": "accumulate 5,000,000 bucks", "price": 5000000},
-            "High roller": {"description": "accumulate over 10,000,000 in bucks", "price": 10000000},
-            "Highest in the room.": {"description": "accumulate over 500,000,000 in bucks", "price": 500000000},
-            "Amazing way to spend!": {"description": "Buy the full amount of every item in the item shop", "price": None},
-            "Time to shop!": {"description": "buy something from the item shop", "price": None},
-            "spending spree!": {"description": "spend over 1,000,000 worth of items from the shop", "price": 1000000},
+            "rich and blind": {
+                "description": "accumulate 5,000,000 bucks",
+                "price": 5000000,
+            },
+            "High roller": {
+                "description": "accumulate over 10,000,000 in bucks",
+                "price": 10000000,
+            },
+            "Highest in the room.": {
+                "description": "accumulate over 500,000,000 in bucks",
+                "price": 500000000,
+            },
+            "Amazing way to spend!": {
+                "description": "Buy the full amount of every item in the item shop",
+                "price": None,
+            },
+            "Time to shop!": {
+                "description": "buy something from the item shop",
+                "price": None,
+            },
+            "spending spree!": {
+                "description": "spend over 1,000,000 worth of items from the shop",
+                "price": 1000000,
+            },
             "loser.": {"description": "lose over 40,000 in gambling", "price": 40000},
-            "retard": {"description": "lose all of your bucks from gambling all", "price": None},
-            "Down and out": {"description": "Lose over 1,000,000 in gambling", "price": 1000000},
-            "Master thief": {"description": "Steal over 100,000 in bucks from other users", "price": 100000},
-            "unlucky": {"description": "have over 50,000 bucks stolen from your wallet", "price": 50000},
-            "banking bank bank": {"description": "transfer 200,000 bucks or more to a wallet", "price": 200000},
-            "sharing is caring": {"description": "pay another user 500 bucks or more", "price": 500},
-            "shared god": {"description": "pay 5 users 500,000 bucks or more", "price": 500000},
-            "immortally satisfied": {"description": "having a balance of 10,000,000, pay all bucks to another user", "price": 10000000},
+            "retard": {
+                "description": "lose all of your bucks from gambling all",
+                "price": None,
+            },
+            "Down and out": {
+                "description": "Lose over 1,000,000 in gambling",
+                "price": 1000000,
+            },
+            "Master thief": {
+                "description": "Steal over 100,000 in bucks from other users",
+                "price": 100000,
+            },
+            "unlucky": {
+                "description": "have over 50,000 bucks stolen from your wallet",
+                "price": 50000,
+            },
+            "banking bank bank": {
+                "description": "transfer 200,000 bucks or more to a wallet",
+                "price": 200000,
+            },
+            "sharing is caring": {
+                "description": "pay another user 500 bucks or more",
+                "price": 500,
+            },
+            "shared god": {
+                "description": "pay 5 users 500,000 bucks or more",
+                "price": 500000,
+            },
+            "immortally satisfied": {
+                "description": "having a balance of 10,000,000, pay all bucks to another user",
+                "price": 10000000,
+            },
         }
         self.cards = {
             1: "`{sym} 1`, ",
@@ -402,7 +520,7 @@ class Economy(commands.Cog):
             7: "`{sym} 7`, ",
             8: "`{sym} 8`, ",
             9: "`{sym} 9`, ",
-            10: "`{sym} 10`, "
+            10: "`{sym} 10`, ",
         }
 
         self.format_economy()
@@ -413,16 +531,15 @@ class Economy(commands.Cog):
         new_items = {}
         new_achievements = {}
         for key, value in self.items.items():
-            new_items[key] = Item(name = key, **value)
+            new_items[key] = Item(name=key, **value)
         for _k, _v in self.achievements.items():
-            new_achievements[_k] = Achievement(name = _k, **_v)
+            new_achievements[_k] = Achievement(name=_k, **_v)
         self.items = new_items
         self.achievements = new_achievements
 
     def get_value(self, ctx: Context) -> bool:
         values = self.chances[ctx.command.qualified_name]
         return calculate(values.percentage, values.total)  # type: ignore # noqa: F821
-
 
     @tasks.loop(hours=24)
     async def clear_earnings(self):
@@ -495,7 +612,11 @@ class Economy(commands.Cog):
             )
             balance = float(str(data))
             if balance < 0.00:
-                await self.bot.db.execute("""UPDATE economy SET balance = $1 WHERE user_id = $2""", 0.00, member.id)
+                await self.bot.db.execute(
+                    """UPDATE economy SET balance = $1 WHERE user_id = $2""",
+                    0.00,
+                    member.id,
+                )
                 return 0.00
             return balance
 
@@ -522,7 +643,11 @@ class Economy(commands.Cog):
         else:
             kwargs = [ctx.author.id, item]
             query = """DELETE FROM inventory WHERE user_id = $1 AND item = $2"""
-        if await self.bot.db.fetchrow("""SELECT * FROM used_items WHERE user_id = $1 AND item = $2""", ctx.author.id, item):
+        if await self.bot.db.fetchrow(
+            """SELECT * FROM used_items WHERE user_id = $1 AND item = $2""",
+            ctx.author.id,
+            item,
+        ):
             return await ctx.fail(f"you are already zooted off da **{item}**")
         ts, ex = self.get_expiration(item)
         await self.bot.db.execute(
@@ -556,9 +681,13 @@ class Economy(commands.Cog):
         return await ctx.success(
             f"successfully bought {amount} **{item}** for `{self.items[item].price}`"
         )
-    
+
     async def check_shrooms(self, ctx: Context):
-        if await self.bot.db.fetchrow("""SELECT * FROM used_items WHERE user_id = $1 AND item = $2""", ctx.author.id, "shrooms"):
+        if await self.bot.db.fetchrow(
+            """SELECT * FROM used_items WHERE user_id = $1 AND item = $2""",
+            ctx.author.id,
+            "shrooms",
+        ):
             return True
         else:
             return False
@@ -650,10 +779,14 @@ class Economy(commands.Cog):
             return "Heads"
         else:
             return "Tails"
-        
+
     async def wait_for_input(self, ctx: Context):
         try:
-            x = await self.bot.wait_for("message", check=lambda m: m.channel == ctx.message.channel and m.author == ctx.author)
+            x = await self.bot.wait_for(
+                "message",
+                check=lambda m: m.channel == ctx.message.channel
+                and m.author == ctx.author,
+            )
             if str(x.content).lower() == "hit":
                 move = 0
             elif str(x.content).lower() == "stay":
@@ -662,27 +795,40 @@ class Economy(commands.Cog):
             return move
         except asyncio.TimeoutError:
             return 1
-        
 
-
-    @commands.command(name = "blackjack", aliases = ["bj"], brief = "play blackjack against the house to gamble bucks", example=',blackjack 100')
+    @commands.command(
+        name="blackjack",
+        aliases=["bj"],
+        brief="play blackjack against the house to gamble bucks",
+        example=",blackjack 100",
+    )
     @account()
     async def blackjack(self, ctx: Context, *, amount: GambleAmount):
         async with self.locks[f"bj:{ctx.author.id}"]:
             balance = await self.get_balance(ctx.author)
             if float(amount) > float(balance):
-                return await ctx.fail(f"you only have `{self.format_int(balance)}` bucks")
+                return await ctx.fail(
+                    f"you only have `{self.format_int(balance)}` bucks"
+                )
             author_deck, author_deck_n, author_amount = await self.generate_cards()
             bot_deck, bot_deck_n, bot_amount = await self.generate_cards()
             get_amount = lambda i, a: [i[z] for z in range(a)]  # noqa: E731
             win_amount = float(amount) * 1.75
-            em = discord.Embed(color=self.bot.color, title="Blackjack", description="Would you like to **hit** or **stay** this round?")
-            em.add_field(name="Your Cards ({})".format(sum(get_amount(author_deck_n, 2))),
-                        value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, 2)])}',
-                        inline=True)
-            em.add_field(name="My Cards ({})".format(sum(get_amount(bot_deck_n, 2)[:1])),
-                        value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, 2)[:1]])}',
-                        inline=False)
+            em = discord.Embed(
+                color=self.bot.color,
+                title="Blackjack",
+                description="Would you like to **hit** or **stay** this round?",
+            )
+            em.add_field(
+                name="Your Cards ({})".format(sum(get_amount(author_deck_n, 2))),
+                value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, 2)])}',
+                inline=True,
+            )
+            em.add_field(
+                name="My Cards ({})".format(sum(get_amount(bot_deck_n, 2)[:1])),
+                value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, 2)[:1]])}',
+                inline=False,
+            )
             thumbnail_url = "https://media.discordapp.net/attachments/1201966711826555002/1250569957830295704/poker_cards.png?ex=666b6b88&is=666a1a08&hm=e21d87bbf61518d3f70bb7772cb79b4a1ada5d28db5c2263a32e77db278524ed&=&format=webp&quality=lossless"
             em.set_thumbnail(url=thumbnail_url)
 
@@ -712,147 +858,264 @@ class Economy(commands.Cog):
 
                 if move == 1:
                     i -= 1
-                    em.add_field(name="Your hand ({})".format(sum(get_amount(author_deck_n, i))),
-                                value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
-                                inline=True)
-                    em.add_field(name="Opponents hand ({})".format(sum(get_amount(bot_deck_n, bot_val))),
-                                value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, bot_val)])}',
-                                inline=False)
+                    em.add_field(
+                        name="Your hand ({})".format(sum(get_amount(author_deck_n, i))),
+                        value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
+                        inline=True,
+                    )
+                    em.add_field(
+                        name="Opponents hand ({})".format(
+                            sum(get_amount(bot_deck_n, bot_val))
+                        ),
+                        value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, bot_val)])}',
+                        inline=False,
+                    )
 
-                    if sum(get_amount(author_deck_n, i)) == sum(get_amount(bot_deck_n, bot_val)):
+                    if sum(get_amount(author_deck_n, i)) == sum(
+                        get_amount(bot_deck_n, bot_val)
+                    ):
                         em.description = "Nobody won."
-                    elif sum(get_amount(author_deck_n, i)) > 21 and sum(get_amount(bot_deck_n, bot_val)) > 21:
+                    elif (
+                        sum(get_amount(author_deck_n, i)) > 21
+                        and sum(get_amount(bot_deck_n, bot_val)) > 21
+                    ):
                         em.description = "Nobody won."
-                    elif sum(get_amount(author_deck_n, i)) > sum(get_amount(bot_deck_n, bot_val)) or \
-                            sum(get_amount(bot_deck_n, bot_val)) > 21:
+                    elif (
+                        sum(get_amount(author_deck_n, i))
+                        > sum(get_amount(bot_deck_n, bot_val))
+                        or sum(get_amount(bot_deck_n, bot_val)) > 21
+                    ):
                         em.description = f"you won **{self.format_int(int(win_amount).maximum(5000))}**"
-                        await self.update_balance(ctx.author, "Add", int(win_amount).maximum(5000))
+                        await self.update_balance(
+                            ctx.author, "Add", int(win_amount).maximum(5000)
+                        )
                     else:
-                        em.description = f"you lost **{self.format_int(float(amount))}**"
+                        em.description = (
+                            f"you lost **{self.format_int(float(amount))}**"
+                        )
                         await self.update_balance(ctx.author, "Take", amount)
                     thumbnail_url = "https://media.discordapp.net/attachments/1201966711826555002/1250569957830295704/poker_cards.png?ex=666b6b88&is=666a1a08&hm=e21d87bbf61518d3f70bb7772cb79b4a1ada5d28db5c2263a32e77db278524ed&=&format=webp&quality=lossless"
                     em.set_thumbnail(url=thumbnail_url)
                     await msg.edit(embed=em, view=None)
                     return
                 try:
-                    if sum(get_amount(bot_deck_n, bot_val)) > 21 or sum(get_amount(author_deck_n, i)) > 21:
-                        if sum(get_amount(author_deck_n, i)) > 21 and sum(get_amount(bot_deck_n, bot_val)) > 21:
+                    if (
+                        sum(get_amount(bot_deck_n, bot_val)) > 21
+                        or sum(get_amount(author_deck_n, i)) > 21
+                    ):
+                        if (
+                            sum(get_amount(author_deck_n, i)) > 21
+                            and sum(get_amount(bot_deck_n, bot_val)) > 21
+                        ):
                             em.description = "Nobody won."
                         elif sum(get_amount(author_deck_n, i)) > 21:
                             em.description = f"You went over 21 and lost **{self.format_int(float(amount))} bucks**"
                             await self.update_balance(ctx.author, "Take", amount)
                         else:
                             em.description = f"I went over 21 and you won **{self.format_int(int(win_amount).maximum(5000))} bucks**"
-                            await self.update_balance(ctx.author, "Add", int(win_amount).maximum(5000))
-                        em.add_field(name="Your hand ({})".format(sum(get_amount(author_deck_n, i))), 
-                                    value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
-                                    inline=True)
-                        em.add_field(name="Opponents hand ({})".format(sum(get_amount(bot_deck_n, bot_val))),
-                                    value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, bot_val)])}',
-                                    inline=False)
+                            await self.update_balance(
+                                ctx.author, "Add", int(win_amount).maximum(5000)
+                            )
+                        em.add_field(
+                            name="Your hand ({})".format(
+                                sum(get_amount(author_deck_n, i))
+                            ),
+                            value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
+                            inline=True,
+                        )
+                        em.add_field(
+                            name="Opponents hand ({})".format(
+                                sum(get_amount(bot_deck_n, bot_val))
+                            ),
+                            value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, bot_val)])}',
+                            inline=False,
+                        )
                         thumbnail_url = "https://media.discordapp.net/attachments/1201966711826555002/1250569957830295704/poker_cards.png?ex=666b6b88&is=666a1a08&hm=e21d87bbf61518d3f70bb7772cb79b4a1ada5d28db5c2263a32e77db278524ed&=&format=webp&quality=lossless"
                         em.set_thumbnail(url=thumbnail_url)
                         await msg.edit(embed=em, view=None)
                         return
                 except Exception:
                     i -= 1
-                    if sum(get_amount(bot_deck_n, bot_val)) > 21 or sum(get_amount(author_deck_n, i)) > 21:
-                        if sum(get_amount(author_deck_n, i)) > 21 and sum(get_amount(bot_deck_n, bot_val)) > 21:
+                    if (
+                        sum(get_amount(bot_deck_n, bot_val)) > 21
+                        or sum(get_amount(author_deck_n, i)) > 21
+                    ):
+                        if (
+                            sum(get_amount(author_deck_n, i)) > 21
+                            and sum(get_amount(bot_deck_n, bot_val)) > 21
+                        ):
                             em.description = "Nobody won."
                         elif sum(get_amount(author_deck_n, i)) > 21:
                             em.description = f"You went over 21 and lost **{self.format_int(float(amount))} bucks**"
                             await self.update_balance(ctx.author, "Take", amount)
                         else:
                             em.description = f"I went over 21 and you won **{self.format_int(int(win_amount).maximum(5000))} bucks**"
-                            await self.update_balance(ctx.author, "Add", int(win_amount).maximum(5000))
-                        em.add_field(name="Your hand ({})".format(sum(get_amount(author_deck_n, i))), 
-                                    value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
-                                    inline=True)
-                        em.add_field(name="Opponents hand ({})".format(sum(get_amount(bot_deck_n, bot_val))),
-                                    value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, bot_val)])}',
-                                    inline=False)
+                            await self.update_balance(
+                                ctx.author, "Add", int(win_amount).maximum(5000)
+                            )
+                        em.add_field(
+                            name="Your hand ({})".format(
+                                sum(get_amount(author_deck_n, i))
+                            ),
+                            value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
+                            inline=True,
+                        )
+                        em.add_field(
+                            name="Opponents hand ({})".format(
+                                sum(get_amount(bot_deck_n, bot_val))
+                            ),
+                            value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, bot_val)])}',
+                            inline=False,
+                        )
                         thumbnail_url = "https://media.discordapp.net/attachments/1201966711826555002/1250569957830295704/poker_cards.png?ex=666b6b88&is=666a1a08&hm=e21d87bbf61518d3f70bb7772cb79b4a1ada5d28db5c2263a32e77db278524ed&=&format=webp&quality=lossless"
                         em.set_thumbnail(url=thumbnail_url)
                         await msg.edit(embed=em, view=None)
                         return
 
-                em.add_field(name="Your hand ({})".format(sum(get_amount(author_deck_n, i))),
-                            value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
-                            inline=True)
-                em.add_field(name="Opponents hand ({})".format(sum(get_amount(bot_deck_n, i)[:1])),
-                            value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, 2)[:1]])}',
-                            inline=False)
+                em.add_field(
+                    name="Your hand ({})".format(sum(get_amount(author_deck_n, i))),
+                    value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
+                    inline=True,
+                )
+                em.add_field(
+                    name="Opponents hand ({})".format(
+                        sum(get_amount(bot_deck_n, i)[:1])
+                    ),
+                    value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, 2)[:1]])}',
+                    inline=False,
+                )
                 thumbnail_url = "https://media.discordapp.net/attachments/1201966711826555002/1250569957830295704/poker_cards.png?ex=666b6b88&is=666a1a08&hm=e21d87bbf61518d3f70bb7772cb79b4a1ada5d28db5c2263a32e77db278524ed&=&format=webp&quality=lossless"
                 em.set_thumbnail(url=thumbnail_url)
                 await msg.edit(embed=em, view=view)
 
-            if sum(get_amount(bot_deck_n, 5)) > 21 or sum(get_amount(author_deck_n, 5)) > 21:
-                if sum(get_amount(author_deck_n, i)) > 21 and sum(get_amount(bot_deck_n, bot_val)) > 21:
+            if (
+                sum(get_amount(bot_deck_n, 5)) > 21
+                or sum(get_amount(author_deck_n, 5)) > 21
+            ):
+                if (
+                    sum(get_amount(author_deck_n, i)) > 21
+                    and sum(get_amount(bot_deck_n, bot_val)) > 21
+                ):
                     em.description = "Nobody won."
                 elif sum(get_amount(author_deck_n, i)) > 21:
                     em.description = f"You went over 21 and you lost **{self.format_int(float(amount))} bucks**"
                     await self.update_balance(ctx.author, "Take", amount)
                 else:
                     em.description = f"I went over 21 and you won **{self.format_int(int(win_amount).maximum(5000))} bucks**"
-                    await self.update_balance(ctx.author, "Add", int(win_amount).maximum(5000))
-                em.add_field(name="Your hand ({})".format(sum(get_amount(author_deck_n, i))),
-                            value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
-                            inline=True)
-                em.add_field(name="Opponents hand ({})".format(sum(get_amount(bot_deck_n, bot_val))),
-                            value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, bot_val)])}',
-                            inline=False)
+                    await self.update_balance(
+                        ctx.author, "Add", int(win_amount).maximum(5000)
+                    )
+                em.add_field(
+                    name="Your hand ({})".format(sum(get_amount(author_deck_n, i))),
+                    value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(author_deck, i)])}',
+                    inline=True,
+                )
+                em.add_field(
+                    name="Opponents hand ({})".format(
+                        sum(get_amount(bot_deck_n, bot_val))
+                    ),
+                    value=f'{"".join([self.cards[x].replace("{sym}", random.choice(self.symbols)) for x in get_amount(bot_deck, bot_val)])}',
+                    inline=False,
+                )
                 await msg.edit(embed=em, view=None)
-        
-    @commands.command(name = "shop", brief = "shows all of the items", example=",shop")
+
+    @commands.command(name="shop", brief="shows all of the items", example=",shop")
     async def shop(self, ctx: Context):
         product = list()
         for name, item in self.items.items():
-             product.append(f"**{name}**:\n**description**: {item.description}\n**price**: `{self.format_int(item.price)}`\n\n")
+            product.append(
+                f"**{name}**:\n**description**: {item.description}\n**price**: `{self.format_int(item.price)}`\n\n"
+            )
         product = discord.utils.chunk_list(product, 2)
-        embeds = [Embed(title = "shop", description = "".join(m for m in _), color = self.bot.color) for _ in product]
+        embeds = [
+            Embed(title="shop", description="".join(m for m in _), color=self.bot.color)
+            for _ in product
+        ]
         return await ctx.paginate(embeds)
-    
-    
-    @commands.group(name = "steal", aliases=["rob"], brief = "steal bucks from other users", example = ",steal @o_5v", invoke_without_command = True)
+
+    @commands.group(
+        name="steal",
+        aliases=["rob"],
+        brief="steal bucks from other users",
+        example=",steal @o_5v",
+        invoke_without_command=True,
+    )
     @account()
     async def steal(self, ctx: Context, *, member: Member):
-        if await self.bot.db.fetchrow("""SELECT * FROM steal_disabled WHERE guild_id = $1""", ctx.guild.id):
+        if await self.bot.db.fetchrow(
+            """SELECT * FROM steal_disabled WHERE guild_id = $1""", ctx.guild.id
+        ):
             return await ctx.fail("steal is disabled here")
         if member == ctx.author:
             return await ctx.fail("nice try lol")
         rl = await self.bot.glory_cache.ratelimited(f"steal:{ctx.author.id}", 1, 300)
         if rl != 0:
-            return await ctx.fail(f"You can steal again {discord.utils.format_dt(datetime.now() + timedelta(seconds = rl), style='R')}")
+            return await ctx.fail(
+                f"You can steal again {discord.utils.format_dt(datetime.now() + timedelta(seconds = rl), style='R')}"
+            )
 
         check = await self.check_item(ctx, member)
         if check is True:
-            return await ctx.fail(f"You can't steal from {member.mention} cuz they zooted off dat purple devil yahurd me cuh?")
+            return await ctx.fail(
+                f"You can't steal from {member.mention} cuz they zooted off dat purple devil yahurd me cuh?"
+            )
         amount = min(float(await self.get_balance(member)), 500.0)
         if float(amount) == 0.00:
             return await ctx.fail(f"sorry but **{member.name}** has `0` bucks")
-        _message = await ctx.send(embed = Embed(description = f"{ctx.author.mention} is **attempting to steal** `{self.format_int(amount)}`. If {member.mention} **doesn't reply it will be stolen**", color = self.bot.color), content = f"{member.mention}")
+        _message = await ctx.send(
+            embed=Embed(
+                description=f"{ctx.author.mention} is **attempting to steal** `{self.format_int(amount)}`. If {member.mention} **doesn't reply it will be stolen**",
+                color=self.bot.color,
+            ),
+            content=f"{member.mention}",
+        )
         try:
+
             def check(message):
                 return message.author == member and message.channel == ctx.channel
+
             # Wait for a reply from the user
-            msg = await self.bot.wait_for('message', timeout=20.0, check=check)  # noqa: F841
-            await _message.edit(content = None, embed = Embed(color = self.bot.color, description = f"{ctx.author.mention}: stealing from **{member.name}** **failed**"))
+            msg = await self.bot.wait_for(
+                "message", timeout=20.0, check=check
+            )  # noqa: F841
+            await _message.edit(
+                content=None,
+                embed=Embed(
+                    color=self.bot.color,
+                    description=f"{ctx.author.mention}: stealing from **{member.name}** **failed**",
+                ),
+            )
         except asyncio.TimeoutError:
             await self.update_balance(member, "Take", amount)
             await self.update_balance(ctx.author, "Add", amount, True)
-            return await _message.edit(content = None, embed = Embed(color = self.bot.color, description = f"{ctx.author.mention}: **Stole {self.format_int(amount)}** from {member.mention}"))
+            return await _message.edit(
+                content=None,
+                embed=Embed(
+                    color=self.bot.color,
+                    description=f"{ctx.author.mention}: **Stole {self.format_int(amount)}** from {member.mention}",
+                ),
+            )
 
-    @steal.command(name = "toggle", bief = "disable or enable the steal command for your server", example = ",steal toggle")
+    @steal.command(
+        name="toggle",
+        bief="disable or enable the steal command for your server",
+        example=",steal toggle",
+    )
     async def steal_disable(self, ctx: Context):
-        data = await self.bot.db.fetchrow("""SELECT * FROM steal_disabled WHERE guild_id = $1""")
+        data = await self.bot.db.fetchrow(
+            """SELECT * FROM steal_disabled WHERE guild_id = $1"""
+        )
         if data:
-            await self.bot.db.execute("""DELETE FROM steal_disabled WHERE guild_id = $1""", ctx.guild.id)
+            await self.bot.db.execute(
+                """DELETE FROM steal_disabled WHERE guild_id = $1""", ctx.guild.id
+            )
             m = "Stealing in this server been **enabled**"
         else:
-            await self.bot.db.execute("""INSERT INTO steal_disabled (guild_id) VALUES($1)""", ctx.guild.id)
+            await self.bot.db.execute(
+                """INSERT INTO steal_disabled (guild_id) VALUES($1)""", ctx.guild.id
+            )
             m = "Stealing in this server has been **disabled**"
         return await ctx.success(m)
-    
 
     @commands.command(name="setbalance", hidden=True)
     @commands.is_owner()
@@ -870,7 +1133,7 @@ class Economy(commands.Cog):
         name="balance",
         aliases=["earnings", "bal", "wallet"],
         brief="Show your wallet, bank and graph of growth through gambling",
-        example=",balance"
+        example=",balance",
     )
     @account()
     async def earnings(self, ctx: Context, member: Member = commands.Author):
@@ -893,7 +1156,9 @@ class Economy(commands.Cog):
             f"**{member.mention}'s bank is set to `{self.format_int(amount)}` bucks**"
         )
 
-    @commands.command(name="open", brief="Open an account to start gambling", example=",open")
+    @commands.command(
+        name="open", brief="Open an account to start gambling", example=",open"
+    )
     async def open(self, ctx: Context):
         if not await self.bot.db.fetchrow(
             """SELECT * FROM economy WHERE user_id = $1""", ctx.author.id
@@ -911,7 +1176,9 @@ class Economy(commands.Cog):
             return await ctx.fail("You already have an **account**")
 
     @commands.command(
-        name="deposit", brief="Deposit bucks from your wallet to your bank", example=",deposit 200"
+        name="deposit",
+        brief="Deposit bucks from your wallet to your bank",
+        example=",deposit 200",
     )
     @account()
     async def deposit(self, ctx: Context, amount: Amount):
@@ -925,9 +1192,7 @@ class Economy(commands.Cog):
         if float(str(amount)) < 0.00:
             return await ctx.fail("lol nice try")
         if float(str(amount)) < 0.00:
-            return await ctx.fail(
-                f"You only have **{self.format_int(balance)} bucks**"
-            )
+            return await ctx.fail(f"You only have **{self.format_int(balance)} bucks**")
         await self.bot.db.execute(
             """UPDATE economy SET balance = economy.balance - $1, bank = economy.bank + $1 WHERE user_id = $2""",
             amount,
@@ -938,7 +1203,9 @@ class Economy(commands.Cog):
         )
 
     @commands.command(
-        name="withdraw", brief="Withdraw bucks from your bank to your wallet", example=",withdraw 200"
+        name="withdraw",
+        brief="Withdraw bucks from your bank to your wallet",
+        example=",withdraw 200",
     )
     @account()
     async def withdraw(self, ctx: Context, amount: BankAmount):
@@ -974,7 +1241,9 @@ class Economy(commands.Cog):
             )
 
     @commands.command(
-        name="roll", brief="Gamble a roll against the house for bucks", example=",roll 500"
+        name="roll",
+        brief="Gamble a roll against the house for bucks",
+        example=",roll 500",
     )
     @account()
     async def roll(self, ctx: Context, amount: GambleAmount):
@@ -1067,9 +1336,7 @@ class Economy(commands.Cog):
             return await ctx.warning("You **Cannot use negatives**")
         balance = await self.get_balance(ctx.author)
         if float(amount) > float(balance):
-            return await ctx.fail(
-                f"you only have **{self.format_int(balance)}** bucks"
-            )
+            return await ctx.fail(f"you only have **{self.format_int(balance)}** bucks")
         if not await self.bot.db.fetchrow(
             """SELECT * FROM economy WHERE user_id = $1""", member.id
         ):
@@ -1086,7 +1353,6 @@ class Economy(commands.Cog):
         if b >= 2:
             return amount / 2
         return amount
-    
 
     def get_suffix_names(self) -> dict:
         return {
@@ -1131,17 +1397,20 @@ class Economy(commands.Cog):
             "Sptg": "Septentrigintillion",
             "Octg": "Octotrigintillion",
             "Notg": "Novemtrigintillion",
-            "Qng": "Quadragintillion"
+            "Qng": "Quadragintillion",
         }
 
     @commands.command(
-        name="gamble", 
-        brief="Gamble bucks against the house", 
+        name="gamble",
+        brief="Gamble bucks against the house",
         example=",gamble 500",
-        cooldown_args = {
-            "limit": (1, 6,),
+        cooldown_args={
+            "limit": (
+                1,
+                6,
+            ),
             "type": "user",
-        }
+        },
     )
     @account()
     async def gamble(self, ctx: Context, amount: GambleAmount):
@@ -1158,7 +1427,9 @@ class Economy(commands.Cog):
                     f"**House has declined,** You have {format_int(float(balance))} and wanted to gamble {format_int(float(amount))}"
                 )
             else:
-                return await ctx.fail(f"**House has declined,** You have 0 and wanted to gamble {format_int(float(amount))}")
+                return await ctx.fail(
+                    f"**House has declined,** You have 0 and wanted to gamble {format_int(float(amount))}"
+                )
         if float(amount) > 10000000.0:
             roll = self.get_random_value(1, 200) / 2
             v = 50
@@ -1169,7 +1440,9 @@ class Economy(commands.Cog):
         if roll > v or ctx.author.id == 352190010998390796:
             action = "WON"
             result = "Add"
-            amount = int(float(self.get_max_bet(float(amount), (float(amount) * get_win())))).maximum(5000)
+            amount = int(
+                float(self.get_max_bet(float(amount), (float(amount) * get_win())))
+            ).maximum(5000)
             if multiplied is True:
                 amount = amount * 2
         else:
@@ -1208,8 +1481,12 @@ class Economy(commands.Cog):
         return await ctx.currency(
             f"You **Super gambled** and rolled a **{roll}**/100, therefore you have **{action} {self.format_int(amount)}** bucks"
         )
-    
-    @commands.command(name = "buy", brief = "buy item(s) to use with gamble commands", example = ",buy meth 2")
+
+    @commands.command(
+        name="buy",
+        brief="buy item(s) to use with gamble commands",
+        example=",buy meth 2",
+    )
     @account()
     async def buy(self, ctx: Context, *, item_and_amount: str):
         item = "".join(m for m in item_and_amount if not m.isdigit())
@@ -1223,25 +1500,33 @@ class Economy(commands.Cog):
         except Exception:
             amount = 1
         if item not in self.items.keys():
-            at = len(max(list(self.items.keys()), key = len))
+            at = len(max(list(self.items.keys()), key=len))
             return await ctx.fail(f"the item `{item[:at]}` is not a valid item")
         return await self.buy_item(ctx, item, amount)
-    
-    @commands.command(name = "inventory", brief = "Show items in your inventory", example = ",inventory @o_5v")
+
+    @commands.command(
+        name="inventory",
+        brief="Show items in your inventory",
+        example=",inventory @o_5v",
+    )
     @account()
     async def inventory(self, ctx: Context, *, member: Optional[Member] = None):
         if member is None:
             member = ctx.author
-        items = await self.bot.db.fetch("""SELECT * FROM inventory WHERE user_id = $1""", member.id)
-        embed = Embed(color = self.bot.color)
+        items = await self.bot.db.fetch(
+            """SELECT * FROM inventory WHERE user_id = $1""", member.id
+        )
+        embed = Embed(color=self.bot.color)
         embed.title = f"{member.name}'s inventory"
         for i in items:
-            embed.add_field(name = i.item, value = i.amount, inline = True)
+            embed.add_field(name=i.item, value=i.amount, inline=True)
         if len(embed.fields) == 0:
             embed.description = "1 mud bricks"
-        return await ctx.send(embed = embed)
-    
-    @commands.command(name = "use", brief = "Use an item bought from the shop", example = ",use meth")
+        return await ctx.send(embed=embed)
+
+    @commands.command(
+        name="use", brief="Use an item bought from the shop", example=",use meth"
+    )
     @account()
     async def use(self, ctx: Context, *, item: str):
         return await self.use_item(ctx, item)
@@ -1254,7 +1539,9 @@ class Economy(commands.Cog):
             return user.name
 
     @commands.command(
-        name="leaderboard", brief="show top users for either earnings or balance", example=",leaderboard"
+        name="leaderboard",
+        brief="show top users for either earnings or balance",
+        example=",leaderboard",
     )
     @account()
     async def leaderboard(self, ctx: Context, type: Optional[str] = "balance"):
@@ -1272,7 +1559,12 @@ class Economy(commands.Cog):
                 ORDER BY bal DESC;
             """
             )
-            users = [user for user in users if not str(user["bal"]).startswith("0") and not str(user["bal"]).startswith("-")]
+            users = [
+                user
+                for user in users
+                if not str(user["bal"]).startswith("0")
+                and not str(user["bal"]).startswith("-")
+            ]
 
             for i, row in enumerate(users, start=1):
                 if i <= 10:
@@ -1286,7 +1578,7 @@ class Economy(commands.Cog):
                     user_data = row
 
             if not user_in_top_10 and user_position:
-                user_balance = self.format_int(user_data['bal'])
+                user_balance = self.format_int(user_data["bal"])
                 if user_balance.startswith("-"):
                     user_balance = 0
                 rows.append(

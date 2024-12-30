@@ -1,5 +1,7 @@
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel
+
 
 class DuckDuckGoImageResult(BaseModel):
     title: str
@@ -9,6 +11,7 @@ class DuckDuckGoImageResult(BaseModel):
     height: str
     width: str
     source: str
+
 
 class DuckDuckGoImageResponse(BaseModel):
     results: Optional[List[DuckDuckGoImageResult]] = None

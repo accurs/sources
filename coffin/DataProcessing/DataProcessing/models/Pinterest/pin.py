@@ -87,14 +87,14 @@ class Orig(BaseModel):
 
 
 class Images(BaseModel):
-    field_60x60: Optional[Field60x60] = Field(None, alias='60x60')
-    field_136x136: Optional[Field136x136] = Field(None, alias='136x136')
-    field_170x: Optional[Field170x] = Field(None, alias='170x')
-    field_236x: Optional[Field236x] = Field(None, alias='236x')
-    field_474x: Optional[Field474x] = Field(None, alias='474x')
-    field_564x: Optional[Field564x] = Field(None, alias='564x')
-    field_736x: Optional[Field736x] = Field(None, alias='736x')
-    field_600x315: Optional[Field600x315] = Field(None, alias='600x315')
+    field_60x60: Optional[Field60x60] = Field(None, alias="60x60")
+    field_136x136: Optional[Field136x136] = Field(None, alias="136x136")
+    field_170x: Optional[Field170x] = Field(None, alias="170x")
+    field_236x: Optional[Field236x] = Field(None, alias="236x")
+    field_474x: Optional[Field474x] = Field(None, alias="474x")
+    field_564x: Optional[Field564x] = Field(None, alias="564x")
+    field_736x: Optional[Field736x] = Field(None, alias="736x")
+    field_600x315: Optional[Field600x315] = Field(None, alias="600x315")
     orig: Optional[Orig] = None
 
 
@@ -208,8 +208,8 @@ class Field736x1(BaseModel):
 
 class Images1(BaseModel):
     originals: Optional[Originals] = None
-    field_750x: Optional[Field750x] = Field(None, alias='750x')
-    field_736x: Optional[Field736x1] = Field(None, alias='736x')
+    field_750x: Optional[Field750x] = Field(None, alias="750x")
+    field_736x: Optional[Field736x1] = Field(None, alias="736x")
 
 
 class ImageAdjusted(BaseModel):
@@ -225,9 +225,9 @@ class Field236x1(BaseModel):
 
 class Images2(BaseModel):
     originals: Optional[Originals] = None
-    field_236x: Optional[Field236x1] = Field(None, alias='236x')
-    field_750x: Optional[Field750x] = Field(None, alias='750x')
-    field_736x: Optional[Field736x1] = Field(None, alias='736x')
+    field_236x: Optional[Field236x1] = Field(None, alias="236x")
+    field_750x: Optional[Field750x] = Field(None, alias="750x")
+    field_736x: Optional[Field736x1] = Field(None, alias="736x")
 
 
 class Image(BaseModel):
@@ -245,7 +245,7 @@ class BlockStyle(BaseModel):
 
 
 class CaptionsUrls(BaseModel):
-    en_za: Optional[str] = Field(None, alias='en-za')
+    en_za: Optional[str] = Field(None, alias="en-za")
 
 
 class VEXP5(BaseModel):
@@ -407,9 +407,9 @@ class CloseupAttribution(BaseModel):
 
 
 class ReactionCounts(BaseModel):
-    field_1: Optional[int] = Field(None, alias='1')
-    field_11: Optional[int] = Field(None, alias='11')
-    field_13: Optional[int] = Field(None, alias='13')
+    field_1: Optional[int] = Field(None, alias="1")
+    field_11: Optional[int] = Field(None, alias="11")
+    field_13: Optional[int] = Field(None, alias="13")
 
 
 class AggregatedStats(BaseModel):
@@ -495,31 +495,31 @@ class LoveFeelingVideo(BaseModel):
 
 class AnnotationsWithLinks(BaseModel):
     How_Life_Feels_When: Optional[HowLifeFeelsWhen] = Field(
-        None, alias='How Life Feels When'
+        None, alias="How Life Feels When"
     )
     Video_For_Story_Instagram: Optional[VideoForStoryInstagram] = Field(
-        None, alias='Video For Story Instagram'
+        None, alias="Video For Story Instagram"
     )
     In_Another_Life_Aesthetic: Optional[InAnotherLifeAesthetic] = Field(
-        None, alias='In Another Life Aesthetic'
+        None, alias="In Another Life Aesthetic"
     )
     Aesthetic_Love_Pictures: Optional[AestheticLovePictures] = Field(
-        None, alias='Aesthetic Love Pictures'
+        None, alias="Aesthetic Love Pictures"
     )
     Cool_Videos_Aesthetic: Optional[CoolVideosAesthetic] = Field(
-        None, alias='Cool Videos Aesthetic'
+        None, alias="Cool Videos Aesthetic"
     )
     Aesthetic_Post_For_Instagram: Optional[AestheticPostForInstagram] = Field(
-        None, alias='Aesthetic Post For Instagram'
+        None, alias="Aesthetic Post For Instagram"
     )
     Instagram_Video_Story_Ideas: Optional[InstagramVideoStoryIdeas] = Field(
-        None, alias='Instagram Video Story Ideas'
+        None, alias="Instagram Video Story Ideas"
     )
     Cute_Video_Edits_Aesthetic: Optional[CuteVideoEditsAesthetic] = Field(
-        None, alias='Cute Video Edits Aesthetic'
+        None, alias="Cute Video Edits Aesthetic"
     )
     Love_Feeling_Video: Optional[LoveFeelingVideo] = Field(
-        None, alias='Love Feeling Video'
+        None, alias="Love Feeling Video"
     )
 
 
@@ -578,7 +578,6 @@ class CarouselData(BaseModel):
     rich_metadata: Optional[List] = None
     rich_summary: Optional[List] = None
     index: Optional[int] = None
-
 
 
 class Data(BaseModel):

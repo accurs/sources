@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import discord
 from red_commons.logging import getLogger
+
 from grief.core.i18n import Translator
 from grief.core.utils.chat_formatting import humanize_list
 
@@ -34,7 +35,9 @@ class RoleToolsView(discord.ui.View):
         # await interaction.response.send_message(
         #     _("An error occured trying to apply a role to you."), ephemeral=True
         # )
-        log.error("An error occured %s with interaction %s: %s", item, interaction, error)
+        log.error(
+            "An error occured %s with interaction %s: %s", item, interaction, error
+        )
 
     def add_item(self, item: Union[SelectRole, ButtonRole]):
         rt_type = getattr(item, "_rt_type", None)
@@ -43,7 +46,9 @@ class RoleToolsView(discord.ui.View):
         elif rt_type == "button":
             self.buttons.add(item.custom_id)
         else:
-            raise TypeError("This view can only contain `SelectRole` or `ButtonRole` items.")
+            raise TypeError(
+                "This view can only contain `SelectRole` or `ButtonRole` items."
+            )
         super().add_item(item)
 
     async def interaction_check(self, interaction: discord.Interaction):
@@ -72,7 +77,10 @@ class ButtonRole(discord.ui.Button):
     ):
         self._original_label = label
         super().__init__(
-            style=discord.ButtonStyle(style), label=label, emoji=emoji, custom_id=custom_id
+            style=discord.ButtonStyle(style),
+            label=label,
+            emoji=emoji,
+            custom_id=custom_id,
         )
         self.role_id = role_id
         self.name = name
@@ -96,7 +104,9 @@ class ButtonRole(discord.ui.Button):
         role = guild.get_role(self.role_id)
         if not role:
             await interaction.response.send_message(
-                _("The role assigned for this button does not appear to exist anymore."),
+                _(
+                    "The role assigned for this button does not appear to exist anymore."
+                ),
                 ephemeral=True,
             )
             return
@@ -109,11 +119,15 @@ class ButtonRole(discord.ui.Button):
         if role not in interaction.user.roles:
             if not await config.role(role).selfassignable():
                 await interaction.response.send_message(
-                    _("{role} is not currently self assignable.").format(role=role.mention),
+                    _("{role} is not currently self assignable.").format(
+                        role=role.mention
+                    ),
                     ephemeral=True,
                 )
                 return
-            if wait_time := await self.view.cog.check_guild_verification(interaction.user, guild):
+            if wait_time := await self.view.cog.check_guild_verification(
+                interaction.user, guild
+            ):
                 # log.debug("Ignoring user due to verification check.")
                 if wait_time:
                     wait = datetime.now(timezone.utc) + timedelta(seconds=wait_time)
@@ -133,22 +147,29 @@ class ButtonRole(discord.ui.Button):
                 )
                 return
             # log.debug(f"Adding role to {interaction.user.name} in {guild}")
-            response = await self.view.cog.give_roles(interaction.user, [role], _("Button Role"))
+            response = await self.view.cog.give_roles(
+                interaction.user, [role], _("Button Role")
+            )
             if response:
                 await interaction.response.send_message(
-                    _("I could not assign {role} for the following reasons: {reasons}").format(
+                    _(
+                        "I could not assign {role} for the following reasons: {reasons}"
+                    ).format(
                         role=role.mention, reasons="\n".join(r.reason for r in response)
                     ),
                     ephemeral=True,
                 )
                 return
             await interaction.response.send_message(
-                _("I have given you the {role} role.").format(role=role.mention), ephemeral=True
+                _("I have given you the {role} role.").format(role=role.mention),
+                ephemeral=True,
             )
         elif role in interaction.user.roles:
             if not await config.role(role).selfremovable():
                 await interaction.response.send_message(
-                    _("{role} is not currently self removable.").format(role=role.mention),
+                    _("{role} is not currently self removable.").format(
+                        role=role.mention
+                    ),
                     ephemeral=True,
                 )
                 return
@@ -213,7 +234,9 @@ class SelectRole(discord.ui.Select):
                 if not original["label"]:
                     original["label"] = "\u200b"
                 if original["label"]:
-                    option.label = original["label"].replace("{count}", str(len(role.members)))
+                    option.label = original["label"].replace(
+                        "{count}", str(len(role.members))
+                    )
                 if original["description"]:
                     option.description = original["description"].replace(
                         "{count}", str(len(role.members))
@@ -287,14 +310,18 @@ class SelectRole(discord.ui.Select):
                     ).format(role=role.mention)
                     continue
                 # log.debug("Removing role from %s in %s", interaction.user.name, guild)
-                await self.view.cog.remove_roles(interaction.user, [role], _("Role Selection"))
+                await self.view.cog.remove_roles(
+                    interaction.user, [role], _("Role Selection")
+                )
                 removed_roles.append(role)
         if wait is not None:
             msg += _(
                 "I cannot assign roles to you until you have spent more time in this server. Try again {time}."
             ).format(time=discord.utils.format_dt(wait))
         if pending:
-            msg += _("You need to finish your member verification before I can assign you a role.")
+            msg += _(
+                "You need to finish your member verification before I can assign you a role."
+            )
         if missing_role:
             msg += _("One or more of the selected roles no longer exists.\n")
         if added_roles:

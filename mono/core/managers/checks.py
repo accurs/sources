@@ -1,7 +1,7 @@
+import config
 import discord
 from discord.ext import commands
 from discord.ext.commands import CommandError
-import config
 
 
 def has_permissions(**permissions):

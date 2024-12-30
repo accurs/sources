@@ -1,7 +1,10 @@
+from asyncio import TimeoutError as AsyncTimeoutError
+from asyncio import sleep
+from typing import Any, List, Optional
+
 import discord
-from typing import List, Any, Optional
 from system.patch.context import Context
-from asyncio import sleep, TimeoutError as AsyncTimeoutError
+
 
 class BlackteaButton(discord.ui.Button):
     def __init__(self):
@@ -16,7 +19,7 @@ class BlackteaButton(discord.ui.Button):
 
         self.label = f"({len(self.users)})"
         return await interaction.response.edit_message(view=self.view)
-    
+
 
 async def start_blacktea(ctx: Context, *, life_count: int = 3, timeout: int = 10):
     ctx.bot.blacktea_matches[ctx.guild.id] = {}
@@ -58,18 +61,20 @@ async def start_blacktea(ctx: Context, *, life_count: int = 3, timeout: int = 10
 
     if len(button.users) < 2:
         ctx.bot.blacktea_matches.pop(ctx.guild.id, None)
-        return await view.message.edit(embed = await ctx.fail("There are not enough players", return_embed = True))
+        return await view.message.edit(
+            embed=await ctx.fail("There are not enough players", return_embed=True)
+        )
 
     ctx.bot.blacktea_matches[ctx.guild.id] = {user: life_count for user in button.users}
 
     async def check_word(message: discord.Message):
-        word = message.content.lower()#.encode('utf-8')
+        word = message.content.lower()  # .encode('utf-8')
         return True if await ctx.bot.redis.sismember("words", word) == 1 else False
 
     while len(ctx.bot.blacktea_matches[ctx.guild.id].keys()) > 1:
         await sleep(0)
         for user in button.users:
-            word = await ctx.bot.redis.random('words')
+            word = await ctx.bot.redis.random("words")
             e = discord.Embed(
                 description=f":coffee: <@{user}> Say a word containing **{word[:3].upper()}**"
             )

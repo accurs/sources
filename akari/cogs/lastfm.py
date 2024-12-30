@@ -1,17 +1,16 @@
-import json
 import asyncio
 import datetime
-
-from tools.predicates import has_perks, lastfm_user_exists
-from tools.handlers.lastfmhandler import Spotify, Handler
-from tools.validators import ValidLastFmName
-from tools.helpers import AkariContext
-from tools.bot import Akari
-
+import json
 from io import BytesIO
 from typing import Literal
-from discord import Message, Embed, User, Member, File
-from discord.ext.commands import Cog, group, Author, command
+
+from discord import Embed, File, Member, Message, User
+from discord.ext.commands import Author, Cog, command, group
+from tools.bot import Akari
+from tools.handlers.lastfmhandler import Handler, Spotify
+from tools.helpers import AkariContext
+from tools.predicates import has_perks, lastfm_user_exists
+from tools.validators import ValidLastFmName
 
 
 class Lastfm(Cog):

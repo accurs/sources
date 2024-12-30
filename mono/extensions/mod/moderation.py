@@ -12,92 +12,42 @@ from time import perf_counter
 from typing import Annotated, Callable, List, Literal, Optional, cast
 from zipfile import ZipFile
 
-# Third-party library imports
-from discord import (
-    AuditLogAction,
-    AuditLogEntry,
-    Color,
-    Embed,
-    Emoji,
-    File,
-    Forbidden,
-    Guild,
-    HTTPException,
-    Member,
-    Message,
-    NotFound,
-    NotificationLevel,
-    Object,
-    PartialEmoji,
-    RateLimited,
-    Role,
-    PermissionOverwrite,
-    StageChannel,
-    TextChannel,
-    Thread,
-    User,
-    VoiceChannel,
-    GuildSticker,
-    utils,
-)
-from discord.abc import GuildChannel
-from discord.ext.commands import (
-    BadArgument,
-    BucketType,
-    Cog,
-    CommandError,
-    Greedy,
-    MaxConcurrency,
-    Range,
-    check,
-    command,
-    cooldown,
-    group,
-    has_permissions,
-    max_concurrency,
-    parameter,
-)
-from discord.http import Route
-from discord.utils import MISSING, format_dt, get, utcnow
-from humanfriendly import format_timespan
-from humanize import precisedelta
-from xxhash import xxh64_hexdigest
-from typing_extensions import Self, Type
-
 # Local imports
 import config
-from core.Mono import Mono
 from core.client.context import Context
 from core.client.database import Record
 from core.managers.script import EmbedScript
-from core.tools import (
-    convert_image,
-    enlarge_emoji,
-    quietly_delete,
-    strip_roles,
-    aenumerate,
-    unicode_emoji,
-    url_to_mime,
-    codeblock,
-    human_join,
-    plural,
-    is_dangerous,
-)
-from core.tools.converters import (
-    Duration,
-    StrictMember,
-    StrictRole,
-    StrictUser,
-    TouchableMember,
-    Error,
-)
-from core.tools.converters.basic import Sound, Attachment
+from core.Mono import Mono
+from core.tools import (aenumerate, codeblock, convert_image, enlarge_emoji,
+                        human_join, is_dangerous, plural, quietly_delete,
+                        strip_roles, unicode_emoji, url_to_mime)
+from core.tools.converters import (Duration, Error, StrictMember, StrictRole,
+                                   StrictUser, TouchableMember)
+from core.tools.converters.basic import Attachment, Sound
 from core.tools.converters.kayo import PartialAttachment
 from core.tools.logging import logger as log
-
+# Third-party library imports
+from discord import (AuditLogAction, AuditLogEntry, Color, Embed, Emoji, File,
+                     Forbidden, Guild, GuildSticker, HTTPException, Member,
+                     Message, NotFound, NotificationLevel, Object,
+                     PartialEmoji, PermissionOverwrite, RateLimited, Role,
+                     StageChannel, TextChannel, Thread, User, VoiceChannel,
+                     utils)
+from discord.abc import GuildChannel
+from discord.ext.commands import (BadArgument, BucketType, Cog, CommandError,
+                                  Greedy, MaxConcurrency, Range, check,
+                                  command, cooldown, group, has_permissions,
+                                  max_concurrency, parameter)
+from discord.http import Route
+from discord.utils import MISSING, format_dt, get, utcnow
 # Module imports
 from extensions.mod.extended.antinuke.antinuke import Settings
 from extensions.mod.extended.logging.enums import LogType
+from humanfriendly import format_timespan
+from humanize import precisedelta
+from typing_extensions import Self, Type
+from xxhash import xxh64_hexdigest
+
 from .extended import Extended
 
 MASS_ROLE_CONCURRENCY = MaxConcurrency(1, per=BucketType.guild, wait=False)

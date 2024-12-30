@@ -1,13 +1,17 @@
+from datetime import datetime, timedelta
+
+import aiohttp
 import discord
+import pytz
 from discord.ext import commands
+from discord.ext.commands import (Bot, BucketType, cooldown, group,
+                                  has_permissions, hybrid_command,
+                                  hybrid_group)
+from discord.utils import format_dt
 from tools.config import color, emoji
 from tools.context import Context
 from tools.paginator import Simple
-import pytz
-from discord.utils import format_dt
-from datetime import datetime, timedelta
-import aiohttp
-from discord.ext.commands import Bot, group, BucketType, cooldown, has_permissions, hybrid_command, hybrid_group
+
 
 class Utility(commands.Cog):
     def __init__(self, client):
@@ -16,11 +20,15 @@ class Utility(commands.Cog):
 
     async def set_user_timezone(self, user_id: int, timezone: str):
         async with self.client.pool.acquire() as conn:
-            await conn.execute("""
+            await conn.execute(
+                """
             INSERT INTO user_timezones (user_id, timezone)
             VALUES ($1, $2)
             ON CONFLICT (user_id) DO UPDATE SET timezone = $2;
-            """, user_id, timezone)
+            """,
+                user_id,
+                timezone,
+            )
 
     async def unset_user_timezone(self, user_id: int):
         async with self.client.pool.acquire() as conn:
@@ -28,8 +36,10 @@ class Utility(commands.Cog):
 
     async def get_user_timezone(self, user_id: int):
         async with self.client.pool.acquire() as conn:
-            row = await conn.fetchrow("SELECT timezone FROM user_timezones WHERE user_id = $1", user_id)
-            return row['timezone'] if row else None
+            row = await conn.fetchrow(
+                "SELECT timezone FROM user_timezones WHERE user_id = $1", user_id
+            )
+            return row["timezone"] if row else None
 
     @commands.command(description="Set your AFK")
     @commands.cooldown(1, 2, commands.BucketType.user)
@@ -37,13 +47,21 @@ class Utility(commands.Cog):
         timestamp = discord.utils.utcnow()
         self.afk[ctx.author.id] = (message, timestamp)
 
-        user_pfp = ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url
+        user_pfp = (
+            ctx.author.avatar.url
+            if ctx.author.avatar
+            else ctx.author.default_avatar.url
+        )
 
-        embed = discord.Embed(description=f"> With the message: **{message}**", color=color.default)
+        embed = discord.Embed(
+            description=f"> With the message: **{message}**", color=color.default
+        )
         embed.set_author(name=f"{ctx.author.name} | Is now AFK", icon_url=user_pfp)
         await ctx.send(embed=embed)
 
-    @commands.command(description="Show your love by sending feedback", aliases=["vouch"])
+    @commands.command(
+        description="Show your love by sending feedback", aliases=["vouch"]
+    )
     async def feedback(self, ctx, *, feedback: str):
         if feedback.endswith("/5"):
             try:
@@ -67,7 +85,10 @@ class Utility(commands.Cog):
 
         stars_display = "⭐" * stars + "☆" * (5 - stars)
 
-        embed = discord.Embed(description=f"> {feedback_text}\n\n**Rating:** {stars_display} ({stars}/5)", color=color.default)
+        embed = discord.Embed(
+            description=f"> {feedback_text}\n\n**Rating:** {stars_display} ({stars}/5)",
+            color=color.default,
+        )
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
 
         await feedback_channel.send(embed=embed)
@@ -90,16 +111,23 @@ class Utility(commands.Cog):
         user_timezone = await self.get_user_timezone(user.id)
 
         if not user_timezone:
-            await ctx.warn(f"{user.display_name} hasn't set their timezone yet. Use `-tzset <timezone>` to set it.")
+            await ctx.warn(
+                f"{user.display_name} hasn't set their timezone yet. Use `-tzset <timezone>` to set it."
+            )
             return
-        current_time = datetime.now(pytz.timezone(user_timezone)).strftime("%d %B %Y, %I:%M %p")
-        
+        current_time = datetime.now(pytz.timezone(user_timezone)).strftime(
+            "%d %B %Y, %I:%M %p"
+        )
+
         embed = discord.Embed(
             title=f"",
             description=f"> **Current time:** {current_time}",
-            color=color.default)
+            color=color.default,
+        )
         embed.set_footer(text=f"Timezone: {user_timezone}")
-        embed.set_author(name=user.display_name, icon_url=user.avatar.url or user.default_avatar.url)
+        embed.set_author(
+            name=user.display_name, icon_url=user.avatar.url or user.default_avatar.url
+        )
         await ctx.send(embed=embed)
 
     @hybrid_command(aliases=["tzl"])
@@ -107,7 +135,9 @@ class Utility(commands.Cog):
     @discord.app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def timezone_list(self, ctx):
         async with self.client.pool.acquire() as conn:
-            rows = await conn.fetch("SELECT timezone, COUNT(*) AS count FROM user_timezones GROUP BY timezone ORDER BY count DESC")
+            rows = await conn.fetch(
+                "SELECT timezone, COUNT(*) AS count FROM user_timezones GROUP BY timezone ORDER BY count DESC"
+            )
 
         if not rows:
             await ctx.warn("No timezones have been set by users in this server.")
@@ -121,14 +151,22 @@ class Utility(commands.Cog):
             timezone_list_str += f"**{timezone}**: {count} users\n"
 
             if len(timezone_list_str.splitlines()) >= 10:
-                embed = discord.Embed(description=timezone_list_str, color=color.default)
-                embed.set_author(name="Server Timezones", icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+                embed = discord.Embed(
+                    description=timezone_list_str, color=color.default
+                )
+                embed.set_author(
+                    name="Server Timezones",
+                    icon_url=ctx.guild.icon.url if ctx.guild.icon else None,
+                )
                 embeds.append(embed)
                 timezone_list_str = ""
 
         if timezone_list_str:
             embed = discord.Embed(description=timezone_list_str, color=color.default)
-            embed.set_author(name="Server Timezones", icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+            embed.set_author(
+                name="Server Timezones",
+                icon_url=ctx.guild.icon.url if ctx.guild.icon else None,
+            )
             embeds.append(embed)
 
         await Simple(embeds).start(ctx)
@@ -138,16 +176,24 @@ class Utility(commands.Cog):
     @discord.app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def timezone_set(self, ctx, timezone: str):
         if timezone not in pytz.all_timezones:
-            await ctx.warn("Invalid timezone. Please use a valid timezone name, e.g., `America/New_York`.")
+            await ctx.warn(
+                "Invalid timezone. Please use a valid timezone name, e.g., `America/New_York`."
+            )
             return
 
         await self.set_user_timezone(ctx.author.id, timezone)
         embed = discord.Embed(
             description=f"> **Your timezone has been set to:** {timezone}",
-            color=color.default)
+            color=color.default,
+        )
         embed.set_author(
             name=f"{ctx.author.name} | Timezone Set",
-            icon_url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
+            icon_url=(
+                ctx.author.avatar.url
+                if ctx.author.avatar
+                else ctx.author.default_avatar.url
+            ),
+        )
         await ctx.send(embed=embed)
 
     @hybrid_command(aliases=["tzrm"])
@@ -158,21 +204,28 @@ class Utility(commands.Cog):
         await self.unset_user_timezone(user_id)
         await ctx.agree("Your timezone has been unset.")
 
-# events
+    # events
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.id != self.client.user.id and not message.content.startswith('-'):
+        if message.author.id != self.client.user.id and not message.content.startswith(
+            "-"
+        ):
             for user in message.mentions:
                 if user.id in self.afk:
                     message_text, timestamp = self.afk[user.id]
                     now = discord.utils.utcnow()
                     afk_duration = now - timestamp
                     afk_duration_str = self.format_duration(afk_duration)
-                    
-                    user_pfp = user.avatar.url if user.avatar else user.default_avatar.url
 
-                    embed = discord.Embed(description=f"> With the message: **{message_text}** \n > For: **{afk_duration_str}**", color=color.default)
+                    user_pfp = (
+                        user.avatar.url if user.avatar else user.default_avatar.url
+                    )
+
+                    embed = discord.Embed(
+                        description=f"> With the message: **{message_text}** \n > For: **{afk_duration_str}**",
+                        color=color.default,
+                    )
                     embed.set_author(name=f"{user.name} | Is afk", icon_url=user_pfp)
                     await message.channel.send(embed=embed)
 
@@ -182,10 +235,19 @@ class Utility(commands.Cog):
                 afk_duration = now - timestamp
                 afk_duration_str = self.format_duration(afk_duration)
 
-                user_pfp = message.author.avatar.url if message.author.avatar else message.author.default_avatar.url
+                user_pfp = (
+                    message.author.avatar.url
+                    if message.author.avatar
+                    else message.author.default_avatar.url
+                )
 
-                embed = discord.Embed(description=f"> You were afk for: **{afk_duration_str}**", color=color.default)
-                embed.set_author(name=f"{message.author.name} | Welcome back!", icon_url=user_pfp)
+                embed = discord.Embed(
+                    description=f"> You were afk for: **{afk_duration_str}**",
+                    color=color.default,
+                )
+                embed.set_author(
+                    name=f"{message.author.name} | Welcome back!", icon_url=user_pfp
+                )
                 await message.channel.send(embed=embed)
                 del self.afk[message.author.id]
 
@@ -205,6 +267,7 @@ class Utility(commands.Cog):
         duration_str += f"{seconds}s"
 
         return duration_str
+
 
 async def setup(client):
     await client.add_cog(Utility(client))

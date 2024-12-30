@@ -5,7 +5,6 @@ from typing import List
 from aiohttp import ClientSession as Session
 from munch import Munch
 from PIL import Image, ImageDraw, ImageFont
-
 from structure.config import API
 from structure.managers import ClientSession, Record
 

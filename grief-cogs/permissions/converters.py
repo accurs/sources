@@ -1,6 +1,6 @@
 import itertools
 import re
-from typing import NamedTuple, Union, Optional
+from typing import NamedTuple, Optional, Union
 
 import discord
 
@@ -48,7 +48,9 @@ class GlobalUniqueObjectFinder(commands.Converter):
             async for guild in AsyncIter(bot.guilds, steps=100)
         ]
 
-        objects = itertools.chain(bot.get_all_channels(), bot.users, bot.guilds, *all_roles)
+        objects = itertools.chain(
+            bot.get_all_channels(), bot.users, bot.guilds, *all_roles
+        )
 
         maybe_matches = []
         async for obj in AsyncIter(objects, steps=100):
@@ -57,7 +59,9 @@ class GlobalUniqueObjectFinder(commands.Converter):
 
         if ctx.guild is not None:
             async for member in AsyncIter(ctx.guild.members, steps=100):
-                if member.nick == arg and not any(obj.id == member.id for obj in maybe_matches):
+                if member.nick == arg and not any(
+                    obj.id == member.id for obj in maybe_matches
+                ):
                     maybe_matches.append(member)
 
         if not maybe_matches:
@@ -99,7 +103,9 @@ class GuildUniqueObjectFinder(commands.Converter):
                 return role
 
         objects = itertools.chain(
-            guild.channels, guild.members, filter(lambda r: not r.is_default(), guild.roles)
+            guild.channels,
+            guild.members,
+            filter(lambda r: not r.is_default(), guild.roles),
         )
 
         maybe_matches = []
@@ -166,7 +172,9 @@ def RuleType(arg: str) -> bool:
         return False
 
     raise commands.BadArgument(
-        _('"{arg}" is not a valid rule. Valid rules are "allow" or "deny"').format(arg=arg)
+        _('"{arg}" is not a valid rule. Valid rules are "allow" or "deny"').format(
+            arg=arg
+        )
     )
 
 

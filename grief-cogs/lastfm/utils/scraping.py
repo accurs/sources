@@ -29,7 +29,9 @@ class ScrapingMixin:
             .find("img")
             .get("src")
             .replace("avatar70s", "avatar300s"),
-            "formatted_name": soup.find("a", {"class": "library-header-crumb"}).text.strip(),
+            "formatted_name": soup.find(
+                "a", {"class": "library-header-crumb"}
+            ).text.strip(),
         }
 
         items = chartlist.findAll("tr", {"class": "chartlist-row"})
@@ -93,7 +95,11 @@ class ScrapingMixin:
         image = soup.find("img", {"class": "image-list-image"})
         if image is None:
             try:
-                image = soup.find("li", {"class": "image-list-item-wrapper"}).find("a").find("img")
+                image = (
+                    soup.find("li", {"class": "image-list-item-wrapper"})
+                    .find("a")
+                    .find("img")
+                )
             except AttributeError:
                 return ""
         return image["src"].replace("/avatar170s/", "/300x300/") if image else ""
@@ -124,7 +130,8 @@ class ScrapingMixin:
                 soup = BeautifulSoup(data, "html.parser")
                 imagedivs = soup.findAll("td", {"class": "chartlist-image"})
                 images += [
-                    div.find("img")["src"].replace("/avatar70s/", "/300x300/") for div in imagedivs
+                    div.find("img")["src"].replace("/avatar70s/", "/300x300/")
+                    for div in imagedivs
                 ]
 
         return images
@@ -134,10 +141,14 @@ class ScrapingMixin:
         url = f"https://last.fm/music/{artistname}"
         data = await self.fetch(ctx, url, handling="text")
         soup = BeautifulSoup(data, "html.parser")
-        for artist in soup.findAll("h3", {"class": "artist-similar-artists-sidebar-item-name"}):
+        for artist in soup.findAll(
+            "h3", {"class": "artist-similar-artists-sidebar-item-name"}
+        ):
             similar.append(artist.find("a").text)
         listeners = (
-            soup.find("li", {"class": "header-metadata-tnew-item--listeners"}).find("abbr").text
+            soup.find("li", {"class": "header-metadata-tnew-item--listeners"})
+            .find("abbr")
+            .text
         )
         return similar, listeners
 
@@ -155,7 +166,9 @@ class ScrapingMixin:
         plays = div.get_text()
         return int(plays.split(" ")[0].replace(",", ""))
 
-    async def get_playcount_track_scraper(self, ctx, username, artistname, trackname, period):
+    async def get_playcount_track_scraper(
+        self, ctx, username, artistname, trackname, period
+    ):
         url = (
             f"https://last.fm/user/{username}/library/music/{artistname}/_/{trackname}"
             f"?date_preset={self.period_http_format(period)}"
@@ -169,7 +182,9 @@ class ScrapingMixin:
         plays = div.get_text()
         return int(plays.split(" ")[0].replace(",", ""))
 
-    async def get_playcount_album_scraper(self, ctx, username, artistname, albumname, period):
+    async def get_playcount_album_scraper(
+        self, ctx, username, artistname, albumname, period
+    ):
         url = (
             f"https://last.fm/user/{username}/library/music/{artistname}/{albumname}"
             f"?date_preset={self.period_http_format(period)}"

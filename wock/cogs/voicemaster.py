@@ -1,11 +1,10 @@
-import discord # type: ignore
-from discord.ui import View # type: ignore
-from discord.ext import commands # type: ignore
 from typing import Union  # noqa: F401
-from tools.views import RenameModal
-from tools import views
-from tools.views import reclaim
 
+import discord  # type: ignore
+from discord.ext import commands  # type: ignore
+from discord.ui import View  # type: ignore
+from tools import views
+from tools.views import RenameModal, reclaim
 
 
 class VmButtons(View):
@@ -595,7 +594,7 @@ class Voicemaster(commands.Cog):
         name="voicemaster", aliases=["vm", "vc"], invoke_without_command=True
     )
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def voicemaster(self, ctx):
         """Manage the voicemaster interface configuration"""
 
@@ -609,7 +608,7 @@ class Voicemaster(commands.Cog):
         brief="setup a voicemaster configuration",
     )
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def setup(self, ctx, category: discord.CategoryChannel = None):
         data = await self.bot.db.fetch(
             """
@@ -642,7 +641,9 @@ class Voicemaster(commands.Cog):
             embed.set_author(name=guild_name, icon_url=guild_icon)
             embed.set_thumbnail(url=self.bot.user.avatar if ctx.guild.icon else None)
 
-            message = await text.send(embed = embed, view = views.VoicemasterInterface(self.bot))
+            message = await text.send(
+                embed=embed, view=views.VoicemasterInterface(self.bot)
+            )
             await self.bot.db.execute(
                 """INSERT INTO voicemaster
                 (guild_id, category_id, voicechannel_id, channel_id, message_id)
@@ -662,7 +663,7 @@ class Voicemaster(commands.Cog):
         name="reset", aliases=["remove"], brief="reset the voicemaster configuration"
     )
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def reset(self, ctx):
         if data := await self.bot.db.fetch(
             """
@@ -734,7 +735,7 @@ class Voicemaster(commands.Cog):
         return await ctx.fail("**Voicemaster interface** hasn't been **set up**")
 
     @voicemaster.command(name="lock", brief="lock your voice channel")
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def lock(self, ctx):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -772,7 +773,7 @@ class Voicemaster(commands.Cog):
             return await ctx.success("Your **voice channel** has been **locked**")
 
     @voicemaster.command(name="unlock", brief="unlock your voice channel")
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def unlock(self, ctx):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -812,7 +813,7 @@ class Voicemaster(commands.Cog):
     @voicemaster.command(
         name="hide", aliases=["ghost"], brief="hide your voice channel"
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def hide(self, ctx):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -853,7 +854,7 @@ class Voicemaster(commands.Cog):
         aliases=["show", "unhide"],
         brief="reveal your hidden voice channel",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def reveal(self, ctx):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -892,7 +893,7 @@ class Voicemaster(commands.Cog):
     @voicemaster.command(
         name="rename", aliases=["name"], brief="rename your voice channel"
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def rename(self, ctx, *, name):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -931,7 +932,7 @@ class Voicemaster(commands.Cog):
     @voicemaster.command(
         name="status", brief="set the status of all of your voice master channels"
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def voicemaster_status(self, ctx: commands.Context, *, status: str):
         await self.bot.db.execute(
             """INSERT INTO vm_status (user_id, status) VALUES($1, $2) ON CONFLICT(user_id) DO UPDATE SET status = excluded.status""",
@@ -947,7 +948,7 @@ class Voicemaster(commands.Cog):
     @voicemaster.command(
         name="claim", aliases=["own"], brief="claim an unclaimed voice channel"
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def voicemaster_claim(self, ctx):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -1035,7 +1036,7 @@ class Voicemaster(commands.Cog):
     @voicemaster.command(
         name="limit", brief="limit the amount of users that can join your voice channel"
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def limit(self, ctx, limit: int):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -1075,7 +1076,7 @@ class Voicemaster(commands.Cog):
             )
 
     @voicemaster.command(name="delete", brief="delete your voice channel")
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def delete(self, ctx):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -1121,7 +1122,7 @@ class Voicemaster(commands.Cog):
         aliases=["kick"],
         brief="reject and kick a user out of your voice channel",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def reject(self, ctx, *, member: discord.Member):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")
@@ -1172,7 +1173,7 @@ class Voicemaster(commands.Cog):
         aliases=["allow"],
         brief="permit a user to join your voice channel",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def permit(self, ctx, *, member: discord.Member):
         if not ctx.author.voice:
             return await ctx.fail("You **are not** in a **voice channel**")

@@ -1,8 +1,10 @@
-import zmq
-import json
 import asyncio
+import json
+
+import zmq
 from discord import Message
 from discord.ext.commands import Cog
+
 
 class SocketParser:
     def __init__(self, bot, raw_data: dict):
@@ -20,12 +22,8 @@ class SocketParser:
         guild = None
         if guild_id := data.get("guild_id"):
             guild = self.bot.get_guild(guild_id)
-        self.bot.dispatch("message",
-            Message(
-                state = self.bot._connection,
-                data = data,
-                guild = guild
-            )
+        self.bot.dispatch(
+            "message", Message(state=self.bot._connection, data=data, guild=guild)
         )
 
 

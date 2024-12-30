@@ -1,8 +1,10 @@
+import asyncio
+
+import aiohttp
+import asyncpg
 import discord
 from discord.ext import commands
-import asyncio
-import asyncpg
-import aiohttp
+
 
 class Config(commands.Cog):
     def __init__(self, bot):
@@ -11,25 +13,27 @@ class Config(commands.Cog):
     async def create_table(self):
         """Create the server_prefixes table if it doesn't exist."""
         async with self.bot.db.acquire() as connection:
-            await connection.execute("""
+            await connection.execute(
+                """
                 CREATE TABLE IF NOT EXISTS server_prefixes (
                     guild_id BIGINT PRIMARY KEY,
                     prefix VARCHAR(5) NOT NULL
                 );
-            """)
+            """
+            )
 
-    @commands.command(name='say')
+    @commands.command(name="say")
     async def say(self, ctx, *, message: str):
         """Send a message through the bot and delete the user's command message."""
         await asyncio.gather(ctx.send(message), ctx.message.delete())
 
-    @commands.group(name='set', invoke_without_command=True)
+    @commands.group(name="set", invoke_without_command=True)
     @commands.has_permissions(manage_guild=True)
     async def set_group(self, ctx):
         """Modify your server with Evelina."""
         await ctx.send_help(ctx.command.qualified_name)
 
-    @set_group.command(name='banner')
+    @set_group.command(name="banner")
     @commands.has_permissions(manage_guild=True)
     async def set_banner(self, ctx, url: str):
         """Change your server's banner."""
@@ -40,7 +44,7 @@ class Config(commands.Cog):
         except Exception as e:
             await ctx.deny(f"Failed to change banner: {e}")
 
-    @set_group.command(name='icon')
+    @set_group.command(name="icon")
     @commands.has_permissions(manage_guild=True)
     async def set_icon(self, ctx, url: str):
         """Change your server's icon."""
@@ -52,7 +56,7 @@ class Config(commands.Cog):
         except Exception as e:
             await ctx.deny(f"Failed to change icon: {e}")
 
-    @set_group.command(name='name')
+    @set_group.command(name="name")
     @commands.has_permissions(manage_guild=True)
     async def set_name(self, ctx, *, name: str):
         """Change your server's name."""
@@ -63,7 +67,7 @@ class Config(commands.Cog):
         except Exception as e:
             await ctx.deny(f"Failed to change server name: {e}")
 
-    @set_group.command(name='splash')
+    @set_group.command(name="splash")
     @commands.has_permissions(manage_guild=True)
     async def set_splash(self, ctx, url: str):
         """Change your server's splash."""
@@ -81,6 +85,7 @@ class Config(commands.Cog):
                 if response.status != 200:
                     raise Exception("Failed to download image.")
                 return await response.read()
+
 
 async def setup(bot):
     await bot.add_cog(Config(bot))

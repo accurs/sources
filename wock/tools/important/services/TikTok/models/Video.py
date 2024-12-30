@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Any, Union
+from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -269,7 +269,7 @@ class ChaListItem(BaseModel):
     cid: Optional[str] = None
     cha_name: Optional[str] = None
     desc: Optional[str] = None
-    schema_: Optional[str] = Field(None, alias='schema')
+    schema_: Optional[str] = Field(None, alias="schema")
     author: Optional[Author1] = None
     user_count: Optional[int] = None
     share_info: Optional[ShareInfo1] = None
@@ -521,7 +521,7 @@ class Thumbnail(BaseModel):
 
 class Action(BaseModel):
     icon: Optional[Icon] = None
-    schema_: Optional[str] = Field(None, alias='schema')
+    schema_: Optional[str] = Field(None, alias="schema")
     action_type: Optional[int] = None
 
 

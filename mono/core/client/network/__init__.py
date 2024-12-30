@@ -15,15 +15,15 @@ limitations under the License.
 """
 
 from http.cookies import SimpleCookie
-from .types import JSON
-from .errors import CommandFailure
+from typing import Any, Dict, Literal, Optional, Self, TypedDict, Union, Unpack
 
-from typing import Any, Literal, Self, TypedDict, Union, Unpack, Dict, Optional
-from aiohttp import ClientSession, ClientResponse, ClientResponseError
-
+from aiohttp import ClientResponse, ClientResponseError, ClientSession
+from cashews import cache
 from lxml import html
 from lxml.html import HtmlElement
-from cashews import cache
+
+from .errors import CommandFailure
+from .types import JSON
 
 
 class RequestKwargs(TypedDict, total=False):

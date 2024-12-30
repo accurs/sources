@@ -1,5 +1,3 @@
-
-
 from .spotify import Spotify
 
 

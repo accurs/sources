@@ -1,12 +1,11 @@
-
 import random
 import re
 from pprint import pprint as pp
-
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 import discord
-from grief.core import commands, bot, checks, Config
+
+from grief.core import Config, bot, checks, commands
 from grief.core.utils import embed
 from grief.core.utils.chat_formatting import pagify
 from grief.core.utils.menus import DEFAULT_CONTROLS, menu
@@ -16,13 +15,23 @@ BaseCog = getattr(commands, "Cog", object)
 
 class AutoReact(BaseCog):
     "Automatically react to a user or a channel."
+
     def __init__(self, bot_instance: bot):
         super().__init__()
 
         self.bot = bot_instance
         self.emojis = {str(e.id): e for e in self.bot.emojis}
-        self.config = Config.get_conf(self, identifier=214753146512080907, force_registration=True, cog_name="autoreact",)
-        default_guild = {"autoreact": {}, "automsg": {}, "channel": {},}
+        self.config = Config.get_conf(
+            self,
+            identifier=214753146512080907,
+            force_registration=True,
+            cog_name="autoreact",
+        )
+        default_guild = {
+            "autoreact": {},
+            "automsg": {},
+            "channel": {},
+        }
         self.config.register_guild(**default_guild)
         self.bot.add_listener(self.autoreact_handler, "on_message")
         self.bot.add_listener(self.channel_handler, "on_message")
@@ -47,7 +56,9 @@ class AutoReact(BaseCog):
 
     @autoreact.command()
     @commands.has_permissions(manage_channels=True)
-    async def channel(self, ctx, channel: discord.TextChannel, *emojis: Union[str, discord.Emoji]):
+    async def channel(
+        self, ctx, channel: discord.TextChannel, *emojis: Union[str, discord.Emoji]
+    ):
         """
         Set a list of emoji to react with in the channel
         """
@@ -55,7 +66,10 @@ class AutoReact(BaseCog):
         async with self.config.guild(ctx.guild).channel() as channeldict:
             if not len(emojis) and channelid in channeldict:
                 del channeldict[channelid]
-                embed = discord.Embed(description=f"> {ctx.author.mention}: Reactions for this channel have been removed.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: Reactions for this channel have been removed.",
+                    color=0x313338,
+                )
                 await ctx.reply(embed=embed, mention_author=False)
             else:
                 converted = []
@@ -65,12 +79,20 @@ class AutoReact(BaseCog):
                     else:
                         converted.append(e)
                 channeldict[channelid] = converted
-                embed = discord.Embed(description=f"> {ctx.author.mention}: Reactions for this channel has been created for this channel.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: Reactions for this channel has been created for this channel.",
+                    color=0x313338,
+                )
                 return ctx.reply(embed=embed, mention_author=False)
-    
+
     @autoreact.command()
     @commands.has_permissions(manage_channels=True)
-    async def set(self, ctx: commands.Context, user: discord.Member, *emojis: Union[str, discord.Emoji],):
+    async def set(
+        self,
+        ctx: commands.Context,
+        user: discord.Member,
+        *emojis: Union[str, discord.Emoji],
+    ):
         """
         Set a list of emoji to react with
         """
@@ -78,7 +100,10 @@ class AutoReact(BaseCog):
             userid = str(user.id)
             if not len(emojis) and userid in autoreactdict:
                 del autoreactdict[userid]
-                embed = discord.Embed(description=f"> {ctx.author.mention}: Reactions removed for this user.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: Reactions removed for this user.",
+                    color=0x313338,
+                )
                 await ctx.reply(embed=embed, mention_author=False)
             else:
                 converted = []
@@ -88,9 +113,12 @@ class AutoReact(BaseCog):
                     else:
                         converted.append(e)
                 autoreactdict[userid] = converted
-                embed = discord.Embed(description=f"> {ctx.author.mention}: Reactions have been set.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: Reactions have been set.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
-            
+
     @autoreact.command()
     @commands.has_permissions(manage_channels=True)
     async def clear(self, ctx: commands.Context):
@@ -100,7 +128,10 @@ class AutoReact(BaseCog):
         config = await self.config.guild(ctx.guild).autoreact.clear()
         config = await self.config.guild(ctx.guild).channel.clear()
         del config
-        embed = discord.Embed(description=f"> {ctx.author.mention}: Autoreacts have been cleared.", color=0x313338)
+        embed = discord.Embed(
+            description=f"> {ctx.author.mention}: Autoreacts have been cleared.",
+            color=0x313338,
+        )
         return await ctx.reply(embed=embed, mention_author=False)
 
     @autoreact.command()
@@ -113,12 +144,18 @@ class AutoReact(BaseCog):
             userid = str(user.id)
             if len(msg) == 0 and userid in automsgdict:
                 del automsgdict[userid]
-                embed = discord.Embed(description=f"> {ctx.author.mention}: Messages removed for this user.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: Messages removed for this user.",
+                    color=0x313338,
+                )
                 await ctx.reply(embed=embed, mention_author=False)
             else:
                 msg = " ".join(msg)
                 automsgdict[userid] = msg
-                embed = discord.Embed(description=f"> {ctx.author.mention}: Message has been set.", color=0x313338)
+                embed = discord.Embed(
+                    description=f"> {ctx.author.mention}: Message has been set.",
+                    color=0x313338,
+                )
                 return await ctx.reply(embed=embed, mention_author=False)
 
     @autoreact.command()
@@ -158,7 +195,7 @@ class AutoReact(BaseCog):
                 await ctx.send(formatted)
         else:
             await ctx.send("No autoreacts have been set.")
-    
+
     async def autoreact_handler(self, message: discord.message):
         # don't proc on DMs
         if message.guild is None:

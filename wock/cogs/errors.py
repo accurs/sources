@@ -1,33 +1,25 @@
-from discord.ext.commands import (
-    Cog,
-    Context,
-    CheckFailure,  # type: ignore
-    BotMissingPermissions,
-)
-from typing import Union
-import discord
 import traceback
-from discord.ext import commands
-from tools.aliases import (  # type: ignore
-    handle_aliases,
-    CommandAlias,  # type: ignore # type: ignore
-)
-from tools.snipe import SnipeError  # type: ignore # type: ignore
-from tools.important.subclasses.command import RolePosition  # type: ignore
-from tools.important.subclasses.parser import EmbedError  # type: ignore
-from loguru import logger
-from discord.errors import HTTPException
-from tools.processing import codeblock  # type: ignore
-from aiohttp.client_exceptions import (
-    ClientConnectorError,
-    ClientResponseError,
-    ContentTypeError,
-    ClientProxyConnectionError,
-    ClientHttpProxyError,
-)
-from tools.exceptions import InvalidSubCommand
+from typing import Union
+
+import discord
+from aiohttp.client_exceptions import (ClientConnectorError,
+                                       ClientHttpProxyError,
+                                       ClientProxyConnectionError,
+                                       ClientResponseError, ContentTypeError)
 from cogs.economy import OverMaximum
 from cogs.moderation import InvalidError
+from discord.errors import HTTPException
+from discord.ext import commands
+from discord.ext.commands import CheckFailure  # type: ignore
+from discord.ext.commands import BotMissingPermissions, Cog, Context
+from loguru import logger
+from tools.aliases import CommandAlias  # type: ignore # type: ignore
+from tools.aliases import handle_aliases  # type: ignore
+from tools.exceptions import InvalidSubCommand
+from tools.important.subclasses.command import RolePosition  # type: ignore
+from tools.important.subclasses.parser import EmbedError  # type: ignore
+from tools.processing import codeblock  # type: ignore
+from tools.snipe import SnipeError  # type: ignore # type: ignore
 
 
 def multi_replace(text: str, to_replace: dict, once: bool = False) -> str:
@@ -40,6 +32,7 @@ def multi_replace(text: str, to_replace: dict, once: bool = False) -> str:
 
     return text
 
+
 def get_message(parameter: str) -> str:
     """
     Returns a grammatically correct message indicating a missing parameter.
@@ -51,18 +44,18 @@ def get_message(parameter: str) -> str:
         str: A message indicating the missing parameter with correct grammar.
     """
     vowels = "aeiouAEIOU"
-    article = "an" if parameter[0] in vowels and parameter.lower() not in ("user", "member") else "a"
+    article = (
+        "an"
+        if parameter[0] in vowels and parameter.lower() not in ("user", "member")
+        else "a"
+    )
     return f"Please provide {article} **{parameter.title()}**"
 
 
 class Errors(Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.ignored = tuple([
-            commands.CommandNotFound,
-            CheckFailure,
-            OverMaximum
-        ])
+        self.ignored = tuple([commands.CommandNotFound, CheckFailure, OverMaximum])
         self.debug = False
 
     def get_rl(self, exception: Exception) -> Union[int, float]:
@@ -140,7 +133,9 @@ class Errors(Cog):
                 "The **API** timed out during the request due to a proxy error!"
             )
         elif isinstance(error, InvalidSubCommand):
-            if await self.bot.glory_cache.ratelimited(f"rl:cooldown_message:{ctx.author.id}", 1, self.get_rl(exception) or 5):
+            if await self.bot.glory_cache.ratelimited(
+                f"rl:cooldown_message:{ctx.author.id}", 1, self.get_rl(exception) or 5
+            ):
                 return
             return await ctx.warning(error.message)
         elif isinstance(exception, EmbedError):

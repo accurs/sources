@@ -4,6 +4,7 @@ from typing import List, Optional, Union
 
 import discord
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
 
@@ -32,7 +33,9 @@ class RoleToolsEvents(RoleToolsMixin):
     logic for handling adding/removing roles with our settings."""
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_add(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
         await self._ready.wait()
         guild = self.bot.get_guild(payload.guild_id)
         if not guild:
@@ -67,7 +70,9 @@ class RoleToolsEvents(RoleToolsMixin):
             await self.give_roles(member, [role], _("Reaction Role"))
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_remove(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
         await self._ready.wait()
         guild = self.bot.get_guild(payload.guild_id)
         if not guild:
@@ -97,7 +102,9 @@ class RoleToolsEvents(RoleToolsMixin):
             await self.remove_roles(member, [role], _("Reaction Role"))
 
     @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+    async def on_member_update(
+        self, before: discord.Member, after: discord.Member
+    ) -> None:
         await self._ready.wait()
         if await self.bot.cog_disabled_in_guild(self, before.guild):
             return
@@ -147,18 +154,26 @@ class RoleToolsEvents(RoleToolsMixin):
             if member.joined_at
             else timedelta(minutes=10)
         )
-        if guild.verification_level.value >= 2 and allowed_discord <= timedelta(minutes=5):
+        if guild.verification_level.value >= 2 and allowed_discord <= timedelta(
+            minutes=5
+        ):
             log.debug("Waiting 5 minutes for %s in %s", member.name, guild)
             return 300 - int(allowed_discord.total_seconds())
-        elif guild.verification_level.value >= 3 and allowed_server <= timedelta(minutes=10):
+        elif guild.verification_level.value >= 3 and allowed_server <= timedelta(
+            minutes=10
+        ):
             log.debug("Waiting 10 minutes for %s in %s", member.name, guild)
             return 600 - int(allowed_server.total_seconds())
         return False
 
-    async def wait_for_verification(self, member: discord.Member, guild: discord.Guild) -> None:
+    async def wait_for_verification(
+        self, member: discord.Member, guild: discord.Guild
+    ) -> None:
         wait = await self.check_guild_verification(member, guild)
         if wait:
-            log.debug("Waiting %s seconds before allowing the user to have a role", wait)
+            log.debug(
+                "Waiting %s seconds before allowing the user to have a role", wait
+            )
             await asyncio.sleep(int(wait))
 
     async def check_atomicity(self, guild: discord.Guild) -> bool:
@@ -246,7 +261,9 @@ class RoleToolsEvents(RoleToolsMixin):
         if not member.guild.get_member(member.id):
             ret.append(
                 RoleChangeResponse(
-                    None, _("A request was made for a user that is not part of the guild."), False
+                    None,
+                    _("A request was made for a user that is not part of the guild."),
+                    False,
                 )
             )
             return ret
@@ -273,13 +290,17 @@ class RoleToolsEvents(RoleToolsMixin):
                     ret.append(
                         RoleChangeResponse(
                             role,
-                            _("The role requested is higher than the bots highest role."),
+                            _(
+                                "The role requested is higher than the bots highest role."
+                            ),
                             False,
                         )
                     )
                 else:
                     ret.append(
-                        RoleChangeResponse(role, _("The Role requested no longer exists."), False)
+                        RoleChangeResponse(
+                            role, _("The Role requested no longer exists."), False
+                        )
                     )
                 continue
             if role in to_add and not atomic:
@@ -312,7 +333,9 @@ class RoleToolsEvents(RoleToolsMixin):
                     for role_id in required:
                         r = guild.get_role(role_id)
                         if r is None:
-                            async with self.config.role(role).required() as required_roles:
+                            async with self.config.role(
+                                role
+                            ).required() as required_roles:
                                 required_roles.remove(role_id)
                             continue
                         if r not in member.roles:
@@ -320,25 +343,35 @@ class RoleToolsEvents(RoleToolsMixin):
                     if not has_required:
                         ret.append(
                             RoleChangeResponse(
-                                role, _("You do not have all of the required roles."), False
+                                role,
+                                _("You do not have all of the required roles."),
+                                False,
                             )
                         )
                         continue
-            if (inclusive := await self.config.role(role).inclusive_with()) and check_inclusive:
+            if (
+                inclusive := await self.config.role(role).inclusive_with()
+            ) and check_inclusive:
                 inclusive_roles = []
                 for role_id in inclusive:
                     log.verbose("role_id: %s", role_id)
                     r = guild.get_role(role_id)
                     if r is None:
-                        async with self.config.role(role).inclusive_with() as inclusive_with:
+                        async with self.config.role(
+                            role
+                        ).inclusive_with() as inclusive_with:
                             inclusive_with.remove(role_id)
                         continue
                     if r and await self.config.role(r).selfassignable():
                         to_add.add(r)
                         inclusive_roles.append(r)
                 if atomic:
-                    await member.add_roles(*inclusive_roles, reason=_("Inclusive Roles"))
-            if (exclusive := await self.config.role(role).exclusive_to()) and check_exclusive:
+                    await member.add_roles(
+                        *inclusive_roles, reason=_("Inclusive Roles")
+                    )
+            if (
+                exclusive := await self.config.role(role).exclusive_to()
+            ) and check_exclusive:
                 skip_role_assign = False
                 exclusive_roles = []
                 for role_id in exclusive:
@@ -347,7 +380,9 @@ class RoleToolsEvents(RoleToolsMixin):
                         # cleanup roles that are missing automatically
                         # we should never :tm: end up in a situation where
                         # roles are not chunked properly
-                        async with self.config.role(role).exclusive_to() as exclusive_to:
+                        async with self.config.role(
+                            role
+                        ).exclusive_to() as exclusive_to:
                             exclusive_to.remove(role_id)
                             continue
                     if r in member.roles:
@@ -369,7 +404,9 @@ class RoleToolsEvents(RoleToolsMixin):
                     # is the case but if required this can be adjusted in the future
                     continue
                 if atomic:
-                    await member.remove_roles(*exclusive_roles, reason=_("Exclusive Roles"))
+                    await member.remove_roles(
+                        *exclusive_roles, reason=_("Exclusive Roles")
+                    )
             to_add.add(role)
         log.debug("Adding %s to %s", to_add, member.name)
         if atomic:
@@ -433,13 +470,17 @@ class RoleToolsEvents(RoleToolsMixin):
                     ret.append(
                         RoleChangeResponse(
                             role,
-                            _("The role requested is higher than the bots highest role."),
+                            _(
+                                "The role requested is higher than the bots highest role."
+                            ),
                             False,
                         )
                     )
                 else:
                     ret.append(
-                        RoleChangeResponse(role, _("The Role requested no longer exists."), False)
+                        RoleChangeResponse(
+                            role, _("The Role requested no longer exists."), False
+                        )
                     )
 
                 continue
@@ -452,7 +493,9 @@ class RoleToolsEvents(RoleToolsMixin):
                     )
                 )
                 continue
-            if (inclusive := await self.config.role(role).inclusive_with()) and check_inclusive:
+            if (
+                inclusive := await self.config.role(role).inclusive_with()
+            ) and check_inclusive:
                 for role_id in inclusive:
                     r = guild.get_role(role_id)
                     if not r:

@@ -1,31 +1,34 @@
+import asyncio
+import logging
 
+import discord
+from discord import MessageType
 
-from ..abc import MixinMeta, CompositeMetaClass
-from ..enums import Action, Rank, QAAction
-from ..core.warden.enums import Event as WardenEvent, ChecksKeys as WDChecksKeys
-from ..core.warden.rule import WardenRule
-from ..core.warden import api as WardenAPI
+from grief.core import commands
+
+from ..abc import CompositeMetaClass, MixinMeta
 from ..core.utils import QUICK_ACTION_EMOJIS, utcnow
+from ..core.warden import api as WardenAPI
+from ..core.warden.enums import ChecksKeys as WDChecksKeys
+from ..core.warden.enums import Event as WardenEvent
+from ..core.warden.rule import WardenRule
+from ..enums import Action, QAAction, Rank
 from ..exceptions import ExecutionError, MisconfigurationError
 from . import cache as df_cache
-from grief.core import commands
-from discord import MessageType
-import discord
-import logging
-import asyncio
 
 ALLOWED_MESSAGE_TYPES = (MessageType.default, MessageType.reply)
 
 log = logging.getLogger("red.x26cogs.defender")
 
-class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
+
+class Events(MixinMeta, metaclass=CompositeMetaClass):  # type: ignore
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         author = message.author
         if not hasattr(author, "guild") or not author.guild:
             return
         guild = author.guild
-        if await self.bot.cog_disabled_in_guild(self, guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, guild):  # type: ignore
             return
         if author.bot:
             return
@@ -50,7 +53,7 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         rank = await self.rank_user(author)
 
         if rank == Rank.Rank1:
-            if await self.bot.is_mod(author): # Is staff?
+            if await self.bot.is_mod(author):  # Is staff?
                 is_staff = True
                 await self.refresh_staff_activity(guild)
 
@@ -58,19 +61,43 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         if await self.config.guild(guild).warden_enabled():
             rules = self.get_warden_rules_by_event(guild, WardenEvent.OnMessage)
             for rule in rules:
-                if await rule.satisfies_conditions(cog=self, rank=rank, guild=message.guild, message=message, user=message.author):
+                if await rule.satisfies_conditions(
+                    cog=self,
+                    rank=rank,
+                    guild=message.guild,
+                    message=message,
+                    user=message.author,
+                ):
                     try:
-                        wd_expelled = await rule.do_actions(cog=self, guild=message.guild, message=message, user=message.author)
+                        wd_expelled = await rule.do_actions(
+                            cog=self,
+                            guild=message.guild,
+                            message=message,
+                            user=message.author,
+                        )
                         if wd_expelled:
                             expelled = True
                             await asyncio.sleep(0.1)
-                    except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
+                    except (
+                        discord.Forbidden,
+                        discord.HTTPException,
+                        ExecutionError,
+                    ) as e:
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
                     except Exception as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
-                        log.error("Warden - unexpected error during actions execution", exc_info=e)
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
+                        log.error(
+                            "Warden - unexpected error during actions execution",
+                            exc_info=e,
+                        )
 
         if expelled:
             return
@@ -78,12 +105,20 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         inv_filter_enabled = await self.config.guild(guild).invite_filter_enabled()
         if inv_filter_enabled and not is_staff:
             inv_filter_rank = await self.config.guild(guild).invite_filter_rank()
-            if rank >= inv_filter_rank and await WardenAPI.eval_check(guild=guild, module=WDChecksKeys.InviteFilter, message=message, user=message.author):
+            if rank >= inv_filter_rank and await WardenAPI.eval_check(
+                guild=guild,
+                module=WDChecksKeys.InviteFilter,
+                message=message,
+                user=message.author,
+            ):
                 try:
                     expelled = await self.invite_filter(message)
                 except discord.Forbidden as e:
-                    self.send_to_monitor(guild, "[InviteFilter] Failed to take action on "
-                                                f"user {author.id}. Please check my permissions.")
+                    self.send_to_monitor(
+                        guild,
+                        "[InviteFilter] Failed to take action on "
+                        f"user {author.id}. Please check my permissions.",
+                    )
                 except MisconfigurationError as e:
                     self.send_to_monitor(guild, f"[InviteFilter] {e}")
                 except Exception as e:
@@ -94,12 +129,20 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         rd_enabled = await self.config.guild(guild).raider_detection_enabled()
         if rd_enabled and not is_staff:
             rd_rank = await self.config.guild(guild).raider_detection_rank()
-            if rank >= rd_rank and await WardenAPI.eval_check(guild=guild, module=WDChecksKeys.RaiderDetection, message=message, user=message.author):
+            if rank >= rd_rank and await WardenAPI.eval_check(
+                guild=guild,
+                module=WDChecksKeys.RaiderDetection,
+                message=message,
+                user=message.author,
+            ):
                 try:
                     expelled = await self.detect_raider(message)
                 except discord.Forbidden as e:
-                    self.send_to_monitor(guild, "[RaiderDetection] Failed to take action on "
-                                                f"user {author.id}. Please check my permissions.")
+                    self.send_to_monitor(
+                        guild,
+                        "[RaiderDetection] Failed to take action on "
+                        f"user {author.id}. Please check my permissions.",
+                    )
                 except Exception as e:
                     log.warning("Unexpected error in RaiderDetection", exc_info=e)
         if expelled:
@@ -119,24 +162,40 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
 
         if ca_enabled and not is_staff:
             rank_ca = await self.config.guild(guild).ca_rank()
-            if rank_ca and rank >= rank_ca and await WardenAPI.eval_check(guild=guild, module=WDChecksKeys.CommentAnalysis, message=message, user=message.author):
+            if (
+                rank_ca
+                and rank >= rank_ca
+                and await WardenAPI.eval_check(
+                    guild=guild,
+                    module=WDChecksKeys.CommentAnalysis,
+                    message=message,
+                    user=message.author,
+                )
+            ):
                 try:
                     await self.comment_analysis(message)
                 except asyncio.TimeoutError:
-                    self.send_to_monitor(guild, "[CommentAnalysis] Failed to query the API: timeout.")
+                    self.send_to_monitor(
+                        guild, "[CommentAnalysis] Failed to query the API: timeout."
+                    )
                 except discord.Forbidden as e:
-                    self.send_to_monitor(guild, "[CommentAnalysis] Failed to take action on "
-                                                f"user {author.id}. Please check my permissions.")
+                    self.send_to_monitor(
+                        guild,
+                        "[CommentAnalysis] Failed to take action on "
+                        f"user {author.id}. Please check my permissions.",
+                    )
                 except Exception as e:
                     log.error("Unexpected error in CommentAnalysis", exc_info=e)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, message_before: discord.Message, message: discord.Message):
+    async def on_message_edit(
+        self, message_before: discord.Message, message: discord.Message
+    ):
         author = message.author
         if not hasattr(author, "guild") or not author.guild:
             return
         guild = author.guild
-        if await self.bot.cog_disabled_in_guild(self, guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, guild):  # type: ignore
             return
         if author.bot:
             return
@@ -156,7 +215,7 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         rank = await self.rank_user(author)
 
         if rank == Rank.Rank1:
-            if await self.bot.is_mod(author): # Is staff?
+            if await self.bot.is_mod(author):  # Is staff?
                 is_staff = True
                 await self.refresh_staff_activity(guild)
 
@@ -164,19 +223,40 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         if await self.config.guild(guild).warden_enabled():
             rules = self.get_warden_rules_by_event(guild, WardenEvent.OnMessageEdit)
             for rule in rules:
-                if await rule.satisfies_conditions(cog=self, rank=rank, guild=guild, message=message, user=message.author):
+                if await rule.satisfies_conditions(
+                    cog=self,
+                    rank=rank,
+                    guild=guild,
+                    message=message,
+                    user=message.author,
+                ):
                     try:
-                        wd_expelled = await rule.do_actions(cog=self, guild=guild, message=message, user=message.author)
+                        wd_expelled = await rule.do_actions(
+                            cog=self, guild=guild, message=message, user=message.author
+                        )
                         if wd_expelled:
                             expelled = True
                             await asyncio.sleep(0.1)
-                    except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
+                    except (
+                        discord.Forbidden,
+                        discord.HTTPException,
+                        ExecutionError,
+                    ) as e:
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
                     except Exception as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
-                        log.error("Warden - unexpected error during actions execution", exc_info=e)
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
+                        log.error(
+                            "Warden - unexpected error during actions execution",
+                            exc_info=e,
+                        )
 
         if expelled:
             return
@@ -188,8 +268,11 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
                 try:
                     expelled = await self.invite_filter(message)
                 except discord.Forbidden as e:
-                    self.send_to_monitor(guild, "[InviteFilter] Failed to take action on "
-                                                f"user {author.id}. Please check my permissions.")
+                    self.send_to_monitor(
+                        guild,
+                        "[InviteFilter] Failed to take action on "
+                        f"user {author.id}. Please check my permissions.",
+                    )
                 except MisconfigurationError as e:
                     self.send_to_monitor(guild, f"[InviteFilter] {e}")
                 except Exception as e:
@@ -202,13 +285,17 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
                 try:
                     await self.comment_analysis(message)
                 except asyncio.TimeoutError:
-                    self.send_to_monitor(guild, "[CommentAnalysis] Failed to query the API: timeout.")
+                    self.send_to_monitor(
+                        guild, "[CommentAnalysis] Failed to query the API: timeout."
+                    )
                 except discord.Forbidden as e:
-                    self.send_to_monitor(guild, "[CommentAnalysis] Failed to take action on "
-                                                f"user {author.id}. Please check my permissions.")
+                    self.send_to_monitor(
+                        guild,
+                        "[CommentAnalysis] Failed to take action on "
+                        f"user {author.id}. Please check my permissions.",
+                    )
                 except Exception as e:
                     log.error("Unexpected error in CommentAnalysis", exc_info=e)
-
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message):
@@ -216,7 +303,7 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         if not hasattr(author, "guild") or not author.guild:
             return
         guild = author.guild
-        if await self.bot.cog_disabled_in_guild(self, guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, guild):  # type: ignore
             return
         if author.bot:
             return
@@ -232,22 +319,43 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         if await self.config.guild(guild).warden_enabled():
             rules = self.get_warden_rules_by_event(guild, WardenEvent.OnMessageDelete)
             for rule in rules:
-                if await rule.satisfies_conditions(cog=self, rank=rank, guild=guild, message=message, user=message.author):
+                if await rule.satisfies_conditions(
+                    cog=self,
+                    rank=rank,
+                    guild=guild,
+                    message=message,
+                    user=message.author,
+                ):
                     try:
-                        await rule.do_actions(cog=self, guild=guild, message=message, user=message.author)
-                    except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
+                        await rule.do_actions(
+                            cog=self, guild=guild, message=message, user=message.author
+                        )
+                    except (
+                        discord.Forbidden,
+                        discord.HTTPException,
+                        ExecutionError,
+                    ) as e:
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
                     except Exception as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
-                        log.error("Warden - unexpected error during actions execution", exc_info=e)
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
+                        log.error(
+                            "Warden - unexpected error during actions execution",
+                            exc_info=e,
+                        )
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.Member):
         if not hasattr(user, "guild") or not user.guild or user.bot:
             return
-        if await self.bot.cog_disabled_in_guild(self, user.guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, user.guild):  # type: ignore
             return
 
         message = reaction.message
@@ -257,16 +365,42 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
             rank = await self.rank_user(user)
             rules = self.get_warden_rules_by_event(guild, WardenEvent.OnReactionAdd)
             for rule in rules:
-                if await rule.satisfies_conditions(cog=self, rank=rank, guild=guild, message=message, user=user, reaction=reaction):
+                if await rule.satisfies_conditions(
+                    cog=self,
+                    rank=rank,
+                    guild=guild,
+                    message=message,
+                    user=user,
+                    reaction=reaction,
+                ):
                     try:
-                        await rule.do_actions(cog=self, guild=guild, message=message, user=user, reaction=reaction)
-                    except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
+                        await rule.do_actions(
+                            cog=self,
+                            guild=guild,
+                            message=message,
+                            user=user,
+                            reaction=reaction,
+                        )
+                    except (
+                        discord.Forbidden,
+                        discord.HTTPException,
+                        ExecutionError,
+                    ) as e:
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
                     except Exception as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
-                        log.error("Warden - unexpected error during actions execution", exc_info=e)
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
+                        log.error(
+                            "Warden - unexpected error during actions execution",
+                            exc_info=e,
+                        )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -274,7 +408,7 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
             return
 
         guild = member.guild
-        if await self.bot.cog_disabled_in_guild(self, guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, guild):  # type: ignore
             return
         if not await self.config.guild(guild).enabled():
             return
@@ -284,19 +418,36 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
             rules = self.get_warden_rules_by_event(guild, WardenEvent.OnUserJoin)
             for rule in rules:
                 rank = await self.rank_user(member)
-                if await rule.satisfies_conditions(cog=self, rank=rank, guild=guild, user=member):
+                if await rule.satisfies_conditions(
+                    cog=self, rank=rank, guild=guild, user=member
+                ):
                     try:
                         await rule.do_actions(cog=self, guild=guild, user=member)
-                    except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
+                    except (
+                        discord.Forbidden,
+                        discord.HTTPException,
+                        ExecutionError,
+                    ) as e:
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
                     except Exception as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
-                        log.error("Warden - unexpected error during actions execution", exc_info=e)
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
+                        log.error(
+                            "Warden - unexpected error during actions execution",
+                            exc_info=e,
+                        )
 
         if await self.config.guild(guild).join_monitor_enabled():
-            if await WardenAPI.eval_check(guild=guild, module=WDChecksKeys.JoinMonitor, user=member):
+            if await WardenAPI.eval_check(
+                guild=guild, module=WDChecksKeys.JoinMonitor, user=member
+            ):
                 await self.join_monitor_flood(member)
                 await self.join_monitor_suspicious(member)
 
@@ -306,7 +457,7 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
             return
 
         guild = member.guild
-        if await self.bot.cog_disabled_in_guild(self, guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, guild):  # type: ignore
             return
         if not await self.config.guild(guild).enabled():
             return
@@ -316,21 +467,36 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
             rules = self.get_warden_rules_by_event(guild, WardenEvent.OnUserLeave)
             for rule in rules:
                 rank = await self.rank_user(member)
-                if await rule.satisfies_conditions(cog=self, rank=rank, guild=guild, user=member):
+                if await rule.satisfies_conditions(
+                    cog=self, rank=rank, guild=guild, user=member
+                ):
                     try:
                         await rule.do_actions(cog=self, guild=guild, user=member)
-                    except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
+                    except (
+                        discord.Forbidden,
+                        discord.HTTPException,
+                        ExecutionError,
+                    ) as e:
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
                     except Exception as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
-                        log.error("Warden - unexpected error during actions execution", exc_info=e)
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
+                        log.error(
+                            "Warden - unexpected error during actions execution",
+                            exc_info=e,
+                        )
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         guild = after.guild
-        if await self.bot.cog_disabled_in_guild(self, guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, guild):  # type: ignore
             return
         if not await self.config.guild(guild).enabled():
             return
@@ -351,25 +517,35 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         rules = self.get_warden_rules_by_event(guild, event)
         for rule in rules:
             rank = await self.rank_user(after)
-            if await rule.satisfies_conditions(cog=self, rank=rank, guild=guild, user=after, role=role):
+            if await rule.satisfies_conditions(
+                cog=self, rank=rank, guild=guild, user=after, role=role
+            ):
                 try:
                     await rule.do_actions(cog=self, guild=guild, user=after, role=role)
                 except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                    self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                f"({rule.last_action.value}) - {str(e)}")
+                    self.send_to_monitor(
+                        guild,
+                        f"[Warden] Rule {rule.name} "
+                        f"({rule.last_action.value}) - {str(e)}",
+                    )
                 except Exception as e:
-                    self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                f"({rule.last_action.value}) - {str(e)}")
-                    log.error("Warden - unexpected error during actions execution", exc_info=e)
+                    self.send_to_monitor(
+                        guild,
+                        f"[Warden] Rule {rule.name} "
+                        f"({rule.last_action.value}) - {str(e)}",
+                    )
+                    log.error(
+                        "Warden - unexpected error during actions execution", exc_info=e
+                    )
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         user = payload.member
         if not user or not hasattr(user, "guild") or not user.guild or user.bot:
             return
-        if await self.bot.cog_disabled_in_guild(self, user.guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, user.guild):  # type: ignore
             return
-        if await self.bot.is_mod(user): # Is staff?
+        if await self.bot.is_mod(user):  # Is staff?
             await self.refresh_staff_activity(user.guild)
         else:
             return
@@ -394,51 +570,81 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
         if target is None:
             return
         elif target.top_role >= user.top_role:
-            self.send_to_monitor(guild, f"[QuickAction] Prevented user {user} from taking action on {target}: "
-                                        "hierarchy check failed.")
+            self.send_to_monitor(
+                guild,
+                f"[QuickAction] Prevented user {user} from taking action on {target}: "
+                "hierarchy check failed.",
+            )
             return
 
-        if quick_action in (Action.Ban, Action.Softban, Action.Kick): # Expel = no more actions
+        if quick_action in (
+            Action.Ban,
+            Action.Softban,
+            Action.Kick,
+        ):  # Expel = no more actions
             self.quick_actions[guild.id].pop(payload.message_id, None)
 
-        if user == target: # Safeguard for Warden integration
-            self.send_to_monitor(guild, f"[QuickAction] Prevented user {user} from taking action on themselves. "
-                                        "Was this deliberate?")
+        if user == target:  # Safeguard for Warden integration
+            self.send_to_monitor(
+                guild,
+                f"[QuickAction] Prevented user {user} from taking action on themselves. "
+                "Was this deliberate?",
+            )
             return
         elif await self.bot.is_mod(target):
-            self.send_to_monitor(guild, f"[QuickAction] Target user {target} is a staff member. I cannot do that.")
+            self.send_to_monitor(
+                guild,
+                f"[QuickAction] Target user {target} is a staff member. I cannot do that.",
+            )
             return
 
-        check1 = user.guild_permissions.ban_members is False and action in (Action.Ban, Action.Softban, QAAction.BanDeleteOneDay)
+        check1 = user.guild_permissions.ban_members is False and action in (
+            Action.Ban,
+            Action.Softban,
+            QAAction.BanDeleteOneDay,
+        )
         check2 = user.guild_permissions.kick_members is False and action == Action.Kick
 
         if any((check1, check2)):
-            self.send_to_monitor(guild, f"[QuickAction] Mod {user} lacks permissions to {action.value}.")
+            self.send_to_monitor(
+                guild, f"[QuickAction] Mod {user} lacks permissions to {action.value}."
+            )
             return
 
         auditlog_reason = f"Defender QuickAction issued by {user} ({user.id})"
 
         if action == Action.Ban:
             await guild.ban(target, reason=auditlog_reason, delete_message_days=0)
-            self.dispatch_event("member_remove", target, action.value, quick_action.reason)
+            self.dispatch_event(
+                "member_remove", target, action.value, quick_action.reason
+            )
         elif action == Action.Softban:
             await guild.ban(target, reason=auditlog_reason, delete_message_days=1)
             await guild.unban(target)
-            self.dispatch_event("member_remove", target, action.value, quick_action.reason)
+            self.dispatch_event(
+                "member_remove", target, action.value, quick_action.reason
+            )
         elif action == Action.Kick:
             await guild.kick(target, reason=auditlog_reason)
-            self.dispatch_event("member_remove", target, action.value, quick_action.reason)
+            self.dispatch_event(
+                "member_remove", target, action.value, quick_action.reason
+            )
         elif action == Action.Punish:
             punish_role = guild.get_role(await self.config.guild(guild).punish_role())
             if punish_role and not self.is_role_privileged(punish_role):
                 await target.add_roles(punish_role, reason=auditlog_reason)
             else:
-                self.send_to_monitor(guild, "[QuickAction] Failed to punish user. Is the punish role "
-                                            "still present and with *no* privileges?")
+                self.send_to_monitor(
+                    guild,
+                    "[QuickAction] Failed to punish user. Is the punish role "
+                    "still present and with *no* privileges?",
+                )
             return
         elif action == QAAction.BanDeleteOneDay:
             await guild.ban(target, reason=auditlog_reason, delete_message_days=1)
-            self.dispatch_event("member_remove", target, action.value, quick_action.reason)
+            self.dispatch_event(
+                "member_remove", target, action.value, quick_action.reason
+            )
 
         await self.create_modlog_case(
             self.bot,
@@ -452,15 +658,15 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
             channel=None,
         )
 
-
-
     @commands.Cog.listener()
-    async def on_reaction_remove(self, reaction: discord.Reaction, user: discord.Member):
+    async def on_reaction_remove(
+        self, reaction: discord.Reaction, user: discord.Member
+    ):
         if not hasattr(user, "guild") or not user.guild or user.bot:
             return
-        if await self.bot.cog_disabled_in_guild(self, user.guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, user.guild):  # type: ignore
             return
-        if await self.bot.is_mod(user): # Is staff?
+        if await self.bot.is_mod(user):  # Is staff?
             await self.refresh_staff_activity(user.guild)
 
         message = reaction.message
@@ -470,21 +676,47 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
             rank = await self.rank_user(user)
             rules = self.get_warden_rules_by_event(guild, WardenEvent.OnReactionRemove)
             for rule in rules:
-                if await rule.satisfies_conditions(cog=self, rank=rank, guild=guild, message=message, user=user, reaction=reaction):
+                if await rule.satisfies_conditions(
+                    cog=self,
+                    rank=rank,
+                    guild=guild,
+                    message=message,
+                    user=user,
+                    reaction=reaction,
+                ):
                     try:
-                        await rule.do_actions(cog=self, guild=guild, message=message, user=user, reaction=reaction)
-                    except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
+                        await rule.do_actions(
+                            cog=self,
+                            guild=guild,
+                            message=message,
+                            user=user,
+                            reaction=reaction,
+                        )
+                    except (
+                        discord.Forbidden,
+                        discord.HTTPException,
+                        ExecutionError,
+                    ) as e:
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
                     except Exception as e:
-                        self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                    f"({rule.last_action.value}) - {str(e)}")
-                        log.error("Warden - unexpected error during actions execution", exc_info=e)
+                        self.send_to_monitor(
+                            guild,
+                            f"[Warden] Rule {rule.name} "
+                            f"({rule.last_action.value}) - {str(e)}",
+                        )
+                        log.error(
+                            "Warden - unexpected error during actions execution",
+                            exc_info=e,
+                        )
 
     @commands.Cog.listener()
     async def on_x26_defender_emergency(self, guild: discord.Guild):
         rule: WardenRule
-        if await self.bot.cog_disabled_in_guild(self, guild): # type: ignore
+        if await self.bot.cog_disabled_in_guild(self, guild):  # type: ignore
             return
         if not await self.config.guild(guild).warden_enabled():
             return
@@ -495,9 +727,17 @@ class Events(MixinMeta, metaclass=CompositeMetaClass): # type: ignore
                 try:
                     await rule.do_actions(cog=self, guild=guild)
                 except (discord.Forbidden, discord.HTTPException, ExecutionError) as e:
-                    self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                f"({rule.last_action.value}) - {str(e)}")
+                    self.send_to_monitor(
+                        guild,
+                        f"[Warden] Rule {rule.name} "
+                        f"({rule.last_action.value}) - {str(e)}",
+                    )
                 except Exception as e:
-                    self.send_to_monitor(guild, f"[Warden] Rule {rule.name} "
-                                                f"({rule.last_action.value}) - {str(e)}")
-                    log.error("Warden - unexpected error during actions execution", exc_info=e)
+                    self.send_to_monitor(
+                        guild,
+                        f"[Warden] Rule {rule.name} "
+                        f"({rule.last_action.value}) - {str(e)}",
+                    )
+                    log.error(
+                        "Warden - unexpected error during actions execution", exc_info=e
+                    )

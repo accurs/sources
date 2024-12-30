@@ -5,7 +5,6 @@ from collections import defaultdict
 
 import discord
 from discord.ext import commands
-
 from structure.managers.context import Context
 from structure.scare import Scare
 from structure.utilities import VoiceMasterView

@@ -1,13 +1,13 @@
 import re
-from cashews import cache
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from cashews import cache
+from core.client.network import Network
+from discord.ext.commands import CommandError
+from loguru import logger as log
 from lxml import html
 from lxml.html import HtmlElement
-from discord.ext.commands import CommandError
-from core.client.network import Network
-from loguru import logger as log
-
 
 DEFAULT_HEADERS: Dict[str, str] = {
     "Accept": "*/*",

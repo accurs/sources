@@ -1,22 +1,34 @@
 from __future__ import annotations
+
 import asyncio
-import ujson
-import msgspec
 from types import TracebackType
-from loguru import logger as log, logger
-from typing import Any, Optional, Protocol, Union, List, Type, TypeVar, Iterable, Sequence
-from asyncpg import Connection, Pool, Record as DefaultRecord, create_pool
-from discord.ext.commands import Context, check
+from typing import (Any, Iterable, List, Optional, Protocol, Sequence, Type,
+                    TypeVar, Union)
+
+import msgspec
+import ujson
+from asyncpg import Connection, Pool
+from asyncpg import Record as DefaultRecord
+from asyncpg import create_pool
 from data.config import CONFIG
+from discord.ext.commands import Context, check
+from loguru import logger
+from loguru import logger as log
 from pydantic import BaseModel
 
+
 class UserModel(BaseModel):
-    user_id: Any # this is to reduce bottlenecking as the id doesn't need to be validated
+    user_id: (
+        Any  # this is to reduce bottlenecking as the id doesn't need to be validated
+    )
+
 
 class GuildModel(BaseModel):
     guild_id: Any
 
+
 T = TypeVar("T")
+
 
 def cast(typ: Union[Type[T], Type[List[T]]], val: Any) -> Any:
     """
@@ -63,21 +75,21 @@ class Record(DefaultRecord):
 
 
 class ConnectionContextManager(Protocol):
-    async def __aenter__(self) -> Connection:
-        ...
+    async def __aenter__(self) -> Connection: ...
 
     async def __aexit__(
         self,
         exc_type: Optional[type[BaseException]],
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class Database:
     def __init__(self):
-        self.uri: str = f"postgres://{CONFIG['database']['user']}:{CONFIG['database']['password']}@localhost:5432/{CONFIG['database']['name']}"
+        self.uri: str = (
+            f"postgres://{CONFIG['database']['user']}:{CONFIG['database']['password']}@localhost:5432/{CONFIG['database']['name']}"
+        )
         self.pool: Optional[Pool] = None
         self.cache = {}
 
@@ -86,10 +98,10 @@ class Database:
 
     def json_decoder(self, *data: Any):
         return ujson.loads(data[1])
-    
+
     def jsonb_encoder(self, *data: Any):
         return msgspec.json.encode(data[-1]).decode("UTF-8")
-    
+
     def jsonb_decoder(self, *data: Any):
         return msgspec.json.decode(data[-1])
 
@@ -105,7 +117,7 @@ class Database:
             encoder=self.jsonb_encoder,
             decoder=self.jsonb_decoder,
             schema="pg_catalog",
-            format="text"
+            format="text",
         )
 
     async def create(self) -> Pool:
@@ -114,14 +126,17 @@ class Database:
         )
         log.info(f"Initialized database connection {pool.__hash__()}")
         return pool
-    
-    def create_database(self, database: str, username: str, password: str, host: str, port: int):
+
+    def create_database(
+        self, database: str, username: str, password: str, host: str, port: int
+    ):
         import psycopg2
+
         conn = psycopg2.connect(
-            dbname='postgres', user=username, password=password, host=host, port=port
+            dbname="postgres", user=username, password=password, host=host, port=port
         )
         conn.autocommit = True  # Allow immediate execution of CREATE DATABASE
-        
+
         with conn.cursor() as cursor:
             cursor.execute(f"CREATE DATABASE {database};")
             logger.info(f"Database '{database}' created successfully.")
@@ -137,7 +152,9 @@ class Database:
         try:
             self.pool = await self.create()
         except Exception:
-            await asyncio.to_thread(self.create_database, database_name, username, password, host, int(port))
+            await asyncio.to_thread(
+                self.create_database, database_name, username, password, host, int(port)
+            )
             self.pool = await self.create()
         try:
             await self.execute("""CREATE EXTENSION IF NOT EXISTS timescaledb;""")

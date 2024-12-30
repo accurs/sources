@@ -1,9 +1,10 @@
 # I DIDNT MAKE THIS ONE EITHER HEHEHEH
 
 from datetime import datetime, timedelta, timezone
+from typing import List, Optional, Sequence
+
 from dateutil.relativedelta import relativedelta
 
-from typing import Optional, List, Sequence
 
 class plural:
     def __init__(self, value: int | List, number: bool = True, code: bool = False):
@@ -40,6 +41,7 @@ def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
         return f"{seq[0]} {final} {seq[1]}"
 
     return delim.join(seq[:-1]) + f" {final} {seq[-1]}"
+
 
 def humanize(
     dt: datetime,
@@ -111,6 +113,7 @@ def humanize(
             return human_join(output, final="and") + output_suffix
         else:
             return "".join(output) + output_suffix
+
 
 def human_timedelta(
     dt: datetime,

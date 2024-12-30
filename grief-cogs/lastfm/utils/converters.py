@@ -11,7 +11,15 @@ class ConvertersMixin:
             period = "1month", "past month"
         elif timeframe in ["90day", "90days", "3months", "3month", "3m"]:
             period = "3month", "past 3 months"
-        elif timeframe in ["180day", "180days", "6months", "6month", "halfyear", "hy", "6m"]:
+        elif timeframe in [
+            "180day",
+            "180days",
+            "6months",
+            "6month",
+            "halfyear",
+            "hy",
+            "6m",
+        ]:
             period = "6month", "past 6 months"
         elif timeframe in [
             "365day",

@@ -1,5 +1,5 @@
-from redis.asyncio import StrictRedis
 import ujson
+from redis.asyncio import StrictRedis
 
 
 class Red(StrictRedis):

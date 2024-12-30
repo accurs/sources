@@ -5,19 +5,16 @@ import string
 from copy import copy
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Awaitable, Callable, Iterable, List, Optional, Union
+from typing import (TYPE_CHECKING, Awaitable, Callable, Iterable, List,
+                    Optional, Union)
 
 import discord
+
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.core.utils import can_user_send_messages_in
-from grief.core.utils.chat_formatting import (
-    bold,
-    escape,
-    format_perms_list,
-    humanize_list,
-    inline,
-)
+from grief.core.utils.chat_formatting import (bold, escape, format_perms_list,
+                                              humanize_list, inline)
 
 if TYPE_CHECKING:
     from grief import Grief
@@ -39,7 +36,10 @@ class IssueDiagnoserBase:
         bot: Grief,
         original_ctx: commands.Context,
         channel: Union[
-            discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.Thread,
         ],
         author: discord.Member,
         command: commands.Command,
@@ -123,7 +123,10 @@ class DetailedGlobalCallOnceChecksMixin(IssueDiagnoserBase):
         label = _("Check if the bot can send messages in the given channel")
         # This is checked by send messages check but this allows us to
         # give more detailed information.
-        if not self.guild.me.guild_permissions.administrator and self.guild.me.is_timed_out():
+        if (
+            not self.guild.me.guild_permissions.administrator
+            and self.guild.me.is_timed_out()
+        ):
             return CheckResult(
                 False,
                 label,
@@ -201,7 +204,9 @@ class DetailedGlobalCallOnceChecksMixin(IssueDiagnoserBase):
             resolution,
         )
 
-    async def _get_detailed_global_whitelist_blacklist_result(self, label: str) -> CheckResult:
+    async def _get_detailed_global_whitelist_blacklist_result(
+        self, label: str
+    ) -> CheckResult:
         global_whitelist = await self.bot.get_whitelist()
         if global_whitelist:
             return CheckResult(
@@ -216,7 +221,9 @@ class DetailedGlobalCallOnceChecksMixin(IssueDiagnoserBase):
                     "If you instead want to clear the allowlist and let all users"
                     " run commands freely, you can run {command_2} to do that."
                 ).format(
-                    command_1=self._format_command_name(f"allowlist add {self.author.id}"),
+                    command_1=self._format_command_name(
+                        f"allowlist add {self.author.id}"
+                    ),
                     user=escape(str(self.author), formatting=True),
                     command_2=self._format_command_name("allowlist clear"),
                 ),
@@ -233,13 +240,17 @@ class DetailedGlobalCallOnceChecksMixin(IssueDiagnoserBase):
                 "If you instead want to clear the blocklist and let all users"
                 " run commands freely, you can run {command_2} to do that."
             ).format(
-                command_1=self._format_command_name(f"blocklist remove {self.author.id}"),
+                command_1=self._format_command_name(
+                    f"blocklist remove {self.author.id}"
+                ),
                 user=escape(str(self.author), formatting=True),
                 command_2=self._format_command_name("blocklist clear"),
             ),
         )
 
-    async def _get_detailed_local_whitelist_blacklist_result(self, label: str) -> CheckResult:
+    async def _get_detailed_local_whitelist_blacklist_result(
+        self, label: str
+    ) -> CheckResult:
         # this method skips guild owner check as the earlier checks wouldn't fail
         # if the user were guild owner
         guild_whitelist = await self.bot.get_whitelist(self.guild)
@@ -256,7 +267,9 @@ class DetailedGlobalCallOnceChecksMixin(IssueDiagnoserBase):
                     "If you instead want to clear the local allowlist and let all users"
                     " run commands freely, you can run {command_2} to do that."
                 ).format(
-                    command_1=self._format_command_name(f"localallowlist add {self.author.id}"),
+                    command_1=self._format_command_name(
+                        f"localallowlist add {self.author.id}"
+                    ),
                     user=escape(str(self.author), formatting=True),
                     command_2=self._format_command_name("localallowlist clear"),
                 ),
@@ -332,7 +345,9 @@ class DetailedGlobalCallOnceChecksMixin(IssueDiagnoserBase):
                 "If you instead want to clear the local blocklist and let all users"
                 " run commands freely, you can run {command_2} to do that."
             ).format(
-                command_1=self._format_command_name(f"localblocklist remove {self.author.id}"),
+                command_1=self._format_command_name(
+                    f"localblocklist remove {self.author.id}"
+                ),
                 user=escape(str(self.author), formatting=True),
                 command_2=self._format_command_name("localblocklist clear"),
             ),
@@ -343,7 +358,9 @@ class DetailedGlobalCallOnceChecksMixin(IssueDiagnoserBase):
         if await self.bot.allowed_by_whitelist_blacklist(self.author):
             return CheckResult(True, label)
 
-        is_global = not await self.bot.allowed_by_whitelist_blacklist(who_id=self.author.id)
+        is_global = not await self.bot.allowed_by_whitelist_blacklist(
+            who_id=self.author.id
+        )
         if is_global:
             return await self._get_detailed_global_whitelist_blacklist_result(label)
 
@@ -360,9 +377,13 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
     ) -> CheckResult:
         command = self.ctx.command
         details = (
-            failed_with_message.format(command=self._format_command_name(command), message=msg)
+            failed_with_message.format(
+                command=self._format_command_name(command), message=msg
+            )
             if msg
-            else failed_without_message.format(command=self._format_command_name(command))
+            else failed_without_message.format(
+                command=self._format_command_name(command)
+            )
         )
         return CheckResult(
             False,
@@ -390,7 +411,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
                     "To fix this issue, you can run {command}"
                     " which will enable the {affected_command} command in this guild."
                 ).format(
-                    command=self._format_command_name(f"command enable guild {command}"),
+                    command=self._format_command_name(
+                        f"command enable guild {command}"
+                    ),
                     affected_command=self._format_command_name(command),
                 ),
             )
@@ -434,7 +457,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
                 "One of the global checks for the command {command} failed with a message:\n"
                 "{message}"
             ),
-            _("One of the global checks for the command {command} failed without a message."),
+            _(
+                "One of the global checks for the command {command} failed without a message."
+            ),
         )
 
     async def _check_dpy_can_run_cog(self) -> CheckResult:
@@ -455,7 +480,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
         return self._command_error_handler(
             msg,
             label,
-            _("The cog check for the command {command} failed with a message:\n{message}"),
+            _(
+                "The cog check for the command {command} failed with a message:\n{message}"
+            ),
             _("The cog check for the command {command} failed without a message."),
         )
 
@@ -467,7 +494,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
 
         msg = ""
         try:
-            if await discord.utils.async_all(predicate(self.ctx) for predicate in predicates):
+            if await discord.utils.async_all(
+                predicate(self.ctx) for predicate in predicates
+            ):
                 return CheckResult(True, label)
         except commands.CommandError as e:
             msg = str(e)
@@ -478,11 +507,15 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
                 "One of the command checks for the command {command} failed with a message:\n"
                 "{message}"
             ),
-            _("One of the command checks for the command {command} failed without a message."),
+            _(
+                "One of the command checks for the command {command} failed without a message."
+            ),
         )
 
     async def _check_requires_command(self) -> CheckResult:
-        return await self._check_requires(_("Permissions verification"), self.ctx.command)
+        return await self._check_requires(
+            _("Permissions verification"), self.ctx.command
+        )
 
     async def _check_requires_cog(self) -> CheckResult:
         label = _("Permissions verification for {cog} cog").format(
@@ -557,16 +590,20 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
             final_check_result=CheckResult(
                 False,
                 _("Other issues related to the permissions."),
-                _(
-                    "Fatal error: There's an issue related to the permissions for the"
-                    " {cog} cog but we're not able to determine the exact cause."
-                )
-                if cog_or_command is self.ctx.cog
-                else _(
-                    "Fatal error: There's an issue related to the permissions for the"
-                    " {command} command but we're not able to determine the exact cause."
+                (
+                    _(
+                        "Fatal error: There's an issue related to the permissions for the"
+                        " {cog} cog but we're not able to determine the exact cause."
+                    )
+                    if cog_or_command is self.ctx.cog
+                    else _(
+                        "Fatal error: There's an issue related to the permissions for the"
+                        " {command} command but we're not able to determine the exact cause."
+                    )
                 ),
-                _("This is an unexpected error, please report it on grief's issue tracker."),
+                _(
+                    "This is an unexpected error, please report it on grief's issue tracker."
+                ),
             ),
         )
 
@@ -574,7 +611,10 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
         self, cog_or_command: commands.CogCommandMixin
     ) -> CheckResult:
         label = _("Ensure that the command is not bot owner only")
-        if cog_or_command.requires.privilege_level is not commands.PrivilegeLevel.BOT_OWNER:
+        if (
+            cog_or_command.requires.privilege_level
+            is not commands.PrivilegeLevel.BOT_OWNER
+        ):
             return CheckResult(True, label)
         # we don't need to check whether the user is bot owner
         # as call to `verify()` would already succeed if that were the case
@@ -582,7 +622,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
             False,
             label,
             _("The command is bot owner only and the given user is not a bot owner."),
-            _("This cannot be fixed - regular users cannot run bot owner only commands."),
+            _(
+                "This cannot be fixed - regular users cannot run bot owner only commands."
+            ),
         )
 
     async def _check_requires_permission_hooks(
@@ -599,7 +641,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
                 False,
                 label,
                 _("Fatal error: the result of permission hooks is inconsistent."),
-                _("To fix this issue, a manual review of the installed cogs is required."),
+                _(
+                    "To fix this issue, a manual review of the installed cogs is required."
+                ),
             )
         return CheckResult(
             False,
@@ -614,8 +658,12 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
     async def _check_requires_permission_rules(
         self, cog_or_command: commands.CogCommandMixin
     ) -> CheckResult:
-        label = _("User's discord permissions, privilege level and rules from Permissions cog")
-        should_invoke, next_state = cog_or_command.requires._get_transitioned_state(self.ctx)
+        label = _(
+            "User's discord permissions, privilege level and rules from Permissions cog"
+        )
+        should_invoke, next_state = cog_or_command.requires._get_transitioned_state(
+            self.ctx
+        )
         if should_invoke is None:
             return await self._check_requires_verify_user(label, cog_or_command)
         elif isinstance(next_state, dict):
@@ -629,15 +677,17 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
         return CheckResult(
             False,
             label,
-            _(
-                "The access has been denied due to the rules set for the {cog} cog"
-                " with Permissions cog."
-            ).format(cog=inline(cog_or_command.qualified_name))
-            if cog_or_command is self.ctx.cog
-            else _(
-                "The access has been denied due to the rules set for the {command} command"
-                " with Permissions cog."
-            ).format(command=self._format_command_name(cog_or_command)),
+            (
+                _(
+                    "The access has been denied due to the rules set for the {cog} cog"
+                    " with Permissions cog."
+                ).format(cog=inline(cog_or_command.qualified_name))
+                if cog_or_command is self.ctx.cog
+                else _(
+                    "The access has been denied due to the rules set for the {command} command"
+                    " with Permissions cog."
+                ).format(command=self._format_command_name(cog_or_command))
+            ),
             _("To fix the issue, a manual review of the rules is required."),
         )
 
@@ -648,20 +698,24 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
             label,
             (
                 partial(self._check_requires_permission_checks, cog_or_command),
-                partial(self._check_requires_user_perms_and_privilege_level, cog_or_command),
+                partial(
+                    self._check_requires_user_perms_and_privilege_level, cog_or_command
+                ),
             ),
             final_check_result=CheckResult(
                 False,
                 _("Other issues related to the permissions."),
-                _(
-                    "There's an issue related to the permissions of {cog} cog"
-                    " but we're not able to determine the exact cause."
-                ).format(cog=inline(cog_or_command.qualified_name))
-                if cog_or_command is self.ctx.cog
-                else _(
-                    "There's an issue related to the permissions of {command} command"
-                    " but we're not able to determine the exact cause."
-                ).format(command=self._format_command_name(cog_or_command)),
+                (
+                    _(
+                        "There's an issue related to the permissions of {cog} cog"
+                        " but we're not able to determine the exact cause."
+                    ).format(cog=inline(cog_or_command.qualified_name))
+                    if cog_or_command is self.ctx.cog
+                    else _(
+                        "There's an issue related to the permissions of {command} command"
+                        " but we're not able to determine the exact cause."
+                    ).format(command=self._format_command_name(cog_or_command))
+                ),
                 _("To fix this issue, a manual review of the command is required."),
             ),
         )
@@ -673,9 +727,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
         if await cog_or_command.requires._verify_checks(self.ctx):
             return CheckResult(True, label)
         details = (
-            _("The access has been denied by one of the permissions checks of {cog} cog.").format(
-                cog=inline(cog_or_command.qualified_name)
-            )
+            _(
+                "The access has been denied by one of the permissions checks of {cog} cog."
+            ).format(cog=inline(cog_or_command.qualified_name))
             if cog_or_command is self.ctx.cog
             else _(
                 "The access has been denied by one of the permission checks of {command} command."
@@ -685,7 +739,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
             False,
             label,
             details,
-            _("To fix this issue, a manual review of the permission checks is required."),
+            _(
+                "To fix this issue, a manual review of the permission checks is required."
+            ),
         )
 
     async def _check_requires_user_perms_and_privilege_level(
@@ -709,13 +765,16 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
                 _(
                     "The user is missing some of the channel permissions ({permissions})"
                     " required by the {cog} cog."
-                ).format(permissions=permissions, cog=inline(cog_or_command.qualified_name))
+                ).format(
+                    permissions=permissions, cog=inline(cog_or_command.qualified_name)
+                )
                 if cog_or_command is self.ctx.cog
                 else _(
                     "The user is missing some of the channel permissions ({permissions})"
                     " required by the {command} command."
                 ).format(
-                    permissions=permissions, command=self._format_command_name(cog_or_command)
+                    permissions=permissions,
+                    command=self._format_command_name(cog_or_command),
                 )
             )
         if requires.privilege_level is not None:
@@ -734,7 +793,8 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
                     "The user is missing the privilege level ({privilege_level})"
                     " required by the {cog} cog."
                 ).format(
-                    privilege_level=privilege_level, cog=inline(cog_or_command.qualified_name)
+                    privilege_level=privilege_level,
+                    cog=inline(cog_or_command.qualified_name),
                 )
                 if cog_or_command is self.ctx.cog
                 else _(
@@ -779,10 +839,12 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
             self._format_multiple_resolutions(resolutions),
         )
 
-    async def _check_dpy_checks_and_requires(self, command: commands.Command) -> CheckResult:
-        label = _("Checks and permissions verification for the command {command}").format(
-            command=self._format_command_name(command)
-        )
+    async def _check_dpy_checks_and_requires(
+        self, command: commands.Command
+    ) -> CheckResult:
+        label = _(
+            "Checks and permissions verification for the command {command}"
+        ).format(command=self._format_command_name(command))
 
         self.ctx.command = command
         original_perm_state = self.ctx.permission_state
@@ -805,7 +867,9 @@ class DetailedCommandChecksMixin(IssueDiagnoserBase):
                 False,
                 _("Other command checks"),
                 _("The given command is failing one of the required checks."),
-                _("To fix this issue, a manual review of the command's checks is required."),
+                _(
+                    "To fix this issue, a manual review of the command's checks is required."
+                ),
             ),
         )
 
@@ -843,7 +907,9 @@ class RootDiagnosersMixin(
                     "One of the global 'call once' checks implemented by a 3rd-party cog"
                     " prevents this command from being ran."
                 ),
-                _("To fix this issue, a manual review of the installed cogs is required."),
+                _(
+                    "To fix this issue, a manual review of the installed cogs is required."
+                ),
             ),
         )
 
@@ -862,7 +928,9 @@ class RootDiagnosersMixin(
                     "To fix this issue, you can run {command}"
                     " which will enable the {affected_command} command globally."
                 ).format(
-                    command=self._format_command_name(f"command enable global {parent}"),
+                    command=self._format_command_name(
+                        f"command enable global {parent}"
+                    ),
                     affected_command=self._format_command_name(parent),
                 ),
             )
@@ -876,7 +944,9 @@ class RootDiagnosersMixin(
                     "To fix this issue, you can run {command}"
                     " which will enable the {affected_command} command globally."
                 ).format(
-                    command=self._format_command_name(f"command enable global {command}"),
+                    command=self._format_command_name(
+                        f"command enable global {command}"
+                    ),
                     affected_command=self._format_command_name(command),
                 ),
             )
@@ -911,14 +981,18 @@ class RootDiagnosersMixin(
                 (self._check_requires_cog,),
                 (
                     partial(self._check_dpy_checks_and_requires, command)
-                    for command in itertools.chain(reversed(self.command.parents), (self.command,))
+                    for command in itertools.chain(
+                        reversed(self.command.parents), (self.command,)
+                    )
                 ),
             ),
             final_check_result=CheckResult(
                 False,
                 _("Other command checks"),
                 _("The given command is failing one of the required checks."),
-                _("To fix this issue, a manual review of the command's checks is required."),
+                _(
+                    "To fix this issue, a manual review of the command's checks is required."
+                ),
             ),
         )
 
@@ -941,7 +1015,9 @@ class IssueDiagnoser(RootDiagnosersMixin, IssueDiagnoserBase):
             )
             lines.append(f"{prefix}{idx}. {subresult.label}: {status}")
             lines.extend(
-                self._get_message_from_check_result(subresult, prefix=f"  {prefix}{idx}.")
+                self._get_message_from_check_result(
+                    subresult, prefix=f"  {prefix}{idx}."
+                )
             )
         return lines
 
@@ -986,7 +1062,9 @@ class IssueDiagnoser(RootDiagnosersMixin, IssueDiagnoserBase):
 
         lines.append(_("\nHere's a detailed report in case you need it:"))
         lines.append(">>> " + bold(_("Channel: ")) + self.channel.mention)
-        lines.append(bold(_("Command caller: ")) + escape(str(self.author), formatting=True))
+        lines.append(
+            bold(_("Command caller: ")) + escape(str(self.author), formatting=True)
+        )
         lines.append(bold(_("Command: ")) + self._format_command_name(self.command))
         lines.append(bold(_("Tests that have been ran:")))
         lines.extend(self._get_message_from_check_result(result))

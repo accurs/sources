@@ -1,14 +1,12 @@
-import datetime, discord
+import datetime
 
+import discord
+from bot.bot import Evict
+from bot.helpers import EvictContext
+from bot.managers.emojis import Colors, Emojis
 from discord.ext import commands
-
 from patches.modules import AntiNukeModule, AntiNukeUser
 from patches.permissions import Permissions
-
-from bot.managers.emojis import Colors, Emojis
-
-from bot.helpers import EvictContext
-from bot.bot import Evict
 
 
 def has_admin():
@@ -214,10 +212,7 @@ class antinuke(commands.Cog):
 
     @has_admin()
     @is_enabled()
-    @antinuke.command(
-        description="List Anti-Nuke Admin", 
-        brief="Anti-Nuke Admin"
-    )
+    @antinuke.command(description="List Anti-Nuke Admin", brief="Anti-Nuke Admin")
     @Permissions.has_permission(administrator=True)
     async def admins(self, ctx: EvictContext):
 
@@ -256,10 +251,7 @@ class antinuke(commands.Cog):
 
     @has_admin()
     @is_enabled()
-    @antinuke.command(
-        description="Enable Anti-Nuke", 
-        brief="Anti-Nuke Admin"
-    )
+    @antinuke.command(description="Enable Anti-Nuke", brief="Anti-Nuke Admin")
     @Permissions.has_permission(administrator=True)
     async def enable(self, ctx: EvictContext):
         enabled = await ctx.bot.db.fetchrow(
@@ -290,10 +282,7 @@ class antinuke(commands.Cog):
 
     @has_admin()
     @is_enabled()
-    @antinuke.command(
-        description="Disable Anti-Nuke", 
-        brief="Anti-Nuke Admin"
-    )
+    @antinuke.command(description="Disable Anti-Nuke", brief="Anti-Nuke Admin")
     @Permissions.has_permission(administrator=True)
     async def disable(self, ctx: EvictContext):
         await ctx.bot.db.execute(

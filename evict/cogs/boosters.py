@@ -1,14 +1,12 @@
-import discord
-
-from discord.ext import commands
 from typing import Union
-from patches.classes import Modals
 
-from patches.permissions import Permissions
-
-from bot.helpers import EvictContext
+import discord
 from bot.bot import Evict
-from bot.managers.emojis import Emojis, Colors
+from bot.helpers import EvictContext
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
+from patches.classes import Modals
+from patches.permissions import Permissions
 
 
 def has_booster_role():

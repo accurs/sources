@@ -1,12 +1,11 @@
 import asyncio
+import logging
 import sys
 from typing import Optional
 
 from aiohttp import web
 from aiohttp_json_rpc import JsonRpc
 from aiohttp_json_rpc.rpc import JsonRpcMethod
-
-import logging
 
 from grief.core._cli import ExitCodes
 
@@ -93,7 +92,9 @@ class RPC:
             self._started, _discard, self._site = (
                 True,
                 await self._runner.setup(),
-                web.TCPSite(self._runner, host="127.0.0.1", port=port, shutdown_timeout=0),
+                web.TCPSite(
+                    self._runner, host="127.0.0.1", port=port, shutdown_timeout=0
+                ),
             )
         except Exception as exc:
             log.exception("RPC setup failure", exc_info=exc)

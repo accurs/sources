@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
-from pydantic import BaseModel, Field, AnyUrl
+from logging import getLogger
+from typing import List, Optional
+
 import aiohttp
 import arrow
-import orjson
 import discord
 import humanize
-from typing import List
-from logging import getLogger
+import orjson
+from pydantic import AnyUrl, BaseModel, Field
 
 logger = getLogger(__name__)
 PROXY_URL = None

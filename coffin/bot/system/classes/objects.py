@@ -1,9 +1,11 @@
-from typing import Any, Optional, Union, Tuple
 import asyncio
 from datetime import datetime
+from typing import Any, Optional, Tuple, Union
+
 from xxhash import xxh64_hexdigest as hash_
 
 SET = set()
+
 
 class RedisMock:
     def __init__(self, bot=None) -> None:

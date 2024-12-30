@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Optional
-from discord import Guild, User, Message
+
 import config
+from discord import Guild, Message, User
 
 if TYPE_CHECKING:
     from tools.bleed import Bleed

@@ -1,7 +1,9 @@
+import json
 from typing import List, Literal, Optional
+
 from data.config import CONFIG
 from pydantic import BaseModel, ValidationError
-import json
+
 
 class Module(BaseModel):
     status: Optional[bool] = False
@@ -36,12 +38,14 @@ class Configuration(BaseModel):
 
     def __init__(self, **data):
         # Convert strings to dictionaries if they represent a Module
-        for key in ['botadd', 'webhook', 'emoji', 'ban', 'kick', 'channel', 'role']:
+        for key in ["botadd", "webhook", "emoji", "ban", "kick", "channel", "role"]:
             if isinstance(data.get(key), str):
                 try:
                     # Attempt to load the string as JSON, assuming it's serialized data
                     data[key] = Module(**json.loads(data[key]))
                 except json.JSONDecodeError:
-                    raise ValidationError(f"Expected JSON string for field '{key}', got: {data[key]}")
+                    raise ValidationError(
+                        f"Expected JSON string for field '{key}', got: {data[key]}"
+                    )
 
         super().__init__(**data)

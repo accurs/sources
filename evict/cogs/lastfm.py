@@ -1,16 +1,20 @@
-import discord, json, typing, traceback, asyncio, os
-from discord import Embed
-from discord.ext import commands, tasks
-from typing import Literal
+import asyncio
+import json
+import os
+import traceback
+import typing
 from io import BytesIO
-from discord import File
+from typing import Literal
 
-from bot.headers import Session
-from utils.utils import EmbedBuilder
-from patches.lastfm import LastFMHandler as Handler
+import discord
 from bot.bot import Evict
+from bot.headers import Session
 from bot.helpers import EvictContext
-from bot.managers.emojis import Emojis, Colors
+from bot.managers.emojis import Colors, Emojis
+from discord import Embed, File
+from discord.ext import commands, tasks
+from patches.lastfm import LastFMHandler as Handler
+from utils.utils import EmbedBuilder
 
 
 def sort_key(lis):
@@ -522,7 +526,7 @@ class lastfm(commands.Cog):
                 ctx.author.id
             )
         )
-        
+
         if check is None:
             return await ctx.lastfm_message(
                 "You don't have a **Last.fm** account connected."
@@ -541,17 +545,17 @@ class lastfm(commands.Cog):
 
         if len(results) == 0:
             return await ctx.lastfm_message("No one has a **Last.fm** account linked.")
-        
+
         for result in results:
             user_id = int(result["discord_user_id"])
             fmuser2 = result["username"]
             us = ctx.guild.get_member(user_id)
             z = await self.lastfmhandler.get_artist_playcount(fmuser2, artist)
-            
+
             tuples[user_id] = (str(us), int(z), f"https://last.fm/user/{fmuser2}")
 
         sorted_users = sorted(tuples.values(), key=lambda n: n[1], reverse=True)[:10]
-        
+
         rows = []
         num = 0
         for x in sorted_users:
@@ -591,7 +595,7 @@ class lastfm(commands.Cog):
                 ctx.author.id
             )
         )
-        
+
         if check is None:
             return await ctx.lastfm_message(
                 "You don't have a **Last.fm** account connected."
@@ -627,10 +631,16 @@ class lastfm(commands.Cog):
 
                 # Add user data to the dictionary if not already present
                 if user_id not in user_data:
-                    user_data[user_id] = (str(us), int(z), f"https://last.fm/user/{fmuser2}")
+                    user_data[user_id] = (
+                        str(us),
+                        int(z),
+                        f"https://last.fm/user/{fmuser2}",
+                    )
 
             # Sort and cache the results
-            sorted_users = sorted(user_data.values(), key=lambda n: n[1], reverse=True)[:10]
+            sorted_users = sorted(user_data.values(), key=lambda n: n[1], reverse=True)[
+                :10
+            ]
             self.globalwhoknows_cache[artist] = sorted_users
             gwk_list = sorted_users
         else:
@@ -670,10 +680,13 @@ class lastfm(commands.Cog):
         )
         if not re:
             top_user = await self.bot.fetch_user(top_user_id)
-            embeds = [embed, discord.Embed(
-                color=Colors.color,
-                description=f"> {top_user} claimed the crown for **{artist}**",
-            )]
+            embeds = [
+                embed,
+                discord.Embed(
+                    color=Colors.color,
+                    description=f"> {top_user} claimed the crown for **{artist}**",
+                ),
+            ]
             ar = await self.bot.db.fetchrow(
                 "SELECT * FROM lfcrowns WHERE artist = $1", artist
             )
@@ -693,7 +706,6 @@ class lastfm(commands.Cog):
             embeds = [embed]
 
         return await ctx.reply(embed=embeds[0])
-
 
     @lastfm.command(
         name="cover",

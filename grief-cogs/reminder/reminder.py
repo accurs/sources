@@ -1,23 +1,23 @@
-
 import asyncio
 import collections
 import datetime
-import discord
 import hashlib
+import re
 from itertools import islice
 from math import ceil
-import re
 from typing import List, Literal, Optional
 
-from grief.core import commands, Config
+import discord
+
+from grief.core import Config, commands
 from grief.core.bot import Grief
 from grief.core.commands import Context
-from grief.core.utils.menus import menu, DEFAULT_CONTROLS
+from grief.core.utils.menus import DEFAULT_CONTROLS, menu
 
 
 class Reminder(commands.Cog):
     """Never forget anything anymore."""
-    
+
     TIME_AMNT_REGEX = re.compile("([1-9][0-9]*)([a-z]+)", re.IGNORECASE)
     TIME_QUANTITIES = collections.OrderedDict(
         [
@@ -43,8 +43,12 @@ class Reminder(commands.Cog):
     def __init__(self, bot: Grief):
         super().__init__()
         self.bot = bot
-        unique_id = int(hashlib.sha512((self.__class__.__name__).encode()).hexdigest(), 16)
-        self.config = Config.get_conf(self, identifier=unique_id, force_registration=True)
+        unique_id = int(
+            hashlib.sha512((self.__class__.__name__).encode()).hexdigest(), 16
+        )
+        self.config = Config.get_conf(
+            self, identifier=unique_id, force_registration=True
+        )
         self.config.register_user(reminders=[], offset=0)
         self.futures = {}
         asyncio.ensure_future(self.start_saved_reminders())
@@ -75,11 +79,17 @@ class Reminder(commands.Cog):
             time_now = datetime.datetime.utcnow()
             days, secs = divmod(seconds, 3600 * 24)
             end_time = time_now + datetime.timedelta(days=days, seconds=secs)
-            reminder = {"content": reminder_text, "start_time": time_now.timestamp(), "end_time": end_time.timestamp()}
+            reminder = {
+                "content": reminder_text,
+                "start_time": time_now.timestamp(),
+                "end_time": end_time.timestamp(),
+            }
             async with self.config.user(user).reminders() as user_reminders:
                 user_reminders.append(reminder)
             self.futures.setdefault(user.id, []).append(
-                asyncio.ensure_future(self.remind_later(user, seconds, reminder_text, reminder))
+                asyncio.ensure_future(
+                    self.remind_later(user, seconds, reminder_text, reminder)
+                )
             )
             user_offset = await self.config.user(ctx.author).offset()
             offset = user_offset * 3600
@@ -105,7 +115,9 @@ class Reminder(commands.Cog):
         await ctx.send(":put_litter_in_its_place: Forgot **all** of your reminders!")
 
     @command_remind_forget.command(name="one")
-    async def command_remind_forget_one(self, ctx: Context, index_number_of_reminder: int):
+    async def command_remind_forget_one(
+        self, ctx: Context, index_number_of_reminder: int
+    ):
         """
         Forget one of your reminders
 
@@ -115,11 +127,15 @@ class Reminder(commands.Cog):
             if not user_data["reminders"]:
                 await ctx.send("You don't have any reminders saved.")
                 return
-            time_sorted_reminders = sorted(user_data["reminders"], key=lambda x: (x["end_time"]))
+            time_sorted_reminders = sorted(
+                user_data["reminders"], key=lambda x: (x["end_time"])
+            )
             try:
                 removed = time_sorted_reminders.pop(index_number_of_reminder - 1)
             except IndexError:
-                await ctx.send(f"There is no reminder at index {index_number_of_reminder}.")
+                await ctx.send(
+                    f"There is no reminder at index {index_number_of_reminder}."
+                )
                 return
             user_data["reminders"] = time_sorted_reminders
             offset = user_data["offset"] * 3600
@@ -137,11 +153,15 @@ class Reminder(commands.Cog):
             return
 
         if not ctx.channel.permissions_for(ctx.me).embed_links:
-            return await ctx.send("I need the `Embed Messages` permission here to be able to display this information.")
+            return await ctx.send(
+                "I need the `Embed Messages` permission here to be able to display this information."
+            )
 
         embed_pages = await self.create_remind_list_embeds(ctx, user_data)
-        await ctx.send(embed=embed_pages[0]) if len(embed_pages) == 1 else await menu(
-            ctx, embed_pages, DEFAULT_CONTROLS
+        (
+            await ctx.send(embed=embed_pages[0])
+            if len(embed_pages) == 1
+            else await menu(ctx, embed_pages, DEFAULT_CONTROLS)
         )
 
     @command_remind.command(name="offset")
@@ -156,9 +176,13 @@ class Reminder(commands.Cog):
         offset = self.remind_offset_check(offset_time_in_hours)
         if offset is not None:
             await self.config.user(ctx.author).offset.set(offset)
-            await ctx.send(f"Your timezone offset was set to {str(offset).replace('.0', '')} hours from UTC.")
+            await ctx.send(
+                f"Your timezone offset was set to {str(offset).replace('.0', '')} hours from UTC."
+            )
         else:
-            await ctx.send(f"That doesn't seem like a valid hour offset. Check `{ctx.prefix}help remind offset`.")
+            await ctx.send(
+                f"That doesn't seem like a valid hour offset. Check `{ctx.prefix}help remind offset`."
+            )
 
     @staticmethod
     async def chunker(input: List[dict], chunk_size: int) -> List[List[str]]:
@@ -168,11 +192,15 @@ class Reminder(commands.Cog):
             chunk_list.append(chunk)
         return chunk_list
 
-    async def create_remind_list_embeds(self, ctx: Context, user_data: dict) -> List[discord.Embed]:
+    async def create_remind_list_embeds(
+        self, ctx: Context, user_data: dict
+    ) -> List[discord.Embed]:
         """Embed creator for command_remind_list."""
         offset = user_data["offset"] * 3600
         reminder_list = []
-        time_sorted_reminders = sorted(user_data["reminders"], key=lambda x: (x["end_time"]))
+        time_sorted_reminders = sorted(
+            user_data["reminders"], key=lambda x: (x["end_time"])
+        )
         entry_size = len(str(len(time_sorted_reminders)))
 
         for i, reminder_dict in enumerate(time_sorted_reminders, 1):
@@ -181,7 +209,9 @@ class Reminder(commands.Cog):
             exact_time_timestamp = f"<t:{end_time}:f>"
             relative_timestamp = f"<t:{end_time}:R>"
             content = reminder_dict["content"]
-            display_content = content if len(content) < 200 else f"{content[:200]} [...]"
+            display_content = (
+                content if len(content) < 200 else f"{content[:200]} [...]"
+            )
             reminder = f"`{entry_number}`. {exact_time_timestamp}, {relative_timestamp}:\n{display_content}\n\n"
             reminder_list.append(reminder)
 
@@ -192,8 +222,12 @@ class Reminder(commands.Cog):
         menu_pages = []
         for chunk in reminder_text_chunks:
             embed = discord.Embed(title="", description="".join(chunk))
-            embed.set_author(name=f"Reminders for {ctx.author}", icon_url=ctx.author.avatar_url)
-            embed.set_footer(text=f"Page {len(menu_pages) + 1} of {max_pages}{offset_text}")
+            embed.set_author(
+                name=f"Reminders for {ctx.author}", icon_url=ctx.author.avatar_url
+            )
+            embed.set_footer(
+                text=f"Page {len(menu_pages) + 1} of {max_pages}{offset_text}"
+            )
             menu_pages.append(embed)
         return menu_pages
 
@@ -203,15 +237,21 @@ class Reminder(commands.Cog):
         for time_match in self.TIME_AMNT_REGEX.finditer(time):
             time_amnt = int(time_match.group(1))
             time_abbrev = time_match.group(2)
-            time_quantity = discord.utils.find(lambda t: t[0].startswith(time_abbrev), self.TIME_QUANTITIES.items())
+            time_quantity = discord.utils.find(
+                lambda t: t[0].startswith(time_abbrev), self.TIME_QUANTITIES.items()
+            )
             if time_quantity is not None:
                 seconds += time_amnt * time_quantity[1]
         return None if seconds == 0 else seconds
 
-    async def remind_later(self, user: discord.User, time: float, content: str, reminder):
+    async def remind_later(
+        self, user: discord.User, time: float, content: str, reminder
+    ):
         """Reminds the `user` in `time` seconds with a message containing `content`"""
         await asyncio.sleep(time)
-        embed = discord.Embed(title="Reminder", description=content, color=discord.Colour.blue())
+        embed = discord.Embed(
+            title="Reminder", description=content, color=discord.Colour.blue()
+        )
         await user.send(embed=embed)
         async with self.config.user(user).reminders() as user_reminders:
             user_reminders.remove(reminder)
@@ -238,9 +278,14 @@ class Reminder(commands.Cog):
                     # Delete the reminder if the user doesn't have a mutual server anymore
                     await self.config.user_from_id(user_id).clear()
                 else:
-                    time_diff = datetime.datetime.fromtimestamp(reminder["end_time"]) - datetime.datetime.utcnow()
+                    time_diff = (
+                        datetime.datetime.fromtimestamp(reminder["end_time"])
+                        - datetime.datetime.utcnow()
+                    )
                     time = max(0.0, time_diff.total_seconds())
-                    fut = asyncio.ensure_future(self.remind_later(user, time, reminder["content"], reminder))
+                    fut = asyncio.ensure_future(
+                        self.remind_later(user, time, reminder["content"], reminder)
+                    )
                     self.futures.setdefault(user.id, []).append(fut)
 
     @staticmethod
@@ -250,11 +295,19 @@ class Reminder(commands.Cog):
         if hours:
             msg = f"{hours} hour" if hours == 1 else f"{hours} hours"
             if minutes != 0:
-                msg += f" and {minutes} minute" if minutes == 1 else f" and {minutes} minutes"
+                msg += (
+                    f" and {minutes} minute"
+                    if minutes == 1
+                    else f" and {minutes} minutes"
+                )
         elif minutes:
             msg = f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
             if seconds != 0:
-                msg += f" and {seconds} second" if seconds == 1 else f" and {seconds} seconds"
+                msg += (
+                    f" and {seconds} second"
+                    if seconds == 1
+                    else f" and {seconds} seconds"
+                )
         else:
             msg = f"{seconds} seconds" if seconds == 1 else f"and {seconds} seconds"
         return msg

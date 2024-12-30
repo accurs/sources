@@ -1,14 +1,16 @@
-from pytz import timezone # type: ignore
-from io import BytesIO
-from discord import Member # type: ignore
-from discord.ext.commands import Context  # type: ignore
 from asyncio import to_thread as thread
-from rival_tools import timeit  # type: ignore # type: ignore
-from typing import List, Union
-from discord import File, Embed # type: ignore
 from datetime import datetime
-import plotly.graph_objects as go # type: ignore
-import pandas as pd # type: ignore
+from io import BytesIO
+from typing import List, Union
+
+import pandas as pd  # type: ignore
+import plotly.graph_objects as go  # type: ignore
+from discord import Member  # type: ignore
+from discord import Embed, File  # type: ignore
+from discord.ext.commands import Context  # type: ignore
+from pytz import timezone  # type: ignore
+from rival_tools import timeit  # type: ignore # type: ignore
+
 
 def format_large(num: Union[int, float]) -> str:
     if str(num).startswith("-"):
@@ -17,29 +19,73 @@ def format_large(num: Union[int, float]) -> str:
         symbol = ""
     num = int(float(str(num).replace("-", "")))
     # List of suffixes for large numbers
-    suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uv", "Dv", "Tv", "Qav", "Qiv", "Sxv", "Spv", "Ocv", "Nov", "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Octg", "Notg", "Qng"]
+    suffixes = [
+        "",
+        "K",
+        "M",
+        "B",
+        "T",
+        "Qa",
+        "Qi",
+        "Sx",
+        "Sp",
+        "Oc",
+        "No",
+        "Dc",
+        "Ud",
+        "Dd",
+        "Td",
+        "Qad",
+        "Qid",
+        "Sxd",
+        "Spd",
+        "Ocd",
+        "Nod",
+        "Vg",
+        "Uv",
+        "Dv",
+        "Tv",
+        "Qav",
+        "Qiv",
+        "Sxv",
+        "Spv",
+        "Ocv",
+        "Nov",
+        "Tg",
+        "Utg",
+        "Dtg",
+        "Ttg",
+        "Qatg",
+        "Qitg",
+        "Sxtg",
+        "Sptg",
+        "Octg",
+        "Notg",
+        "Qng",
+    ]
     num = int(float(num))
     # Number of digits in the input number
     num_str = str(num)
     if "." in num_str:
-        num_str = num_str[:num_str.index(".")]    
+        num_str = num_str[: num_str.index(".")]
     num_len = len(num_str)
-    
+
     # Determine the appropriate suffix and scale the number
     if num_len <= 3:
-        return f"{symbol}{num_str}"  # No suffix needed for numbers with 3 or fewer digits
-    
+        return (
+            f"{symbol}{num_str}"  # No suffix needed for numbers with 3 or fewer digits
+        )
+
     # Calculate the index for suffixes list
     suffix_index = (num_len - 1) // 3
-    
+
     if suffix_index >= len(suffixes):
         return f"{num} is too large to format."
-    
-    # Calculate the formatted number
-    scaled_num = int(num_str[:num_len - suffix_index * 3])
-    
-    return f"{symbol}{scaled_num}{suffixes[suffix_index]}"
 
+    # Calculate the formatted number
+    scaled_num = int(num_str[: num_len - suffix_index * 3])
+
+    return f"{symbol}{scaled_num}{suffixes[suffix_index]}"
 
 
 class EconomyCharts:
@@ -59,8 +105,6 @@ class EconomyCharts:
         if ",." in formatted_number:
             formatted_number = formatted_number.replace(",.", ".")
         return sign + formatted_number
-
-
 
     def format_int(self, n: Union[float, str, int]):
         emoji = None
@@ -83,7 +127,7 @@ class EconomyCharts:
             else:
                 emoji = "<:uptriangle:1221951842250915992>"
             return f"{emoji} {format_large(float(n))}"
-        n = str(n).replace("-0.00", "0")        
+        n = str(n).replace("-0.00", "0")
         n = self.format_large_number(n)
         if n.startswith("-"):
             emoji = "<:downtriangle:1221951843463200798>"
@@ -199,10 +243,7 @@ class EconomyCharts:
                 0,
                 0,
             ]
-        labels = [
-            str(hour)
-            for hour in range(1, 25)
-        ]
+        labels = [str(hour) for hour in range(1, 25)]
         profits = [float(i) for i in data]
         earnings = float(
             await self.bot.db.fetchval(
@@ -247,7 +288,12 @@ class EconomyCharts:
                     ticktext=labels,
                 ),
             )  # Set tick values to every hour
-            fig.update_layout({"plot_bgcolor": "rgba(0, 0, 0, 0)", "paper_bgcolor": "rgba(0, 0, 0, 0)"})
+            fig.update_layout(
+                {
+                    "plot_bgcolor": "rgba(0, 0, 0, 0)",
+                    "paper_bgcolor": "rgba(0, 0, 0, 0)",
+                }
+            )
             # Show the chart
             fig.write_image(buffer, format="png")
             buffer.seek(0)

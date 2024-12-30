@@ -71,7 +71,9 @@ class RoleHierarchyConverter(commands.RoleConverter):
 
     async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
         if not ctx.me.guild_permissions.manage_roles:
-            raise commands.BadArgument("I require manage roles permission to use this command.")
+            raise commands.BadArgument(
+                "I require manage roles permission to use this command."
+            )
         try:
             role = await commands.RoleConverter().convert(ctx, argument=argument)
         except commands.BadArgument:
@@ -89,7 +91,10 @@ class RoleHierarchyConverter(commands.RoleConverter):
                         "The {role.mention} role is an integration role and cannot be assigned or removed."
                     ).format(role=role)
                 )
-            if getattr(role, "is_premium_subscriber", None) and role.is_premium_subscriber():
+            if (
+                getattr(role, "is_premium_subscriber", None)
+                and role.is_premium_subscriber()
+            ):
                 raise commands.BadArgument(
                     _(
                         "The {role.mention} role is a premium subscriber role and can only be assigned or removed by Nitro boosting the server."

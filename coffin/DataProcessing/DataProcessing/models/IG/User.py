@@ -1,4 +1,4 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, Union, Any, List, Dict
+from typing import Any, Dict, List, Optional, Union
 
+from pydantic import BaseModel

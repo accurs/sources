@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 import random
 import re
-
 from collections import OrderedDict
 from pathlib import Path
 from string import ascii_letters, digits
@@ -10,26 +9,28 @@ from typing import Final, Pattern
 
 import discord
 import lavalink
-from red_commons.logging import getLogger
-
 from aiohttp import ClientConnectorError
 from discord.ext.commands import CheckFailure
 from lavalink import NodeNotFound, PlayerNotFound
+from red_commons.logging import getLogger
 
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.core.utils import can_user_send_messages_in
 from grief.core.utils.antispam import AntiSpam
-from grief.core.utils.chat_formatting import box, humanize_list, underline, bold
+from grief.core.utils.chat_formatting import (bold, box, humanize_list,
+                                              underline)
 
-from ...errors import TrackEnqueueError, AudioError
+from ...errors import AudioError, TrackEnqueueError
 from ..abc import MixinMeta
 from ..cog_utils import CompositeMetaClass
 
 log = getLogger("red.cogs.Audio.cog.Events.dpy")
 _T = Translator("Audio", Path(__file__))
 _ = lambda s: s
-RE_CONVERSION: Final[Pattern] = re.compile('Converting to "(.*)" failed for parameter "(.*)".')
+RE_CONVERSION: Final[Pattern] = re.compile(
+    'Converting to "(.*)" failed for parameter "(.*)".'
+)
 HUMANIZED_PERM = {
     "create_instant_invite": _("Create Instant Invite"),
     "kick_members": _("Kick Members"),
@@ -164,7 +165,9 @@ DANGEROUS_COMMANDS = {
         "This setting controls the managed node's JDA-NAS buffer, "
         "do not change this unless instructed."
     ),
-    "command_llset_reset": _("This command will reset every setting changed by `[p]llset`."),
+    "command_llset_reset": _(
+        "This command will reset every setting changed by `[p]llset`."
+    ),
 }
 
 _ = _T
@@ -255,8 +258,9 @@ class DpyEvents(MixinMeta, metaclass=CompositeMetaClass):
         if self.local_folder_current_path is None:
             self.local_folder_current_path = Path(await self.config.localpath())
 
-        if ctx.command.callback.__name__ in DANGEROUS_COMMANDS and await ctx.bot.is_owner(
-            ctx.author
+        if (
+            ctx.command.callback.__name__ in DANGEROUS_COMMANDS
+            and await ctx.bot.is_owner(ctx.author)
         ):
             if ctx.command.callback.__name__ not in self.antispam[ctx.author.id]:
                 self.antispam[ctx.author.id][ctx.command.callback.__name__] = AntiSpam(
@@ -302,11 +306,17 @@ class DpyEvents(MixinMeta, metaclass=CompositeMetaClass):
         if not guild:
             return
         guild_data = await self.config.guild(ctx.guild).all()
-        dj_enabled = self._dj_status_cache.setdefault(ctx.guild.id, guild_data["dj_enabled"])
-        self._daily_playlist_cache.setdefault(ctx.guild.id, guild_data["daily_playlists"])
+        dj_enabled = self._dj_status_cache.setdefault(
+            ctx.guild.id, guild_data["dj_enabled"]
+        )
+        self._daily_playlist_cache.setdefault(
+            ctx.guild.id, guild_data["daily_playlists"]
+        )
         self._persist_queue_cache.setdefault(ctx.guild.id, guild_data["persist_queue"])
         if dj_enabled:
-            dj_role = self._dj_role_cache.setdefault(ctx.guild.id, guild_data["dj_role"])
+            dj_role = self._dj_role_cache.setdefault(
+                ctx.guild.id, guild_data["dj_role"]
+            )
             dj_role_obj = ctx.guild.get_role(dj_role)
             if not dj_role_obj:
                 async with self.config.guild(ctx.guild).all() as write_guild_data:
@@ -314,7 +324,9 @@ class DpyEvents(MixinMeta, metaclass=CompositeMetaClass):
                     write_guild_data["dj_role"] = None
                 self._dj_status_cache[ctx.guild.id] = None
                 self._dj_role_cache[ctx.guild.id] = None
-                await self.send_embed_msg(ctx, title=_("No DJ role found. Disabling DJ mode."))
+                await self.send_embed_msg(
+                    ctx, title=_("No DJ role found. Disabling DJ mode.")
+                )
 
     async def cog_after_invoke(self, ctx: commands.Context) -> None:
         await self.maybe_run_pending_db_tasks(ctx)
@@ -398,7 +410,8 @@ class DpyEvents(MixinMeta, metaclass=CompositeMetaClass):
                 error=True,
             )
             log.exception(
-                "This is not handled in the core Audio cog, please report it.", exc_info=error
+                "This is not handled in the core Audio cog, please report it.",
+                exc_info=error,
             )
         if not isinstance(
             error,
@@ -443,7 +456,10 @@ class DpyEvents(MixinMeta, metaclass=CompositeMetaClass):
 
     @commands.Cog.listener()
     async def on_voice_state_update(
-        self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
     ) -> None:
         if await self.bot.cog_disabled_in_guild(self, member.guild):
             return

@@ -1,5 +1,6 @@
 import datetime
 from typing import Optional, Sequence
+
 from dateutil.relativedelta import relativedelta
 
 
@@ -15,6 +16,7 @@ def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
         return f"{seq[0]} {final} {seq[1]}"
 
     return delim.join(seq[:-1]) + f" {final} {seq[-1]}"
+
 
 def percentage(lowest: float, highest: float = 100) -> str:
     return "%.0f%%" % int((lowest / highest) * 100)
@@ -44,6 +46,7 @@ def human_timedelta(
     suffix: bool = True,
 ) -> str:
     from system.classes.builtins import plural
+
     if isinstance(dt, datetime.timedelta):
         dt = datetime.datetime.utcfromtimestamp(dt.total_seconds())
 

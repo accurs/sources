@@ -6,9 +6,8 @@ from typing import Annotated, Optional, Union
 
 import discord
 from discord.ext import commands
-
-from structure.scare import Scare
 from structure.managers import Context
+from structure.scare import Scare
 from structure.utilities import Bank, Value
 
 

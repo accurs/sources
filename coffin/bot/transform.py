@@ -1,25 +1,11 @@
-from discord import (
-    Member,
-    User,
-    Role,
-    Guild,
-    StageInstance,
-    Emoji,
-    PartialEmoji,
-    TextChannel,
-    VoiceChannel,
-    StageChannel,
-    Thread,
-    CategoryChannel,
-    Sticker,
-    VoiceState,
-    ScheduledEvent,
-    SoundboardSound,
-    Client,
-)
-from typing import Union, Dict, Any, Optional
-from loguru import logger
 import traceback
+from typing import Any, Dict, Optional, Union
+
+from discord import (CategoryChannel, Client, Emoji, Guild, Member,
+                     PartialEmoji, Role, ScheduledEvent, SoundboardSound,
+                     StageChannel, StageInstance, Sticker, TextChannel, Thread,
+                     User, VoiceChannel, VoiceState)
+from loguru import logger
 
 Channel = Union[VoiceChannel, TextChannel, Thread, StageChannel]
 
@@ -84,6 +70,7 @@ class Transformers:
                         return channel.type.value
                     except AttributeError:
                         return channel.type
+
         if isinstance(channel, CategoryChannel):
             return {
                 "guild": guild if guild else self.guild(guild=channel.guild),
@@ -213,7 +200,11 @@ class Transformers:
                 "archived": thread.archived,
                 "archiver_id": thread.archiver_id,
                 "auto_archive_duration": thread.auto_archive_duration,
-                "archive_timestamp": thread.archive_timestamp.timestamp() if thread.archive_timestamp else None,
+                "archive_timestamp": (
+                    thread.archive_timestamp.timestamp()
+                    if thread.archive_timestamp
+                    else None
+                ),
                 "locked": thread.locked,
                 "invitable": thread.invitable,
                 "create_timestamp": (
@@ -371,7 +362,9 @@ class Transformers:
             ],
         }
         copy = guild_payload.copy()
-        guild_payload["channels"] = [self.channel(channel=channel, guild=copy) for channel in guild.channels]
+        guild_payload["channels"] = [
+            self.channel(channel=channel, guild=copy) for channel in guild.channels
+        ]
         return guild_payload
 
     def test(self, ctx):
@@ -397,9 +390,7 @@ class Transformers:
                     )
                 )
         except Exception as e:
-            exc = "".join(
-                traceback.format_exception(type(e), e, e.__traceback__)
-            )
+            exc = "".join(traceback.format_exception(type(e), e, e.__traceback__))
             logger.info(f"dumping the transformed objects raised {exc}")
         return {
             "guild": guild,
@@ -408,6 +399,3 @@ class Transformers:
             "member": member,
             "role": role,
         }
-
-
-

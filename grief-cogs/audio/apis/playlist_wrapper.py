@@ -1,7 +1,6 @@
 import concurrent
 import json
 from pathlib import Path
-
 from types import SimpleNamespace
 from typing import List, MutableMapping, Optional
 
@@ -13,24 +12,16 @@ from grief.core.i18n import Translator
 from grief.core.utils import AsyncIter
 from grief.core.utils.dbtools import APSWConnectionWrapper
 
-from ..sql_statements import (
-    HANDLE_DISCORD_DATA_DELETION_QUERY,
-    PLAYLIST_CREATE_INDEX,
-    PLAYLIST_CREATE_TABLE,
-    PLAYLIST_DELETE,
-    PLAYLIST_DELETE_SCHEDULED,
-    PLAYLIST_DELETE_SCOPE,
-    PLAYLIST_FETCH,
-    PLAYLIST_FETCH_ALL,
-    PLAYLIST_FETCH_ALL_CONVERTER,
-    PLAYLIST_FETCH_ALL_WITH_FILTER,
-    PLAYLIST_UPSERT,
-    PRAGMA_FETCH_user_version,
-    PRAGMA_SET_journal_mode,
-    PRAGMA_SET_read_uncommitted,
-    PRAGMA_SET_temp_store,
-    PRAGMA_SET_user_version,
-)
+from ..sql_statements import (HANDLE_DISCORD_DATA_DELETION_QUERY,
+                              PLAYLIST_CREATE_INDEX, PLAYLIST_CREATE_TABLE,
+                              PLAYLIST_DELETE, PLAYLIST_DELETE_SCHEDULED,
+                              PLAYLIST_DELETE_SCOPE, PLAYLIST_FETCH,
+                              PLAYLIST_FETCH_ALL, PLAYLIST_FETCH_ALL_CONVERTER,
+                              PLAYLIST_FETCH_ALL_WITH_FILTER, PLAYLIST_UPSERT,
+                              PRAGMA_FETCH_user_version,
+                              PRAGMA_SET_journal_mode,
+                              PRAGMA_SET_read_uncommitted,
+                              PRAGMA_SET_temp_store, PRAGMA_SET_user_version)
 from ..utils import PlaylistScope
 from .api_utils import PlaylistFetchResult
 
@@ -67,9 +58,15 @@ class PlaylistWrapper:
     async def init(self) -> None:
         """Initialize the Playlist table."""
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            executor.submit(self.database.cursor().execute, self.statement.pragma_temp_store)
-            executor.submit(self.database.cursor().execute, self.statement.pragma_journal_mode)
-            executor.submit(self.database.cursor().execute, self.statement.pragma_read_uncommitted)
+            executor.submit(
+                self.database.cursor().execute, self.statement.pragma_temp_store
+            )
+            executor.submit(
+                self.database.cursor().execute, self.statement.pragma_journal_mode
+            )
+            executor.submit(
+                self.database.cursor().execute, self.statement.pragma_read_uncommitted
+            )
             executor.submit(self.database.cursor().execute, self.statement.create_table)
             executor.submit(self.database.cursor().execute, self.statement.create_index)
 
@@ -109,7 +106,9 @@ class PlaylistWrapper:
                 try:
                     row_result = future.result()
                 except Exception as exc:
-                    log.verbose("Failed to complete playlist fetch from database", exc_info=exc)
+                    log.verbose(
+                        "Failed to complete playlist fetch from database", exc_info=exc
+                    )
                     return None
             row = row_result.fetchone()
             if row:
@@ -143,7 +142,8 @@ class PlaylistWrapper:
                         row_result = future.result()
                     except Exception as exc:
                         log.verbose(
-                            "Failed to complete playlist fetch from database", exc_info=exc
+                            "Failed to complete playlist fetch from database",
+                            exc_info=exc,
                         )
                         return []
             else:
@@ -160,7 +160,8 @@ class PlaylistWrapper:
                         row_result = future.result()
                     except Exception as exc:
                         log.verbose(
-                            "Failed to complete playlist fetch from database", exc_info=exc
+                            "Failed to complete playlist fetch from database",
+                            exc_info=exc,
                         )
                         return []
         async for row in AsyncIter(row_result):
@@ -212,13 +213,21 @@ class PlaylistWrapper:
             executor.submit(
                 self.database.cursor().execute,
                 self.statement.delete,
-                ({"playlist_id": playlist_id, "scope_id": scope_id, "scope_type": scope_type}),
+                (
+                    {
+                        "playlist_id": playlist_id,
+                        "scope_id": scope_id,
+                        "scope_type": scope_type,
+                    }
+                ),
             )
 
     async def delete_scheduled(self):
         """Clean up database from all deleted playlists."""
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            executor.submit(self.database.cursor().execute, self.statement.delete_scheduled)
+            executor.submit(
+                self.database.cursor().execute, self.statement.delete_scheduled
+            )
 
     async def drop(self, scope: str):
         """Delete all playlists in a scope."""

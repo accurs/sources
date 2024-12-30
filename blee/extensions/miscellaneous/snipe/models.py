@@ -5,12 +5,11 @@ from typing import List, Optional
 from discord import File, Message, Reaction, User
 from discord.http import HTTPClient
 from discord.utils import utcnow
+from orjson import dumps, loads
 from pydantic import BaseModel
+from tools.client.redis import Redis
 from typing_extensions import Self
 from xxhash import xxh64_hexdigest
-from orjson import dumps, loads
-
-from tools.client.redis import Redis
 
 
 class MessageAttachment(BaseModel):

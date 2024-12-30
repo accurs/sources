@@ -1,18 +1,18 @@
 from core.tools import CompositeMetaClass
 
-from .ticket import Ticket
 from .alias import Alias
-from .roles import Roles
-from .starboard import Starboard
-from .sticky import Sticky
-from .statistics import Statistics
-from .system import System
-from .webhook import Webhook
-from .level import Level
-from .disboard import Disboard
 # from .command import CommandManagement
 from .boosterrole import BoosterRole
+from .disboard import Disboard
 from .gallery import Gallery
+from .level import Level
+from .roles import Roles
+from .starboard import Starboard
+from .statistics import Statistics
+from .sticky import Sticky
+from .system import System
+from .ticket import Ticket
+from .webhook import Webhook
 
 
 class Extended(
@@ -26,7 +26,7 @@ class Extended(
     Webhook,
     Level,
     Disboard,
-#     CommandManagement,
+    #     CommandManagement,
     BoosterRole,
     Gallery,
     metaclass=CompositeMetaClass,

@@ -8,76 +8,41 @@ from datetime import datetime
 from io import BytesIO
 from re import compile as re_compile
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Literal
+from typing import List, Literal, Optional
 
+# Local imports
+import config
 # Third-party imports
 from aiofiles import open as async_open
-from discord import (
-    AllowedMentions,
-    CategoryChannel,
-    Embed,
-    File,
-    Forbidden,
-    HTTPException,
-    Member,
-    Message,
-    PartialMessage,
-    Reaction,
-    Status,
-    TextChannel,
-    Thread,
-    User,
-)
-from discord.ext.commands import (
-    BucketType,
-    Cog,
-    Command,
-    FlagConverter,
-    MissingPermissions,
-    Range,
-    command,
-    cooldown,
-    flag,
-    group,
-    has_permissions,
-    max_concurrency,
-    param,
-)
+from discord import (AllowedMentions, CategoryChannel, Embed, File, Forbidden,
+                     HTTPException, Member, Message, PartialMessage, Reaction,
+                     Status, TextChannel, Thread, User)
+from discord.ext.commands import (BucketType, Cog, Command, FlagConverter,
+                                  MissingPermissions, Range, command, cooldown,
+                                  flag, group, has_permissions,
+                                  max_concurrency, param)
 from discord.ext.tasks import loop
-from discord.utils import (
-    as_chunks,
-    escape_markdown,
-    escape_mentions,
-    find,
-    format_dt,
-    utcnow,
-)
+from discord.utils import (as_chunks, escape_markdown, escape_mentions, find,
+                           format_dt, utcnow)
 from jishaku.codeblocks import Codeblock, codeblock_converter
 from loguru import logger as log
 from munch import Munch
 from orjson import dumps, loads
-from xxhash import xxh128_hexdigest
-from yarl import URL
-
-# Local imports
-import config
 from tools import Bleed
 from tools.client.context import Context
 from tools.client.database.settings import Settings
-from tools.converters.basic import (
-    Command,
-    TimeConverter,
-    ImageFinder,
-    Emoji,
-    EmojiFinder,
-)
+from tools.converters.basic import (Command, Emoji, EmojiFinder, ImageFinder,
+                                    TimeConverter)
 from tools.converters.color import Color
-from tools.converters.role import Role
 from tools.converters.embed import EmbedScript, EmbedScriptValidator
+from tools.converters.role import Role
+from tools.utilities.checks import require_boost
 from tools.utilities.process import ensure_future
 from tools.utilities.regex import STRING
-from tools.utilities.text import hash, Plural
-from tools.utilities.checks import require_boost
+from tools.utilities.text import Plural, hash
+from xxhash import xxh128_hexdigest
+from yarl import URL
+
 
 class Servers(Cog):
     def __init__(self, bot: Bleed):
@@ -245,7 +210,6 @@ class Servers(Cog):
                 )
             )
 
-
     @Cog.listener("on_member_join")  # AUTOROLE GRANT
     async def autorole_assigning(self: "Servers", member: Member):
         """Assign roles to a member which joins the server"""
@@ -263,8 +227,6 @@ class Servers(Cog):
         if roles:
             with suppress(HTTPException):
                 await member.add_roles(*roles, reason="Role Assignment", atomic=False)
-
-
 
     @group(name="prefix", invoke_without_command=True)
     async def prefix(self, ctx: Context) -> Message:
@@ -1272,7 +1234,6 @@ class Servers(Cog):
             emoji="ℹ️",
         )
 
-
     @group(
         name="boost",
         usage="(subcommand) <args>",
@@ -1702,7 +1663,6 @@ class Servers(Cog):
 
         return await ctx.approve("Removed the **icon** of your **booster role**")
 
-
     @group(
         name="autorole",
         usage="(subcommand) <args>",
@@ -1824,10 +1784,14 @@ class Servers(Cog):
         ]
         if not roles:
             return await ctx.utility("No **auto roles** found", emoji="🔍")
-    
-        await ctx.paginate([  # Wrap the Embed in a list
-            Embed(
-                title=f"Auto Roles ({len(roles)})",  # Add count to title
-                description="\n".join(f"`{i+1}` {role}" for i, role in enumerate(roles)),  # Add index numbers
-            )
-        ])
+
+        await ctx.paginate(
+            [  # Wrap the Embed in a list
+                Embed(
+                    title=f"Auto Roles ({len(roles)})",  # Add count to title
+                    description="\n".join(
+                        f"`{i+1}` {role}" for i, role in enumerate(roles)
+                    ),  # Add index numbers
+                )
+            ]
+        )

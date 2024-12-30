@@ -5,13 +5,12 @@ from logging import getLogger
 from typing import List, Optional
 
 from aiohttp import ClientSession
+from config import Authorization
+from core.client.context import Context
 from discord.ext.commands import CommandError
 from pydantic import BaseModel, Field
 from typing_extensions import Self
 from yarl import URL
-
-from config import Authorization
-from core.client.context import Context
 
 log = getLogger("mono/soundcloud")
 

@@ -1,8 +1,9 @@
+import urllib
+from datetime import *  # noqa: F403
+
 import aiohttp
 import discord
-import urllib
 from pydantic import BaseModel
-from datetime import *  # noqa: F403
 
 key = "HDEV-ec64c7f4-27d4-42e3-8dbf-fbe4457e197f"
 

@@ -6,6 +6,7 @@ from typing import List, Optional
 import discord
 import tekore
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
 from grief.core.utils.chat_formatting import humanize_list
@@ -51,7 +52,9 @@ class SpotifySelectTrack(discord.ui.Select):
             with user_spotify.token_as(self.user_token):
                 cur = await user_spotify.playback()
                 if not cur:
-                    device_id = await self.cog.config.user(interaction.user).default_device()
+                    device_id = await self.cog.config.user(
+                        interaction.user
+                    ).default_device()
                     devices = await user_spotify.playback_devices()
                     device = None
                     for d in devices:
@@ -113,7 +116,9 @@ class PlayPauseButton(discord.ui.Button):
             with user_spotify.token_as(self.user_token):
                 cur = await user_spotify.playback()
                 if not cur:
-                    device_id = await self.cog.config.user(interaction.user).default_device()
+                    device_id = await self.cog.config.user(
+                        interaction.user
+                    ).default_device()
                     devices = await user_spotify.playback_devices()
                     device = None
                     for d in devices:
@@ -128,14 +133,18 @@ class PlayPauseButton(discord.ui.Button):
                 if cur and cur.item.id == self.view.source.current_track.id:
                     if cur.is_playing:
                         await interaction.response.send_message(
-                            _("Pausing Spotify on {device}.").format(device=device.name),
+                            _("Pausing Spotify on {device}.").format(
+                                device=device.name
+                            ),
                             ephemeral=True,
                         )
                         await user_spotify.playback_pause(device_id=device_id)
                         self.emoji = spotify_emoji_handler.get_emoji("play")
                     else:
                         await interaction.response.send_message(
-                            _("Resuming Spotify playback on {device}.").format(device=device.name),
+                            _("Resuming Spotify playback on {device}.").format(
+                                device=device.name
+                            ),
                             ephemeral=True,
                         )
                         await user_spotify.playback_resume(device_id=device_id)
@@ -279,7 +288,9 @@ class ShuffleButton(discord.ui.Button):
             with user_spotify.token_as(self.user_token):
                 cur = await user_spotify.playback()
                 if not cur:
-                    device_id = await self.cog.config.user(interaction.user).default_device()
+                    device_id = await self.cog.config.user(
+                        interaction.user
+                    ).default_device()
                     devices = await user_spotify.playback_devices()
                     device = None
                     for d in devices:
@@ -301,7 +312,8 @@ class ShuffleButton(discord.ui.Button):
                     self.style = discord.ButtonStyle.grey
                 await user_spotify.playback_shuffle(state, device_id=device_id)
                 await interaction.response.send_message(
-                    _("Shuffling Spotify on {device}.").format(device=device.name), ephemeral=True
+                    _("Shuffling Spotify on {device}.").format(device=device.name),
+                    ephemeral=True,
                 )
         except tekore.Unauthorised:
             await self.cog.not_authorized(interaction)
@@ -389,13 +401,17 @@ class VolumeModal(discord.ui.Modal):
         self.cog = cog
 
     async def on_submit(self, interaction: discord.Interaction):
-        volume = max(min(100, int(self.text.value)), 0)  # constrains volume to be within 100
+        volume = max(
+            min(100, int(self.text.value)), 0
+        )  # constrains volume to be within 100
         try:
             user_spotify = tekore.Spotify(sender=self.cog._sender)
             with user_spotify.token_as(self.user_token):
                 cur = await user_spotify.playback()
                 if not cur:
-                    device_id = await self.cog.config.user(interaction.user).default_device()
+                    device_id = await self.cog.config.user(
+                        interaction.user
+                    ).default_device()
                     devices = await user_spotify.playback_devices()
                     device = None
                     for d in devices:
@@ -464,7 +480,9 @@ class VolumeButton(discord.ui.Button):
         with user_spotify.token_as(self.user_token):
             cur = await user_spotify.playback()
             if not cur:
-                device_id = await self.cog.config.user(interaction.user).default_device()
+                device_id = await self.cog.config.user(
+                    interaction.user
+                ).default_device()
                 devices = await user_spotify.playback_devices()
                 device = None
                 for d in devices:
@@ -556,7 +574,9 @@ class PlayAllButton(discord.ui.Button):
             with user_spotify.token_as(self.user_token):
                 cur = await user_spotify.playback()
                 if not cur:
-                    device_id = await self.cog.config.user(interaction.user).default_device()
+                    device_id = await self.cog.config.user(
+                        interaction.user
+                    ).default_device()
                     devices = await user_spotify.playback_devices()
                     device = None
                     for d in devices:
@@ -618,7 +638,9 @@ class QueueTrackButton(discord.ui.Button):
             with user_spotify.token_as(self.user_token):
                 cur = await user_spotify.playback()
                 if not cur:
-                    device_id = await self.cog.config.user(interaction.user).default_device()
+                    device_id = await self.cog.config.user(
+                        interaction.user
+                    ).default_device()
                     devices = await user_spotify.playback_devices()
                     device = None
                     for d in devices:
@@ -634,7 +656,9 @@ class QueueTrackButton(discord.ui.Button):
                         self.view.source.current_track.uri, device_id=device_id
                     )
                     await interaction.response.send_message(
-                        _("{track} by {artist} has been added to your queue on {device}.").format(
+                        _(
+                            "{track} by {artist} has been added to your queue on {device}."
+                        ).format(
                             track=self.view.source.current_track.name,
                             artist=humanize_list(
                                 [i.name for i in self.view.source.current_track.artists]

@@ -3,14 +3,12 @@ from grief import _early_init
 # this needs to be called as early as possible
 _early_init()
 
-import discord_ios
 import asyncio
 import functools
 import getpass
 import json
 import logging
 import os
-import pip
 import platform
 import shutil
 import signal
@@ -21,17 +19,18 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable, NoReturn, Optional, Union
 
 import discord
+import discord_ios
+import pip
 import rich
 
 import grief.logging
 from grief import __version__
-from grief.core.bot import Grief, ExitCodes, _NoOwnerSet
-from grief.core._cli import interactive_config, confirm, parse_cli_flags
-from grief.setup import get_data_dir, get_name, save_config
-from grief.core import data_manager, _drivers
+from grief.core import _drivers, data_manager
+from grief.core._cli import confirm, interactive_config, parse_cli_flags
 from grief.core._debuginfo import DebugInfo
 from grief.core._sharedlibdeprecation import SharedLibImportWarner
-
+from grief.core.bot import ExitCodes, Grief, _NoOwnerSet
+from grief.setup import get_data_dir, get_name, save_config
 
 log = logging.getLogger("grief.main")
 
@@ -77,7 +76,9 @@ async def edit_instance(red, cli_flags):
         print("--copy-data can't be used without --edit-data-path argument")
         sys.exit(ExitCodes.INVALID_CLI_USAGE)
     if new_name is None and confirm_overwrite:
-        print("--overwrite-existing-instance can't be used without --edit-instance-name argument")
+        print(
+            "--overwrite-existing-instance can't be used without --edit-instance-name argument"
+        )
         sys.exit(ExitCodes.INVALID_CLI_USAGE)
     if (
         no_prompt
@@ -113,7 +114,9 @@ async def _edit_token(red, token, no_prompt):
             )
             return
         await red._config.token.set(token)
-    elif not no_prompt and confirm("Would you like to change instance's token?", default=False):
+    elif not no_prompt and confirm(
+        "Would you like to change instance's token?", default=False
+    ):
         await interactive_config(red, False, True, print_header=False)
         print("Token updated.\n")
 
@@ -122,7 +125,9 @@ async def _edit_prefix(red, prefix, no_prompt):
     if prefix:
         prefixes = sorted(prefix, reverse=True)
         await red._config.prefix.set(prefixes)
-    elif not no_prompt and confirm("Would you like to change instance's prefixes?", default=False):
+    elif not no_prompt and confirm(
+        "Would you like to change instance's prefixes?", default=False
+    ):
         print(
             "Enter the prefixes, separated by a space (please note "
             "that prefixes containing a space will need to be added with [p]set prefix)"
@@ -152,7 +157,9 @@ async def _edit_owner(red, owner, no_prompt):
             )
             return
         await red._config.owner.set(owner)
-    elif not no_prompt and confirm("Would you like to change instance's owner?", default=False):
+    elif not no_prompt and confirm(
+        "Would you like to change instance's owner?", default=False
+    ):
         print(
             "Remember:\n"
             "ONLY the person who is hosting Red should be owner."
@@ -185,7 +192,9 @@ def _edit_instance_name(old_name, new_name, confirm_overwrite, no_prompt):
                 "If you want to remove the existing instance and replace it with this one,"
                 " run this command with --overwrite-existing-instance flag."
             )
-    elif not no_prompt and confirm("Would you like to change the instance name?", default=False):
+    elif not no_prompt and confirm(
+        "Would you like to change the instance name?", default=False
+    ):
         name = get_name("")
         if name in _get_instance_names():
             print(
@@ -231,9 +240,13 @@ def _edit_data_path(data, instance_name, data_path, copy_data, no_prompt):
                 )
         data["DATA_PATH"] = data_path
         if copy_data and not _copy_data(data):
-            print("Can't copy data to non-empty location. Data location will remain unchanged.")
+            print(
+                "Can't copy data to non-empty location. Data location will remain unchanged."
+            )
             data["DATA_PATH"] = data_manager.basic_config["DATA_PATH"]
-    elif not no_prompt and confirm("Would you like to change the data location?", default=False):
+    elif not no_prompt and confirm(
+        "Would you like to change the data location?", default=False
+    ):
         data["DATA_PATH"] = get_data_dir(
             instance_name=instance_name, data_path=None, interactive=True
         )
@@ -262,7 +275,9 @@ def _copy_data(data):
 
 def early_exit_runner(
     cli_flags: Namespace,
-    func: Union[Callable[[], Awaitable[Any]], Callable[[Grief, Namespace], Awaitable[Any]]],
+    func: Union[
+        Callable[[], Awaitable[Any]], Callable[[Grief, Namespace], Awaitable[Any]]
+    ],
 ) -> NoReturn:
     """
     This one exists to not log all the things like it's a full run of the bot.
@@ -465,7 +480,9 @@ def red_exception_handler(red, red_task: asyncio.Future):
     except (SystemExit, KeyboardInterrupt, asyncio.CancelledError):
         pass  # Handled by the global_exception_handler, or cancellation
     except Exception as exc:
-        log.critical("The main bot task didn't handle an exception and has crashed", exc_info=exc)
+        log.critical(
+            "The main bot task didn't handle an exception and has crashed", exc_info=exc
+        )
         log.warning("Attempting to die as gracefully as possible...")
         asyncio.create_task(shutdown_handler(red))
 
@@ -515,7 +532,9 @@ def main():
         loop.run_forever()
     except KeyboardInterrupt:
         # We still have to catch this here too. (*joy*)
-        log.warning("Please do not use Ctrl+C to Shutdown Red! (attempting to die gracefully...)")
+        log.warning(
+            "Please do not use Ctrl+C to Shutdown Red! (attempting to die gracefully...)"
+        )
         log.error("Received KeyboardInterrupt, treating as interrupt")
         if red is not None:
             loop.run_until_complete(shutdown_handler(red, signal.SIGINT))

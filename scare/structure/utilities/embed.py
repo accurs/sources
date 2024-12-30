@@ -1,6 +1,6 @@
-import re
 import asyncio
 import datetime
+import re
 from contextlib import suppress
 from typing import Any, Optional, Union
 
@@ -185,30 +185,29 @@ class Embed:
                         label = values[0].format(**Munch(**models))
                         obj = self.find(values, 1).format(**Munch(**models))
                         obj2 = self.find(values, 2).format(**Munch(**models))
-                        
-                        url = None 
+
+                        url = None
                         emoji = None
 
-                        url_regex = re.compile(r"(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])")
-                        
+                        url_regex = re.compile(
+                            r"(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])"
+                        )
+
                         if obj:
                             if url_regex.match(obj):
                                 url = obj
                             else:
                                 emoji = discord.PartialEmoji.from_str(obj)
 
-                        if obj2: 
+                        if obj2:
                             if url_regex.match(obj2):
                                 url = obj2
                             else:
-                                emoji = discord.PartialEmoji.from_str(obj2) 
+                                emoji = discord.PartialEmoji.from_str(obj2)
 
                         view.add_item(
                             discord.ui.Button(
-                                label=label,
-                                url=url,
-                                disabled=not url,
-                                emoji=emoji
+                                label=label, url=url, disabled=not url, emoji=emoji
                             )
                         )
                 case _:

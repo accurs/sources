@@ -3,12 +3,11 @@ from logging import getLogger
 from typing import Annotated, Optional, cast
 
 from asyncpg import UniqueViolationError
+from core.client.context import Context
+from core.tools import CompositeMetaClass, MixinMeta
+from core.tools.converters.discord import StrictRole
 from discord import Embed, HTTPException, Message, RawReactionActionEvent, Role
 from discord.ext.commands import Cog, group, has_permissions
-
-from core.tools import CompositeMetaClass, MixinMeta
-from core.client.context import Context
-from core.tools.converters.discord import StrictRole
 
 log = getLogger("swag/roles")
 

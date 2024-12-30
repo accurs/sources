@@ -1,16 +1,10 @@
-from discord.abc import GuildChannel
 from discord import Embed, PermissionOverwrite
-from discord.ext.commands import (
-    Cog,
-    group,
-    has_guild_permissions,
-    bot_has_guild_permissions,
-    BadArgument,
-)
-
+from discord.abc import GuildChannel
+from discord.ext.commands import (BadArgument, Cog, bot_has_guild_permissions,
+                                  group, has_guild_permissions)
 from tools.bot import Akari
-from tools.converters import AkariContext
-from tools.converters import ChannelType, CounterMessage, CounterType
+from tools.converters import (AkariContext, ChannelType, CounterMessage,
+                              CounterType)
 
 
 class Counters(Cog):

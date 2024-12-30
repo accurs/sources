@@ -1,30 +1,33 @@
+import asyncio
+import contextlib
+import itertools
+import time
+from datetime import timedelta
+from hashlib import sha1
+from typing import Any, Dict, List, Literal, Optional, Union
+
 import humanize
 import orjson
 import tuuid
-import asyncio
-import contextlib
-import time
-import itertools
-
-from datetime import timedelta
-from hashlib import sha1
-from typing import Dict, Optional, Union, List, Any, Literal
-from discord import Message, Guild, User, Member, TextChannel
-from discord.ext.commands import Context
 from async_timeout import timeout as Timeout
-from loguru import logger as log, logger
-from xxhash import xxh3_64_hexdigest
+from discord import Guild, Member, Message, TextChannel, User
+from discord.ext.commands import Context
+from loguru import logger
+from loguru import logger as log
+from pydantic import BaseModel
 from redis.asyncio import Redis
 from redis.asyncio.connection import BlockingConnectionPool
 from redis.asyncio.lock import Lock
 from redis.backoff import EqualJitterBackoff
 from redis.exceptions import LockError, NoScriptError
 from redis.retry import Retry
-from pydantic import BaseModel
+from xxhash import xxh3_64_hexdigest
+
 from .events import Events
 
-#REDIS_URL = "async+redis+unix:///var/run/redis.sock"
+# REDIS_URL = "async+redis+unix:///var/run/redis.sock"
 REDIS_URL = "redis://127.0.0.1:6379"
+
 
 class IPCData(BaseModel):
     event: Literal["Request", "Inform", "Response"]
@@ -37,6 +40,7 @@ class IPCData(BaseModel):
 
 class IPCResponse(BaseModel):
     """IPCResponse is a dataclass that represents a response from the IPC server."""
+
     type: str
     pattern: str
     channel: str
@@ -64,7 +68,6 @@ class IPCResponse(BaseModel):
             self.data = IPCData(**self.data)
         except Exception:
             pass
-
 
 
 def fmtseconds(seconds: Union[int, float], unit="microseconds") -> str:
@@ -182,7 +185,6 @@ class CoffinLock(Lock):
             await asyncio.sleep(self.extension_time)
             await self.reacquire()
 
-
     async def __aexit__(self, exc_type, exc_value, traceback):
         if self.extend_task:
             self.extend_task.cancel()
@@ -223,14 +225,13 @@ class CoffinRedis(Redis):
         return [
             {name: lock} for name, lock in self._locks_created.items() if lock.locked()
         ]
-    
+
     # async def read_messages(self):
     #     while True:
     #         message = await self.pubsub.get_message(ignore_subscribe_messages=True)
     #         if message and message['type'] == 'message':
     #             await self.dispatch_pubsub(message)
 
-                
     async def dispatch_pubsub(self, message):
         self.__events.dispatch_event("ipc_message", message)
         if self.bot:
@@ -243,13 +244,13 @@ class CoffinRedis(Redis):
         subscribed = False
         current = None
         self.channel = super().pubsub()
+
         async def alternative_subscribe():
             if subscribed:
                 return
             if channel := kwargs.pop("channel"):
                 current = channel
                 await self.channel.psubscribe(channel)
-    
 
         if self.bot:
             if hasattr(self.bot, "cluster_name"):
@@ -263,10 +264,6 @@ class CoffinRedis(Redis):
             if channel != current:
                 await self.channel.subscribe(channel)
         await self.read_messages()
-        
-
-            
-
 
     @property
     def locks(self):
@@ -290,10 +287,14 @@ class CoffinRedis(Redis):
 
     async def read_messages(self):
         if sub := getattr(self, "channel"):
+
             async def reader(pubsub):
                 while True:
                     try:
-                        message = await asyncio.wait_for(pubsub.get_message(ignore_subscribe_messages=True), timeout=10)
+                        message = await asyncio.wait_for(
+                            pubsub.get_message(ignore_subscribe_messages=True),
+                            timeout=10,
+                        )
                         if message:
                             try:
                                 message = message.decode("UTF-8")
@@ -307,7 +308,8 @@ class CoffinRedis(Redis):
                     except asyncio.TimeoutError:
                         continue
                     except Exception as e:
-                         logger.info(f"read_messages raised: {e}")
+                        logger.info(f"read_messages raised: {e}")
+
             asyncio.create_task(reader(sub))
 
     async def jsonget(self, key):
@@ -346,7 +348,7 @@ class CoffinRedis(Redis):
 
     def rl_key(self, ident) -> str:
         return f"{self.rl_prefix}{xxh3_64_hexdigest(ident)}"
-    
+
     async def aclose(self, close_connection_pool: Optional[bool] = None) -> None:
         """
         Closes Redis client connection
@@ -379,7 +381,7 @@ class CoffinRedis(Redis):
             current_usage = await self.eval(
                 INCREMENT_SCRIPT, 1, rlkey, timespan, increment
             )
-        self.rl_keys[resource_ident]=rlkey
+        self.rl_keys[resource_ident] = rlkey
         if int(current_usage) > request_limit:
             return True
         return False

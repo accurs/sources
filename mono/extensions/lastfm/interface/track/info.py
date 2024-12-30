@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import List, Optional
 
 from discord.ext.commands import CommandError
-from pydantic import BaseModel, Field
-
 from extensions.lastfm import http
 from extensions.lastfm.interface.spotify.track import SpotifyTrack
+from pydantic import BaseModel, Field
 
 
 class Artist(BaseModel):

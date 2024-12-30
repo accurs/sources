@@ -1,4 +1,5 @@
 import discord
+
 from grief.core.utils.chat_formatting import humanize_list, pagify
 from grief.core.utils.menus import DEFAULT_CONTROLS, menu
 
@@ -7,6 +8,7 @@ from .exceptions import *
 from .fmmixin import FMMixin
 
 command_fm = FMMixin.command_fm
+
 
 class TagsMixin(MixinMeta):
     """Tag Commands"""
@@ -19,7 +21,9 @@ class TagsMixin(MixinMeta):
     async def command_tag_track(self, ctx):
         """Commands to tag tracks"""
 
-    @command_tag_track.command(name="add", usage="<tag>,[tag] | [track name] | [artist name]")
+    @command_tag_track.command(
+        name="add", usage="<tag>,[tag] | [track name] | [artist name]"
+    )
     async def command_tag_track_add(self, ctx, *, args):
         """
         Add tags to a track
@@ -59,7 +63,9 @@ class TagsMixin(MixinMeta):
             f"Added **{len(list_of_tags)}** {'tag' if len(list_of_tags) == 1 else 'tags'}."
         )
 
-    @command_tag_track.command(name="remove", usage="<tag>,[tag] | [track name] | [artist name]")
+    @command_tag_track.command(
+        name="remove", usage="<tag>,[tag] | [track name] | [artist name]"
+    )
     async def command_tag_track_remove(self, ctx, *, args):
         """
         Remove tags from a track
@@ -113,7 +119,9 @@ class TagsMixin(MixinMeta):
                 if trackname == "" or artistname == "":
                     raise ValueError
             except ValueError:
-                return await ctx.send("\N{WARNING SIGN} Incorrect format! use `track | artist`")
+                return await ctx.send(
+                    "\N{WARNING SIGN} Incorrect format! use `track | artist`"
+                )
         else:
 
             trackname, artistname, albumname, imageurl = await self.get_current_track(
@@ -158,7 +166,9 @@ class TagsMixin(MixinMeta):
     async def command_tag_album(self, ctx):
         """Commands to tag albums"""
 
-    @command_tag_album.command(name="add", usage="<tag>,[tag] | [album name] | [artist name]")
+    @command_tag_album.command(
+        name="add", usage="<tag>,[tag] | [album name] | [artist name]"
+    )
     async def command_tag_album_add(self, ctx, *, args):
         """
         Add tags to an album
@@ -204,7 +214,9 @@ class TagsMixin(MixinMeta):
             f"Added **{len(list_of_tags)}** {'tag' if len(list_of_tags) == 1 else 'tags'}."
         )
 
-    @command_tag_album.command(name="remove", usage="<tag>,[tag] | [album name] | [artist name]")
+    @command_tag_album.command(
+        name="remove", usage="<tag>,[tag] | [album name] | [artist name]"
+    )
     async def command_tag_album_remove(self, ctx, *, args):
         """
         Remove tags from an album
@@ -265,7 +277,9 @@ class TagsMixin(MixinMeta):
                 if albumname == "" or artistname == "":
                     raise ValueError
             except ValueError:
-                return await ctx.send("\N{WARNING SIGN} Incorrect format! use `track | artist`")
+                return await ctx.send(
+                    "\N{WARNING SIGN} Incorrect format! use `track | artist`"
+                )
         else:
 
             trackname, artistname, albumname, imageurl = await self.get_current_track(

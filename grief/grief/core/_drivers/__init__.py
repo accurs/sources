@@ -2,7 +2,7 @@ import enum
 from typing import Optional, Type
 
 from .. import data_manager
-from .base import IdentifierData, BaseDriver, ConfigCategory
+from .base import BaseDriver, ConfigCategory, IdentifierData
 from .json import JsonDriver
 from .postgres import PostgresDriver
 
@@ -32,7 +32,9 @@ class BackendType(enum.Enum):
 _DRIVER_CLASSES = {BackendType.JSON: JsonDriver, BackendType.POSTGRES: PostgresDriver}
 
 
-def _get_driver_class_include_old(storage_type: Optional[BackendType] = None) -> Type[BaseDriver]:
+def _get_driver_class_include_old(
+    storage_type: Optional[BackendType] = None,
+) -> Type[BaseDriver]:
     """
     ONLY for use in CLI for moving data away from a no longer supported backend
     """

@@ -1,21 +1,17 @@
 import math
 from typing import Literal, Optional, Union, cast
 
-from tools.managers.paginator import Paginator
-
-from tools.client.context import Context
-
-from .player import Player, Panel
-
-from discord import Message, Member, VoiceChannel
+from discord import Member, Message, VoiceChannel
+from discord.ext.commands import Cog, check, command, group
 from discord.utils import format_dt
-from discord.ext.commands import command, group, Cog, check
 from humanize import ordinal
-
-from pomice import LoopMode, NodePool, Timescale, Playlist
-
+from pomice import LoopMode, NodePool, Playlist, Timescale
+from tools.client.context import Context
+from tools.managers.paginator import Paginator
 from tools.utilities import format_duration, pluralize
 from tools.utilities.text import shorten
+
+from .player import Panel, Player
 
 
 def player():

@@ -1,8 +1,8 @@
-from datetime import datetime, timezone, timedelta
-from typing import Optional, Union, Sequence
-from dateutil.relativedelta import relativedelta
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Sequence, Union
 
-from humanize import precisedelta, intcomma, ordinal
+from dateutil.relativedelta import relativedelta
+from humanize import intcomma, ordinal, precisedelta
 
 
 def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:

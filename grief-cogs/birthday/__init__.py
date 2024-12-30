@@ -9,6 +9,7 @@ from grief.core.bot import Grief
 from . import vexutils
 from .birthday import Birthday
 
+
 async def setup(bot: Grief) -> None:
     cog = Birthday(bot)
     await bot.add_cog(cog)

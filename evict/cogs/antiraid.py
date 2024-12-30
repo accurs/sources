@@ -1,12 +1,10 @@
-import humanfriendly, discord
-from discord.ext import commands
-
-from patches.permissions import Permissions, Whitelist
-
-from bot.helpers import EvictContext
+import discord
+import humanfriendly
 from bot.bot import Evict
-
-from bot.managers.emojis import Emojis, Colors
+from bot.helpers import EvictContext
+from bot.managers.emojis import Colors, Emojis
+from discord.ext import commands
+from patches.permissions import Permissions, Whitelist
 
 
 def check_whitelist(module: str):

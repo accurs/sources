@@ -1,12 +1,12 @@
-
-
 import asyncio
 import logging
 import re
-from typing import Annotated, Any, Callable, Coroutine, Dict, Final, List, Optional, Union
+from typing import (Annotated, Any, Callable, Coroutine, Dict, Final, List,
+                    Optional, Union)
 
 import arrow
 import discord
+
 from grief.cogs.cleanup import Cleanup as CleanupCog
 from grief.core import app_commands, commands
 from grief.core.bot import Grief
@@ -14,14 +14,9 @@ from grief.core.utils import mod
 from grief.core.utils.chat_formatting import humanize_list, humanize_number
 
 from .converters import PurgeFlags, RawMessageIdsConverter, Snowflake
-from .utils import (
-    CUSTOM_EMOJI_RE,
-    LINKS_RE,
-    _cleanup,
-    get_message_from_reference,
-    get_messages_for_deletion,
-    has_hybrid_permissions,
-)
+from .utils import (CUSTOM_EMOJI_RE, LINKS_RE, _cleanup,
+                    get_message_from_reference, get_messages_for_deletion,
+                    has_hybrid_permissions)
 
 log: logging.Logger = logging.getLogger("grief.purge")
 
@@ -54,9 +49,7 @@ class Purge(commands.Cog):
     def format_help_for_context(self, ctx: commands.Context) -> str:
         pre_processed = super().format_help_for_context(ctx) or ""
         n = "\n" if "\n\n" not in pre_processed else ""
-        text = [
-            f"{pre_processed}{n}"
-        ]
+        text = [f"{pre_processed}{n}"]
         return "\n".join(text)
 
     async def _initialize(self) -> None:
@@ -74,7 +67,12 @@ class Purge(commands.Cog):
         ctx: commands.GuildContext,
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -92,7 +90,12 @@ class Purge(commands.Cog):
         ctx: commands.GuildContext,
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -115,7 +118,12 @@ class Purge(commands.Cog):
         pattern: Optional[str],
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -146,7 +154,12 @@ class Purge(commands.Cog):
         ctx: commands.GuildContext,
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -168,7 +181,12 @@ class Purge(commands.Cog):
         ctx: commands.GuildContext,
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -182,7 +200,9 @@ class Purge(commands.Cog):
         - `[p]purge images 10`
         - `[p]purge images 2000`
         """
-        await _cleanup(ctx, number, lambda e: len(e.embeds) or len(e.attachments), channel=channel)
+        await _cleanup(
+            ctx, number, lambda e: len(e.embeds) or len(e.attachments), channel=channel
+        )
 
     @_purge.command(name="user", aliases=["member"])  # type: ignore
     async def _user(
@@ -191,7 +211,12 @@ class Purge(commands.Cog):
         member: discord.Member,
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -215,7 +240,12 @@ class Purge(commands.Cog):
         *,
         text: str,
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -246,7 +276,12 @@ class Purge(commands.Cog):
         prefix: Optional[str] = None,
         number: commands.Range[int, 1, 2000] = 100,
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -276,7 +311,12 @@ class Purge(commands.Cog):
         ctx: commands.GuildContext,
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -306,7 +346,12 @@ class Purge(commands.Cog):
         ctx: commands.GuildContext,
         number: commands.Range[int, 1, 2000],
         channel: Optional[  # type: ignore
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -321,8 +366,13 @@ class Purge(commands.Cog):
         - `[p]purge reactions 200`
         """
         channel: Union[
-            discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel
-        ] = (channel if channel else ctx.channel)
+            discord.Thread,
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+        ] = (
+            channel if channel else ctx.channel
+        )
         total_reactions: int = 0
         async for message in channel.history(limit=number, before=ctx.message):
             if len(message.reactions):
@@ -336,7 +386,19 @@ class Purge(commands.Cog):
         )
 
     @commands.command(aliases=["self"])  # type: ignore
-    async def selfpurge(self, ctx: commands.GuildContext, number: commands.Range[int, 1, 2000], channel: Optional[Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]] = None,):
+    async def selfpurge(
+        self,
+        ctx: commands.GuildContext,
+        number: commands.Range[int, 1, 2000],
+        channel: Optional[
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
+        ] = None,
+    ):
         """
         Removes your messages from the channel.
 
@@ -356,7 +418,12 @@ class Purge(commands.Cog):
         ctx: commands.GuildContext,
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -378,7 +445,12 @@ class Purge(commands.Cog):
         ctx: commands.GuildContext,
         number: commands.Range[int, 1, 2000],
         channel: Optional[
-            Union[discord.Thread, discord.TextChannel, discord.VoiceChannel, discord.StageChannel]
+            Union[
+                discord.Thread,
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+            ]
         ] = None,
     ):
         """
@@ -392,7 +464,9 @@ class Purge(commands.Cog):
         - `[p]purge links 10`
         - `[p]purge links 2000`
         """
-        await _cleanup(ctx, number, lambda m: LINKS_RE.search(m.content), channel=channel)
+        await _cleanup(
+            ctx, number, lambda m: LINKS_RE.search(m.content), channel=channel
+        )
 
     @_purge.command(name="after")  # type: ignore
     async def _after(
@@ -503,7 +577,10 @@ class Purge(commands.Cog):
             return
 
         to_delete: List[discord.Message] = await get_messages_for_deletion(
-            channel=ctx.channel, number=number, before=before, delete_pinned=delete_pinned
+            channel=ctx.channel,
+            number=number,
+            before=before,
+            delete_pinned=delete_pinned,
         )
         to_delete.append(ctx.message)
 
@@ -561,7 +638,10 @@ class Purge(commands.Cog):
             )
             return
         to_delete: List[discord.Message] = await get_messages_for_deletion(
-            channel=ctx.channel, before=message_two, after=message_one, delete_pinned=delete_pinned
+            channel=ctx.channel,
+            before=message_two,
+            after=message_one,
+            delete_pinned=delete_pinned,
         )
         to_delete.append(ctx.message)
         reason: str = "{} ({}) deleted {} messages in channel #{}.".format(
@@ -579,7 +659,9 @@ class Purge(commands.Cog):
         )
 
     @_purge.command(name="duplicates", aliases=["duplicate", "spam"])  # type: ignore
-    async def _duplicates(self, ctx: commands.GuildContext, number: commands.Range[int, 1, 2000]):
+    async def _duplicates(
+        self, ctx: commands.GuildContext, number: commands.Range[int, 1, 2000]
+    ):
         """
         Deletes duplicate messages in the channel from the last X messages and keeps only one copy.
 
@@ -652,7 +734,8 @@ class Purge(commands.Cog):
                 predicates.append(lambda m: m.author.bot)
             else:
                 predicates.append(
-                    lambda m: (m.webhook_id is None or m.interaction is not None) and m.author.bot
+                    lambda m: (m.webhook_id is None or m.interaction is not None)
+                    and m.author.bot
                 )
         elif flags.webhooks:
             predicates.append(lambda m: m.webhook_id is not None)
@@ -694,7 +777,11 @@ class Purge(commands.Cog):
         if number is None:
             number: int = 100
 
-        before: Optional[Annotated[int, Snowflake]] = flags.before if flags.before else None
-        after: Optional[Annotated[int, Snowflake]] = flags.after if flags.after else None
+        before: Optional[Annotated[int, Snowflake]] = (
+            flags.before if flags.before else None
+        )
+        after: Optional[Annotated[int, Snowflake]] = (
+            flags.after if flags.after else None
+        )
 
         await _cleanup(ctx, number, predicate, before=before, after=after)

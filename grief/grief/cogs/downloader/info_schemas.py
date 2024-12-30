@@ -3,7 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple, Union, cast
 
-from grief import VersionInfo, version_info as red_version_info
+from grief import VersionInfo
+from grief import version_info as red_version_info
 
 from . import installable
 from .log import log
@@ -134,7 +135,11 @@ def ensure_python_version_info(
 
 
 def ensure_bool(
-    info_file: Path, key_name: str, value: Union[Any, UseDefault], *, default: bool = False
+    info_file: Path,
+    key_name: str,
+    value: Union[Any, UseDefault],
+    *,
+    default: bool = False,
 ) -> bool:
     if value is USE_DEFAULT:
         return default
@@ -228,4 +233,8 @@ def update_mixin(repo_or_installable: RepoJSONMixin, schema: SchemaType) -> None
     info = repo_or_installable._info
     info_file = repo_or_installable._info_file
     for key, callback in schema.items():
-        setattr(repo_or_installable, key, callback(info_file, key, info.get(key, USE_DEFAULT)))
+        setattr(
+            repo_or_installable,
+            key,
+            callback(info_file, key, info.get(key, USE_DEFAULT)),
+        )

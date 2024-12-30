@@ -1,20 +1,9 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    Category,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    cast,
-    commands,
-    get_aliases,
-    get_cooldowns,
-    get_perms,
-    pagify,
-    get_category_page_mapper_chunk,
-)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, Category,
+                              Context, EmbedField, HelpSettings, _, cast,
+                              commands, get_aliases,
+                              get_category_page_mapper_chunk, get_cooldowns,
+                              get_perms, pagify)
 
 
 class DankHelp(ThemesMeta):
@@ -81,8 +70,8 @@ class DankHelp(ThemesMeta):
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx)
             emb["embed"]["title"] = (
-                (str(obj.reaction) if obj.reaction else "") + obj.name.capitalize()
-            )
+                str(obj.reaction) if obj.reaction else ""
+            ) + obj.name.capitalize()
             if description := obj.long_desc:
                 emb["embed"]["description"] = f"{description[:250]}"
 
@@ -129,14 +118,16 @@ class DankHelp(ThemesMeta):
             return
 
         command = obj
-        signature = _("`{ctx.clean_prefix}{command.qualified_name} {command.signature}`").format(
-            ctx=ctx, command=command
-        )
+        signature = _(
+            "`{ctx.clean_prefix}{command.qualified_name} {command.signature}`"
+        ).format(ctx=ctx, command=command)
         subcommands = None
 
         if hasattr(command, "all_commands"):
             grp = cast(commands.Group, command)
-            subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
+            subcommands = await self.get_group_help_mapping(
+                ctx, grp, help_settings=help_settings
+            )
 
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx)
@@ -157,10 +148,14 @@ class DankHelp(ThemesMeta):
                 emb["fields"].append(EmbedField("Aliases:", ", ".join(aliases), False))
 
             if final_perms := get_perms(command):
-                emb["fields"].append(EmbedField("Required Permissions:", final_perms, False))
+                emb["fields"].append(
+                    EmbedField("Required Permissions:", final_perms, False)
+                )
 
             if value:
-                emb["fields"].append(EmbedField("Full description:", value[:1024], False))
+                emb["fields"].append(
+                    EmbedField("Full description:", value[:1024], False)
+                )
 
             if subcommands:
 
@@ -170,10 +165,14 @@ class DankHelp(ThemesMeta):
                     return a_line[:67] + ".."
 
                 subtext = "\n" + "\n".join(
-                    shorten_line(f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}")
+                    shorten_line(
+                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
+                    )
                     for name, command in sorted(subcommands.items())
                 )
-                for i, page in enumerate(pagify(subtext, page_length=500, shorten_by=0)):
+                for i, page in enumerate(
+                    pagify(subtext, page_length=500, shorten_by=0)
+                ):
                     if i == 0:
                         title = _("**__Commands:__**")
                     else:

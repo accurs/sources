@@ -1,3 +1,2 @@
-
-from .events import ModerationEvents
 from .commands import Moderation
+from .events import ModerationEvents

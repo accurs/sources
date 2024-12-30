@@ -3,6 +3,7 @@ import importlib.machinery
 import discord
 
 from grief.core.utils.chat_formatting import humanize_number
+
 from .i18n import Translator
 
 _ = Translator(__name__, __file__)
@@ -29,7 +30,9 @@ class PackageAlreadyLoaded(RedError):
         self.spec: importlib.machinery.ModuleSpec = spec
 
     def __str__(self) -> str:
-        return f"There is already a package named {self.spec.name.split('.')[-1]} loaded"
+        return (
+            f"There is already a package named {self.spec.name.split('.')[-1]} loaded"
+        )
 
 
 class CogLoadError(RedError):

@@ -1,21 +1,13 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Pattern,
-    Tuple,
-    Union,
-)
+from typing import (TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional,
+                    Pattern, Tuple, Union)
 
 import discord
 from discord.ext.commands.converter import Converter, IDConverter
 from discord.ext.commands.errors import BadArgument
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
 
@@ -160,7 +152,9 @@ class MultiFlags(commands.FlagConverter):
     ban: Optional[bool] = commands.flag(name="ban", default=None)
     kick: Optional[bool] = commands.flag(name="kick", default=None)
     text: Optional[str] = commands.flag(name="text", default=None)
-    delete: Optional[bool] = commands.flag(name="delete", aliases=["filter"], default=None)
+    delete: Optional[bool] = commands.flag(
+        name="delete", aliases=["filter"], default=None
+    )
     react: Tuple[Union[discord.PartialEmoji, str], ...] = commands.flag(
         name="react", aliases=["emoji"], default=()
     )
@@ -210,7 +204,9 @@ class TriggerThread:
         if self.public is None:
             return _("None")
         elif self.public is True:
-            return _("\n- Public Thread created\n- Thread Name: `{name}`").format(name=self.name)
+            return _("\n- Public Thread created\n- Thread Name: `{name}`").format(
+                name=self.name
+            )
         else:
             return _(
                 "\n- Private Thread created\n- Invitable: {invitable}\n- Thread Name: `{name}`"
@@ -358,7 +354,9 @@ class Trigger:
         if self.last_modified_by:
             user = ctx.guild.get_member(self.last_modified_by)
             if user is None:
-                user_str = _("Unknown user (`{user_id}`)\n").format(user_id=self.last_modified_by)
+                user_str = _("Unknown user (`{user_id}`)\n").format(
+                    user_id=self.last_modified_by
+                )
             else:
                 user_str = user.mention
             msg += _("- By: {user}\n").format(user=user_str)
@@ -369,7 +367,11 @@ class Trigger:
         return msg
 
     def modify(
-        self, attr: str, value: Any, author: Union[discord.Member, discord.User], message_id: int
+        self,
+        attr: str,
+        value: Any,
+        author: Union[discord.Member, discord.User],
+        message_id: int,
     ):
         setattr(self, attr, value)
         self._last_modified_by = author.id
@@ -400,8 +402,12 @@ class Trigger:
                             last = entity["last"]
                             time = self.cooldown["time"]
                             if (now - last) > time:
-                                self.cooldown["last"].remove({"id": snowflake.id, "last": last})
-                                self.cooldown["last"].append({"id": snowflake.id, "last": now})
+                                self.cooldown["last"].remove(
+                                    {"id": snowflake.id, "last": last}
+                                )
+                                self.cooldown["last"].append(
+                                    {"id": snowflake.id, "last": now}
+                                )
                                 return False
                             else:
                                 return True
@@ -539,7 +545,8 @@ class Trigger:
         if isinstance(response_type, str):
             response_type = [data["response_type"]]
         response_type = [
-            TriggerResponse(t) if t != "filter" else TriggerResponse.delete for t in response_type
+            TriggerResponse(t) if t != "filter" else TriggerResponse.delete
+            for t in response_type
         ]
         if "delete" in response_type and isinstance(data["text"], bool):
             # replace old setting with new flag
@@ -570,7 +577,9 @@ class Trigger:
         if TriggerResponse.remove_role in response_type and not remove_roles:
             if multi_payload:
                 remove_roles = [
-                    r.response for r in multi_payload if r.action is TriggerResponse.remove_role
+                    r.response
+                    for r in multi_payload
+                    if r.action is TriggerResponse.remove_role
                 ]
             else:
                 remove_roles = data.get("text", [])
@@ -580,7 +589,9 @@ class Trigger:
         if TriggerResponse.add_role in response_type and not add_roles:
             if multi_payload:
                 remove_roles = [
-                    r.response for r in multi_payload if r.action is TriggerResponse.add_role
+                    r.response
+                    for r in multi_payload
+                    if r.action is TriggerResponse.add_role
                 ]
             else:
                 add_roles = data.get("text", [])
@@ -590,7 +601,9 @@ class Trigger:
         if TriggerResponse.react in response_type and not reactions:
             if multi_payload:
                 remove_roles = [
-                    r.response for r in multi_payload if r.action is TriggerResponse.react
+                    r.response
+                    for r in multi_payload
+                    if r.action is TriggerResponse.react
                 ]
             else:
                 reactions = data.get("text", [])
@@ -674,7 +687,9 @@ class ValidRegex(Converter):
             result = argument
         except Exception as e:
             log.error("Retrigger conversion error")
-            err_msg = _("`{arg}` is not a valid regex pattern. {e}").format(arg=argument, e=e)
+            err_msg = _("`{arg}` is not a valid regex pattern. {e}").format(
+                arg=argument, e=e
+            )
             raise BadArgument(err_msg)
         return result
 
@@ -693,7 +708,9 @@ class ValidEmoji(IDConverter):
     https://github.com/Rapptz/discord.py/blob/rewrite/discord/ext/commands/converter.py
     """
 
-    async def convert(self, ctx: commands.Context, argument: str) -> discord.PartialEmoji:
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> discord.PartialEmoji:
         match = self._get_id_match(argument) or re.match(
             r"<a?:[a-zA-Z0-9\_]+:([0-9]+)>$|(:[a-zA-z0-9\_]+:$)", argument
         )

@@ -1,20 +1,18 @@
-
-import discord
-from grief.core.utils import chat_formatting as chat
-from grief.vendored.discord.ext import menus
-
-from .common_variables import KNOWN_CHANNEL_TYPES
-from .embeds import activity_embed, emoji_embed, spotify_embed
-from .utils import _
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, List, Optional, Tuple, Union
 
 import discord
 from red_commons.logging import getLogger
+
 from grief.core import commands
 from grief.core.i18n import Translator
+from grief.core.utils import chat_formatting as chat
 from grief.vendored.discord.ext import menus
+
+from .common_variables import KNOWN_CHANNEL_TYPES
+from .embeds import activity_embed, emoji_embed, spotify_embed
+from .utils import _
 
 
 def check_channels(channel_type: str):
@@ -22,6 +20,7 @@ def check_channels(channel_type: str):
         return channel_type not in self.sources
 
     return predicate
+
 
 class BaseView(discord.ui.View):
     def __init__(
@@ -107,7 +106,9 @@ class BaseView(discord.ui.View):
         return self.message
 
     async def _get_kwargs_from_page(self, page):
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         if isinstance(value, dict):
             return value
         elif isinstance(value, str):
@@ -125,7 +126,9 @@ class BaseView(discord.ui.View):
         kwargs = await self._get_kwargs_from_page(page)
         await interaction.response.edit_message(**kwargs, view=self)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None:
@@ -145,10 +148,12 @@ class BaseView(discord.ui.View):
         """Just extends the default reaction_check to use owner_ids"""
         if interaction.user.id not in (*self.ctx.bot.owner_ids, self.ctx.author.id):
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True
+
 
 class BaseMenu(menus.MenuPages, inherit_buttons=False):
     def __init__(
@@ -179,7 +184,10 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
         if timed_out and self.delete_message_after:
             self.delete_message_after = False
 
-    @menus.button("<:grief_force_arrow_L:1107472953362370650>",position=menus.First(3),)
+    @menus.button(
+        "<:grief_force_arrow_L:1107472953362370650>",
+        position=menus.First(3),
+    )
     async def go_to_first_page(self, payload):
         """go to the first page"""
         await self.show_page(0)
@@ -200,7 +208,10 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
         else:
             await self.show_checked_page(self.current_page + 1)
 
-    @menus.button("<:grief_force_arrow_R:1107472947758780456> ", position=menus.Last(1),)
+    @menus.button(
+        "<:grief_force_arrow_R:1107472947758780456> ",
+        position=menus.Last(1),
+    )
     async def go_to_last_page(self, payload):
         """go to the last page"""
         # The call here is safe because it's guarded by skip_if
@@ -212,7 +223,9 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
 
 
 class ChannelsMenu(menus.MenuPages, inherit_buttons=True):
-    def __init__(self, sources: dict, channel_type: str, total_channels: int, timeout: int = 30):
+    def __init__(
+        self, sources: dict, channel_type: str, total_channels: int, timeout: int = 30
+    ):
         super().__init__(
             sources[next(iter(sources))],
             timeout=timeout,
@@ -230,23 +243,36 @@ class ChannelsMenu(menus.MenuPages, inherit_buttons=True):
     def should_add_reactions(self):
         return True
 
-    @menus.button("\N{BOOKMARK TABS}", position=menus.First(0), skip_if=check_channels("category"))
+    @menus.button(
+        "\N{BOOKMARK TABS}", position=menus.First(0), skip_if=check_channels("category")
+    )
     async def switch_category(self, payload):
         await self.set_source("category")
 
-    @menus.button("\N{SPEECH BALLOON}", position=menus.First(1), skip_if=check_channels("text"))
+    @menus.button(
+        "\N{SPEECH BALLOON}", position=menus.First(1), skip_if=check_channels("text")
+    )
     async def switch_text(self, payload):
         await self.set_source("text")
 
-    @menus.button("\N{SPEAKER}", position=menus.First(2), skip_if=check_channels("voice"))
+    @menus.button(
+        "\N{SPEAKER}", position=menus.First(2), skip_if=check_channels("voice")
+    )
     async def switch_voice(self, payload):
         await self.set_source("voice")
 
-    @menus.button("\N{SATELLITE ANTENNA}", position=menus.First(3), skip_if=check_channels("stage"),)
+    @menus.button(
+        "\N{SATELLITE ANTENNA}",
+        position=menus.First(3),
+        skip_if=check_channels("stage"),
+    )
     async def switch_stage(self, payload):
         await self.set_source("stage")
 
-    @menus.button("<:grief_force_arrow_L:1107472953362370650>",position=menus.First(3),)
+    @menus.button(
+        "<:grief_force_arrow_L:1107472953362370650>",
+        position=menus.First(3),
+    )
     async def go_to_first_page(self, payload):
         """go to the first page"""
         await self.show_page(0)
@@ -267,7 +293,10 @@ class ChannelsMenu(menus.MenuPages, inherit_buttons=True):
         else:
             await self.show_checked_page(self.current_page + 1)
 
-    @menus.button("<:grief_force_arrow_R:1107472947758780456> ", position=menus.Last(1),)
+    @menus.button(
+        "<:grief_force_arrow_R:1107472947758780456> ",
+        position=menus.Last(1),
+    )
     async def go_to_last_page(self, payload):
         """go to the last page"""
         # The call here is safe because it's guarded by skip_if
@@ -286,9 +315,11 @@ class ChannelsPager(menus.ListPageSource):
     async def format_page(self, menu: ChannelsMenu, entries):
         e = discord.Embed(
             title="{}:".format(_(KNOWN_CHANNEL_TYPES[menu.channel_type][1])),
-            description=chat.box("\n".join(c.name for c in entries))
-            if entries
-            else _("No channels"),
+            description=(
+                chat.box("\n".join(c.name for c in entries))
+                if entries
+                else _("No channels")
+            ),
         )
         e.set_footer(
             text=_("Page {}/{} • {}: {} • Total channels: {}").format(
@@ -316,7 +347,9 @@ class EmojiPager(menus.ListPageSource):
 
     async def format_page(self, menu: BaseMenu, page):
         e = await emoji_embed(menu.ctx, page)
-        e.set_footer(text=_("Page {}/{}").format(menu.current_page + 1, self.get_max_pages()))
+        e.set_footer(
+            text=_("Page {}/{}").format(menu.current_page + 1, self.get_max_pages())
+        )
         return e
 
 
@@ -326,7 +359,8 @@ class ActivityPager(menus.ListPageSource):
 
     async def format_page(self, menu: BaseMenu, page):
         return await activity_embed(menu.ctx, page)
-    
+
+
 class Spotify:
 
     async def format_page(self, menu: BaseMenu, page):
@@ -345,7 +379,9 @@ class AvatarDisplay(Enum):
             AvatarDisplay.guild: _("Server Avatar"),
         }.get(self, _("Global Avatar"))
 
-    def get_asset(self, member: Union[discord.Member, discord.User]) -> Optional[discord.Asset]:
+    def get_asset(
+        self, member: Union[discord.Member, discord.User]
+    ) -> Optional[discord.Asset]:
         if self is AvatarDisplay.default:
             return member.default_avatar
         elif self is AvatarDisplay.guild:
@@ -359,7 +395,9 @@ class AvatarPages(menus.ListPageSource):
         self.use_display_avatar: bool = True
         self.avatar_display: AvatarDisplay = None
 
-    def adjust_buttons(self, menu: BaseView, member: Union[discord.Member, discord.User]):
+    def adjust_buttons(
+        self, menu: BaseView, member: Union[discord.Member, discord.User]
+    ):
         for style in AvatarDisplay:
             if style is self.avatar_display or style.get_asset(member) is None:
                 menu.avatar_swap[style.value].disabled = True
@@ -384,11 +422,15 @@ class AvatarPages(menus.ListPageSource):
             formats.append("gif")
         if url != member.default_avatar:
             description = (
-                " | ".join(f"[{a.upper()}]({url.replace(size=4096, format=a)})" for a in formats)
+                " | ".join(
+                    f"[{a.upper()}]({url.replace(size=4096, format=a)})"
+                    for a in formats
+                )
                 + "\n"
             )
             description += " | ".join(
-                f"[{a}]({url.replace(size=a)})" for a in [32, 64, 128, 256, 512, 1024, 2048, 4096]
+                f"[{a}]({url.replace(size=a)})"
+                for a in [32, 64, 128, 256, 512, 1024, 2048, 4096]
             )
             em.description = description
         if isinstance(member, discord.Member):
@@ -403,7 +445,9 @@ class AvatarPages(menus.ListPageSource):
 
 class SwapAvatarButton(discord.ui.Button):
     def __init__(self, avatar_display: AvatarDisplay):
-        super().__init__(style=discord.ButtonStyle.grey, label=avatar_display.get_name())
+        super().__init__(
+            style=discord.ButtonStyle.grey, label=avatar_display.get_name()
+        )
         self.view: BaseView
         self.avatar_display = avatar_display
 
@@ -564,7 +608,6 @@ class JoinGuildButton(discord.ui.Button):
             await interaction.response.defer()
 
 
-
 class ConfirmView(discord.ui.View):
     """
     This is just a copy of my version from Grief to be removed later possibly
@@ -599,7 +642,9 @@ class ConfirmView(discord.ui.View):
             await self.message.edit(view=None)
 
     @discord.ui.button(label=_("Yes"), style=discord.ButtonStyle.green)
-    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def confirm_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.result = True
         self.stop()
         # respond to the interaction so the user does not see "interaction failed".
@@ -608,7 +653,9 @@ class ConfirmView(discord.ui.View):
         await self.on_timeout()
 
     @discord.ui.button(label=_("No"), style=discord.ButtonStyle.secondary)
-    async def dismiss_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def dismiss_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.result = False
         self.stop()
         # respond to the interaction so the user does not see "interaction failed".
@@ -621,7 +668,8 @@ class ConfirmView(discord.ui.View):
             self.message = interaction.message
         if self.author and interaction.user.id != self.author.id:
             await interaction.response.send_message(
-                content=_("You are not authorized to interact with this."), ephemeral=True
+                content=_("You are not authorized to interact with this."),
+                ephemeral=True,
             )
             return False
         return True

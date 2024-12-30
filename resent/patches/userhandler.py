@@ -1,8 +1,10 @@
-from  patches.classes import LastFMHandler as Handler
 import json
 from os.path import exists
 
+from patches.classes import LastFMHandler as Handler
+
 users = {}
+
 
 def read_db():
     if exists("users.json"):
@@ -13,9 +15,11 @@ def read_db():
             json.dump(users, outfile)
             return read_db()
 
+
 def update_db():
     with open("users.json", "w") as outfile:
-            json.dump(users, outfile)
+        json.dump(users, outfile)
+
 
 def get_user(id):
     if str(id) in users:
@@ -23,14 +27,17 @@ def get_user(id):
     else:
         return "error"
 
+
 async def lastfm_user_exists(user):
-    h = Handler("43693facbb24d1ac893a7d33846b15cc") 
+    h = Handler("43693facbb24d1ac893a7d33846b15cc")
     a = await h.get_user_info(user)
-    return 'error' not in a
+    return "error" not in a
+
 
 def link_user(id, user):
     users[str(id)] = user
     update_db()
+
 
 def unlink_user(id, user):
     users

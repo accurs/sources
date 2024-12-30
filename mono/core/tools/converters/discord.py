@@ -4,15 +4,9 @@ from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from discord import Member, Role
-from discord.ext.commands import (
-    BadArgument,
-    CommandError,
-    MemberConverter,
-    RoleConverter,
-    RoleNotFound,
-)
+from discord.ext.commands import (BadArgument, CommandError, MemberConverter,
+                                  RoleConverter, RoleNotFound)
 from discord.utils import find
-
 
 if TYPE_CHECKING:
     from core.client.context import Context

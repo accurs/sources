@@ -1,22 +1,18 @@
-from discord.ext.commands import (
-    Cog, 
-)
-from discord import (
-    Client, 
-    Member, 
-    Guild
-)
 import json
+
+from discord import Client, Guild, Member
+from discord.ext.commands import Cog
 from loguru import logger
+
 
 class LevelEvents(Cog):
     def __init__(self: "LevelEvents", bot: Client):
         self.bot = bot
 
-
     @Cog.listener("on_text_level_up")
     async def on_level_up(self, guild: Guild, member: Member, level: int):
         settings = await self.bot.levels.get_settings(guild)
+
         async def do_roles():
             if not settings.roles:
                 return
@@ -33,12 +29,17 @@ class LevelEvents(Cog):
                 if level >= role_level:
                     if role not in member.roles:
                         new_roles.append(role)
-            return await member.edit(roles = new_roles, reason = "level up")
+            return await member.edit(roles=new_roles, reason="level up")
 
         async def do_message():
             data = settings.award_message
             mode = settings.award_message_mode
-            user_data = await self.bot.db.fetchval("""SELECT messages_enabled FROM text_levels WHERE guild_id = $1 AND user_id = $2""", guild.id, member.id, cached = False)
+            user_data = await self.bot.db.fetchval(
+                """SELECT messages_enabled FROM text_levels WHERE guild_id = $1 AND user_id = $2""",
+                guild.id,
+                member.id,
+                cached=False,
+            )
             if user_data is None:
                 user_data = True
             if user_data is False:
@@ -60,11 +61,11 @@ class LevelEvents(Cog):
                 message = data.get("message")
             except Exception:
                 message = data
-                    
+
             message = message.replace("{level}", str(level))
             if user_data is True:
                 try:
-                    return await self.bot.send_embed(channel, message, user = member)
+                    return await self.bot.send_embed(channel, message, user=member)
                 except Exception:
                     return False
             else:

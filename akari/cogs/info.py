@@ -1,12 +1,12 @@
-import git, datetime
+import datetime
+from platform import python_version
+
+import git
+from discord import Embed, Permissions, User, __version__, utils
+from discord.ext.commands import Cog, command, hybrid_command
+from discord.ui import Button, View
 from tools.bot import Akari
 from tools.helpers import AkariContext
-
-from discord import User, Embed, __version__, utils, Permissions
-from discord.ext.commands import Cog, command, hybrid_command
-from discord.ui import View, Button
-
-from platform import python_version
 
 REPO_PATH = "/root/AkariBot/.git"
 

@@ -1,6 +1,7 @@
 import asyncio
 
 import discord
+
 from grief.core.utils.chat_formatting import escape
 from grief.core.utils.menus import DEFAULT_CONTROLS, menu
 

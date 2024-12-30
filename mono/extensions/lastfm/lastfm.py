@@ -2,65 +2,40 @@ from asyncio import Task, gather, sleep
 from base64 import b64decode
 from contextlib import suppress
 from io import BytesIO
-from core.tools.logging import logger as log
 from math import ceil
 from random import choice
-from typing import (
-    Annotated,
-    AsyncGenerator,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import (TYPE_CHECKING, Annotated, AsyncGenerator, List, Literal,
+                    Optional, Tuple, Union, cast)
 from urllib.parse import quote_plus
-from discord.utils import run_in_executor
 
+import extensions.lastfm.interface as lastfm
+import extensions.lastfm.interface as interface
 from asyncspotify import Client as SpotifyClient
 from asyncspotify import ClientCredentialsFlow as SpotifyClientCredentialsFlow
 from cashews import cache
 from colorama import Fore
-from discord import Color, Embed, File, HTTPException, Member, Message
-from discord.ext.commands import (
-    BucketType,
-    Cog,
-    CommandError,
-    Cooldown,
-    CooldownMapping,
-    MaxConcurrency,
-    MaxConcurrencyReached,
-    Range,
-    command,
-    group,
-    has_permissions,
-    cooldown,
-    max_concurrency,
-    parameter,
-)
-from discord.utils import format_dt, utcnow
-from pydantic import BaseModel, Field
-from pylast import LastFMNetwork, Track, WSError, TopItem
-from typing_extensions import Self
-from yarl import URL
-from typing import TYPE_CHECKING
-
-import extensions.lastfm.interface as lastfm
-import extensions.lastfm.interface as interface
-from extensions.lastfm.interface.spotify.track import SpotifyTrack
 from config import Api
+from core.client.context import Context as _Context
+from core.managers.paginator import Paginator
+from core.managers.script import EmbedScript
+from core.managers.script import EmbedScript as Script
 from core.Mono import Mono
 from core.tools import codeblock, plural, shorten
-from core.tools.converters.kayo import Timeframe, StrictMember
+from core.tools.converters.kayo import StrictMember, Timeframe
+from core.tools.logging import logger as log
 from core.tools.tools import capture_time
-
-from core.client.context import Context as _Context
-
-from core.managers.paginator import Paginator
-
-from core.managers.script import EmbedScript as Script
-from core.managers.script import EmbedScript
+from discord import Color, Embed, File, HTTPException, Member, Message
+from discord.ext.commands import (BucketType, Cog, CommandError, Cooldown,
+                                  CooldownMapping, MaxConcurrency,
+                                  MaxConcurrencyReached, Range, command,
+                                  cooldown, group, has_permissions,
+                                  max_concurrency, parameter)
+from discord.utils import format_dt, run_in_executor, utcnow
+from extensions.lastfm.interface.spotify.track import SpotifyTrack
+from pydantic import BaseModel, Field
+from pylast import LastFMNetwork, TopItem, Track, WSError
+from typing_extensions import Self
+from yarl import URL
 
 INDEX_CONCURRENCY = MaxConcurrency(1, per=BucketType.user, wait=False)
 WHOKNOWS_COOLDOWN = CooldownMapping(Cooldown(1, 3), BucketType.member)

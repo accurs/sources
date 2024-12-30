@@ -4,27 +4,13 @@ from collections import defaultdict
 from contextlib import suppress
 from typing import Annotated, List, Optional, Union
 
-from discord import (
-    Color,
-    Embed,
-    File,
-    Member,
-    Message,
-    NotFound,
-    RawReactionActionEvent,
-    TextChannel,
-)
-from discord.ext.commands import (
-    ChannelNotFound,
-    Cog,
-    group,
-    has_permissions,
-    hybrid_group,
-)
+from discord import (Color, Embed, File, Member, Message, NotFound,
+                     RawReactionActionEvent, TextChannel)
+from discord.ext.commands import (ChannelNotFound, Cog, group, has_permissions,
+                                  hybrid_group)
 from discord.ui import Button, View
-
-from structure.scare import Scare, ratelimiter
 from structure.managers import Context
+from structure.scare import Scare, ratelimiter
 from structure.utilities import DiscordEmoji, YouTuber
 
 

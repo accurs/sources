@@ -5,14 +5,15 @@ import contextlib
 import itertools
 import re
 from getpass import getpass
-from typing import Match, Pattern, Tuple, Optional, AsyncIterator, Any, Dict, Iterator, List
+from typing import (Any, AsyncIterator, Dict, Iterator, List, Match, Optional,
+                    Pattern, Tuple)
 from urllib.parse import quote_plus
 
 try:
     # pylint: disable=import-error
-    import pymongo.errors
     import motor.core
     import motor.motor_asyncio
+    import pymongo.errors
 except ModuleNotFoundError:
     motor = None
     pymongo = None
@@ -128,7 +129,9 @@ class MongoDriver(BaseDriver):
         return identifier_data.primary_key
 
     async def rebuild_dataset(
-        self, identifier_data: IdentifierData, cursor: "motor.motor_asyncio.AsyncIOMotorCursor"
+        self,
+        identifier_data: IdentifierData,
+        cursor: "motor.motor_asyncio.AsyncIOMotorCursor",
     ):
         ret = {}
         async for doc in cursor:
@@ -161,14 +164,18 @@ class MongoDriver(BaseDriver):
         if len(identifier_data.identifiers) > 0:
             proj = {"_id": False, ".".join(escaped_identifiers): True}
 
-            partial = await mongo_collection.find_one(filter=pkey_filter, projection=proj)
+            partial = await mongo_collection.find_one(
+                filter=pkey_filter, projection=proj
+            )
         else:
             # The case here is for partial primary keys like all_members()
             cursor = mongo_collection.find(filter=pkey_filter)
             partial = await self.rebuild_dataset(identifier_data, cursor)
 
         if partial is None:
-            raise KeyError("No matching document was found and Config expects a KeyError.")
+            raise KeyError(
+                "No matching document was found and Config expects a KeyError."
+            )
 
         for i in escaped_identifiers:
             partial = partial[i]
@@ -190,7 +197,9 @@ class MongoDriver(BaseDriver):
 
         if num_pkeys >= identifier_data.primary_key_len:
             # We're setting at the document level or below.
-            dot_identifiers = ".".join(map(self._escape_key, identifier_data.identifiers))
+            dot_identifiers = ".".join(
+                map(self._escape_key, identifier_data.identifiers)
+            )
             if dot_identifiers:
                 update_stmt = {"$set": {dot_identifiers: value}}
             else:
@@ -230,7 +239,10 @@ class MongoDriver(BaseDriver):
                         await mongo_collection.delete_many(pkey_filter, session=session)
                         await mongo_collection.insert_many(
                             self.generate_documents_to_insert(
-                                uuid, primary_key, value, identifier_data.primary_key_len
+                                uuid,
+                                primary_key,
+                                value,
+                                identifier_data.primary_key_len,
                             ),
                             session=session,
                         )
@@ -251,7 +263,9 @@ class MongoDriver(BaseDriver):
                     # simply be all the primary keys which were part of existing documents but are
                     # not included in the new documents.
                     to_delete: List[Dict] = []
-                    async for document in mongo_collection.find(pkey_filter, session=session):
+                    async for document in mongo_collection.find(
+                        pkey_filter, session=session
+                    ):
                         pkey = document["_id"]["RED_primary_key"]
                         new_document = value
                         try:
@@ -262,9 +276,13 @@ class MongoDriver(BaseDriver):
                         except KeyError:
                             # We've found the primary key of an old document which isn't in the
                             # updated set of documents - it should be deleted.
-                            to_delete.append({"_id": {"RED_uuid": uuid, "RED_primary_key": pkey}})
+                            to_delete.append(
+                                {"_id": {"RED_uuid": uuid, "RED_primary_key": pkey}}
+                            )
                         else:
-                            _filter = {"_id": {"RED_uuid": uuid, "RED_primary_key": pkey}}
+                            _filter = {
+                                "_id": {"RED_uuid": uuid, "RED_primary_key": pkey}
+                            }
                             new_document.update(_filter)
                             to_replace.append((_filter, new_document))
 
@@ -300,12 +318,19 @@ class MongoDriver(BaseDriver):
 
     @classmethod
     def generate_documents_to_insert(
-        cls, uuid: str, primary_keys: List[str], data: Dict[str, Dict[str, Any]], pkey_len: int
+        cls,
+        uuid: str,
+        primary_keys: List[str],
+        data: Dict[str, Dict[str, Any]],
+        pkey_len: int,
     ) -> Iterator[Dict[str, Any]]:
         num_missing_pkeys = pkey_len - len(primary_keys)
         if num_missing_pkeys == 1:
             for pkey, document in data.items():
-                document["_id"] = {"RED_uuid": uuid, "RED_primary_key": primary_keys + [pkey]}
+                document["_id"] = {
+                    "RED_uuid": uuid,
+                    "RED_primary_key": primary_keys + [pkey],
+                }
                 yield document
         else:
             for pkey, inner_data in data.items():
@@ -325,8 +350,12 @@ class MongoDriver(BaseDriver):
         if identifier_data.identifiers:
             # This covers case 1
             mongo_collection = self.get_collection(identifier_data.category)
-            dot_identifiers = ".".join(map(self._escape_key, identifier_data.identifiers))
-            await mongo_collection.update_one(pkey_filter, update={"$unset": {dot_identifiers: 1}})
+            dot_identifiers = ".".join(
+                map(self._escape_key, identifier_data.identifiers)
+            )
+            await mongo_collection.update_one(
+                pkey_filter, update={"$unset": {dot_identifiers: 1}}
+            )
         elif identifier_data.category:
             # This covers cases 2-4
             mongo_collection = self.get_collection(identifier_data.category)

@@ -1,7 +1,7 @@
-
 from typing import Any, List, Optional, Tuple
 
 import discord
+
 from grief.core import commands
 from grief.vendored.discord.ext.menus import ListPageSource
 
@@ -16,7 +16,9 @@ class BaseView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self._author_id:
-            await interaction.response.send_message("You can't do that.", ephemeral=True)
+            await interaction.response.send_message(
+                "You can't do that.", ephemeral=True
+            )
             return False
         return True
 
@@ -53,7 +55,9 @@ class ConfirmationView(BaseView):
         await self.disable_all(button, interaction)
         await interaction.followup.send("Action cancelled.", ephemeral=True)
 
-    async def disable_all(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def disable_all(
+        self, button: discord.ui.Button, interaction: discord.Interaction
+    ):
         self.disable_items(ignore_color=(button,))
         await interaction.response.edit_message(view=self)
 
@@ -99,11 +103,19 @@ class PaginatedView(BaseView):
         length = source.get_max_pages()
         if length > 1:
             self.add_item(
-                Button("previous", style=discord.ButtonStyle.blurple, callback=self.previous)
+                Button(
+                    "previous",
+                    style=discord.ButtonStyle.blurple,
+                    callback=self.previous,
+                )
             )
-        self.add_item(Button("close", style=discord.ButtonStyle.red, callback=self.close))
+        self.add_item(
+            Button("close", style=discord.ButtonStyle.red, callback=self.close)
+        )
         if length > 1:
-            self.add_item(Button("next", style=discord.ButtonStyle.blurple, callback=self.next))
+            self.add_item(
+                Button("next", style=discord.ButtonStyle.blurple, callback=self.next)
+            )
 
     async def send_initial_message(self, ctx: commands.Context) -> discord.Message:
         self._author_id = ctx.author.id
@@ -114,7 +126,9 @@ class PaginatedView(BaseView):
         return message
 
     async def _get_kwargs_from_page(self, page) -> dict:
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         kwargs: Optional[dict] = None
         if isinstance(value, dict):
             kwargs = value
@@ -131,7 +145,9 @@ class PaginatedView(BaseView):
         kwargs = await self._get_kwargs_from_page(page)
         await interaction.response.edit_message(**kwargs)
 
-    async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
+    async def show_checked_page(
+        self, page_number: int, interaction: discord.Interaction
+    ) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None or max_pages > page_number >= 0:
@@ -145,7 +161,9 @@ class PaginatedView(BaseView):
             # An error happened that can be handled, so ignore it.
             pass
 
-    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def previous(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await self.show_checked_page(self.current_page - 1, interaction)
 
     async def close(self, interaction: discord.Interaction, button: discord.ui.Button):

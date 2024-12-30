@@ -1,65 +1,45 @@
 from __future__ import annotations
 
-import discord_ios
 import asyncio
+import contextlib
+import functools
 import inspect
 import logging
 import os
 import platform
 import shutil
 import sys
-import contextlib
 import weakref
-import functools
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 from datetime import datetime
 from importlib.machinery import ModuleSpec
 from pathlib import Path
-from typing import (
-    Optional,
-    Union,
-    List,
-    Iterable,
-    Dict,
-    NoReturn,
-    Set,
-    TypeVar,
-    Callable,
-    Awaitable,
-    Any,
-    Literal,
-    MutableMapping,
-    Set,
-    overload,
-    TYPE_CHECKING,
-)
 from types import MappingProxyType
+from typing import (TYPE_CHECKING, Any, Awaitable, Callable, Dict, Iterable,
+                    List, Literal, MutableMapping, NoReturn, Optional, Set,
+                    TypeVar, Union, overload)
 
 import discord
+import discord_ios
 from discord.ext import commands as dpy_commands
 from discord.ext.commands import when_mentioned_or
 
-from . import Config, i18n, app_commands, commands, errors, _drivers
+from . import Config, _drivers, app_commands, commands, errors, i18n
 from ._cli import ExitCodes
 from ._cog_manager import CogManager, CogManagerUI
+from ._events import init_events
+from ._global_checks import init_global_checks
+from ._rpc import RPCMixin
+from ._settings_caches import (DisabledCogCache, I18nManager, IgnoreManager,
+                               PrefixManager, WhitelistBlacklistManager)
 from .core_commands import Core
 from .data_manager import cog_data_path
 from .dev_commands import Dev
-from ._events import init_events
-from ._global_checks import init_global_checks
-from ._settings_caches import (
-    PrefixManager,
-    IgnoreManager,
-    WhitelistBlacklistManager,
-    DisabledCogCache,
-    I18nManager,
-)
-from .utils.predicates import MessagePredicate
-from ._rpc import RPCMixin
 from .tree import RedTree
-from .utils import can_user_send_messages_in, common_filters, AsyncIter
-from .utils.chat_formatting import box, text_to_file
+from .utils import AsyncIter, can_user_send_messages_in, common_filters
 from .utils._internal_utils import send_to_owners_with_prefix_replaced
+from .utils.chat_formatting import box, text_to_file
+from .utils.predicates import MessagePredicate
 
 if TYPE_CHECKING:
     from discord.ext.commands.hybrid import CommandCallback, ContextT, P
@@ -77,7 +57,9 @@ __all__ = ("grief",)
 
 NotMessage = namedtuple("NotMessage", "guild")
 
-DataDeletionResults = namedtuple("DataDeletionResults", "failed_modules failed_cogs unhandled")
+DataDeletionResults = namedtuple(
+    "DataDeletionResults", "failed_modules failed_cogs unhandled"
+)
 
 PreInvokeCoroutine = Callable[[commands.Context], Awaitable[Any]]
 T_BIC = TypeVar("T_BIC", bound=PreInvokeCoroutine)
@@ -195,7 +177,7 @@ class Grief(
         self._whiteblacklist_cache = WhitelistBlacklistManager(self._config)
         self._i18n_cache = I18nManager(self._config)
         self._bypass_cooldowns = False
-        
+
         async def prefix_manager(bot, message) -> List[str]:
             prefixes = await self._prefix_cache.get_prefixes(message.guild)
             if cli_flags.mentionable:
@@ -206,7 +188,9 @@ class Grief(
             kwargs["command_prefix"] = prefix_manager
 
         if "owner_id" in kwargs:
-            raise RuntimeError("grief doesn't accept owner_id kwarg, use owner_ids instead.")
+            raise RuntimeError(
+                "grief doesn't accept owner_id kwarg, use owner_ids instead."
+            )
 
         if "intents" not in kwargs:
             intents = discord.Intents.all()
@@ -226,7 +210,9 @@ class Grief(
             kwargs["command_not_found"] = "Command {} not found.\n{}"
 
         if "allowed_mentions" not in kwargs:
-            kwargs["allowed_mentions"] = discord.AllowedMentions(everyone=False, roles=False)
+            kwargs["allowed_mentions"] = discord.AllowedMentions(
+                everyone=False, roles=False
+            )
 
         message_cache_size = cli_flags.message_cache_size
         if cli_flags.no_message_cache:
@@ -250,7 +236,9 @@ class Grief(
         self._red_ready = asyncio.Event()
         self._red_before_invoke_objs: Set[PreInvokeCoroutine] = set()
 
-        self._deletion_requests: MutableMapping[int, asyncio.Lock] = weakref.WeakValueDictionary()
+        self._deletion_requests: MutableMapping[int, asyncio.Lock] = (
+            weakref.WeakValueDictionary()
+        )
 
     def set_help_formatter(self, formatter: commands.help.HelpFormatterABC):
         """
@@ -438,7 +426,9 @@ class Grief(
         """
         if guild is None:
             return False
-        return await self._disabled_cog_cache.cog_disabled_in_guild(cog.qualified_name, guild.id)
+        return await self._disabled_cog_cache.cog_disabled_in_guild(
+            cog.qualified_name, guild.id
+        )
 
     async def cog_disabled_in_guild_raw(self, cog_name: str, guild_id: int) -> bool:
         """
@@ -544,7 +534,10 @@ class Grief(
         return self._max_messages
 
     async def add_to_blacklist(
-        self, users_or_roles: Iterable[UserOrRole], *, guild: Optional[discord.Guild] = None
+        self,
+        users_or_roles: Iterable[UserOrRole],
+        *,
+        guild: Optional[discord.Guild] = None,
     ):
         """
         Add users or roles to the global or local blocklist.
@@ -567,7 +560,10 @@ class Grief(
         await self._whiteblacklist_cache.add_to_blacklist(guild, to_add)
 
     async def remove_from_blacklist(
-        self, users_or_roles: Iterable[UserOrRole], *, guild: Optional[discord.Guild] = None
+        self,
+        users_or_roles: Iterable[UserOrRole],
+        *,
+        guild: Optional[discord.Guild] = None,
     ):
         """
         Remove users or roles from the global or local blocklist.
@@ -619,7 +615,10 @@ class Grief(
         await self._whiteblacklist_cache.clear_blacklist(guild)
 
     async def add_to_whitelist(
-        self, users_or_roles: Iterable[UserOrRole], *, guild: Optional[discord.Guild] = None
+        self,
+        users_or_roles: Iterable[UserOrRole],
+        *,
+        guild: Optional[discord.Guild] = None,
     ):
         """
         Add users or roles to the global or local allowlist.
@@ -642,7 +641,10 @@ class Grief(
         await self._whiteblacklist_cache.add_to_whitelist(guild, to_add)
 
     async def remove_from_whitelist(
-        self, users_or_roles: Iterable[UserOrRole], *, guild: Optional[discord.Guild] = None
+        self,
+        users_or_roles: Iterable[UserOrRole],
+        *,
+        guild: Optional[discord.Guild] = None,
     ):
         """
         Remove users or roles from the global or local allowlist.
@@ -784,7 +786,9 @@ class Grief(
                 # This uses member._roles (getattr is for the user case)
                 # If this is removed upstream (undocumented)
                 # there is a silent failure potential, and role blacklist/whitelists will break.
-                ids = {i for i in (who.id, *(getattr(who, "_roles", []))) if i != guild.id}
+                ids = {
+                    i for i in (who.id, *(getattr(who, "_roles", []))) if i != guild.id
+                }
 
             guild_whitelist = await self.get_whitelist(guild)
             if guild_whitelist:
@@ -841,7 +845,12 @@ class Grief(
         if guild:
             assert isinstance(
                 channel,
-                (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread),
+                (
+                    discord.TextChannel,
+                    discord.VoiceChannel,
+                    discord.StageChannel,
+                    discord.Thread,
+                ),
             )
             if not can_user_send_messages_in(guild.me, channel):
                 return False
@@ -886,7 +895,9 @@ class Grief(
         is_private = isinstance(ctx.channel, discord.abc.PrivateChannel)
         if isinstance(ctx.channel, discord.PartialMessageable):
             if ctx.channel.type is not discord.ChannelType.private:
-                raise TypeError("Can't check permissions for non-private PartialMessageable.")
+                raise TypeError(
+                    "Can't check permissions for non-private PartialMessageable."
+                )
             is_private = True
         perms = ctx.channel.permissions_for(author)
         surpass_ignore = (
@@ -929,7 +940,9 @@ class Grief(
         )
         return not thread_ignored
 
-    async def get_valid_prefixes(self, guild: Optional[discord.Guild] = None) -> List[str]:
+    async def get_valid_prefixes(
+        self, guild: Optional[discord.Guild] = None
+    ) -> List[str]:
         """
         This gets the valid prefixes for a guild.
 
@@ -950,7 +963,9 @@ class Grief(
         """
         return await self.get_prefix(NotMessage(guild))
 
-    async def set_prefixes(self, prefixes: List[str], guild: Optional[discord.Guild] = None):
+    async def set_prefixes(
+        self, prefixes: List[str], guild: Optional[discord.Guild] = None
+    ):
         """
         Set global/server prefixes.
 
@@ -1029,7 +1044,9 @@ class Grief(
             return user
         return await self.fetch_user(user_id)
 
-    async def get_or_fetch_member(self, guild: discord.Guild, member_id: int) -> discord.Member:
+    async def get_or_fetch_member(
+        self, guild: discord.Guild, member_id: int
+    ) -> discord.Member:
         """
         Retrieves a `discord.Member` from a guild and a member ID.
 
@@ -1349,7 +1366,8 @@ class Grief(
             )
 
         if isinstance(
-            channel, (discord.GroupChannel, discord.DMChannel, discord.PartialMessageable)
+            channel,
+            (discord.GroupChannel, discord.DMChannel, discord.PartialMessageable),
         ):
             raise TypeError(
                 "You cannot pass a GroupChannel, DMChannel, or PartialMessageable to this method."
@@ -1357,21 +1375,35 @@ class Grief(
 
         if isinstance(
             channel,
-            (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread),
+            (
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.StageChannel,
+                discord.Thread,
+            ),
         ):
-            channel_id = channel.parent_id if isinstance(channel, discord.Thread) else channel.id
+            channel_id = (
+                channel.parent_id if isinstance(channel, discord.Thread) else channel.id
+            )
 
-            if check_permissions and not channel.permissions_for(channel.guild.me).embed_links:
+            if (
+                check_permissions
+                and not channel.permissions_for(channel.guild.me).embed_links
+            ):
                 return False
 
             channel_setting = await self._config.channel_from_id(channel_id).embeds()
             if channel_setting is not None:
                 return channel_setting
 
-            if (command_setting := await get_command_setting(channel.guild.id)) is not None:
+            if (
+                command_setting := await get_command_setting(channel.guild.id)
+            ) is not None:
                 return command_setting
 
-            if (guild_setting := await self._config.guild(channel.guild).embeds()) is not None:
+            if (
+                guild_setting := await self._config.guild(channel.guild).embeds()
+            ) is not None:
                 return guild_setting
         else:
             user = channel
@@ -1433,7 +1465,9 @@ class Grief(
         scopes = ("bot", "applications.commands") if commands_scope else ("bot",)
         perms_int = data["invite_perm"]
         permissions = discord.Permissions(perms_int)
-        return discord.utils.oauth_url(self.application_id, permissions=permissions, scopes=scopes)
+        return discord.utils.oauth_url(
+            self.application_id, permissions=permissions, scopes=scopes
+        )
 
     async def is_invite_url_public(self) -> bool:
         """
@@ -1504,12 +1538,14 @@ class Grief(
         return await self._config.guild(discord.Object(id=guild_id)).mod_role()
 
     @overload
-    async def get_shared_api_tokens(self, service_name: str = ...) -> Dict[str, str]:
-        ...
+    async def get_shared_api_tokens(
+        self, service_name: str = ...
+    ) -> Dict[str, str]: ...
 
     @overload
-    async def get_shared_api_tokens(self, service_name: None = ...) -> Dict[str, Dict[str, str]]:
-        ...
+    async def get_shared_api_tokens(
+        self, service_name: None = ...
+    ) -> Dict[str, Dict[str, str]]: ...
 
     async def get_shared_api_tokens(
         self, service_name: Optional[str] = None
@@ -1679,7 +1715,9 @@ class Grief(
         lib = spec.loader.load_module()
         if not hasattr(lib, "setup"):
             del lib
-            raise discord.ClientException(f"extension {name} does not have a setup function")
+            raise discord.ClientException(
+                f"extension {name} does not have a setup function"
+            )
 
         try:
             await lib.setup(self)
@@ -1787,7 +1825,10 @@ class Grief(
         }
 
     async def is_automod_immune(
-        self, to_check: Union[discord.Message, commands.Context, discord.abc.User, discord.Role]
+        self,
+        to_check: Union[
+            discord.Message, commands.Context, discord.abc.User, discord.Role
+        ],
     ) -> bool:
         """
         Checks if the user, message, context, or role should be considered immune from automated
@@ -1922,7 +1963,9 @@ class Grief(
 
     def add_command(self, command: commands.Command, /) -> None:
         if not isinstance(command, commands.Command):
-            raise RuntimeError("Commands must be instances of `redbot.core.commands.Command`")
+            raise RuntimeError(
+                "Commands must be instances of `redbot.core.commands.Command`"
+            )
 
         super().add_command(command)
 
@@ -1954,7 +1997,9 @@ class Grief(
         with_app_command: bool = True,
         *args: Any,
         **kwargs: Any,
-    ) -> Callable[[CommandCallback[Any, ContextT, P, _T]], commands.HybridCommand[Any, P, _T]]:
+    ) -> Callable[
+        [CommandCallback[Any, ContextT, P, _T]], commands.HybridCommand[Any, P, _T]
+    ]:
         """A shortcut decorator that invokes :func:`~redbot.core.commands.hybrid_command` and adds it to
         the internal command list via :meth:`add_command`.
 
@@ -1980,7 +2025,9 @@ class Grief(
         with_app_command: bool = True,
         *args: Any,
         **kwargs: Any,
-    ) -> Callable[[CommandCallback[Any, ContextT, P, _T]], commands.HybridGroup[Any, P, _T]]:
+    ) -> Callable[
+        [CommandCallback[Any, ContextT, P, _T]], commands.HybridGroup[Any, P, _T]
+    ]:
         """A shortcut decorator that invokes :func:`~redbot.core.commands.hybrid_group` and adds it to
         the internal command list via :meth:`add_command`.
 
@@ -2082,7 +2129,12 @@ class Grief(
     async def get_owner_notification_destinations(
         self,
     ) -> List[
-        Union[discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.User]
+        Union[
+            discord.TextChannel,
+            discord.VoiceChannel,
+            discord.StageChannel,
+            discord.User,
+        ]
     ]:
         """
         Gets the users and channels to send to
@@ -2248,7 +2300,9 @@ class Grief(
         await self.wait_until_red_ready()
         lock = self._deletion_requests.setdefault(user_id, asyncio.Lock())
         async with lock:
-            return await self._handle_data_deletion_request(requester=requester, user_id=user_id)
+            return await self._handle_data_deletion_request(
+                requester=requester, user_id=user_id
+            )
 
     async def _handle_data_deletion_request(
         self,
@@ -2275,7 +2329,8 @@ class Grief(
         }
 
         cog_handlers = {
-            cog_qualname: cog.red_delete_data_for_user for cog_qualname, cog in self.cogs.items()
+            cog_qualname: cog.red_delete_data_for_user
+            for cog_qualname, cog in self.cogs.items()
         }
 
         failures = {
@@ -2295,7 +2350,10 @@ class Grief(
                 failures[stype].append(sname)
 
         handlers = [
-            *(wrapper(coro, "extension", name) for name, coro in extension_handlers.items()),
+            *(
+                wrapper(coro, "extension", name)
+                for name, coro in extension_handlers.items()
+            ),
             *(wrapper(coro, "cog", name) for name, coro in cog_handlers.items()),
         ]
 
@@ -2375,7 +2433,9 @@ class Grief(
                         " or {command_2} to upload all contents as a file."
                     )
                 query = await channel.send(
-                    prompt_text.format(count=n_remaining, command_1="`more`", command_2="`file`")
+                    prompt_text.format(
+                        count=n_remaining, command_1="`more`", command_2="`file`"
+                    )
                 )
                 pred = MessagePredicate.lower_contained_in(
                     ("more", "file"), channel=channel, user=user
@@ -2401,7 +2461,9 @@ class Grief(
                             await query.delete()
                     if pred.result == 1:
                         ret.append(
-                            await channel.send(file=text_to_file(join_character.join(messages)))
+                            await channel.send(
+                                file=text_to_file(join_character.join(messages))
+                            )
                         )
                         break
         return ret

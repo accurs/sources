@@ -1,9 +1,9 @@
-from discord import (
-    Embed, Interaction
-)
-from discord.voice_client import VoiceProtocol
 from typing import Optional
+
+from discord import Embed, Interaction
+from discord.voice_client import VoiceProtocol
 from typing_extensions import Self
+
 
 class WockInteraction(Interaction):
     def __init__(self: Self):
@@ -19,9 +19,7 @@ class WockInteraction(Interaction):
         kwargs["ephemeral"] = ephemeral
         color = 0x2B2D31
         emoji = kwargs.pop("emoji", "")
-        embed = Embed(
-            color=color, description=f"> {emoji}{self.user.mention}: {text}"
-        )
+        embed = Embed(color=color, description=f"> {emoji}{self.user.mention}: {text}")
         if footer := kwargs.pop("footer", None):
             if isinstance(footer, tuple):
                 embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -38,15 +36,13 @@ class WockInteraction(Interaction):
             delete_after = None
         if kwargs.pop("return_embed", False) is True:
             return embed
-        return await self.response.send_message(embed = embed, **kwargs)
-    
+        return await self.response.send_message(embed=embed, **kwargs)
+
     async def normal(self: Self, text: str, **kwargs):
         color = 0x2B2D31
         emoji = kwargs.pop("emoji", "")
         ephemeral = kwargs.pop("ephemeral", True)
-        embed = Embed(
-            color=color, description=f"> {emoji}{self.user.mention}: {text}"
-        )
+        embed = Embed(color=color, description=f"> {emoji}{self.user.mention}: {text}")
         if footer := kwargs.get("footer", None):
             if isinstance(footer, tuple):
                 embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -63,7 +59,9 @@ class WockInteraction(Interaction):
             delete_after = None
         if kwargs.get("return_embed", False) is True:
             return embed
-        return await self.response.send_message(embed = embed, delete_after = delete_after, ephemeral = ephemeral)
+        return await self.response.send_message(
+            embed=embed, delete_after=delete_after, ephemeral=ephemeral
+        )
 
     async def fail(self: Self, text: str, **kwargs):
         color = 0x2B2D31
@@ -88,7 +86,9 @@ class WockInteraction(Interaction):
             delete_after = delete_after
         else:
             delete_after = None
-        return await self.response.send_message(embed = embed, delete_after = delete_after, ephemeral = ephemeral)
+        return await self.response.send_message(
+            embed=embed, delete_after=delete_after, ephemeral=ephemeral
+        )
 
     async def warning(self: Self, text: str, **kwargs):
         emoji = kwargs.pop("emoji", None)
@@ -113,5 +113,6 @@ class WockInteraction(Interaction):
             delete_after = delete_after
         else:
             delete_after = None
-        return await self.response.send_message(embed = embed, delete_after = delete_after, ephemeral = ephemeral)
-    
+        return await self.response.send_message(
+            embed=embed, delete_after=delete_after, ephemeral=ephemeral
+        )

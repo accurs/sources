@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import List, Optional, Any
 from datetime import datetime
+from typing import Any, List, Optional
+
+from pydantic import BaseModel
 
 
 class Stream(BaseModel):
@@ -20,8 +21,10 @@ class Stream(BaseModel):
     tags: Optional[List[str]] = None
     is_mature: Optional[bool] = False
 
+
 class Pagination(BaseModel):
     cursor: Optional[str] = None
+
 
 class StreamResponse(BaseModel):
     data: Optional[List[Stream]] = []

@@ -1,9 +1,10 @@
-from discord.ext.commands.converter import MemberConverter
-from typing import Optional, Union
-from discord.ext.commands import Context, MemberNotFound
-from discord import Member
-from fast_string_match import closest_match_distance as cmd
 import re
+from typing import Optional, Union
+
+from discord import Member
+from discord.ext.commands import Context, MemberNotFound
+from discord.ext.commands.converter import MemberConverter
+from fast_string_match import closest_match_distance as cmd
 
 _ID_REGEX = re.compile(r"([0-9]{15,20})$")
 

@@ -1,6 +1,7 @@
-from typing import TYPE_CHECKING, Optional, List, Dict, Any
-from discord import Guild, User, Message, TextChannel, Thread
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
 import config
+from discord import Guild, Message, TextChannel, Thread, User
 
 if TYPE_CHECKING:
     from tools.bleed import Bleed

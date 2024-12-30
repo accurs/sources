@@ -1,6 +1,5 @@
 from .info import Info
 
-
 __red_end_user_data_statement__ = "No user data is stored by this cog."
 
 

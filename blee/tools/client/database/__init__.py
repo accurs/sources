@@ -4,10 +4,8 @@ from typing import Any, Optional
 from asyncpg import Connection, Pool
 from asyncpg import Record as DefaultRecord
 from asyncpg import create_pool
-from munch import DefaultMunch, Munch
-
 from config import Database
-
+from munch import DefaultMunch, Munch
 from tools.managers.logging import logger as log
 
 _pool: Optional[Pool] = None

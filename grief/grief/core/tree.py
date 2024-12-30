@@ -1,30 +1,19 @@
+import logging
+import traceback
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Optional, Sequence, Tuple, Union
+
 import discord
 from discord.abc import Snowflake
 from discord.utils import MISSING
 
-from .app_commands import (
-    AppCommand,
-    AppCommandError,
-    BotMissingPermissions,
-    CheckFailure,
-    Command,
-    CommandAlreadyRegistered,
-    CommandInvokeError,
-    CommandNotFound,
-    CommandOnCooldown,
-    CommandTree,
-    ContextMenu,
-    Group,
-    NoPrivateMessage,
-    TransformerError,
-)
+from .app_commands import (AppCommand, AppCommandError, BotMissingPermissions,
+                           CheckFailure, Command, CommandAlreadyRegistered,
+                           CommandInvokeError, CommandNotFound,
+                           CommandOnCooldown, CommandTree, ContextMenu, Group,
+                           NoPrivateMessage, TransformerError)
 from .i18n import Translator
 from .utils.chat_formatting import humanize_list, inline
-
-import logging
-import traceback
-from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Tuple, Union, Optional, Sequence
 
 __all__ = ("RedTree",)
 
@@ -45,7 +34,9 @@ class RedTree(CommandTree):
         super().__init__(*args, **kwargs)
         # Same structure as superclass
         self._disabled_global_commands: Dict[str, Union[Command, Group]] = {}
-        self._disabled_context_menus: Dict[Tuple[str, Optional[int], int], ContextMenu] = {}
+        self._disabled_context_menus: Dict[
+            Tuple[str, Optional[int], int], ContextMenu
+        ] = {}
 
     def add_command(
         self,
@@ -116,14 +107,20 @@ class RedTree(CommandTree):
     ) -> Optional[Union[Command, ContextMenu, Group]]:
         """Removes an application command from this tree."""
         if guild is not None:
-            return super().remove_command(command, *args, guild=guild, type=type, **kwargs)
+            return super().remove_command(
+                command, *args, guild=guild, type=type, **kwargs
+            )
         if type is discord.AppCommandType.chat_input:
-            return self._disabled_global_commands.pop(command, None) or super().remove_command(
+            return self._disabled_global_commands.pop(
+                command, None
+            ) or super().remove_command(
                 command, *args, guild=guild, type=type, **kwargs
             )
         elif type in (discord.AppCommandType.user, discord.AppCommandType.message):
             key = (command, None, type.value)
-            return self._disabled_context_menus.pop(key, None) or super().remove_command(
+            return self._disabled_context_menus.pop(
+                key, None
+            ) or super().remove_command(
                 command, *args, guild=guild, type=type, **kwargs
             )
 
@@ -147,12 +144,18 @@ class RedTree(CommandTree):
         else:
             self._disabled_context_menus = {
                 (name, _guild_id, value): cmd
-                for (name, _guild_id, value), cmd in self._disabled_context_menus.items()
+                for (
+                    name,
+                    _guild_id,
+                    value,
+                ), cmd in self._disabled_context_menus.items()
                 if value != type.value
             }
         return super().clear_commands(*args, guild=guild, type=type, **kwargs)
 
-    async def sync(self, *args, guild: Optional[Snowflake] = None, **kwargs) -> List[AppCommand]:
+    async def sync(
+        self, *args, guild: Optional[Snowflake] = None, **kwargs
+    ) -> List[AppCommand]:
         """Wrapper to store command IDs when commands are synced."""
         commands = await super().sync(*args, guild=guild, **kwargs)
         if guild:
@@ -264,7 +267,12 @@ class RedTree(CommandTree):
         return parent == child or child.startswith(parent + ".")
 
     async def on_error(
-        self, interaction: discord.Interaction, error: AppCommandError, /, *args, **kwargs
+        self,
+        interaction: discord.Interaction,
+        error: AppCommandError,
+        /,
+        *args,
+        **kwargs,
     ) -> None:
         """Fallback error handler for app commands."""
         if isinstance(error, CommandNotFound):
@@ -279,7 +287,9 @@ class RedTree(CommandTree):
                 "Exception in command '{}'".format(error.command.qualified_name),
                 exc_info=error.original,
             )
-            exception_log = "Exception in command '{}'\n" "".format(error.command.qualified_name)
+            exception_log = "Exception in command '{}'\n" "".format(
+                error.command.qualified_name
+            )
             exception_log += "".join(
                 traceback.format_exception(type(error), error, error.__traceback__)
             )
@@ -289,7 +299,9 @@ class RedTree(CommandTree):
             if not message:
                 if interaction.user.id in interaction.client.owner_ids:
                     message = inline(
-                        _("Error in command '{command}'. Check your console or logs for details.")
+                        _(
+                            "Error in command '{command}'. Check your console or logs for details."
+                        )
                     )
                 else:
                     message = inline(_("Error in command '{command}'."))
@@ -298,21 +310,24 @@ class RedTree(CommandTree):
             )
         elif isinstance(error, TransformerError):
             if error.__cause__:
-                log.exception("Error in an app command transformer.", exc_info=error.__cause__)
+                log.exception(
+                    "Error in an app command transformer.", exc_info=error.__cause__
+                )
             await self._send_from_interaction(interaction, str(error))
         elif isinstance(error, BotMissingPermissions):
             formatted = [
-                '"' + perm.replace("_", " ").title() + '"' for perm in error.missing_permissions
+                '"' + perm.replace("_", " ").title() + '"'
+                for perm in error.missing_permissions
             ]
             formatted = humanize_list(formatted).replace("Guild", "Server")
             if len(error.missing_permissions) == 1:
-                msg = _("I require the {permission} permission to execute that command.").format(
-                    permission=formatted
-                )
+                msg = _(
+                    "I require the {permission} permission to execute that command."
+                ).format(permission=formatted)
             else:
-                msg = _("I require {permission_list} permissions to execute that command.").format(
-                    permission_list=formatted
-                )
+                msg = _(
+                    "I require {permission_list} permissions to execute that command."
+                ).format(permission_list=formatted)
             await self._send_from_interaction(interaction, msg)
         elif isinstance(error, NoPrivateMessage):
             # Seems to be only called normally by the has_role check
@@ -326,7 +341,9 @@ class RedTree(CommandTree):
             msg = _("This command is on cooldown. Try again {relative_time}.").format(
                 relative_time=relative_time
             )
-            await self._send_from_interaction(interaction, msg, delete_after=error.retry_after)
+            await self._send_from_interaction(
+                interaction, msg, delete_after=error.retry_after
+            )
         elif isinstance(error, CheckFailure):
             await self._send_from_interaction(
                 interaction, _("You are not permitted to use this command.")

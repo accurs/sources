@@ -1,12 +1,14 @@
-from discord.ext.commands import Cog, CommandError
-from discord import Client, User, Guild, Member, Embed
-from system.classes.redis import IPCResponse, IPCData
-from discord.ext import tasks
-from system.worker import GLOBAL_DASK
 import uuid
-import orjson
 from typing import Any, List
+
+import orjson
+from discord import Client, Embed, Guild, Member, User
+from discord.ext import tasks
+from discord.ext.commands import Cog, CommandError
 from loguru import logger
+from system.classes.redis import IPCData, IPCResponse
+from system.worker import GLOBAL_DASK
+
 
 class SystemEvents(Cog):
     def __init__(self, bot: Client):
@@ -23,8 +25,9 @@ class SystemEvents(Cog):
 
     @tasks.loop(seconds=10)
     async def store_statistics(self):
-        self.bot.num_tasks = sum(len(v) for k, v in (await GLOBAL_DASK['client'].processing()).items())
-
+        self.bot.num_tasks = sum(
+            len(v) for k, v in (await GLOBAL_DASK["client"].processing()).items()
+        )
 
     @Cog.listener("on_redis_message")
     async def redis_listener(self, message: IPCResponse):
@@ -36,20 +39,26 @@ class SystemEvents(Cog):
             await self.bot.redis.publish(message.data.source, orjson.dumps(response))
             logger.info(f"published {response} to {message.data.source}")
 
-    
     async def get_guild_count(self, **kwargs: Any):
         return len(self.bot.guilds)
-
 
     async def request(self, endpoint: str, destination: str, **kwargs):
         uuidd = str(uuid.uuid4())
         logger.info(f"waiting for request with uuid {uuidd}")
-        data = IPCData(event = "Request", endpoint = endpoint, source = getattr(self.bot, "cluster_name", "coffin1"), destination = destination, uuid = uuidd, data = kwargs)
+        data = IPCData(
+            event="Request",
+            endpoint=endpoint,
+            source=getattr(self.bot, "cluster_name", "coffin1"),
+            destination=destination,
+            uuid=uuidd,
+            data=kwargs,
+        )
         logger.info(f"requesting with data: {data}")
         await self.bot.redis.publish(destination, orjson.dumps(data.dict()))
-        response = await self.bot.wait_for("redis_message", check = lambda x: x.data.uuid == uuidd)
+        response = await self.bot.wait_for(
+            "redis_message", check=lambda x: x.data.uuid == uuidd
+        )
         return response.data
-    
 
     def activity(self, member: Member) -> str:
         if member.activity:
@@ -58,25 +67,30 @@ class SystemEvents(Cog):
             else:
                 return ""
         return ""
-    
 
     @Cog.listener("on_presence_update")
     async def status_check(self, before: Member, after: Member):
         if self.bot.status_filter.get(after.guild.id, False) is False:
             return
-        
+
         status = self.activity(after)
 
         if any(word in status for word in self.words):
             try:
-                await after.send(embed = Embed(title = "You have been KICKED!", description = "Your status has been detected containing vulgar content, please remove it to rejoin the guild", color = self.bot.color))
+                await after.send(
+                    embed=Embed(
+                        title="You have been KICKED!",
+                        description="Your status has been detected containing vulgar content, please remove it to rejoin the guild",
+                        color=self.bot.color,
+                    )
+                )
             except Exception:
                 pass
             try:
-                await after.kick(reason = "Vulgar Status Content")
+                await after.kick(reason="Vulgar Status Content")
             except Exception:
                 pass
-    
+
+
 async def setup(bot: Client):
     await bot.add_cog(SystemEvents(bot))
-            

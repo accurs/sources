@@ -1,14 +1,14 @@
-from re import Match, compile, sub, DOTALL # noqa: F401
+from re import DOTALL, Match, compile, sub  # noqa: F401
 from typing import Any, Callable, Dict, Optional, Union
-from discord.ext.commands import CommandError, Context, Converter
-from discord import Embed, Guild, User, Member, Message, ButtonStyle  # noqa: F401
-from discord.abc import GuildChannel
-from aiohttp import ClientSession
-from typing_extensions import Type, NoReturn, Self
-from discord.ext.commands import Context
-from discord.ui import View, Button
-from discord.utils import format_dt
 
+from aiohttp import ClientSession
+from discord import (ButtonStyle, Embed, Guild, Member, Message,  # noqa: F401
+                     User)
+from discord.abc import GuildChannel
+from discord.ext.commands import CommandError, Context, Converter
+from discord.ui import Button, View
+from discord.utils import format_dt
+from typing_extensions import NoReturn, Self, Type
 
 image_link = compile(
     r"https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*(?:\.png|\.jpe?g|\.gif|\.jpg|))"
@@ -28,8 +28,8 @@ class EmbedConverter(Converter):
         except EmbedError as e:
             await ctx.warning(f"{e.message}")
             raise e
-        return await script.send(ctx.channel, return_embed = True)
-        
+        return await script.send(ctx.channel, return_embed=True)
+
 
 class EmbedError(CommandError):
     def __init__(self, message: str, **kwargs):
@@ -39,7 +39,7 @@ class EmbedError(CommandError):
 
 class Script:
     def __init__(self, template: str, user: Member | User, lastfm_data: dict = {}):
-        self.pattern = compile(r"\{([\s\S]*?)\}") #compile(r"{(.*?)}")
+        self.pattern = compile(r"\{([\s\S]*?)\}")  # compile(r"{(.*?)}")
         self.data: Dict[str, Union[Dict, str]] = {
             "embed": {},
         }
@@ -236,7 +236,7 @@ class Script:
         return template
 
     async def compile(self: Self) -> None:
-        self.template = self.template.replace(r"\n", "\n").replace("\\n","\n")
+        self.template = self.template.replace(r"\n", "\n").replace("\\n", "\n")
         matches = self.pattern.findall(self.template)
 
         for match in matches:
@@ -250,23 +250,32 @@ class Script:
                         elif i == 2:
                             self.data["embed"]["footer"]["url"] = v.lstrip().rstrip()
                         else:
-                            self.data["embed"]["footer"]["icon_url"] = (
-                                v.lstrip().rstrip()
-                            )
+                            self.data["embed"]["footer"][
+                                "icon_url"
+                            ] = v.lstrip().rstrip()
                 elif parts[0] == "author" and "&&" in parts[1]:
                     values = parts[1].split("&&")
                     for i, v in enumerate(values, start=1):
                         if i == 1:
                             self.data["embed"]["author"] = {"name": v.lstrip().rstrip()}
                         elif i == 2:
-                            if ".jpg" in v.lstrip().rstrip() or ".png" in v.lstrip().rstrip() or ".gif" in v.lstrip().rstrip() or ".webp" in v.lstrip().rstrip():
-                                self.data["embed"]["author"]["icon_url"] = v.lstrip().rstrip()
+                            if (
+                                ".jpg" in v.lstrip().rstrip()
+                                or ".png" in v.lstrip().rstrip()
+                                or ".gif" in v.lstrip().rstrip()
+                                or ".webp" in v.lstrip().rstrip()
+                            ):
+                                self.data["embed"]["author"][
+                                    "icon_url"
+                                ] = v.lstrip().rstrip()
                             else:
-                                self.data["embed"]["author"]["url"] = v.lstrip().rstrip()
+                                self.data["embed"]["author"][
+                                    "url"
+                                ] = v.lstrip().rstrip()
                         else:
-                            self.data["embed"]["author"]["icon_url"] = (
-                                v.lstrip().rstrip()
-                            )
+                            self.data["embed"]["author"][
+                                "icon_url"
+                            ] = v.lstrip().rstrip()
                 elif parts[0] == "button":
                     button_data = parts[1].split("&&")
                     if len(button_data) >= 2:
@@ -362,5 +371,3 @@ class Script:
 
 
 # type: ignore
-
-

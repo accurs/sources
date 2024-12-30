@@ -3,7 +3,6 @@ from typing import List, Optional
 
 import discord
 from discord.ext import commands
-
 from structure.scare import Scare
 from structure.utilities import Context
 

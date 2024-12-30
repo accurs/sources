@@ -1,30 +1,17 @@
 import asyncio
-import discord # type: ignore
 import re
-from discord.abc import GuildChannel # type: ignore
-from discord.ui import View, Button, Select # type: ignore
-from discord.ext import commands # type: ignore
-from discord.ext.commands import ( # type: ignore
-    PartialEmojiConverter,
-    group,
-    Cog,
-    Context,
-    has_permissions,
-    check,
-    bot_has_permissions,
-)
-from tools.important.subclasses.parser import EmbedConverter # type: ignore
-from discord import ( # type: ignore
-    PermissionOverwrite,
-    Member,
-    Embed,
-    Role,
-    CategoryChannel,
-    TextChannel,
-    Interaction,
-    ButtonStyle,
-    SelectOption,
-)
+
+import discord  # type: ignore
+from discord import (ButtonStyle, CategoryChannel, Embed,  # type: ignore
+                     Interaction, Member, PermissionOverwrite, Role,
+                     SelectOption, TextChannel)
+from discord.abc import GuildChannel  # type: ignore
+from discord.ext import commands  # type: ignore
+from discord.ext.commands import (Cog, Context,  # type: ignore
+                                  PartialEmojiConverter, bot_has_permissions,
+                                  check, group, has_permissions)
+from discord.ui import Button, Select, View  # type: ignore
+from tools.important.subclasses.parser import EmbedConverter  # type: ignore
 
 EMOJI_REGEX = re.compile(
     r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"
@@ -50,6 +37,7 @@ class Emojis(commands.Converter):
         if len(defaults) > 0:
             emojis.extend(defaults)
         return emojis
+
 
 def get_ticket():
     async def predicate(ctx: Context):
@@ -78,15 +66,21 @@ def manage_ticket():
                     role not in ctx.author.roles
                     and not ctx.author.guild_permissions.manage_channels
                 ):
-                    await ctx.fail(f"Only members with {role.mention} role and members with the **Manage Channels** permission can **add** or **remove** new members from the ticket",)
+                    await ctx.fail(
+                        f"Only members with {role.mention} role and members with the **Manage Channels** permission can **add** or **remove** new members from the ticket",
+                    )
                     return False
             else:
                 if not ctx.author.guild_permissions.manage_channels:
-                    await ctx.fail("Only members with the **Manage Channels** permission can **add** or **remove** new members from the ticket")
+                    await ctx.fail(
+                        "Only members with the **Manage Channels** permission can **add** or **remove** new members from the ticket"
+                    )
                     return False
         else:
             if not ctx.author.guild_permissions.manage_channels:
-                await ctx.fail("Only members with the **Manage Channels** permission can **add** or **remove** new members from the ticket",)
+                await ctx.fail(
+                    "Only members with the **Manage Channels** permission can **add** or **remove** new members from the ticket",
+                )
                 return False
         return True
 
@@ -146,37 +140,76 @@ class TicketCategory(discord.ui.Modal, title="Add a ticket category"):
             f"Added new ticket topic **{self.name.value}**", ephemeral=True
         )
 
-class OpenTicket(discord.ui.DynamicItem[discord.ui.Button], template=r'button:open:(?P<guild_id>[0-9]+)'):
+
+class OpenTicket(
+    discord.ui.DynamicItem[discord.ui.Button],
+    template=r"button:open:(?P<guild_id>[0-9]+)",
+):
     def __init__(self, guild_id: int, emoji: str = "🎫"):
         super().__init__(
             discord.ui.Button(
                 label="Create",
                 emoji=emoji,
-                custom_id=f'button:open:{guild_id}',
+                custom_id=f"button:open:{guild_id}",
                 style=discord.ButtonStyle.primary,
             )
         )
         self.guild_id = guild_id
 
     @classmethod
-    async def from_custom_id(cls, interaction: discord.Interaction, item: discord.ui.Button, match: re.Match[str]): # type: ignore # type: ignore
-        guild_id = int(match['guild_id'])
+    async def from_custom_id(cls, interaction: discord.Interaction, item: discord.ui.Button, match: re.Match[str]):  # type: ignore # type: ignore
+        guild_id = int(match["guild_id"])
         return cls(guild_id)
 
-    async def create_channel(self, interaction: discord.Interaction, category: discord.CategoryChannel, title: str = None, topic: str = None, embed: str = None):
+    async def create_channel(
+        self,
+        interaction: discord.Interaction,
+        category: discord.CategoryChannel,
+        title: str = None,
+        topic: str = None,
+        embed: str = None,
+    ):
         view = TicketView(interaction.client, guild_id=self.guild_id)
         await view.setup()
         view.delete_ticket()
         overwrites = category.overwrites if category else {}
-        
-        che = await interaction.client.db.fetchrow("SELECT support_id FROM tickets WHERE guild_id = $1", interaction.guild.id)
+
+        che = await interaction.client.db.fetchrow(
+            "SELECT support_id FROM tickets WHERE guild_id = $1", interaction.guild.id
+        )
         if che:
             role = interaction.guild.get_role(che[0])
             if role:
-                overwrites.update({role: discord.PermissionOverwrite(manage_permissions=True, read_messages=True, send_messages=True, attach_files=True, embed_links=True, manage_messages=True)})
-        
-        overwrites.update({interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, embed_links=True)})
-        overwrites.update({interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False, view_channel=False)})
+                overwrites.update(
+                    {
+                        role: discord.PermissionOverwrite(
+                            manage_permissions=True,
+                            read_messages=True,
+                            send_messages=True,
+                            attach_files=True,
+                            embed_links=True,
+                            manage_messages=True,
+                        )
+                    }
+                )
+
+        overwrites.update(
+            {
+                interaction.user: discord.PermissionOverwrite(
+                    read_messages=True,
+                    send_messages=True,
+                    attach_files=True,
+                    embed_links=True,
+                )
+            }
+        )
+        overwrites.update(
+            {
+                interaction.guild.default_role: discord.PermissionOverwrite(
+                    read_messages=False, view_channel=False
+                )
+            }
+        )
 
         channel = await interaction.guild.create_text_channel(
             name=f"ticket-{interaction.user.name}",
@@ -186,32 +219,62 @@ class OpenTicket(discord.ui.DynamicItem[discord.ui.Button], template=r'button:op
             overwrites=overwrites,
         )
 
-        await interaction.client.db.execute("INSERT INTO opened_tickets VALUES ($1,$2,$3)", interaction.guild.id, channel.id, interaction.user.id)
-        
+        await interaction.client.db.execute(
+            "INSERT INTO opened_tickets VALUES ($1,$2,$3)",
+            interaction.guild.id,
+            channel.id,
+            interaction.user.id,
+        )
+
         if not embed:
-            embed = "{embed}{author: {user.name} && https://wock.bot/ && {user.avatar}}$v{title: {title}}$v{content: {user.mention}}$v{description: To close the ticket please press :wastebasket:¸}$v{color: #d6bcd0}".replace("{title}", title or "Ticket Opened")
-        
-        mes = await interaction.client.send_embed(channel, embed.replace("{topic}", topic or "none"), user=interaction.user, view=view)
+            embed = "{embed}{author: {user.name} && https://wock.bot/ && {user.avatar}}$v{title: {title}}$v{content: {user.mention}}$v{description: To close the ticket please press :wastebasket:¸}$v{color: #d6bcd0}".replace(
+                "{title}", title or "Ticket Opened"
+            )
+
+        mes = await interaction.client.send_embed(
+            channel,
+            embed.replace("{topic}", topic or "none"),
+            user=interaction.user,
+            view=view,
+        )
         await mes.pin(reason="pinned the ticket message")
         return channel
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        check = await interaction.client.db.fetchrow("SELECT * FROM tickets WHERE guild_id = $1", interaction.guild.id)
+        check = await interaction.client.db.fetchrow(
+            "SELECT * FROM tickets WHERE guild_id = $1", interaction.guild.id
+        )
         if not check:
             return await interaction.fail("Tickets module is disabled in this server")
-        if await interaction.client.db.fetchrow("SELECT * FROM opened_tickets WHERE guild_id = $1 AND guild_id = $2", interaction.guild.id, interaction.user.id):
+        if await interaction.client.db.fetchrow(
+            "SELECT * FROM opened_tickets WHERE guild_id = $1 AND guild_id = $2",
+            interaction.guild.id,
+            interaction.user.id,
+        ):
             return await interaction.fail("You **already** have an opened ticket")
-        
-        results = await interaction.client.db.fetch("SELECT * FROM ticket_topics WHERE guild_id = $1", interaction.guild.id)
+
+        results = await interaction.client.db.fetch(
+            "SELECT * FROM ticket_topics WHERE guild_id = $1", interaction.guild.id
+        )
         category = interaction.guild.get_channel(check["category_id"])
         open_embed = check["open_embed"]
         if len(results) == 0:
-            channel = await self.create_channel(interaction, category, title=None, topic=None, embed=open_embed)
-            return await interaction.success(f"Opened ticket for you in {channel.mention}")
+            channel = await self.create_channel(
+                interaction, category, title=None, topic=None, embed=open_embed
+            )
+            return await interaction.success(
+                f"Opened ticket for you in {channel.mention}"
+            )
         else:
-            options = [discord.SelectOption(label=result["name"], description=result["description"]) for result in results]
+            options = [
+                discord.SelectOption(
+                    label=result["name"], description=result["description"]
+                )
+                for result in results
+            ]
             select = discord.ui.Select(options=options, placeholder="Topic menu")
             view = discord.ui.View(timeout=None)
+
             async def select_callback(inter: discord.Interaction) -> None:
                 channel = await self.create_channel(
                     interaction,
@@ -220,57 +283,91 @@ class OpenTicket(discord.ui.DynamicItem[discord.ui.Button], template=r'button:op
                     topic=select.values[0],
                     embed=open_embed,
                 )
-                return await inter.success(f"Opened ticket for you in {channel.mention}")
+                return await inter.success(
+                    f"Opened ticket for you in {channel.mention}"
+                )
+
             select.callback = select_callback
             view.add_item(select)
-            embed = discord.Embed(color=interaction.client.color, description="🔍 Select a topic")
-            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+            embed = discord.Embed(
+                color=interaction.client.color, description="🔍 Select a topic"
+            )
+            await interaction.response.send_message(
+                embed=embed, view=view, ephemeral=True
+            )
 
-class DeleteTicket(discord.ui.DynamicItem[discord.ui.Button], template=r'button:close:(?P<guild_id>[0-9]+)'):
+
+class DeleteTicket(
+    discord.ui.DynamicItem[discord.ui.Button],
+    template=r"button:close:(?P<guild_id>[0-9]+)",
+):
     def __init__(self, guild_id: int, emoji: str = "🗑️"):
         super().__init__(
             discord.ui.Button(
                 emoji=emoji,
-                custom_id=f'button:close:{guild_id}',
+                custom_id=f"button:close:{guild_id}",
                 style=discord.ButtonStyle.danger,
             )
         )
         self.guild_id = guild_id
 
     @classmethod
-    async def from_custom_id(cls, interaction: discord.Interaction, item: discord.ui.Button, match: re.Match[str], /): # type: ignore # type: ignore
-        guild_id = int(match['guild_id'])
+    async def from_custom_id(cls, interaction: discord.Interaction, item: discord.ui.Button, match: re.Match[str], /):  # type: ignore # type: ignore
+        guild_id = int(match["guild_id"])
         return cls(guild_id)
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        che = await interaction.client.db.fetchrow("SELECT support_id FROM tickets WHERE guild_id = $1", interaction.guild.id)
+        che = await interaction.client.db.fetchrow(
+            "SELECT support_id FROM tickets WHERE guild_id = $1", interaction.guild.id
+        )
         if che:
             role = interaction.guild.get_role(che[0])
-            if role and role not in interaction.user.roles and not interaction.user.guild_permissions.manage_channels:
-                return await interaction.fail("You are missing permissions **Manage Channels**")
+            if (
+                role
+                and role not in interaction.user.roles
+                and not interaction.user.guild_permissions.manage_channels
+            ):
+                return await interaction.fail(
+                    "You are missing permissions **Manage Channels**"
+                )
         if not interaction.user.guild_permissions.manage_channels:
-            return await interaction.fail("You are missing permissions **Manage Channels**")
-        
+            return await interaction.fail(
+                "You are missing permissions **Manage Channels**"
+            )
+
         view = discord.ui.View(timeout=None)
         yes = discord.ui.Button(label="Yes", style=discord.ButtonStyle.success)
         no = discord.ui.Button(label="No", style=discord.ButtonStyle.danger)
 
         async def yes_callback(inter: discord.Interaction) -> None:
-            await inter.response.edit_message(content="Deleting this channel in 5 seconds", view=None)
+            await inter.response.edit_message(
+                content="Deleting this channel in 5 seconds", view=None
+            )
             await asyncio.sleep(5)
             await inter.channel.delete(reason="Ticket closed")
 
         async def no_callback(inter: discord.Interaction) -> None:
-            await inter.response.edit_message(content="You changed your mind", view=None)
+            await inter.response.edit_message(
+                content="You changed your mind", view=None
+            )
 
         yes.callback = yes_callback
         no.callback = no_callback
         view.add_item(yes)
         view.add_item(no)
-        return await interaction.response.send_message("Are you sure you want to close this ticket?", view=view, ephemeral=True)
+        return await interaction.response.send_message(
+            "Are you sure you want to close this ticket?", view=view, ephemeral=True
+        )
+
 
 class TicketView(discord.ui.View):
-    def __init__(self, bot: commands.AutoShardedBot, guild_id: int, open_ticket_emoji: str = None, delete_ticket_emoji: str = None):
+    def __init__(
+        self,
+        bot: commands.AutoShardedBot,
+        guild_id: int,
+        open_ticket_emoji: str = None,
+        delete_ticket_emoji: str = None,
+    ):
         super().__init__(timeout=None)
         self.bot = bot
         self.guild_id = guild_id
@@ -278,7 +375,10 @@ class TicketView(discord.ui.View):
         self.delete_ticket_emoji = delete_ticket_emoji
 
     async def setup(self, refresh: bool = False):
-        emojis = await self.bot.db.fetchrow("SELECT open_emoji, delete_emoji, message_id FROM tickets WHERE guild_id = $1", self.guild_id)
+        emojis = await self.bot.db.fetchrow(
+            "SELECT open_emoji, delete_emoji, message_id FROM tickets WHERE guild_id = $1",
+            self.guild_id,
+        )
         try:
             self.open_ticket_emoji = emojis["open_emoji"] or "🎫"
             self.delete_ticket_emoji = emojis["delete_emoji"] or "🗑️"
@@ -289,28 +389,36 @@ class TicketView(discord.ui.View):
         return
 
     def create_ticket(self):
-        self.add_item(OpenTicket(guild_id = self.guild_id, emoji=self.open_ticket_emoji))
+        self.add_item(OpenTicket(guild_id=self.guild_id, emoji=self.open_ticket_emoji))
 
     def delete_ticket(self):
-        self.add_item(DeleteTicket(guild_id = self.guild_id, emoji=self.delete_ticket_emoji))
+        self.add_item(
+            DeleteTicket(guild_id=self.guild_id, emoji=self.delete_ticket_emoji)
+        )
 
 
 class WockDonation(discord.ui.View):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
-        super().__init__(timeout = None)
-    
-    @discord.ui.button(label = "", emoji = "<a:Sanrio_hellokittylove:1255713730281607240>", custom_id = "wock:purchase")
-    async def purchase(self, interaction: discord.Interaction, button: discord.ui.Button): # type: ignore
-        embed = discord.Embed(title = "Payment Methods")
+        super().__init__(timeout=None)
+
+    @discord.ui.button(
+        label="",
+        emoji="<a:Sanrio_hellokittylove:1255713730281607240>",
+        custom_id="wock:purchase",
+    )
+    async def purchase(self, interaction: discord.Interaction, button: discord.ui.Button):  # type: ignore
+        embed = discord.Embed(title="Payment Methods")
         embed.description = """
         > **Wock Pass Premium** requires a monthly payment of **$3.99 a month or 2 server boosts**. No additional fees and includes access to commands such as avatar history, google searching, among other commands. Once purchased, Dm a staff member with proof of payment to get the donator role. Users who owns a server with more than 500 users that has wock in it, provided with proof, qualify for wock premium free!
         """
         embed.color = self.bot.color
-        embed.add_field(name="Cashapp Payment Only", value="> <:CashApp:1252763419560640645> - $ocx01")
+        embed.add_field(
+            name="Cashapp Payment Only",
+            value="> <:CashApp:1252763419560640645> - $ocx01",
+        )
         embed.set_footer(text="For questions, contact a staff member.")
-        return await interaction.response.send_message(embed = embed, ephemeral = True)
-
+        return await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class Tickets(Cog):
@@ -325,24 +433,25 @@ class Tickets(Cog):
             view = TicketView(self.bot, guild.id)
             view2 = TicketView(self.bot, guild.id)
             await view2.setup()
-            await view.setup(refresh = True)
+            await view.setup(refresh=True)
             view.create_ticket()
             view2.delete_ticket()
-            self.bot.add_view(view2, message_id = None)
-            self.bot.add_view(view, message_id=None)  # Register the view without associating it with a specific message
+            self.bot.add_view(view2, message_id=None)
+            self.bot.add_view(
+                view, message_id=None
+            )  # Register the view without associating it with a specific message
 
     async def cog_load(self):
         await self.register_persistent_views()
         self.bot.add_view(WockDonation(self.bot))
 
-    @commands.command(name = "sendmessage", hidden = True)
+    @commands.command(name="sendmessage", hidden=True)
     @commands.is_owner()
     async def sendmessage(self, ctx: Context, *, code: EmbedConverter):
         view = WockDonation(self.bot)
         code.pop("view", None)
         code["view"] = view
         return await ctx.send(**code)
-
 
     @Cog.listener()
     async def on_guild_channel_delete(self, channel: GuildChannel):
@@ -353,19 +462,21 @@ class Tickets(Cog):
                 channel.id,
             )
 
-    @group(name="ticket", brief="Configure the tickets setup for your server", example=",ticket")
+    @group(
+        name="ticket",
+        brief="Configure the tickets setup for your server",
+        example=",ticket",
+    )
     @manage_ticket()
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def ticket(self, ctx):
         if ctx.invoked_subcommand is None:
             return await ctx.send_help()
 
     @ticket.command(
-        name="add",
-        brief="Add a user to the ticket",
-        example=",ticket add @o_5v"
+        name="add", brief="Add a user to the ticket", example=",ticket add @o_5v"
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @manage_ticket()
     @get_ticket()
     async def ticket_add(self, ctx: Context, *, member: Member):
@@ -383,9 +494,9 @@ class Tickets(Cog):
     @ticket.command(
         name="remove",
         brief="Remove a ticket that a user has created",
-        example=",ticket remove @o_5v"
+        example=",ticket remove @o_5v",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @manage_ticket()
     @get_ticket()
     async def ticket_remove(self, ctx: Context, *, member: Member):
@@ -403,7 +514,7 @@ class Tickets(Cog):
     @ticket.command(name="close", extras={"perms": "ticket support / manage channels"})
     @manage_ticket()
     @get_ticket()
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def ticket_close(self, ctx: Context):
         """close the ticket"""
         await ctx.send(content="Deleting this channel in 5 seconds")
@@ -415,7 +526,7 @@ class Tickets(Cog):
     )
     @has_permissions(manage_guild=True)
     @ticket_exists()
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def ticket_reset(self, ctx: Context):
         """disable the ticket module in the server"""
         for i in ["tickets", "ticket_topics", "opened_tickets"]:
@@ -432,7 +543,7 @@ class Tickets(Cog):
     )
     @manage_ticket()
     @get_ticket()
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @bot_has_permissions(manage_channels=True)
     async def ticket_rename(self, ctx: Context, *, name: str):
         """rename a ticket channel"""
@@ -445,9 +556,9 @@ class Tickets(Cog):
         name="support",
         extras={"perms": "manage server"},
         brief="Set a role for users that has that role to answer tickets",
-        example=",ticket support @mod"
+        example=",ticket support @mod",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @has_permissions(manage_guild=True)
     @ticket_exists()
     async def ticket_support(self, ctx: Context, *, role: Role = None):
@@ -473,7 +584,7 @@ class Tickets(Cog):
         brief="Set a category where created tickets will be sent to",
         example=",ticket category create-a-ticket",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @has_permissions(manage_guild=True)
     @ticket_exists()
     async def ticket_category(self, ctx: Context, *, category: CategoryChannel = None):
@@ -499,7 +610,7 @@ class Tickets(Cog):
         brief="Set a message to be sent when a ticket is opened",
         example=",ticket opened {embed_code}",
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @has_permissions(manage_guild=True)
     @ticket_exists()
     async def ticket_opened(self, ctx: Context, *, code: str = None):
@@ -508,14 +619,20 @@ class Tickets(Cog):
             "UPDATE tickets SET open_embed = $1 WHERE guild_id = $2", code, ctx.guild.id
         )
         if code:
-            return await ctx.success(f"Updated the ticket opening message to\n```{code}```")
+            return await ctx.success(
+                f"Updated the ticket opening message to\n```{code}```"
+            )
         else:
             return await ctx.success("Removed the custom ticket opening message")
 
-    @ticket.command(name="topics", brief="Assign topics to be chosen from before a user creates a ticket", example=",ticket topics")
+    @ticket.command(
+        name="topics",
+        brief="Assign topics to be chosen from before a user creates a ticket",
+        example=",ticket topics",
+    )
     @has_permissions(manage_guild=True)
     @ticket_exists()
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def ticket_topics(self, ctx: Context):
         """manage the ticket topics"""
         results = await self.bot.db.fetch(
@@ -571,7 +688,7 @@ class Tickets(Cog):
         await ctx.reply(embed=embed, view=view)
 
     @ticket.command(name="config", aliases=["settings"])
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def ticket_config(self, ctx: Context):
         """check the server's ticket settings"""
         check = await self.bot.db.fetchrow(
@@ -579,9 +696,7 @@ class Tickets(Cog):
         )
 
         if not check:
-            return await ctx.fail(
-                "Ticket module is **not** enabled in this server"
-            )
+            return await ctx.fail("Ticket module is **not** enabled in this server")
 
         results = await self.bot.db.fetch(
             "SELECT * FROM ticket_topics WHERE guild_id = $1", ctx.guild.id
@@ -597,32 +712,36 @@ class Tickets(Cog):
         embed.add_field(
             name="Channel Category",
             value=f"<#{check['category_id']}>" if check["category_id"] else "none",
-            inline=False
+            inline=False,
         )
         embed.add_field(name="Categories", value=str(len(results)), inline=False)
-        embed.add_field(name="opening ticket embed", value=f"```\n{check['open_embed']}```", inline=False)
+        embed.add_field(
+            name="opening ticket embed",
+            value=f"```\n{check['open_embed']}```",
+            inline=False,
+        )
         await ctx.reply(embed=embed)
 
     @ticket.command(
         name="setup",
         brief="Setup the ticket panel to send to a channel",
         example=",ticket setup #tickets",
-        parameters = {
+        parameters={
             "delete": {
                 "converter": Emojis,
                 "description": "the delete ticket emoji",
-                "default": None
+                "default": None,
             },
             "open": {
                 "converter": Emojis,
                 "description": "the open ticket emoji",
-                "default": None
+                "default": None,
             },
             "code": {
                 "converter": str,
                 "description": "the embed code",
                 "aliases": ("embed",),
-                "default": "{embed}{color: #181a14}$v{title: Create a ticket}$v{description: Click on the button below this message to create a ticket}"
+                "default": "{embed}{color: #181a14}$v{title: Create a ticket}$v{description: Click on the button below this message to create a ticket}",
             },
             # "embed": {
             #     "converter": str,
@@ -630,9 +749,8 @@ class Tickets(Cog):
             #     "default": "{embed}{color: #181a14}$v{title: Create a ticket}$v{description: Click on the button below this message to create a ticket}"
             # }
         },
-    
     )
-    @commands.bot_has_permissions(manage_channels = True)
+    @commands.bot_has_permissions(manage_channels=True)
     @has_permissions(manage_guild=True)
     @ticket_exists()
     async def ticket_send(
@@ -650,19 +768,36 @@ class Tickets(Cog):
         if open_emoji:
             open_emoji = await open_emoji
         if delete_emoji and open_emoji:
-            await self.bot.db.execute("""UPDATE tickets SET delete_emoji = $1, open_emoji = $2 WHERE guild_id = $3""", delete_emoji[0], open_emoji[0], ctx.guild.id)
+            await self.bot.db.execute(
+                """UPDATE tickets SET delete_emoji = $1, open_emoji = $2 WHERE guild_id = $3""",
+                delete_emoji[0],
+                open_emoji[0],
+                ctx.guild.id,
+            )
         elif delete_emoji:
-            await self.bot.db.execute("""UPDATE tickets SET delete_emoji = $1 WHERE guild_id = $2""", delete_emoji[0], ctx.guild.id)
+            await self.bot.db.execute(
+                """UPDATE tickets SET delete_emoji = $1 WHERE guild_id = $2""",
+                delete_emoji[0],
+                ctx.guild.id,
+            )
         elif open_emoji:
-            await self.bot.db.execute("""UPDATE tickets SET open_emoji = $1 WHERE guild_id = $2""", open_emoji[0], ctx.guild.id)
+            await self.bot.db.execute(
+                """UPDATE tickets SET open_emoji = $1 WHERE guild_id = $2""",
+                open_emoji[0],
+                ctx.guild.id,
+            )
         else:
             pass
         view = TicketView(self.bot, ctx.guild.id)
         await view.setup()
         view.create_ticket()
         self.bot.view_ = view
-        message = await self.bot.send_embed(channel, code, user = ctx.author, view = view)
-        await self.bot.db.execute("""UPDATE tickets SET message_id = $1 WHERE guild_id = $2""", message.id, ctx.guild.id)
+        message = await self.bot.send_embed(channel, code, user=ctx.author, view=view)
+        await self.bot.db.execute(
+            """UPDATE tickets SET message_id = $1 WHERE guild_id = $2""",
+            message.id,
+            ctx.guild.id,
+        )
         return await ctx.success(f"Sent ticket panel in {channel.mention}")
 
 

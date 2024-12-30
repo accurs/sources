@@ -1,16 +1,10 @@
+from core.tools.utils import COLORS
+from discord import Color
+from discord.ext.commands import BadArgument, CommandError, Context, Converter
+
 from .basic import *
 from .discord import *
 from .kayo import *
-
-
-from discord.ext.commands import (
-    BadArgument,
-    Converter,
-    CommandError,
-)
-from discord import Color
-from discord.ext.commands import Context
-from core.tools.utils import COLORS
 
 
 class CustomColorConverter(Converter):

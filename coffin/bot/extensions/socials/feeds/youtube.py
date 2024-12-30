@@ -1,20 +1,24 @@
-from .base import BaseRecord, Feed
 import asyncio
 from collections import defaultdict
 from contextlib import suppress
+from datetime import datetime, timedelta, timezone
 from random import uniform
-from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, cast
-from typing_extensions import NoReturn, Self
-from ..models.youtube import YouTubeChannel, YouTubeFeed, FeedEntry
-from discord import AllowedMentions, Color, Embed, HTTPException, TextChannel, Thread, Client
+
+from discord import (AllowedMentions, Client, Color, Embed, HTTPException,
+                     TextChannel, Thread)
 from discord.utils import utcnow
+from typing_extensions import NoReturn, Self
+
+from ..models.youtube import FeedEntry, YouTubeChannel, YouTubeFeed
+from .base import BaseRecord, Feed
 
 
 class Record(BaseRecord):
     youtube_id: int
     youtube_name: str
     color: Optional[str]
+
 
 class YouTube(Feed):
     """
@@ -41,8 +45,7 @@ class YouTube(Feed):
             "{post.stats.likes}": "",
             "{post.stats.comments}": "",
             "{post.stats.plays}": post.media_statistics.views,
-            "{post.stats.shares}": ""
-
+            "{post.stats.shares}": "",
         }
         return REPLACEMENTS
 
@@ -88,7 +91,7 @@ class YouTube(Feed):
             result[record["youtube_id"]].append(record)
 
         return result
-    
+
     async def get_posts(self: Self, youtube_id: str, records: List[Record]) -> NoReturn:
         feed = await YouTubeFeed.from_id(youtube_id)
         youtube_channel = await YouTubeChannel.from_id(youtube_id)
@@ -97,9 +100,13 @@ class YouTube(Feed):
             return
         for item in feed.entries[:3]:
             if await self.bot.redis.sismember(self.key, str(item.yt_videoid)):
-                self.log.info(f"skipping {str(item.yt_videoid)} due to it already have been sent")
+                self.log.info(
+                    f"skipping {str(item.yt_videoid)} due to it already have been sent"
+                )
                 continue
-            if datetime.now(timezone.utc) - datetime.fromisoformat(item.published) > timedelta(hours=1):
+            if datetime.now(timezone.utc) - datetime.fromisoformat(
+                item.published
+            ) > timedelta(hours=1):
                 self.log.info(f"skipping {item} due to it being to old")
                 self.bot.ytvideo = item
                 continue
@@ -111,27 +118,27 @@ class YouTube(Feed):
         youtube_channel: YouTubeChannel,
         youtube_video: FeedEntry,
         records: List[Record],
-        live: Optional[bool] = False
+        live: Optional[bool] = False,
     ) -> None:
         """
         Dispatch a youtube post to the subscription channels.
         """
 
-        #self.log.debug(
+        # self.log.debug(
         #    "Dispatching youtube post %r from @%s (%s).", youtube_video.id, youtube_channel.name, youtube_channel.id
-        #)
+        # )
 
         embed = Embed(
-            description = f"[{youtube_video.title}]({youtube_video.link})",
-            timestamp = datetime.fromisoformat(youtube_video.published),
+            description=f"[{youtube_video.title}]({youtube_video.link})",
+            timestamp=datetime.fromisoformat(youtube_video.published),
         )
         embed.set_author(
-            url = youtube_video.link,
-            name = youtube_video.author,
-            icon_url = youtube_channel.avatarUrl
+            url=youtube_video.link,
+            name=youtube_video.author,
+            icon_url=youtube_channel.avatarUrl,
         )
         embed.color = self.bot.color
-        embed.set_thumbnail(url = youtube_video.media_thumbnail[0].url)
+        embed.set_thumbnail(url=youtube_video.media_thumbnail[0].url)
         for record in records:
 
             guild = self.bot.get_guild(record["guild_id"])
@@ -152,5 +159,3 @@ class YouTube(Feed):
                     embed=embed,
                     allowed_mentions=AllowedMentions.all(),
                 )
-
-    

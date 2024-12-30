@@ -1,10 +1,9 @@
 import asyncio
 import datetime
 import json
-
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Mapping, Dict
+from typing import Dict, Mapping
 
 import aiohttp
 import discord
@@ -16,12 +15,8 @@ from grief.core.data_manager import cog_data_path
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils.antispam import AntiSpam
 
-from ..utils import (
-    CacheLevel,
-    PlaylistScope,
-    DEFAULT_LAVALINK_YAML,
-    DEFAULT_LAVALINK_SETTINGS,
-)
+from ..utils import (DEFAULT_LAVALINK_SETTINGS, DEFAULT_LAVALINK_YAML,
+                     CacheLevel, PlaylistScope)
 from . import abc, cog_utils, commands, events, tasks, utilities
 from .cog_utils import CompositeMetaClass
 
@@ -64,7 +59,9 @@ class Audio(
         self._dj_role_cache = {}
         self.skip_votes = {}
         self.play_lock = {}
-        self.antispam: Dict[int, Dict[str, AntiSpam]] = defaultdict(lambda: defaultdict(AntiSpam))
+        self.antispam: Dict[int, Dict[str, AntiSpam]] = defaultdict(
+            lambda: defaultdict(AntiSpam)
+        )
 
         self.lavalink_connect_task = None
         self._restore_task = None
@@ -150,7 +147,9 @@ class Audio(
             url_keyword_whitelist=[],
             country_code="US",
         )
-        _playlist: Mapping = dict(id=None, author=None, name=None, playlist_url=None, tracks=[])
+        _playlist: Mapping = dict(
+            id=None, author=None, name=None, playlist_url=None, tracks=[]
+        )
 
         self.config.init_custom("EQUALIZER", 1)
         self.config.register_custom("EQUALIZER", eq_bands=[], eq_presets={})

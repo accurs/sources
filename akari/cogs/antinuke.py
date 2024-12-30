@@ -1,28 +1,18 @@
-import json
 import datetime
+import json
+from typing import List, Union
+
 import humanfriendly
-
+from discord import (AuditLogAction, Embed, Guild, Interaction, Member,
+                     Message, Role, TextChannel, User)
 from discord.abc import GuildChannel
-from discord.ext.commands import group, Cog
-from discord import (
-    Interaction,
-    Embed,
-    Member,
-    User,
-    AuditLogAction,
-    Guild,
-    TextChannel,
-    Message,
-    Role,
-)
-
-from typing import Union, List
-
+from discord.ext.commands import Cog, group
 from tools.bot import Akari
-from tools.validators import ValidTime
 from tools.converters import Punishment
 from tools.helpers import AkariContext
-from tools.predicates import antinuke_owner, antinuke_configured, admin_antinuke
+from tools.predicates import (admin_antinuke, antinuke_configured,
+                              antinuke_owner)
+from tools.validators import ValidTime
 
 
 class Antinuke(Cog):

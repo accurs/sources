@@ -4,9 +4,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
-from discord import Embed
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from discord import Embed
 from pydantic import BaseModel
 
 
@@ -233,12 +234,26 @@ class GithubPushEvent(BaseModel):
         modified_count = len(self.head_commit.modified)
 
         # Construct each part of the message based on conditions
-        added_message = f"+ Added {added_count} {'files' if added_count > 1 else 'file'}" if added_count > 0 else ""
-        deleted_message = f"- Deleted {deleted_count} {'files' if deleted_count > 1 else 'file'}" if deleted_count > 0 else ""
-        modified_message = f"! Modified {modified_count} {'files' if modified_count > 1 else 'file'}" if modified_count > 0 else ""
+        added_message = (
+            f"+ Added {added_count} {'files' if added_count > 1 else 'file'}"
+            if added_count > 0
+            else ""
+        )
+        deleted_message = (
+            f"- Deleted {deleted_count} {'files' if deleted_count > 1 else 'file'}"
+            if deleted_count > 0
+            else ""
+        )
+        modified_message = (
+            f"! Modified {modified_count} {'files' if modified_count > 1 else 'file'}"
+            if modified_count > 0
+            else ""
+        )
 
         # Combine non-empty parts with newlines, formatted for Discord
-        change_message = "\n".join(filter(None, [added_message, deleted_message, modified_message]))
+        change_message = "\n".join(
+            filter(None, [added_message, deleted_message, modified_message])
+        )
 
         # Create description with code block formatting
         commit_count = len(self.commits)
@@ -254,14 +269,26 @@ class GithubPushEvent(BaseModel):
             description=(
                 f">>> There has been **{commit_count}** {'commit' if commit_count == 1 else 'commits'} "
                 f"to [`{self.repository.full_name}`](https://github.com/{self.repository.full_name})\n{description}"
-            )
+            ),
         )
-        if len(self.commits) == 1 and self.commits[0].message.startswith("test") or len(self.commits[0].message) < 5:
+        if (
+            len(self.commits) == 1
+            and self.commits[0].message.startswith("test")
+            or len(self.commits[0].message) < 5
+        ):
             return
         for commit in self.commits:
-            embed.add_field(name=f"`{commit.id[:6]}`", value = f"```fix\n{commit.message}\n```", inline = False) # Commit message block
+            embed.add_field(
+                name=f"`{commit.id[:6]}`",
+                value=f"```fix\n{commit.message}\n```",
+                inline=False,
+            )  # Commit message block
 
-        embed.set_author(name=str(self.sender.login), icon_url=str(self.sender.avatar_url), url=self.sender.html_url)
+        embed.set_author(
+            name=str(self.sender.login),
+            icon_url=str(self.sender.avatar_url),
+            url=self.sender.html_url,
+        )
         embed.timestamp = datetime.now()
 
         return embed

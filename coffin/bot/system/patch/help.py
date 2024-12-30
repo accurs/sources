@@ -1,15 +1,18 @@
-import discord
 import asyncio
-from discord.ext import commands
-from discord.ext.commands import Command, Group, CommandOnCooldown
-from .context import Context
-from discord import Embed
-from discord.ui import View
-from urllib.parse import quote_plus as urlencode
 import datetime
-from typing import List, Generator, Optional
-from ..classes.exceptions import InvalidSubCommand
+from typing import Generator, List, Optional
+from urllib.parse import quote_plus as urlencode
+
+import discord
 from data.config import CONFIG
+from discord import Embed
+from discord.ext import commands
+from discord.ext.commands import Command, CommandOnCooldown, Group
+from discord.ui import View
+
+from ..classes.exceptions import InvalidSubCommand
+from .context import Context
+
 
 class OnCooldown(Exception):
     pass
@@ -23,7 +26,7 @@ def shorten(text: str, limit: int) -> str:
             return text
     except Exception:
         return text
-    
+
 
 def map_check(check):
     if "is_booster" in check.__qualname__:
@@ -37,7 +40,15 @@ def map_check(check):
     else:
         return None
 
-def humann_join(items: list, separator: Optional[str] = ", ", markdown: Optional[str] = "", replacements: Optional[dict] = None, start_content: Optional[str] = "", titled: Optional[bool] = False) -> str:
+
+def humann_join(
+    items: list,
+    separator: Optional[str] = ", ",
+    markdown: Optional[str] = "",
+    replacements: Optional[dict] = None,
+    start_content: Optional[str] = "",
+    titled: Optional[bool] = False,
+) -> str:
     if len(items) == 0:
         return ""
     if len(items) > 1:
@@ -141,23 +152,27 @@ class Help(commands.HelpCommand):
         ):
             if retry_after != 0:
                 raise CommandOnCooldown(None, retry_after, None)
-    
-        embed: Embed = Embed(color=CONFIG["colors"]["bleed"], timestamp=datetime.datetime.now())
+
+        embed: Embed = Embed(
+            color=CONFIG["colors"]["bleed"], timestamp=datetime.datetime.now()
+        )
         ctx = self.context
         commands: List = []
         embeds = []
         commands_ = [c for c in group.walk_commands()]
-#        commands = commands[::-1]
+        #        commands = commands[::-1]
         commands_.insert(0, group)
-    
+
         for i, command in enumerate(commands_, start=1):
             if not command.perms:
                 try:
                     await command.can_run(ctx)
                 except Exception:
                     pass
-            perms = command.perms or ["send_messages"]  # Default to send_messages if no perms
-    
+            perms = command.perms or [
+                "send_messages"
+            ]  # Default to send_messages if no perms
+
             if command.cog_name.lower() == "premium":
                 if command.perms:
                     perms = command.perms
@@ -169,23 +184,23 @@ class Help(commands.HelpCommand):
                     await command.can_run(ctx)
                 except Exception:
                     pass
-    
-            embed = Embed(color=0x6e879c, timestamp=datetime.datetime.now())
+
+            embed = Embed(color=0x6E879C, timestamp=datetime.datetime.now())
             embed.title = f"{'Group Command: ' if isinstance(command, Group) else 'Command: '}{command.qualified_name}"
-    
+
             # Description
             description = command.description or command.help
             # Description
             description = description if description else generate(ctx, command)
             embed.description = description
-    
+
             # Aliases (before Parameters)
             if len(command.aliases) > 0:
                 aliases = ", ".join(command.aliases)
             else:
                 aliases = "none"
             embed.add_field(name="Aliases", value=aliases, inline=True)
-    
+
             # Parameters
             if len(command.clean_params.keys()) > 0:
                 params = ", ".join(command.clean_params.keys()).replace("_", ", ")
@@ -197,13 +212,22 @@ class Help(commands.HelpCommand):
             for check in _checks:
                 if check not in checks:
                     checks.append(check)
-            information_text = "".join(f"\n{CONFIG['emojis']['warning']} {c}" for c in checks)
+            information_text = "".join(
+                f"\n{CONFIG['emojis']['warning']} {c}" for c in checks
+            )
             # Permissions
             permissions = []
             for p in command.perms:
                 if p not in permissions and p not in checks:
                     permissions.append(p)
-            permissions_text = humann_join(permissions, ", ", "`", {"_": " "}, f"{CONFIG['emojis']['warning']} ", True)
+            permissions_text = humann_join(
+                permissions,
+                ", ",
+                "`",
+                {"_": " "},
+                f"{CONFIG['emojis']['warning']} ",
+                True,
+            )
             information_text = f"{permissions_text}" + information_text
             if len(information_text) > 3:
                 embed.add_field(
@@ -211,26 +235,29 @@ class Help(commands.HelpCommand):
                     value=information_text,
                     inline=True,
                 )
-    
+
             # Usage
-            example = command.example.replace(",", self.context.prefix) if command.example else ""
+            example = (
+                command.example.replace(",", self.context.prefix)
+                if command.example
+                else ""
+            )
             embed.add_field(
                 name="Usage", value=generate(ctx, command, example, True), inline=False
             )
-            cog_name = command.extras.get("cog_name", command.cog_name) 
-            #footer
+            cog_name = command.extras.get("cog_name", command.cog_name)
+            # footer
             embed.set_footer(
                 text=f"Module: {cog_name.replace('.py','')}・Command - {i}/{len(commands_)}"
             )
-            #author
+            # author
             embed.set_author(
                 name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
             )
-    
-            embeds.append(embed)
-    
-        return await self.context.paginate(embeds, commands)
 
+            embeds.append(embed)
+
+        return await self.context.paginate(embeds, commands)
 
     def get_example(self, command):
         if len(command.clean_params.keys()) == 0:
@@ -268,21 +295,28 @@ class Help(commands.HelpCommand):
             f"**No command** named **{string}** exists"
         )
 
-
-    
     async def send_command_help(self, command):
-        embed = Embed(color=CONFIG["colors"]["bleed"], timestamp=datetime.datetime.now())
+        embed = Embed(
+            color=CONFIG["colors"]["bleed"], timestamp=datetime.datetime.now()
+        )
         try:
             if command.qualified_name == "help":
                 embed.title = "Command: help"
                 embed.description = "View extended help for commands"
-                embed.add_field(name = "Aliases", value = "commands, h", inline = True)
-                embed.add_field(name = "Parameters", value = "command", inline = True)
-                embed.add_field(name = "Information", value = "n/a", inline = True)
-                embed.add_field(name = "Usage", value = "```No syntax has been set for this command```", inline = False)
-                embed.set_author(name = self.context.author.display_name, icon_url = self.context.author.display_avatar.url)
-                embed.set_footer(text = "Page 1/1 (1 entry) ∙ Module: Information")
-                return await self.context.send(embed = embed)
+                embed.add_field(name="Aliases", value="commands, h", inline=True)
+                embed.add_field(name="Parameters", value="command", inline=True)
+                embed.add_field(name="Information", value="n/a", inline=True)
+                embed.add_field(
+                    name="Usage",
+                    value="```No syntax has been set for this command```",
+                    inline=False,
+                )
+                embed.set_author(
+                    name=self.context.author.display_name,
+                    icon_url=self.context.author.display_avatar.url,
+                )
+                embed.set_footer(text="Page 1/1 (1 entry) ∙ Module: Information")
+                return await self.context.send(embed=embed)
         except Exception:
             pass
         # Set the author to the command requester
@@ -290,31 +324,33 @@ class Help(commands.HelpCommand):
             name=self.context.author.display_name,
             icon_url=self.context.author.display_avatar.url,
         )
-    
+
         ctx = self.context
-        perms = command.perms or ["send_messages"]  # Default to send_messages if no perms
-    
+        perms = command.perms or [
+            "send_messages"
+        ]  # Default to send_messages if no perms
+
         if command.cog_name.lower() == "premium":
             if command.perms:
                 perms = command.perms
                 perms.append("Donator")
             else:
                 perms = ["Donator"]
-    
+
         # Command Title
         embed.title = f"{'Group Command: ' if isinstance(command, Group) else 'Command: '}{command.qualified_name}"
         description = command.description or command.help
         # Description
         description = description if description else generate(ctx, command)
         embed.description = description
-    
+
         # Aliases (before Parameters)
         if len(command.aliases) > 0:
             aliases = ", ".join(command.aliases)
         else:
             aliases = "none"
         embed.add_field(name="Aliases", value=aliases, inline=True)
-    
+
         # Parameters
         if len(command.clean_params.keys()) > 0:
             params = "".join(f"{c}, " for c in command.clean_params.keys()).strip(", ")
@@ -322,19 +358,23 @@ class Help(commands.HelpCommand):
             embed.add_field(name="Parameters", value=params, inline=True)
         else:
             embed.add_field(name="Parameters", value="none", inline=True)
-    
+
         _checks = set([map_check(c) for c in command.checks if map_check(c)])
         checks = []
         for check in _checks:
             if check not in checks:
                 checks.append(check)
-        information_text = "".join(f"\n{CONFIG['emojis']['warning']} {c}" for c in checks)
+        information_text = "".join(
+            f"\n{CONFIG['emojis']['warning']} {c}" for c in checks
+        )
         # Permissions
         permissions = []
         for p in command.perms:
             if p not in permissions:
                 permissions.append(p)
-        permissions_text = humann_join(permissions, ", ", "`", {"_": " "}, f"{CONFIG['emojis']['warning']} ", True)
+        permissions_text = humann_join(
+            permissions, ", ", "`", {"_": " "}, f"{CONFIG['emojis']['warning']} ", True
+        )
         information_text = f"{permissions_text}" + information_text
         if len(information_text) > 3:
             embed.add_field(
@@ -342,50 +382,21 @@ class Help(commands.HelpCommand):
                 value=information_text,
                 inline=True,
             )
-    
+
         # Usage
-        example = command.example.replace(",", self.context.prefix) if command.example else self.get_example(command)
+        example = (
+            command.example.replace(",", self.context.prefix)
+            if command.example
+            else self.get_example(command)
+        )
         embed.add_field(
             name="Usage", value=generate(ctx, command, example, True), inline=False
         )
-        cog_name = command.extras.get("cog_name", command.cog_name) 
+        cog_name = command.extras.get("cog_name", command.cog_name)
         # Set footer with module info
         try:
             embed.set_footer(text=f"Module: {cog_name.replace('.py','')}")
         except AttributeError:
             pass
-    
+
         return await ctx.send(embed=embed)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

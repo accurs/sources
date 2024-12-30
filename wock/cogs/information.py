@@ -1,46 +1,46 @@
+import math
 import os
+import re
 import typing
+from datetime import datetime, timedelta
+from difflib import get_close_matches
+from io import BytesIO
+from typing import Annotated, List, Optional, Union  # type: ignore
+
+import aiohttp
 import discord
 import pytz
-import aiohttp
-import math
-from difflib import get_close_matches
-from tools.important import Context  # type: ignore
-from munch import Munch, DefaultMunch
-from io import BytesIO
-from discord.ext.commands import CommandError, param
-from discord.ext import commands
-from datetime import timedelta, datetime
-from tools.important.subclasses.command import (  # type: ignore
-    Member,
-    User,
-    Message,  # noqa: F401
-    NonAssignedRole,
-)
 from aiohttp import ContentTypeError
-from tools.important.subclasses.color import get_dominant_color, color_info  # type: ignore
-from discord import Interaction, app_commands  # type: ignore
+from discord import Embed, Interaction, app_commands  # type: ignore
 from discord.app_commands import Choice
+from discord.ext import commands
+from discord.ext.commands import CommandError, param
 from discord.utils import chunk_list  # noqa: F401
-from typing import Union, Optional, List, Annotated  # type: ignore
-from tools.wock import Wock  # type: ignore
+from GeoPython import Client
+from munch import DefaultMunch, Munch
+from tools.important import Context  # type: ignore
+from tools.important.subclasses.color import (color_info,  # type: ignore
+                                              get_dominant_color)
+from tools.important.subclasses.command import Message  # noqa: F401
+from tools.important.subclasses.command import (Member,  # type: ignore
+                                                NonAssignedRole, User)
 from tools.shazam import Recognizer  # type: ignore
+from tools.wock import Wock  # type: ignore
+from typing_extensions import NotRequired, Type
 from weather import WeatherClient  # type: ignore
 from weather.weathertypes import Kind  # type: ignore
-from GeoPython import Client
-from typing_extensions import Type, NotRequired
-import re
-from discord import Embed
+
 if typing.TYPE_CHECKING:
     pass
+from aiohttp import ClientSession as Session
+from bs4 import BeautifulSoup
+from cashews import cache
+from cogs.lastfm import shorten
+from humanize import intword
+from loguru import logger
 from munch import DefaultMunch
 from pydantic import BaseModel
-from loguru import logger
-from aiohttp import ClientSession as Session
-from cashews import cache
-from bs4 import BeautifulSoup
-from humanize import intword
-from cogs.lastfm import shorten
+
 
 class plural:
     def __init__(
@@ -53,12 +53,14 @@ class plural:
             len(value)
             if isinstance(value, list)
             else (
-                int(value.split(" ", 1)[-1])
-                if value.startswith(("CREATE", "DELETE"))
-                else int(value)
+                (
+                    int(value.split(" ", 1)[-1])
+                    if value.startswith(("CREATE", "DELETE"))
+                    else int(value)
+                )
+                if isinstance(value, str)
+                else value
             )
-            if isinstance(value, str)
-            else value
         )
         self.number: bool = number
         self.md: str = md
@@ -115,7 +117,9 @@ class Image:
 
         attachment = message.attachments[0]
         if not attachment.content_type:
-            raise CommandError(f"The [attachment]({attachment.url}) provided is invalid!")
+            raise CommandError(
+                f"The [attachment]({attachment.url}) provided is invalid!"
+            )
 
         elif not attachment.content_type.startswith("image"):
             raise CommandError(
@@ -432,16 +436,22 @@ class Information(commands.Cog):
                 return None
 
     async def get_time(self, timezone: str):
-        return int(datetime.now(tz = pytz.timezone(timezone)).timestamp())  # type: ignore
+        return int(datetime.now(tz=pytz.timezone(timezone)).timestamp())  # type: ignore
 
-    @commands.command(name = "reverse", aliases = ["reversesearch"], brief = "Reverse search an image", usage = ",reverse {image}")
-    async def reverse(self, 
-        ctx: Context, 
+    @commands.command(
+        name="reverse",
+        aliases=["reversesearch"],
+        brief="Reverse search an image",
+        usage=",reverse {image}",
+    )
+    async def reverse(
+        self,
+        ctx: Context,
         *,
         image: Image = param(
             default=Image.fallback,
             description="The image to search.",
-        )
+        ),
     ):
         try:
             async with aiohttp.ClientSession() as session:
@@ -471,7 +481,7 @@ class Information(commands.Cog):
             description=(
                 f"Found {plural(data.num_matches, md='`'):match|matches} for [`{image.filename}`]({image.url})."
             ),
-            color = self.bot.color,
+            color=self.bot.color,
         )
 
         embed.set_thumbnail(url=image.url)
@@ -487,13 +497,12 @@ class Information(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-
     @commands.group(
         name="timezone",
         aliases=["tz", "time"],
         invoke_without_command=True,
         brief="get the local time of a user if set",
-        example=",timezone @o_5v"
+        example=",timezone @o_5v",
     )
     async def timezone(
         self, ctx: Context, member: discord.Member | discord.User = commands.Author
@@ -509,7 +518,11 @@ class Information(commands.Cog):
                 f"{member.mention} does not have their time set with `timezone set`"
             )
 
-    @timezone.command(name="set", brief="set a timezone via location or timezone", example=",timezone set New York/et")
+    @timezone.command(
+        name="set",
+        brief="set a timezone via location or timezone",
+        example=",timezone set New York/et",
+    )
     async def timezone_set(self, ctx: Context, *, timezone: str):
         data = await self.find_timezone(city=timezone)
         if data:
@@ -524,19 +537,20 @@ class Information(commands.Cog):
         else:
             return await ctx.fail(f"could not find a timezone for `{timezone}`")
 
-
- 
-
     @commands.command(
         brief="Check the bot's latency",
         description="Shows the current latency of the bot.",
-        example=",ping"
+        example=",ping",
     )
     async def ping(self, ctx):
         latency = round(self.bot.latency * 1000)
         await ctx.send(f"*...**{latency}**ms*")
 
-    @commands.command(name="weather", brief="Show the current weather of a certain city", example=",weather columbia")
+    @commands.command(
+        name="weather",
+        brief="Show the current weather of a certain city",
+        example=",weather columbia",
+    )
     async def weather(self, ctx: Context, *, city: str):
         try:
             weather_dat = await self.weather_client.get(city)
@@ -552,8 +566,9 @@ class Information(commands.Cog):
             await ctx.send(e)
             return await ctx.fail(f"**Could not find** the weather for `{city}`")
 
-
-    @commands.command(name="bans", brief="Show banned users in the guild", example=",bans")
+    @commands.command(
+        name="bans", brief="Show banned users in the guild", example=",bans"
+    )
     @commands.has_permissions(moderate_members=True)
     async def bans(self, ctx: Context):
         try:
@@ -571,7 +586,10 @@ class Information(commands.Cog):
             return await ctx.fail("**no bans found in guild**")
 
     @commands.command(
-        name="color", aliases=["clr", "hex"], brief="get information about a color", example=",color red"
+        name="color",
+        aliases=["clr", "hex"],
+        brief="get information about a color",
+        example=",color red",
     )
     async def color(
         self, ctx: Context, *, query: Optional[Union[str, User, Member]] = None
@@ -600,8 +618,13 @@ class Information(commands.Cog):
             return await color_info(ctx, _)
         except Exception:
             return await ctx.send_help()
-        
-    @commands.command(name="botinfo", aliases=["bi", "system", "sys"], brief="View wock bots information on its growth", example=",botinfo")
+
+    @commands.command(
+        name="botinfo",
+        aliases=["bi", "system", "sys"],
+        brief="View wock bots information on its growth",
+        example=",botinfo",
+    )
     async def botinfo(self, ctx: Context):
         get_lines()  # type: ignore
         stat = await self.bot.get_statistics()
@@ -636,7 +659,6 @@ class Information(commands.Cog):
         embed.set_thumbnail(url=self.bot.user.avatar)
         await ctx.send(embed=embed)
 
-
     @commands.command(
         name="members",
         description="Show server statistics",
@@ -664,7 +686,10 @@ class Information(commands.Cog):
         await ctx.send(embed=e)
 
     @commands.command(
-        name="serverinfo", aliases=["guildinfo", "sinfo", "ginfo", "si", "gi"], brief="view information on the server", example=",serverinfo"
+        name="serverinfo",
+        aliases=["guildinfo", "sinfo", "ginfo", "si", "gi"],
+        brief="view information on the server",
+        example=",serverinfo",
     )
     async def serverinfo(self, ctx: Context, *, guild: discord.Guild = None):
         guild = ctx.guild if guild is None else guild
@@ -726,11 +751,8 @@ class Information(commands.Cog):
 
         await ctx.send(embed=e)
 
-
     @commands.command(
-        name="invite",
-        description="Invite the bot to your server",
-        example="invite"
+        name="invite", description="Invite the bot to your server", example="invite"
     )
     async def invite(self, ctx):
         invite = self.bot.invite_url
@@ -740,13 +762,10 @@ class Information(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-
-
     @commands.command(
         aliases=["ui", "user", "userinfo"],
         example=",userinfo @o_5v",
-        brief="View information on a users account"
-
+        brief="View information on a users account",
     )
     async def whois(self, ctx, user: Member = None):
         """View some information on a user"""
@@ -1073,7 +1092,7 @@ class Information(commands.Cog):
         name="names",
         aliases=["namehistory", "nh", "namehist"],
         brief="show a user's name history",
-        example=",names @o_5v"
+        example=",names @o_5v",
     )
     async def names(self, ctx, *, user: discord.User = None):
         if user is None:
@@ -1098,7 +1117,7 @@ class Information(commands.Cog):
         name="inrole",
         brief="list all users that has a role",
         aliases=["irole"],
-        example=",inrole admin"
+        example=",inrole admin",
     )
     async def inrole(self, ctx, *, role: NonAssignedRole):
         """View the users in a role"""
@@ -1168,7 +1187,11 @@ class Information(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.group(invoke_without_command=True, example=",boosters", brief="List all the current users boosting the guild")
+    @commands.group(
+        invoke_without_command=True,
+        example=",boosters",
+        brief="List all the current users boosting the guild",
+    )
     async def boosters(self, ctx):
         rows = []
 
@@ -1240,7 +1263,11 @@ class Information(commands.Cog):
 
             return user.global_name or user.name
 
-    @boosters.command(name="lost", brief="List all users who has recently stopped boosting the server", example=",boosters lost")
+    @boosters.command(
+        name="lost",
+        brief="List all users who has recently stopped boosting the server",
+        example=",boosters lost",
+    )
     async def boosters_lost(self, ctx: Context):
         embed = discord.Embed(
             title="boosters lost", url=self.bot.domain, color=self.bot.color
@@ -1263,7 +1290,9 @@ class Information(commands.Cog):
         else:
             return await ctx.fail("no **boosters lost** in guild")
 
-    @commands.command(name="emojis", brief="List all emojis in the server", example=",emojis")
+    @commands.command(
+        name="emojis", brief="List all emojis in the server", example=",emojis"
+    )
     async def emojis(self, ctx):
         emojis = ctx.guild.emojis
 
@@ -1398,7 +1427,11 @@ class Information(commands.Cog):
 
         await ctx.paginate(embeds)
 
-    @commands.command(name="channelinfo", brief="View information on a channel", example=",channelinfo #txt")
+    @commands.command(
+        name="channelinfo",
+        brief="View information on a channel",
+        example=",channelinfo #txt",
+    )
     async def channelinfo(self, ctx, channel: discord.TextChannel):
         category = channel.category.name if channel.category else "No category"
 
@@ -1434,7 +1467,7 @@ class Information(commands.Cog):
         name="urbandictionary",
         aliases=("urban", "ud"),
         example=",urbandictionary black",
-        brief="Lookup a words meaning using the urban dictionary"
+        brief="Lookup a words meaning using the urban dictionary",
     )
     async def urbandictionary(self, ctx, term: str):
         """

@@ -1,8 +1,12 @@
-from pydantic import BaseModel
-from typing import Optional, Any, List, Dict, Union
+from typing import Any, Dict, List, Optional, Union
+
 from aiohttp import ClientSession
+from pydantic import BaseModel
+
+
 class VideoThumbnail(BaseModel):
     """Thumbnails for the video in different sizes"""
+
     url: str
     width: int
     height: int
@@ -10,6 +14,7 @@ class VideoThumbnail(BaseModel):
 
 class VideoStatistics(BaseModel):
     """Statistics of the post"""
+
     likes: Optional[int] = 0
     views: Optional[int] = 0
     comments: Optional[int] = 0
@@ -17,17 +22,21 @@ class VideoStatistics(BaseModel):
 
 class AuthorStatistics(BaseModel):
     """Statistics of the author"""
+
     subscribers: Optional[int] = 0
     videos: Optional[int] = 0
     views: Optional[int] = 0
+
 
 class AuthorAvatar(BaseModel):
     url: str
     width: int
     height: int
 
+
 class VideoAuthor(BaseModel):
     """The author of the video"""
+
     name: str
     id: str
     url: str
@@ -35,8 +44,10 @@ class VideoAuthor(BaseModel):
     statistics: AuthorStatistics
     description: str
 
+
 class YouTubeVideo(BaseModel):
     """YouTube video object"""
+
     videoId: str
     title: str
     length: int

@@ -4,6 +4,7 @@ import datetime
 from typing import Any, NoReturn
 
 import discord
+
 from grief.core import commands
 from grief.core.utils import AsyncIter
 
@@ -38,7 +39,9 @@ class BirthdayLoop(MixinMeta):
         # to get them doe faster as (some) rate limits are per-guild
         # but it's fine for now and the loop is hourly
 
-    async def add_role(self, me: discord.Member, member: discord.Member, role: discord.Role):
+    async def add_role(
+        self, me: discord.Member, member: discord.Member, role: discord.Role
+    ):
         if error := role_perm_check(me, role):
             log.warning(
                 "Not adding role %s to %s in guild %s because %s",
@@ -48,12 +51,16 @@ class BirthdayLoop(MixinMeta):
                 error,
             )
             return
-        log.trace("Queued birthday role add for %s in guild %s", member.id, member.guild.id)
+        log.trace(
+            "Queued birthday role add for %s in guild %s", member.id, member.guild.id
+        )
         self.coro_queue.put_nowait(
             member.add_roles(role, reason="Birthday cog - birthday starts today")
         )
 
-    async def remove_role(self, me: discord.Member, member: discord.Member, role: discord.Role):
+    async def remove_role(
+        self, me: discord.Member, member: discord.Member, role: discord.Role
+    ):
         if error := role_perm_check(me, role):
             log.warning(
                 "Not removing role to %s in guild %s because %s",
@@ -62,7 +69,9 @@ class BirthdayLoop(MixinMeta):
                 error,
             )
             return
-        log.trace("Queued birthday role remove for %s in guild %s", member.id, member.guild.id)
+        log.trace(
+            "Queued birthday role remove for %s in guild %s", member.id, member.guild.id
+        )
         self.coro_queue.put_nowait(
             member.remove_roles(role, reason="Birthday cog - birthday ends today")
         )
@@ -79,7 +88,11 @@ class BirthdayLoop(MixinMeta):
             )
             return
 
-        log.trace("Queued birthday announcement for %s in guild %s", channel.id, channel.guild.id)
+        log.trace(
+            "Queued birthday announcement for %s in guild %s",
+            channel.id,
+            channel.guild.id,
+        )
         log.trace("Message: %s", message)
         self.coro_queue.put_nowait(
             channel.send(
@@ -139,7 +152,9 @@ class BirthdayLoop(MixinMeta):
 
     async def _update_birthdays(self):
         """Update birthdays"""
-        all_birthdays: dict[int, dict[int, dict[str, Any]]] = await self.config.all_members()
+        all_birthdays: dict[int, dict[int, dict[str, Any]]] = (
+            await self.config.all_members()
+        )
         all_settings: dict[int, dict[str, Any]] = await self.config.all_guilds()
 
         async for guild_id, guild_data in AsyncIter(all_birthdays.items(), steps=5):
@@ -148,7 +163,9 @@ class BirthdayLoop(MixinMeta):
                 log.trace("Guild %s is not in cache, skipping", guild_id)
                 continue
 
-            if all_settings.get(guild.id) is None:  # can happen with migration from ZeLarp's cog
+            if (
+                all_settings.get(guild.id) is None
+            ):  # can happen with migration from ZeLarp's cog
                 log.trace("Guild %s is not setup, skipping", guild_id)
                 continue
 
@@ -162,10 +179,14 @@ class BirthdayLoop(MixinMeta):
 
             since_midnight = datetime.datetime.utcnow().replace(
                 minute=0, second=0, microsecond=0
-            ) - datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            ) - datetime.datetime.utcnow().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
 
             if since_midnight.total_seconds() != hour_td.total_seconds():
-                log.trace("Not correct time for update for guild %s, skipping", guild_id)
+                log.trace(
+                    "Not correct time for update for guild %s, skipping", guild_id
+                )
                 continue
 
             today_dt = (datetime.datetime.utcnow() - hour_td).replace(
@@ -182,12 +203,16 @@ class BirthdayLoop(MixinMeta):
                 member = guild.get_member(int(member_id))
                 if member is None:
                     log.trace(
-                        "Member %s for guild %s is not in cache, skipping", member_id, guild_id
+                        "Member %s for guild %s is not in cache, skipping",
+                        member_id,
+                        guild_id,
                     )
                     continue
 
                 proper_bday_dt = datetime.datetime(
-                    year=birthday["year"] or 1, month=birthday["month"], day=birthday["day"]
+                    year=birthday["year"] or 1,
+                    month=birthday["month"],
+                    day=birthday["day"],
                 )
                 this_year_bday_dt = proper_bday_dt.replace(year=today_dt.year) + hour_td
 
@@ -214,7 +239,9 @@ class BirthdayLoop(MixinMeta):
                 )
                 continue
 
-            log.trace("Members with birthdays in guild %s: %s", guild_id, birthday_members)
+            log.trace(
+                "Members with birthdays in guild %s: %s", guild_id, birthday_members
+            )
 
             for member, dt in birthday_members.items():
                 if member not in role.members:
@@ -223,7 +250,9 @@ class BirthdayLoop(MixinMeta):
                     if dt.year == 1:
                         await self.send_announcement(
                             channel,
-                            format_bday_message(all_settings[guild.id]["message_wo_year"], member),
+                            format_bday_message(
+                                all_settings[guild.id]["message_wo_year"], member
+                            ),
                             all_settings[guild.id]["allow_role_mention"],
                         )
 

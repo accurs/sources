@@ -6,6 +6,7 @@ from typing import Optional
 
 import discord
 from discord.ext import tasks
+
 from grief.core import Config, VersionInfo, checks, commands, version_info
 from grief.core.i18n import Translator, cog_i18n
 from grief.core.utils.chat_formatting import humanize_list, pagify

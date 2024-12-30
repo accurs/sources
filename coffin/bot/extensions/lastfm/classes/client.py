@@ -1,14 +1,15 @@
 from json import dumps, loads
-import aiohttp
-from bs4 import BeautifulSoup
-from discord.ext.commands import CommandError
-from pydantic import BaseModel, create_model
-from yarl import URL
-from data.config import CONFIG as config
 from typing import Any, Dict, Optional, Union
+
+import aiohttp
 from aiohttp import ClientSession as DefaultClientSession
 from aiohttp import ClientTimeout
+from bs4 import BeautifulSoup
+from data.config import CONFIG as config
+from discord.ext.commands import CommandError
 from munch import DefaultMunch
+from pydantic import BaseModel, create_model
+from yarl import URL
 
 
 class CS(DefaultClientSession):
@@ -66,6 +67,8 @@ class CS(DefaultClientSession):
             return munch
 
         return response
+
+
 def create_model_from_dict(data: Union[dict, list]) -> BaseModel:
     if "data" in data:
         data = data["data"]

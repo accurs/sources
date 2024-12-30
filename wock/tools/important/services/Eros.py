@@ -3,10 +3,9 @@
 #   timestamp: 2024-03-02T00:34:12+00:00
 from __future__ import annotations
 
+from typing import Any, List, Optional
 
-from typing import List, Optional
 import aiohttp
-from typing import Any
 from pydantic import BaseModel
 
 
@@ -80,6 +79,10 @@ class PostResponse(BaseModel):
                     if not str(resp.url) == "https://www.tiktok.com/explore":
                         url = str(resp.url)
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://eros.rest/tiktok/post", params = {"url": url}, headers = {"api-key": key}) as response:
+            async with session.get(
+                "https://eros.rest/tiktok/post",
+                params={"url": url},
+                headers={"api-key": key},
+            ) as response:
                 data = await response.read()
         return cls.parse_raw(data)

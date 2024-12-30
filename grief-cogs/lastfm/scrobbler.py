@@ -5,6 +5,7 @@ import re
 import arrow
 import discord
 import lavalink
+
 from grief.core import commands
 
 from .abc import MixinMeta
@@ -43,7 +44,9 @@ class ScrobblerMixin(MixinMeta):
             if trackname == "" or artistname == "":
                 raise ValueError
         except ValueError:
-            return await ctx.send("\N{WARNING SIGN} Incorrect format! use `track | artist`")
+            return await ctx.send(
+                "\N{WARNING SIGN} Incorrect format! use `track | artist`"
+            )
 
         result = await self.scrobble_song(
             trackname, artistname, ctx.author, ctx.author, conf["session_key"], False
@@ -128,7 +131,9 @@ class ScrobblerMixin(MixinMeta):
             return
 
         if player.current and player.current.uri == track.uri:
-            await self.scrobble_song(track_name, artist_name, user, guild.me, session_key, True)
+            await self.scrobble_song(
+                track_name, artist_name, user, guild.me, session_key, True
+            )
 
     @commands.Cog.listener(name="on_red_audio_track_start")
     async def listener_scrobbler_track_start(
@@ -158,5 +163,10 @@ class ScrobblerMixin(MixinMeta):
                     track_title, track_artist, member, user_settings["session_key"]
                 )
                 await self.maybe_scrobble_song(
-                    member, guild, track, track_artist, track_title, user_settings["session_key"]
+                    member,
+                    guild,
+                    track,
+                    track_artist,
+                    track_title,
+                    user_settings["session_key"],
                 )

@@ -3,14 +3,13 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import Optional
 
+from core.client.context import Context
 from discord import ButtonStyle, Embed, HTTPException, Member, Message, User
 from discord.emoji import Emoji
 from discord.interactions import Interaction
 from discord.partial_emoji import PartialEmoji
 from discord.ui import Button as OriginalButton
 from discord.ui import View as OriginalView
-
-from core.client.context import Context
 
 
 class View(OriginalView):

@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from contextlib import suppress
 from io import BytesIO
-from typing import Annotated, List, Literal, Optional, Union, Dict
+from typing import Annotated, Dict, List, Literal, Optional, Union
 from zipfile import ZipFile
 
 import discord
@@ -13,58 +13,23 @@ import humanize
 import matplotlib.pyplot as plt
 from aiogtts import aiogTTS
 from bs4 import BeautifulSoup
-from discord import (
-    Attachment,
-    Embed,
-    FFmpegPCMAudio,
-    File,
-    Guild,
-    HTTPException,
-    Invite,
-    Member,
-    Message,
-    PartialEmoji,
-    Role,
-    Spotify,
-    TextChannel,
-    User,
-    app_commands,
-    Reaction
-)
-from discord.ext.commands import (
-    Author,
-    Cog,
-    CurrentChannel,
-    CurrentGuild,
-    PartialEmojiConverter,
-    check,
-    command,
-    group,
-    has_permissions,
-    hybrid_command,
-    hybrid_group,
-)
+from discord import (Attachment, Embed, FFmpegPCMAudio, File, Guild,
+                     HTTPException, Invite, Member, Message, PartialEmoji,
+                     Reaction, Role, Spotify, TextChannel, User, app_commands)
+from discord.ext.commands import (Author, Cog, CurrentChannel, CurrentGuild,
+                                  PartialEmojiConverter, check, command, group,
+                                  has_permissions, hybrid_command,
+                                  hybrid_group)
 from discord.utils import format_dt
 from pytz import timezone
 from shazamio import Shazam
-
-from structure.scare import Afk, Scare, ratelimiter
 from structure.managers import Context
+from structure.scare import Afk, Scare, ratelimiter
 from structure.utilities import CashApp, Location
 from structure.utilities import Member as AssignableMember
-from structure.utilities import (
-    Roblox,
-    RobloxUser,
-    Script,
-    Snapchat,
-    SnapchatUser,
-    Tiktok,
-    TikTokUser,
-    ValidDate,
-    Weather,
-    WeatherModel,
-    plural,
-)
+from structure.utilities import (Roblox, RobloxUser, Script, Snapchat,
+                                 SnapchatUser, Tiktok, TikTokUser, ValidDate,
+                                 Weather, WeatherModel, plural)
 
 
 class Miscellaneous(Cog):
@@ -149,22 +114,21 @@ class Miscellaneous(Cog):
                             for group in groups:
                                 await asyncio.sleep(0.01)
                                 await message.channel.send(embeds=group)
-    
+
     @Cog.listener()
     async def on_reaction_remove(
-        self: "Miscellaneous", 
-        reaction: Reaction, 
-        user: Union[Member, User]
+        self: "Miscellaneous", reaction: Reaction, user: Union[Member, User]
     ):
-        if not user.bot: 
+        if not user.bot:
             if message := reaction.message:
                 await self.bot.cache.append(
-                    f"reaction-{message.channel.id}", {
-                        'reaction': reaction,
-                        'user': user,
-                        'reacted': datetime.datetime.now()
+                    f"reaction-{message.channel.id}",
+                    {
+                        "reaction": reaction,
+                        "user": user,
+                        "reacted": datetime.datetime.now(),
                     },
-                    3600*2
+                    3600 * 2,
                 )
 
     @Cog.listener()
@@ -830,7 +794,7 @@ class Miscellaneous(Cog):
         """
 
         return await ctx.send_help(ctx.command)
-    
+
     @sticker.command(name="tag")
     @has_permissions(manage_expressions=True)
     async def sticker_tag(self: "Miscellaneous", ctx: Context):
@@ -843,23 +807,23 @@ class Miscellaneous(Cog):
 
         if not ctx.guild.stickers:
             return await ctx.alert("There are no stickers in this server")
-        
+
         await ctx.typing()
         for sticker in ctx.guild.stickers:
             pattern = r"(/)([\S]+)"
             if re.search(pattern, sticker.name):
                 name = re.sub(
-                    pattern, 
-                    lambda m: f"{m.group(1)}{ctx.guild.vanity_url_code}", 
-                    sticker.name
+                    pattern,
+                    lambda m: f"{m.group(1)}{ctx.guild.vanity_url_code}",
+                    sticker.name,
                 )
             else:
                 name = sticker.name + f" /{ctx.guild.vanity_url_code}"
-            
+
             if len(name) < 32:
                 await sticker.edit(name=name)
 
-        return await ctx.confirm("Tagged all stickers") 
+        return await ctx.confirm("Tagged all stickers")
 
     @sticker.command(name="zip")
     @has_permissions(manage_expressions=True)
@@ -1405,9 +1369,7 @@ class Miscellaneous(Cog):
 
     @tiktok.command(name="user")
     async def tiktok_user(
-        self: "Miscellaneous", 
-        ctx: Context, 
-        user: Annotated[TikTokUser, Tiktok]
+        self: "Miscellaneous", ctx: Context, user: Annotated[TikTokUser, Tiktok]
     ):
         """
         Get information about a tiktok user
@@ -1626,7 +1588,8 @@ class Miscellaneous(Cog):
 
         try:
             msg = await ctx.reply(
-                f"... `WS: {round(self.bot.latency * 1000, 1)}ms`, `DB:{time}ms`", mention_author=False
+                f"... `WS: {round(self.bot.latency * 1000, 1)}ms`, `DB:{time}ms`",
+                mention_author=False,
             )
         except:
             msg = await ctx.send(
@@ -1703,25 +1666,25 @@ class Miscellaneous(Cog):
         )
 
         return await ctx.send(embed=embed)
-    
-    @hybrid_command(name="reactionsnipe", aliases=['rs'])
+
+    @hybrid_command(name="reactionsnipe", aliases=["rs"])
     async def reactionsnipe(self: "Miscellaneous", ctx: Context, index: int = 1):
         """
         Snipe a recently removed reaction
         """
 
         reactions = self.bot.cache.get(f"reaction-{ctx.channel.id}")
-        
+
         try:
-            reaction, user, reacted = reactions[::-1][index-1].values()
+            reaction, user, reacted = reactions[::-1][index - 1].values()
         except IndexError:
             return await ctx.alert("That is out of my range!")
         except TypeError:
             return await ctx.alert("There are no sniped reactions in this channel")
-        
+
         await ctx.neutral(
             f"{user.mention} removed {reaction.emoji} from {reaction.message.jump_url} {format_dt(reacted, style='R')}"
-        ) 
+        )
 
     @hybrid_command(name="snipe", aliases=["s"])
     async def snipe(self: "Miscellaneous", ctx: Context, index: int = 1) -> Message:
@@ -1857,10 +1820,10 @@ class Miscellaneous(Cog):
         ],
     )
     async def icon(
-        self: "Miscellaneous", 
-        ctx: Context, 
-        *, 
-        guild: Union[Guild, Invite] = CurrentGuild
+        self: "Miscellaneous",
+        ctx: Context,
+        *,
+        guild: Union[Guild, Invite] = CurrentGuild,
     ) -> Message:
         """
         Returns guild icon
@@ -1887,10 +1850,10 @@ class Miscellaneous(Cog):
         ],
     )
     async def guildbanner(
-        self: "Miscellaneous", 
-        ctx: Context, 
-        *, 
-        guild: Union[Guild, Invite] = CurrentGuild
+        self: "Miscellaneous",
+        ctx: Context,
+        *,
+        guild: Union[Guild, Invite] = CurrentGuild,
     ) -> Message:
         """
         Returns guild banner
@@ -1913,10 +1876,10 @@ class Miscellaneous(Cog):
         name="splash",
     )
     async def splash(
-        self: "Miscellaneous", 
-        ctx: Context, 
-        *, 
-        guild: Union[Guild, Invite] = CurrentGuild
+        self: "Miscellaneous",
+        ctx: Context,
+        *,
+        guild: Union[Guild, Invite] = CurrentGuild,
     ) -> Message:
         """
         Returns splash background

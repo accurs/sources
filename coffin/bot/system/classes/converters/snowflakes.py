@@ -1,13 +1,12 @@
-from discord.ext import commands
-from system.patch.context import Context
-from data.variables import DISCORD_ID, DISCORD_USER_MENTION, _ID_REGEX
-from typing import Optional, Union
-from fast_string_match import closest_match_distance as cmd
-
-import discord
 import re
 import unicodedata
+from typing import Optional, Union
 
+import discord
+from data.variables import _ID_REGEX, DISCORD_ID, DISCORD_USER_MENTION
+from discord.ext import commands
+from fast_string_match import closest_match_distance as cmd
+from system.patch.context import Context
 
 
 class UserConverter(commands.UserConverter):
@@ -209,8 +208,11 @@ class UserConverter(commands.UserConverter):
             raise commands.UserNotFound(argument)
         return member
 
+
 class MemberConverter(commands.MemberConverter):
-    async def convert(self, ctx: Context, arg: Union[int, str]) -> Optional[discord.Member]:
+    async def convert(
+        self, ctx: Context, arg: Union[int, str]
+    ) -> Optional[discord.Member]:
         _id = _ID_REGEX.match(arg) or re.match(r"<@!?([0-9]{15,20})>$", arg)
         if _id is not None:
             _id = int(_id.group(1))
@@ -223,7 +225,10 @@ class MemberConverter(commands.MemberConverter):
         member_lookup = {
             name: member.id
             for member in ctx.guild.members
-            for name in filter(None, [member.global_name, member.nick, member.display_name, member.name])
+            for name in filter(
+                None,
+                [member.global_name, member.nick, member.display_name, member.name],
+            )
         }
 
         # Perform lookup with cmd() function
@@ -233,7 +238,8 @@ class MemberConverter(commands.MemberConverter):
 
         # Raise exception if no member found
         raise commands.MemberNotFound(arg)
-    
+
+
 class Emoji(commands.EmojiConverter):
     async def convert(
         self, ctx: "Context", argument: str
@@ -252,6 +258,7 @@ class Emoji(commands.EmojiConverter):
 
             return argument
 
+
 class SafeMemberConverter(commands.Converter):
     async def convert(self, ctx: Context, argument: str):
         author = ctx.author
@@ -266,9 +273,13 @@ class SafeMemberConverter(commands.Converter):
             return member
 
         elif ctx.guild.me.top_role <= member.top_role:
-            raise commands.CommandError(f"The role of {member.mention} is **higher than wocks**")
+            raise commands.CommandError(
+                f"The role of {member.mention} is **higher than wocks**"
+            )
         elif ctx.author.id == member.id and not author:
-            raise commands.CommandError("You **can not execute** that command on **yourself**")
+            raise commands.CommandError(
+                "You **can not execute** that command on **yourself**"
+            )
         elif ctx.author.id == member.id and author:
             return member
         elif ctx.author.id == ctx.guild.owner_id:
@@ -278,11 +289,14 @@ class SafeMemberConverter(commands.Converter):
                 "**Can not execute** that command on the **server owner**"
             )
         elif ctx.author.top_role.is_default():
-            raise commands.CommandError("You are **missing permissions to use this command**")
+            raise commands.CommandError(
+                "You are **missing permissions to use this command**"
+            )
         elif ctx.author.top_role == member.top_role:
             raise commands.CommandError("You have the **same role** as that user")
         elif ctx.author.top_role < member.top_role:
-            raise commands.CommandError("You **do not** have a role **higher** than that user")
+            raise commands.CommandError(
+                "You **do not** have a role **higher** than that user"
+            )
         else:
             return member
-

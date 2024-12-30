@@ -1,6 +1,11 @@
-from typing import Optional
-import aiohttp, humanize, orjson, random, os
+import os
+import random
 from io import BytesIO
+from typing import Optional
+
+import aiohttp
+import humanize
+import orjson
 
 
 class Session:

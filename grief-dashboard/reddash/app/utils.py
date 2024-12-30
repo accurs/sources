@@ -1,19 +1,19 @@
-from importlib import import_module
-from copy import copy
-from os import path
-import time
 import json
-import websocket
-import jwt
 import threading
+import time
+from copy import copy
+from importlib import import_module
+from os import path
 
-from flask import render_template, redirect, request, url_for, session, g
+import jwt
+import websocket
+from flask import g, redirect, render_template, request, session, url_for
 from flask_babel import _
-from rich import rule, columns, table as rtable, panel
 from fuzzywuzzy import process
-
 from reddash import __version__
 from reddash.app.constants import DEFAULTS, WS_EXCEPTIONS
+from rich import columns, panel, rule
+from rich import table as rtable
 
 
 def register_blueprints(app):
@@ -60,7 +60,9 @@ def apply_themes(app):
 
     def _generate_url_for_theme(endpoint, **values):
         if endpoint.endswith("static"):
-            themename = values.get("theme", None) or app.config.get("DEFAULT_THEME", None)
+            themename = values.get("theme", None) or app.config.get(
+                "DEFAULT_THEME", None
+            )
             if themename:
                 theme_file = "{}/{}".format(themename, values.get("filename", ""))
                 if path.isfile(path.join(app.static_folder, theme_file)):
@@ -125,7 +127,9 @@ def initialize_babel(app, babel):
     @babel.localeselector
     def get_locale():
         if not session.get("lang_code", None):
-            session["lang_code"] = request.accept_languages.best_match(app.config["LANGUAGES"])
+            session["lang_code"] = request.accept_languages.best_match(
+                app.config["LANGUAGES"]
+            )
         return session["lang_code"]
 
 
@@ -148,7 +152,9 @@ def process_meta_tags(variables):
         variables["meta"] = {"title": "", "icon": "", "description": "", "color": ""}
 
     if variables["meta"]["title"] == "":
-        variables["meta"]["title"] = _("{name} Dashboard").format(name=variables["botname"])
+        variables["meta"]["title"] = _("{name} Dashboard").format(
+            name=variables["botname"]
+        )
     else:
         variables["meta"]["title"] = variables["meta"]["title"].replace(
             "{name}", variables["botname"]
@@ -188,12 +194,22 @@ def startup_message(app, progress, kwargs):
     progress.print(rule.Rule("Red Discord Bot Dashboard - Webserver"))
     disclaimer = "This is an instance of Red Discord Bot Dashboard,\ncreated by Neuro Assassin. This package is\nprotected under the AGPL License. Any action\nthat will breach this license (including but not\nlimited to, removal of credits) may result in a\nDMCA takedown request, or other legal\nconsequences.\n\n\nYou can view the license at\nhttps://github.com/Cog-Creators/\nRed-Dashboard/blob/master/LICENSE."
 
-    vartask = progress.add_task("Update variable task:", status="[bold blue]Starting[/bold blue]")
-    cmdtask = progress.add_task("Update command task:", status="[bold blue]Starting[/bold blue]")
-    vertask = progress.add_task("Update version task:", status="[bold blue]Starting[/bold blue]")
-    contask = progress.add_task("RPC Connected", status="[bold blue]Starting[/bold blue]")
+    vartask = progress.add_task(
+        "Update variable task:", status="[bold blue]Starting[/bold blue]"
+    )
+    cmdtask = progress.add_task(
+        "Update command task:", status="[bold blue]Starting[/bold blue]"
+    )
+    vertask = progress.add_task(
+        "Update version task:", status="[bold blue]Starting[/bold blue]"
+    )
+    contask = progress.add_task(
+        "RPC Connected", status="[bold blue]Starting[/bold blue]"
+    )
 
-    progress.print(columns.Columns([panel.Panel(table), panel.Panel(disclaimer)], equal=True))
+    progress.print(
+        columns.Columns([panel.Panel(table), panel.Panel(disclaimer)], equal=True)
+    )
     return {"var": vartask, "cmd": cmdtask, "ver": vertask, "con": contask}
 
 
@@ -238,7 +254,9 @@ def check_for_disconnect(app, method, result):
         app.ws.close()
         app.ws = None
         return False
-    if isinstance(result["result"], dict) and result["result"].get("disconnected", False):
+    if isinstance(result["result"], dict) and result["result"].get(
+        "disconnected", False
+    ):
         # Dashboard cog unloaded, disconnect
         if method == "DASHBOARDRPC__GET_VARIABLES":
             app.variables = {}

@@ -1,21 +1,21 @@
-from tools.wock import Wock  # type: ignore
-from humanize import naturaldelta
-from datetime import timedelta
-from typing import Optional, Union, Literal  # type: ignore
-from tools import expressions as regex
-import discord
-import pomice
 import asyncio
-import async_timeout
 import random
-import orjson
-from discord.ext import tasks, commands
-from discord.ext.commands.errors import CommandError
-from discord.ext.commands import Context
-from tuuid import tuuid
 from contextlib import suppress
+from datetime import timedelta
+from typing import Literal, Optional, Union  # type: ignore
 
+import async_timeout
+import discord
+import orjson
+import pomice
+from discord.ext import commands, tasks
+from discord.ext.commands import Context
+from discord.ext.commands.errors import CommandError
+from humanize import naturaldelta
 from loguru import logger
+from tools import expressions as regex
+from tools.wock import Wock  # type: ignore
+from tuuid import tuuid
 
 play_emoji = "<:wock_play:1207661064096063599>"
 skip_emoji = "<:wock_skip:1207661069938589716>"
@@ -217,23 +217,27 @@ class Player(pomice.Player):
 
     def _format_socket_channel(self):
         return {
-            "voice": {
-                "id": self.channel.id,
-                "name": self.channel.name,
-                "members": [
-                    {
-                        "id": member.id,
-                        "name": str(member),
-                        "avatar": (
-                            member.display_avatar.url if member.display_avatar else None
-                        ),
-                    }
-                    for member in self.channel.members
-                    if not member.bot
-                ],
-            }
-            if self.channel
-            else None,
+            "voice": (
+                {
+                    "id": self.channel.id,
+                    "name": self.channel.name,
+                    "members": [
+                        {
+                            "id": member.id,
+                            "name": str(member),
+                            "avatar": (
+                                member.display_avatar.url
+                                if member.display_avatar
+                                else None
+                            ),
+                        }
+                        for member in self.channel.members
+                        if not member.bot
+                    ],
+                }
+                if self.channel
+                else None
+            ),
             "text": {"id": self.bound_channel.id, "name": self.bound_channel.name},
         }
 

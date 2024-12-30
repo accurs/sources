@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import discord
 import contextlib
 import json
 from copy import deepcopy
-from discord import Embed
 from typing import Any, Optional
+
+import discord
+from discord import Embed
 
 from grief.core import commands
 from grief.core.bot import Grief
 from grief.core.commands import BadArgument, ColourConverter, Context
-
 from grief.core.utils.chat_formatting import bold, box, text_to_file
 
 JSON_EMOJI = discord.PartialEmoji(name="json", animated=False, id=1110250547254141049)
@@ -369,12 +369,16 @@ class EmbedEditorView(discord.ui.View):
             description=DEFAULT_EMBED_DESCRIPTION,
             colour=discord.Colour.greyple(),
         )
-        self.embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+        self.embed.set_author(
+            name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
+        )
         self.content: Optional[str] = None
         self.message: Optional[discord.Message] = None
 
     @discord.ui.button(label="Title", style=discord.ButtonStyle.grey)
-    async def edit_title_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def edit_title_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await interaction.response.send_modal(EmbedTitleModal(self))
 
     @discord.ui.button(label="Description", style=discord.ButtonStyle.grey)
@@ -393,14 +397,20 @@ class EmbedEditorView(discord.ui.View):
     async def edit_colour_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
-        await interaction.response.send_modal(EmbedColourModal(self, context=self.context))
+        await interaction.response.send_modal(
+            EmbedColourModal(self, context=self.context)
+        )
 
     @discord.ui.button(label="URL", style=discord.ButtonStyle.grey)
-    async def edit_url_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def edit_url_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await interaction.response.send_modal(EmbedURLModal(self))
 
     @discord.ui.button(label="Image", row=1, style=discord.ButtonStyle.grey)
-    async def edit_image_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def edit_image_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await interaction.response.send_modal(EmbedImageModal(self))
 
     @discord.ui.button(label="Thumbnail", row=1, style=discord.ButtonStyle.grey)
@@ -422,7 +432,9 @@ class EmbedEditorView(discord.ui.View):
         await interaction.response.send_modal(EmbedFooterBuilder(self))
 
     @discord.ui.button(label="Clear", row=1, style=discord.ButtonStyle.red)
-    async def clear_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def clear_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(description="[…]")
         self.embed = embed
         self.content = None
@@ -431,7 +443,9 @@ class EmbedEditorView(discord.ui.View):
     @discord.ui.button(
         label="Add field", style=discord.ButtonStyle.green, emoji="\U00002795", row=2
     )
-    async def add_field_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def add_field_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await interaction.response.send_modal(EmbedFieldAdder(self))
 
     @discord.ui.button(
@@ -452,7 +466,9 @@ class EmbedEditorView(discord.ui.View):
     @discord.ui.button(
         label="Get Python", style=discord.ButtonStyle.blurple, emoji="\U0001f40d", row=3
     )
-    async def get_python(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def get_python(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = self.embed
         text = "embed = discord.Embed("
         if embed.title:
@@ -481,7 +497,9 @@ class EmbedEditorView(discord.ui.View):
                 if gattr := getattr(embed.author, attr):
                     attrs[attr] = gattr
             text += (
-                f"embed.set_author(" + ", ".join(f"{k}={v!r}" for k, v in attrs.items()) + ")\n"
+                f"embed.set_author("
+                + ", ".join(f"{k}={v!r}" for k, v in attrs.items())
+                + ")\n"
             )
 
         if embed.footer:
@@ -490,7 +508,9 @@ class EmbedEditorView(discord.ui.View):
                 if gattr := getattr(embed.footer, attr):
                     attrs[attr] = gattr
             text += (
-                f"embed.set_footer(" + ", ".join(f"{k}={v!r}" for k, v in attrs.items()) + ")\n"
+                f"embed.set_footer("
+                + ", ".join(f"{k}={v!r}" for k, v in attrs.items())
+                + ")\n"
             )
 
         if not text.endswith("\n\n"):
@@ -523,7 +543,9 @@ class EmbedEditorView(discord.ui.View):
     @discord.ui.button(
         label="Get JSON", style=discord.ButtonStyle.blurple, emoji=JSON_EMOJI, row=3
     )
-    async def get_json(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def get_json(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         text = json.dumps(self.embed.to_dict(), indent=4)
         if len(text) > 1990:
             await interaction.response.send_message(
@@ -542,8 +564,12 @@ class EmbedEditorView(discord.ui.View):
         emoji=JSON_EMOJI,
         row=3,
     )
-    async def replace_json(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(EmbedDictionaryUpdater(self, replace=True))
+    async def replace_json(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await interaction.response.send_modal(
+            EmbedDictionaryUpdater(self, replace=True)
+        )
 
     @discord.ui.button(
         label="Update JSON",
@@ -551,8 +577,12 @@ class EmbedEditorView(discord.ui.View):
         emoji=JSON_EMOJI,
         row=3,
     )
-    async def update_json(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(EmbedDictionaryUpdater(self, replace=False))
+    async def update_json(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await interaction.response.send_modal(
+            EmbedDictionaryUpdater(self, replace=False)
+        )
 
     @discord.ui.select(
         cls=discord.ui.ChannelSelect,
@@ -567,11 +597,14 @@ class EmbedEditorView(discord.ui.View):
         placeholder="Send your embed",
         row=4,
     )
-    async def send(self, interaction: discord.Interaction, select: discord.ui.ChannelSelect):
+    async def send(
+        self, interaction: discord.Interaction, select: discord.ui.ChannelSelect
+    ):
         channel = interaction.guild.get_channel(select.values[0].id)
         if not channel.permissions_for(interaction.guild.me).send_messages:
             return await interaction.response.send_message(
-                f"I do not have permissions to post in {channel.mention}.", ephemeral=True
+                f"I do not have permissions to post in {channel.mention}.",
+                ephemeral=True,
             )
         try:
             await channel.send(embed=self.embed, content=self.content)
@@ -629,7 +662,6 @@ class EmbedCreator(commands.Cog):
     async def red_delete_data_for_user(self, **kwargs):
         return
 
-    
     @commands.command(aliases=["ecreate"])
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)

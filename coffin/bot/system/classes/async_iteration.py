@@ -3,14 +3,8 @@ from __future__ import annotations
 import asyncio
 from asyncio import Semaphore, as_completed
 from asyncio.futures import isfuture
-from collections.abc import (
-    AsyncIterable,
-    AsyncIterator,
-    Awaitable,
-    Generator,
-    Iterable,
-    Iterator,
-)
+from collections.abc import (AsyncIterable, AsyncIterator, Awaitable,
+                             Generator, Iterable, Iterator)
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from itertools import chain
 from typing import Any, Callable, Optional, TypeVar, Union
@@ -50,14 +44,20 @@ class nullcontext(AbstractContextManager, AbstractAsyncContextManager):
         pass
 
 
-class AsyncFilter(AsyncIterator[_T], Awaitable[list[_T]]):  # pylint: disable=duplicate-bases
+class AsyncFilter(
+    AsyncIterator[_T], Awaitable[list[_T]]
+):  # pylint: disable=duplicate-bases
     """Class returned by `async_filter`. See that function for details.
 
     We don't recommend instantiating this class directly.
 
     """
 
-    def __init__(self, func: Callable[[_T], Union[bool, Awaitable[bool]]], iterable: Union[AsyncIterable[_T], Iterable[_T]]) -> None:
+    def __init__(
+        self,
+        func: Callable[[_T], Union[bool, Awaitable[bool]]],
+        iterable: Union[AsyncIterable[_T], Iterable[_T]],
+    ) -> None:
         self.__func: Callable[[_T], Union[bool, Awaitable[bool]]] = func
         self.__iterable: Union[AsyncIterable[_T], Iterable[_T]] = iterable
 
@@ -103,7 +103,10 @@ class AsyncFilter(AsyncIterator[_T], Awaitable[list[_T]]):  # pylint: disable=du
         return self.__generator_instance.__anext__()
 
 
-def async_filter(func: Callable[[_T], Union[bool, Awaitable[bool]]], iterable: Union[AsyncIterable[_T], Iterable[_T]]) -> AsyncFilter[_T]:
+def async_filter(
+    func: Callable[[_T], Union[bool, Awaitable[bool]]],
+    iterable: Union[AsyncIterable[_T], Iterable[_T]],
+) -> AsyncFilter[_T]:
     """Filter an (optionally async) iterable with an (optionally async) predicate.
 
     At least one of the arguments must be async.
@@ -131,7 +134,9 @@ def async_filter(func: Callable[[_T], Union[bool, Awaitable[bool]]], iterable: U
     return AsyncFilter(func, iterable)
 
 
-async def async_enumerate(async_iterable: AsyncIterable[_T], start: int = 0) -> AsyncIterator[tuple[int, _T]]:
+async def async_enumerate(
+    async_iterable: AsyncIterable[_T], start: int = 0
+) -> AsyncIterator[tuple[int, _T]]:
     """Async iterable version of `enumerate`.
 
     Parameters
@@ -157,7 +162,9 @@ async def _sem_wrapper(sem, task):
         return await task
 
 
-def bounded_gather_iter(*coros_or_futures, limit: int = 4, semaphore: Optional[Semaphore] = None) -> Iterator[Awaitable[Any]]:
+def bounded_gather_iter(
+    *coros_or_futures, limit: int = 4, semaphore: Optional[Semaphore] = None
+) -> Iterator[Awaitable[Any]]:
     """An iterator that returns tasks as they are ready, but limits the number of
     tasks running at a time.
 
@@ -197,8 +204,16 @@ def bounded_gather_iter(*coros_or_futures, limit: int = 4, semaphore: Optional[S
     return as_completed(pending)
 
 
-class AsyncIter(AsyncIterator[_T], Awaitable[list[_T]]):  # pylint: disable=duplicate-bases
-    def __init__(self, iterable: Iterable[_T], delay: Union[float, int] = 0, steps: int = 0, circuit_breaker=None) -> None:
+class AsyncIter(
+    AsyncIterator[_T], Awaitable[list[_T]]
+):  # pylint: disable=duplicate-bases
+    def __init__(
+        self,
+        iterable: Iterable[_T],
+        delay: Union[float, int] = 0,
+        steps: int = 0,
+        circuit_breaker=None,
+    ) -> None:
         # sourcery skip: assign-if-exp
         self._delay = delay
         if iterable is True:
@@ -270,7 +285,9 @@ class AsyncIter(AsyncIterator[_T], Awaitable[list[_T]]):  # pylint: disable=dupl
         """
         return [item async for item in self]
 
-    def filter(self, function: Callable[[_T], Union[bool, Awaitable[bool]]]) -> AsyncFilter[_T]:
+    def filter(
+        self, function: Callable[[_T], Union[bool, Awaitable[bool]]]
+    ) -> AsyncFilter[_T]:
         """Filter the iterable with an (optionally async) predicate.
 
         Parameters
@@ -305,7 +322,11 @@ class AsyncIter(AsyncIterator[_T], Awaitable[list[_T]]):  # pylint: disable=dupl
                 _temp.add(item)
         del _temp
 
-    async def find(self, predicate: Callable[[_T], Union[bool, Awaitable[bool]]], default: Optional[Any] = None) -> AsyncIterator[_T]:
+    async def find(
+        self,
+        predicate: Callable[[_T], Union[bool, Awaitable[bool]]],
+        default: Optional[Any] = None,
+    ) -> AsyncIterator[_T]:
         """Calls ``predicate`` over items in iterable and return first value to
         match.
 
@@ -356,6 +377,13 @@ def deduplicate_iterables(*iterables):
     # dict insertion order is guaranteed to be preserved in 3.6+
     return list(dict.fromkeys(chain.from_iterable(iterables)))
 
+
 class aiter(AsyncIter):
-    def __init__(self, iterable: Iterable[_T], circuit_breaker=None, delay: Union[float, int] = 0, steps: int = 1) -> None:
+    def __init__(
+        self,
+        iterable: Iterable[_T],
+        circuit_breaker=None,
+        delay: Union[float, int] = 0,
+        steps: int = 1,
+    ) -> None:
         super().__init__(iterable, delay, steps, circuit_breaker=circuit_breaker)

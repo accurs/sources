@@ -7,7 +7,6 @@ from typing import Optional
 
 import discord
 from discord.ext import commands
-
 from structure.managers import Context
 from structure.scare import Scare
 
@@ -161,6 +160,7 @@ class TicTacToe(discord.ui.View):
             self.stop()
             await self.message.edit(content=f"Time's up", view=self)
 
+
 class Fun(commands.Cog):
     def __init__(self, bot: Scare):
         self.bot = bot
@@ -264,7 +264,7 @@ class Fun(commands.Cog):
 
         rate = random.randint(0, 100)
         return await ctx.neutral(f"{member.mention} is **{rate}%** gay")
-    
+
     @commands.hybrid_command(aliases=["insult"])
     async def pack(self: "Fun", ctx: Context, *, member: discord.Member):
         """

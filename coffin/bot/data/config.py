@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv(verbose=True)
@@ -74,7 +75,13 @@ CONFIG = {
     },
     "support_url": "https://discord.gg/okay",
     "prefix": ",",
-    "owners": [352190010998390796, 1012662778974179339, 119939767231053825, 349274018307637249, 99965114706296832],
+    "owners": [
+        352190010998390796,
+        1012662778974179339,
+        119939767231053825,
+        349274018307637249,
+        99965114706296832,
+    ],
     "authentication": {
         "api": {"rival_api": "", "eros": ""},
         "cookies": {"instagram": "", "tiktok": ""},

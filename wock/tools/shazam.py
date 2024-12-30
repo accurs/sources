@@ -1,12 +1,13 @@
-from aiohttp import ClientSession
-from shazamio import Shazam as ShazamClient
-from loguru import logger
-from dataclasses import dataclass
 from asyncio import create_subprocess_shell as shell
 from asyncio.subprocess import PIPE
-from aiofiles import open as async_open
-from tuuid import tuuid
+from dataclasses import dataclass
 from os import remove
+
+from aiofiles import open as async_open
+from aiohttp import ClientSession
+from loguru import logger
+from shazamio import Shazam as ShazamClient
+from tuuid import tuuid
 
 
 @dataclass

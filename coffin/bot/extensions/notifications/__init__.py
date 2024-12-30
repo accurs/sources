@@ -1,3 +1,2 @@
-
-from .events import NotificationsEvents
 from .commands import Notifications
+from .events import NotificationsEvents

@@ -5,10 +5,10 @@ from typing import Annotated, Union
 
 from discord import Attachment, Colour, File, HTTPException, Member
 from discord.ext.commands import Cog, command, group, is_donator
-
-from structure.scare import Scare
 from structure.managers import Context
+from structure.scare import Scare
 from structure.utilities import Color
+
 
 class Premium(Cog):
     def __init__(self, bot: Scare):

@@ -1,52 +1,72 @@
 from __future__ import annotations
 
-from typing import List, Optional
-from typing_extensions import Self
-from pydantic import BaseModel
 import re
-from discord.ext.commands import CommandError
-from aiohttp import ClientSession
 from logging import getLogger
-from system.worker import offloaded
+from typing import List, Optional
+
+from aiohttp import ClientSession
 from cashews import cache
+from discord.ext.commands import CommandError
+from pydantic import BaseModel
+from system.worker import offloaded
+from typing_extensions import Self
+
 cache.setup("mem://")
+
 
 @offloaded
 def get_youtube_channel(url: str):
-    from quantulum3 import parser
-    from pytubefix import Channel
     import orjson
+    from pytubefix import Channel
+    from quantulum3 import parser
 
     def format_value(value: str) -> int:
         return int(parser.parse(value)[0].value * 1_000)
-    
+
     c = Channel(url)
-    metadata = c.initial_data["header"]["pageHeaderRenderer"]["content"]["pageHeaderViewModel"]["metadata"]["contentMetadataViewModel"]["metadataRows"]
+    metadata = c.initial_data["header"]["pageHeaderRenderer"]["content"][
+        "pageHeaderViewModel"
+    ]["metadata"]["contentMetadataViewModel"]["metadataRows"]
     row = metadata[-1]
     try:
-        subscribers = format_value(row["metadataParts"][0]["text"]["content"].split(" ", 1)[0])
+        subscribers = format_value(
+            row["metadataParts"][0]["text"]["content"].split(" ", 1)[0]
+        )
     except Exception:
         subscribers = 0
-    return orjson.dumps({"id": c.channel_id, "name": c.channel_name, "description": c.description, "avatarUrl": c.thumbnail_url, "subscriberCount": subscribers})
+    return orjson.dumps(
+        {
+            "id": c.channel_id,
+            "name": c.channel_name,
+            "description": c.description,
+            "avatarUrl": c.thumbnail_url,
+            "subscriberCount": subscribers,
+        }
+    )
+
 
 @cache(ttl=1600, key="get_channel:{url}")
 async def get_channel(url: str):
     return await get_youtube_channel(url)
 
+
 log = getLogger("feeds/youtube")
 
 CHANNEL_LOOKUPS = {
     "BY_ID": "https://pipedapi.kavin.rocks/channel/",
-    "BY_USERNAME": "https://pipedapi.kavin.rocks/c/"
+    "BY_USERNAME": "https://pipedapi.kavin.rocks/c/",
 }
 
 REGEXES = [
-    re.compile(r'channel/([a-zA-Z0-9_-]+)'),  # Matches channel URLs
-    re.compile(r'c/([a-zA-Z0-9_-]+)'),        # Matches custom URLs (short form)
-    re.compile(r'user/([a-zA-Z0-9_-]+)'),      # Matches legacy user URLs
-    re.compile(r'@([a-zA-Z0-9_-]+)'),
-    re.compile(r'^https:\/\/(?:www\.)?youtube\.com\/([a-zA-Z0-9_-]+)$')       # Matches YouTube handles
+    re.compile(r"channel/([a-zA-Z0-9_-]+)"),  # Matches channel URLs
+    re.compile(r"c/([a-zA-Z0-9_-]+)"),  # Matches custom URLs (short form)
+    re.compile(r"user/([a-zA-Z0-9_-]+)"),  # Matches legacy user URLs
+    re.compile(r"@([a-zA-Z0-9_-]+)"),
+    re.compile(
+        r"^https:\/\/(?:www\.)?youtube\.com\/([a-zA-Z0-9_-]+)$"
+    ),  # Matches YouTube handles
 ]
+
 
 class RelatedStream(BaseModel):
     url: Optional[str] = None
@@ -75,11 +95,11 @@ class YouTubeChannel(BaseModel):
     name: Optional[str] = None
     avatarUrl: Optional[str] = None
     description: Optional[str] = None
-    #nextpage: Optional[str] = None
+    # nextpage: Optional[str] = None
     subscriberCount: Optional[int] = None
-    #verified: Optional[bool] = None
-    #relatedStreams: Optional[List[RelatedStream]] = None
-    #tabs: Optional[List[Tab]] = None
+    # verified: Optional[bool] = None
+    # relatedStreams: Optional[List[RelatedStream]] = None
+    # tabs: Optional[List[Tab]] = None
 
     @property
     def url(self) -> str:
@@ -103,7 +123,7 @@ class YouTubeChannel(BaseModel):
             log.error(f"Failed to get channel data for {url}: {e}")
             raise CommandError("Invalid YouTube Channel URL provided")
         return cls.parse_raw(data)
-    
+
     @classmethod
     async def from_id(cls, channel_id: str) -> Optional[Self]:
         try:
@@ -113,6 +133,8 @@ class YouTubeChannel(BaseModel):
             log.error(f"Failed to get channel data for {channel_id}: {e}")
             raise CommandError("Invalid YouTube Channel ID provided")
         async with ClientSession() as session:
-            async with session.get(f"{CHANNEL_LOOKUPS['BY_ID']}{channel_id}") as response:
+            async with session.get(
+                f"{CHANNEL_LOOKUPS['BY_ID']}{channel_id}"
+            ) as response:
                 data = await response.read()
         return cls.parse_raw(data)

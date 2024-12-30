@@ -9,8 +9,8 @@ from aiohttp import ClientSession
 from discord.ext.commands import CommandError
 from discord.ui import Button, View
 from discord.utils import format_dt
-from yarl import URL
 from tools.important.subclasses.parser import Script
+from yarl import URL
 
 
 def ordinal(n):

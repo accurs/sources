@@ -14,18 +14,19 @@ from __future__ import annotations
 
 import ast
 import asyncio
-import aiohttp
 import inspect
 import io
+import re
+import sys
 import textwrap
 import traceback
 import types
-import re
-import sys
 from copy import copy
-from typing import Any, Awaitable, Dict, Iterator, List, Literal, Tuple, Type, TypeVar, Union
 from types import CodeType, TracebackType
+from typing import (Any, Awaitable, Dict, Iterator, List, Literal, Tuple, Type,
+                    TypeVar, Union)
 
+import aiohttp
 import discord
 
 from . import commands
@@ -58,9 +59,16 @@ def sanitize_output(ctx: commands.Context, to_sanitize: str) -> str:
     return to_sanitize
 
 
-def async_compile(source: str, filename: str, mode: Literal["eval", "exec"]) -> CodeType:
+def async_compile(
+    source: str, filename: str, mode: Literal["eval", "exec"]
+) -> CodeType:
     return compile(
-        source, filename, mode, flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT, optimize=0, dont_inherit=True
+        source,
+        filename,
+        mode,
+        flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT,
+        optimize=0,
+        dont_inherit=True,
     )
 
 
@@ -144,7 +152,9 @@ class DevOutput:
         """Source string that we pass to async_compile()."""
         return self._compilable_source
 
-    def set_compilable_source(self, compilable_source: str, *, line_offset: int = 0) -> None:
+    def set_compilable_source(
+        self, compilable_source: str, *, line_offset: int = 0
+    ) -> None:
         self._compilable_source = compilable_source
         self.source_line_offset = line_offset
         self.source_cache[self.filename] = (compilable_source, line_offset)
@@ -186,7 +196,12 @@ class DevOutput:
 
     @classmethod
     async def from_debug(
-        cls, ctx: commands.Context, *, source: str, source_cache: SourceCache, env: Dict[str, Any]
+        cls,
+        ctx: commands.Context,
+        *,
+        source: str,
+        source_cache: SourceCache,
+        env: Dict[str, Any],
     ) -> DevOutput:
         output = cls(
             ctx,
@@ -200,7 +215,12 @@ class DevOutput:
 
     @classmethod
     async def from_eval(
-        cls, ctx: commands.Context, *, source: str, source_cache: SourceCache, env: Dict[str, Any]
+        cls,
+        ctx: commands.Context,
+        *,
+        source: str,
+        source_cache: SourceCache,
+        env: Dict[str, Any],
     ) -> DevOutput:
         output = cls(
             ctx,
@@ -214,7 +234,12 @@ class DevOutput:
 
     @classmethod
     async def from_repl(
-        cls, ctx: commands.Context, *, source: str, source_cache: SourceCache, env: Dict[str, Any]
+        cls,
+        ctx: commands.Context,
+        *,
+        source: str,
+        source_cache: SourceCache,
+        env: Dict[str, Any],
     ) -> DevOutput:
         output = cls(
             ctx,
@@ -243,7 +268,8 @@ class DevOutput:
     async def run_eval(self) -> None:
         self.always_include_result = False
         self.set_compilable_source(
-            "async def func():\n%s" % textwrap.indent(self.raw_source, "  "), line_offset=1
+            "async def func():\n%s" % textwrap.indent(self.raw_source, "  "),
+            line_offset=1,
         )
         try:
             compiled = self.async_compile_with_exec()
@@ -525,7 +551,9 @@ class Dev(commands.Cog):
         if ctx.channel.id in self.sessions:
             if self.sessions[ctx.channel.id]:
                 await ctx.send(
-                    _("Already running a REPL session in this channel. Exit it with `quit`.")
+                    _(
+                        "Already running a REPL session in this channel. Exit it with `quit`."
+                    )
                 )
             else:
                 await ctx.send(
@@ -546,7 +574,9 @@ class Dev(commands.Cog):
         )
 
         while True:
-            response = await ctx.bot.wait_for("message", check=MessagePredicate.regex(r"^`", ctx))
+            response = await ctx.bot.wait_for(
+                "message", check=MessagePredicate.regex(r"^`", ctx)
+            )
             env["message"] = response
 
             if not self.sessions[ctx.channel.id]:
@@ -573,7 +603,9 @@ class Dev(commands.Cog):
     async def pause(self, ctx: commands.Context, toggle: Optional[bool] = None) -> None:
         """Pauses/resumes the REPL running in the current channel."""
         if ctx.channel.id not in self.sessions:
-            await ctx.send(_("There is no currently running REPL session in this channel."))
+            await ctx.send(
+                _("There is no currently running REPL session in this channel.")
+            )
             return
 
         if toggle is None:
@@ -588,7 +620,9 @@ class Dev(commands.Cog):
     @commands.guild_only()
     @commands.command()
     @commands.is_owner()
-    async def mock(self, ctx: commands.Context, user: discord.Member, *, command: str) -> None:
+    async def mock(
+        self, ctx: commands.Context, user: discord.Member, *, command: str
+    ) -> None:
         """Mock another user invoking a command.
 
         The prefix must not be entered.
@@ -625,7 +659,9 @@ class Dev(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
-    async def bypasscooldowns(self, ctx: commands.Context, toggle: Optional[bool] = True) -> None:
+    async def bypasscooldowns(
+        self, ctx: commands.Context, toggle: Optional[bool] = True
+    ) -> None:
         """Give bot owners the ability to bypass cooldowns.
 
         Does not persist through restarts."""
@@ -636,4 +672,6 @@ class Dev(commands.Cog):
         if toggle:
             await ctx.send(_("Bot owners will now bypass all commands with cooldowns."))
         else:
-            await ctx.send(_("Bot owners will no longer bypass all commands with cooldowns."))
+            await ctx.send(
+                _("Bot owners will no longer bypass all commands with cooldowns.")
+            )

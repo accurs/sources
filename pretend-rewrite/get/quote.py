@@ -80,7 +80,9 @@ class Quotes(Cog):
                 current_h += h3 + pad
             dr = ImageDraw.Draw(sa)
             font = ImageFont.truetype("quote/Arial.ttf", 15)
-            _, _, authorw, authorh = dr.textbbox((0, 0), f"by {str(message.author)}", font=font)
+            _, _, authorw, authorh = dr.textbbox(
+                (0, 0), f"by {str(message.author)}", font=font
+            )
             output = BytesIO()
             dr.text(
                 (480 - int(authorw / 2), current_h + h2 + 10),

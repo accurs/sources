@@ -1,13 +1,9 @@
-
-
 import json
 from pathlib import Path
 
 from grief.core.bot import Grief
 
 from .baron import Baron
-
-
 
 
 async def setup(bot: Grief) -> None:

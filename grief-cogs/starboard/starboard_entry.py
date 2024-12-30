@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Union
 
 import discord
 from red_commons.logging import getLogger
+
 from grief import VersionInfo, version_info
 from grief.core.bot import Grief
 from grief.core.utils import AsyncIter
@@ -32,14 +33,18 @@ class StarboardEntry:
         self.name: str = kwargs.get("name", "starboard")
         self.guild: int = kwargs.get("guild", None)
         self.channel: int = kwargs.get("channel", 0)
-        self.emoji: discord.PartialEmoji = discord.PartialEmoji.from_str(kwargs.get("emoji", "⭐"))
+        self.emoji: discord.PartialEmoji = discord.PartialEmoji.from_str(
+            kwargs.get("emoji", "⭐")
+        )
         self.colour: str = kwargs.get("colour", "user")
         self.enabled: bool = kwargs.get("enabled", True)
         self.selfstar: bool = kwargs.get("selfstar", False)
         self.blacklist: List[int] = kwargs.get("blacklist", [])
         self.whitelist: List[int] = kwargs.get("whitelist", [])
         self.messages: Dict[str, StarboardMessage] = kwargs.get("messages", {})
-        self.starboarded_messages: Dict[str, str] = kwargs.get("starboarded_messages", {})
+        self.starboarded_messages: Dict[str, str] = kwargs.get(
+            "starboarded_messages", {}
+        )
         self.threshold: int = kwargs.get("threshold", 1)
         self.autostar: bool = kwargs.get("autostar", False)
         self.starred_messages: int = kwargs.get("starred_messages", 0)
@@ -75,10 +80,14 @@ class StarboardEntry:
             return True
         guild = member.guild
         whitelisted_roles = [
-            guild.get_role(rid) for rid in self.whitelist if guild.get_role(rid) is not None
+            guild.get_role(rid)
+            for rid in self.whitelist
+            if guild.get_role(rid) is not None
         ]
         blacklisted_roles = [
-            guild.get_role(rid) for rid in self.blacklist if guild.get_role(rid) is not None
+            guild.get_role(rid)
+            for rid in self.blacklist
+            if guild.get_role(rid) is not None
         ]
         if whitelisted_roles:
             # only count if the whitelist contains actual roles
@@ -169,7 +178,8 @@ class StarboardEntry:
             "blacklist": self.blacklist,
             "whitelist": self.whitelist,
             "messages": {
-                k: m.to_json() async for k, m in AsyncIter(self.messages.items(), steps=500)
+                k: m.to_json()
+                async for k, m in AsyncIter(self.messages.items(), steps=500)
             },
             "starboarded_messages": self.starboarded_messages,
             "threshold": self.threshold,
@@ -204,7 +214,9 @@ class StarboardEntry:
         if not starboarded_messages:
             async for message_ids, obj in AsyncIter(messages.items()):
                 key = f"{obj.new_channel}-{obj.new_message}"
-                starboarded_messages[key] = f"{obj.original_channel}-{obj.original_message}"
+                starboarded_messages[key] = (
+                    f"{obj.original_channel}-{obj.original_message}"
+                )
         starred_messages = data.get("starred_messages", len(starboarded_messages))
         stars_added = data.get("stars_added", 0)
         if not stars_added:
@@ -317,7 +329,9 @@ class StarboardMessage:
             try:
                 orig_msg = await orig_channel.fetch_message(self.original_message)
                 orig_reaction = [
-                    r for r in orig_msg.reactions if str(r.emoji) == str(starboard.emoji)
+                    r
+                    for r in orig_msg.reactions
+                    if str(r.emoji) == str(starboard.emoji)
                 ]
             except discord.HTTPException:
                 pass

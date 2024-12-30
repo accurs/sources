@@ -1,8 +1,12 @@
-import discord, datetime, aiohttp, logging
-from discord.ext import commands, tasks
-from discord import Embed
+import datetime
+import logging
 from asyncio import log
+
+import aiohttp
+import discord
 from bot.managers.emojis import Colors
+from discord import Embed
+from discord.ext import commands, tasks
 
 log = logging.getLogger(__name__)
 
@@ -13,15 +17,15 @@ class Bot(commands.Cog):
 
     @commands.Cog.listener("on_ready")
     async def stats(self):
-        
+
         channel_id = 1264065200290529350
         channel = self.bot.get_channel(channel_id)
-        
+
         embed = discord.Embed(
             color=Colors.color,
             description=f"evict is now online with **{len(self.bot.guilds)}** guilds and **{len(self.bot.users)}** users.",
         )
-        
+
         try:
             await channel.send(embed=embed)
         except:
@@ -141,7 +145,7 @@ class Bot(commands.Cog):
                 ),
                 inline=False,
             )
-            
+
             embed.add_field(
                 name="**Moderation System 🛡️**",
                 value=(
@@ -150,7 +154,7 @@ class Bot(commands.Cog):
                 ),
                 inline=False,
             )
-            
+
             embed.add_field(
                 name="**Documentation and Help 📚**",
                 value=(
@@ -171,6 +175,7 @@ class Bot(commands.Cog):
 
         if check is not None:
             await guild.leave()
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Bot(bot))

@@ -20,7 +20,5 @@ from grief.core.bot import Grief
 from .nitrorole import NitroRole
 
 
-
-
 async def setup(bot: Grief) -> None:
     await bot.add_cog(NitroRole(bot))

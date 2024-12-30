@@ -1,19 +1,23 @@
+import asyncio  # noqa: F401  # type: ignore
+import io
+import pathlib
+from random import shuffle
+from typing import Any, Dict
+from typing import List
+from typing import List as array
+from typing import Optional  # type: ignore
+from typing import Optional as pos
+from typing import Union as one
+
 import aiohttp
 import discord
-import pathlib
-import io
-import asyncio  # noqa: F401  # type: ignore
-from tools.important import EmbedBuilder as Builder  # type: ignore  # noqa: F401
-from pydantic import BaseModel
 from discord import Message
-from pydantic import Field
-from typing import Optional as pos, Union as one, List as array, Any, Dict  # type: ignore
 from discord.ext.commands import Context
 from discord.ext.commands.errors import CommandError
 from munch import DefaultMunch
-from random import shuffle
-
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from tools.important import \
+    EmbedBuilder as Builder  # type: ignore  # noqa: F401
 
 
 class YouTubeAuthor(BaseModel):
@@ -1368,6 +1372,7 @@ class Statistics(BaseModel):
     coroutines: str
     uptime: str
 
+
 class _MainResult(BaseModel):
     title: Optional[str] = None
     url: Optional[str] = None
@@ -1390,7 +1395,6 @@ class GoogleSearchResponse(BaseModel):
     safe: Optional[str] = None
     main_result: Optional[_MainResult] = None
     results: Optional[List[_Result]] = None
-
 
 
 async def get_statistics(bot):  # type: ignore
@@ -1560,22 +1564,38 @@ class RivalAPI(object):
             ) as response:
                 data = await response.text()
         return data
-    
-    async def google_search(self, query: str, safe: bool) -> Optional[GoogleSearchResponse]:
+
+    async def google_search(
+        self, query: str, safe: bool
+    ) -> Optional[GoogleSearchResponse]:
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://api.rival.rocks/google/search", params = {"query": query, "safe": "true" if safe is True else "false"}, headers = {"api-key": self.key}) as response:
+            async with session.get(
+                "https://api.rival.rocks/google/search",
+                params={"query": query, "safe": "true" if safe is True else "false"},
+                headers={"api-key": self.key},
+            ) as response:
                 data = await response.json()
         return GoogleSearchResponse(**data)
-    
+
     async def girlfriend(self, ctx: Context):
-        if identity := await self.bot.db.fetchval("""SELECT identity FROM girlfriend WHERE user_id = $1""", ctx.message.author.id):
+        if identity := await self.bot.db.fetchval(
+            """SELECT identity FROM girlfriend WHERE user_id = $1""",
+            ctx.message.author.id,
+        ):
             prompt = ctx.message.content
         else:
-            return await ctx.fail(f"you have not set your girlfriend's identity using `{ctx.prefix}girlfriend identity`")
+            return await ctx.fail(
+                f"you have not set your girlfriend's identity using `{ctx.prefix}girlfriend identity`"
+            )
         async with aiohttp.ClientSession() as session:
-            async with session.request("POST", "https://api.rival.rocks/girlfriend", json = {"identity": identity, "message": prompt}, headers = {"api-key": self.key}) as response:
+            async with session.request(
+                "POST",
+                "https://api.rival.rocks/girlfriend",
+                json={"identity": identity, "message": prompt},
+                headers={"api-key": self.key},
+            ) as response:
                 _ = await response.text()
-        return await ctx.reply(content = _.replace('"', ''))
+        return await ctx.reply(content=_.replace('"', ""))
 
     async def youtube(self, url: str) -> Optional[YouTube]:
         async with aiohttp.ClientSession() as session:

@@ -1,6 +1,7 @@
 import asyncio
 
 import discord
+
 from grief.core import commands
 from grief.core.utils.menus import DEFAULT_CONTROLS, menu
 
@@ -27,8 +28,8 @@ class WhoKnowsMixin(MixinMeta):
             if not artistname:
                 conf = await self.config.user(ctx.author).all()
                 self.check_if_logged_in(conf)
-                trackname, artistname, albumname, image_url = await self.get_current_track(
-                    ctx, conf["lastfm_username"]
+                trackname, artistname, albumname, image_url = (
+                    await self.get_current_track(ctx, conf["lastfm_username"])
                 )
             for user in userslist:
                 lastfm_username = userlist[user]["lastfm_username"]
@@ -39,7 +40,9 @@ class WhoKnowsMixin(MixinMeta):
                     continue
 
                 tasks.append(
-                    self.get_playcount(ctx, lastfm_username, artistname, "overall", member)
+                    self.get_playcount(
+                        ctx, lastfm_username, artistname, "overall", member
+                    )
                 )
             if tasks:
                 data = await asyncio.gather(*tasks)
@@ -76,7 +79,9 @@ class WhoKnowsMixin(MixinMeta):
                 total += playcount
 
             if not rows:
-                return await ctx.send(f"Nobody on this server has listened to **{artistname}**")
+                return await ctx.send(
+                    f"Nobody on this server has listened to **{artistname}**"
+                )
 
             content = discord.Embed(
                 title=f"Who knows **{artistname}**?",
@@ -92,7 +97,9 @@ class WhoKnowsMixin(MixinMeta):
         else:
             await ctx.send(embed=pages[0])
         if old_king is None:
-            await ctx.send(f"> **{new_king.name}** just earned the **{artistname}** crown.")
+            await ctx.send(
+                f"> **{new_king.name}** just earned the **{artistname}** crown."
+            )
             async with self.config.guild(ctx.guild).crowns() as crowns:
                 crowns[artistname.lower()] = {"user": new_king.id, "playcount": play}
         if isinstance(old_king, discord.Member):
@@ -101,13 +108,21 @@ class WhoKnowsMixin(MixinMeta):
                     f"> **{new_king.name}** just stole the **{artistname}** crown from **{old_king.name}**."
                 )
                 async with self.config.guild(ctx.guild).crowns() as crowns:
-                    crowns[artistname.lower()] = {"user": new_king.id, "playcount": play}
+                    crowns[artistname.lower()] = {
+                        "user": new_king.id,
+                        "playcount": play,
+                    }
             if old_king.id == new_king.id:
                 async with self.config.guild(ctx.guild).crowns() as crowns:
-                    crowns[artistname.lower()] = {"user": new_king.id, "playcount": play}
+                    crowns[artistname.lower()] = {
+                        "user": new_king.id,
+                        "playcount": play,
+                    }
 
     @commands.command(
-        name="whoknowstrack", usage="<track name> | <artist name>", aliases=["wkt", "whoknowst"]
+        name="whoknowstrack",
+        usage="<track name> | <artist name>",
+        aliases=["wkt", "whoknowst"],
     )
     @commands.check(tokencheck)
     @commands.guild_only()
@@ -128,7 +143,9 @@ class WhoKnowsMixin(MixinMeta):
                 if trackname == "" or artistname == "":
                     raise ValueError
             except ValueError:
-                return await ctx.send("\N{WARNING SIGN} Incorrect format! use `track | artist`")
+                return await ctx.send(
+                    "\N{WARNING SIGN} Incorrect format! use `track | artist`"
+                )
 
         listeners = []
         tasks = []
@@ -157,7 +174,9 @@ class WhoKnowsMixin(MixinMeta):
                 if playcount > 0:
                     listeners.append((playcount, user))
         else:
-            return await ctx.send("Nobody on this server has connected their last.fm account yet!")
+            return await ctx.send(
+                "Nobody on this server has connected their last.fm account yet!"
+            )
 
         rows = []
         total = 0
@@ -190,7 +209,9 @@ class WhoKnowsMixin(MixinMeta):
             await ctx.send(embed=pages[0])
 
     @commands.command(
-        name="whoknowsalbum", aliases=["wka", "whoknowsa"], usage="<album name> | <artist name>"
+        name="whoknowsalbum",
+        aliases=["wka", "whoknowsa"],
+        usage="<album name> | <artist name>",
     )
     @commands.check(tokencheck)
     @commands.guild_only()
@@ -216,7 +237,9 @@ class WhoKnowsMixin(MixinMeta):
                 if not albumname or not artistname:
                     raise ValueError
             except ValueError:
-                return await ctx.send("\N{WARNING SIGN} Incorrect format! use `album | artist`")
+                return await ctx.send(
+                    "\N{WARNING SIGN} Incorrect format! use `album | artist`"
+                )
 
         listeners = []
         tasks = []
@@ -245,7 +268,9 @@ class WhoKnowsMixin(MixinMeta):
                 if playcount > 0:
                     listeners.append((playcount, user))
         else:
-            return await ctx.send("Nobody on this server has connected their last.fm account yet!")
+            return await ctx.send(
+                "Nobody on this server has connected their last.fm account yet!"
+            )
 
         rows = []
         total = 0

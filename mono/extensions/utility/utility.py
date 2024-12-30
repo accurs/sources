@@ -1,88 +1,62 @@
 # Standard library imports
+import asyncio
+import colorsys
+import os
+import textwrap
+import traceback
 from asyncio import sleep
+from contextlib import suppress
 from datetime import datetime, timezone
 from enum import Enum
 from io import BytesIO
 from re import Pattern, compile
-from typing import Optional, Annotated, List, Dict, cast, Literal
-import colorsys
-import textwrap
-import os
+from time import perf_counter
+from typing import Annotated, Dict, List, Literal, Optional, cast
 
 # Third-party library imports
 import aiohttp
-import asyncio
+# Local imports
+import config
 import dateparser
-from contextlib import suppress
 import lyricsgenius
 import pytz
 from bs4 import BeautifulSoup
-from dateutil.tz import gettz
-from discord import (
-    Embed,
-    utils,
-    Color,
-    Message,
-    Permissions,
-    File,
-    Attachment,
-    RawReactionActionEvent,
-    TextChannel,
-    Thread,
-    HTTPException,
-    Member,
-    app_commands,
-)
-from discord.ext.commands import (
-    Cog,
-    flag,
-    CommandError,
-    Range,
-    parameter,
-    BadArgument,
-    Group,
-    max_concurrency,
-    cooldown,
-    group,
-    BucketType,
-    hybrid_command,
-    command,
-    has_permissions,
-)
-from discord.ext.tasks import loop
-from discord.utils import format_dt, oauth_url, utcnow, find
-from humanize import naturalsize
-from lyricsgenius.song import Song as GeniusSong
-from psutil import Process
-from wand.image import Image as WandImage
-from yarl import URL
-from shazamio import Serialize as ShazamSerialize, Shazam as ShazamClient
-from core.managers.checks import require_dm
-from jishaku.math import mean_stddev
-from time import perf_counter
-
-
-from core.client.network.errors import CommandFailure
-import traceback
-
-# Local imports
-import config
-from core.Mono import Mono
 from core.client.context import Context
 from core.client.database.settings import Settings
+from core.client.network.errors import CommandFailure
+from core.managers.checks import require_dm
 from core.managers.script import EmbedScript, EmbedScriptValidator
-from core.tools import FlagConverter, shorten, CustomColorConverter, ordinal
-from core.tools.converters.basic import Domain as FilteredDomain, TimeConverter
+from core.Mono import Mono
+from core.tools import CustomColorConverter, FlagConverter, ordinal, shorten
+from core.tools.converters.basic import Domain as FilteredDomain
+from core.tools.converters.basic import TimeConverter
 from core.tools.converters.kayo import Timezone
 from core.tools.logging import logger as log
+from dateutil.tz import gettz
+from discord import (Attachment, Color, Embed, File, HTTPException, Member,
+                     Message, Permissions, RawReactionActionEvent, TextChannel,
+                     Thread, app_commands, utils)
+from discord.ext.commands import (BadArgument, BucketType, Cog, CommandError,
+                                  Group, Range, command, cooldown, flag, group,
+                                  has_permissions, hybrid_command,
+                                  max_concurrency, parameter)
+from discord.ext.tasks import loop
+from discord.utils import find, format_dt, oauth_url, utcnow
+from extensions.socials.models import YouTubeVideo
+from extensions.utility.models.google.images import Google as GoogleImages
+from extensions.utility.models.google.images import SafeSearchLevel
+from humanize import naturalsize
+from jishaku.math import mean_stddev
+from lyricsgenius.song import Song as GeniusSong
+from psutil import Process
+from shazamio import Serialize as ShazamSerialize
+from shazamio import Shazam as ShazamClient
+from wand.image import Image as WandImage
+from yarl import URL
 
 # Module imports
 from .extended import Extended
 from .models.google import Google
-from extensions.utility.models.google.images import Google as GoogleImages
-from extensions.utility.models.google.images import SafeSearchLevel
-
-from extensions.socials.models import YouTubeVideo
 
 
 class ScreenshotFlags(FlagConverter):
@@ -1059,14 +1033,14 @@ class Utility(Extended, Cog):
             """,
             ctx.guild.id,
         )
-    
+
         async with ctx.typing():
             data = await Google.search(
                 self.bot.session, query, safe=safesearch_level
             )  # Pass the SafeSearch level
             if not data.results:
                 return await ctx.warn(f"No results found for **{query}**!")
-    
+
         embed = Embed(
             title=(
                 f"{data.header}"
@@ -1076,47 +1050,51 @@ class Utility(Extended, Cog):
             ),
             color=config.Color.base,
         )
-    
+
         # Add Knowledge Panel Items to the description
         if panel := data.panel:
             if panel.source:
                 embed.url = panel.source.url
-    
-            embed.description = shorten(panel.description, 200) if panel.description else ""
-    
+
+            embed.description = (
+                shorten(panel.description, 200) if panel.description else ""
+            )
+
             for item in panel.items:
                 if embed.description:
-                    embed.description += "\n"  # Add a newline if there's existing description
+                    embed.description += (
+                        "\n"  # Add a newline if there's existing description
+                    )
                 embed.description += f"> **{item.name}:** `{item.value}`"
-    
+
         description = []
         for result in data.results:
             snippet = result.snippet or (".." if not result.tweets else "")
             for highlight in result.highlights:
                 snippet = snippet.replace(highlight, f"**{highlight}**")
-    
+
             result_text = f"**[{result.title}]({result.url.split('?', 1)[0]})**\n{shorten(snippet, 200)}"
-    
+
             if result.extended_links:
                 result_text += "\n" + "\n".join(
                     f"> [`{extended.title}`]({extended.url}): {textwrap.shorten(extended.snippet or '...', 46, placeholder='..')}"
                     for extended in result.extended_links
                 )
-    
+
             if result.tweets:
                 result_text += "\n" + "\n".join(
                     f"> [`{textwrap.shorten(tweet.text, 46, placeholder='..')}`]({tweet.url}) **{tweet.footer}**"
                     for tweet in result.tweets[:3]
                 )
-    
+
             description.append(result_text)
-    
+
         # Add the knowledge items to the description
         if panel and panel.items:
             description.append("\n")
             for item in panel.items:
                 description.append(f"> **{item.name}:** `{item.value}`")
-    
+
         return await ctx.autopaginator(embed, description, split=5)
 
     @command(

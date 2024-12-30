@@ -1,31 +1,16 @@
 from __future__ import annotations
+
 import asyncio
 import json
 import logging
-from asyncio import as_completed, Semaphore
+from asyncio import Semaphore, as_completed
 from asyncio.futures import isfuture
 from itertools import chain
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    AsyncIterator,
-    AsyncIterable,
-    Awaitable,
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    Literal,
-    NoReturn,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-    Generator,
-    Coroutine,
-    overload,
-)
+from typing import (TYPE_CHECKING, Any, AsyncIterable, AsyncIterator,
+                    Awaitable, Callable, Coroutine, Generator, Iterable,
+                    Iterator, List, Literal, NoReturn, Optional, Tuple,
+                    TypeVar, Union, overload)
 
 import discord
 from discord.ext import commands as dpy_commands
@@ -41,7 +26,9 @@ if TYPE_CHECKING:
         discord.StageChannel,
         discord.Thread,
     ]
-    DMMessageable = Union[commands.DMContext, discord.Member, discord.User, discord.DMChannel]
+    DMMessageable = Union[
+        commands.DMContext, discord.Member, discord.User, discord.DMChannel
+    ]
 
 __all__ = (
     "async_filter",
@@ -74,7 +61,9 @@ def deduplicate_iterables(*iterables):
 
 
 # https://github.com/PyCQA/pylint/issues/2717
-class AsyncFilter(AsyncIterator[_T], Awaitable[List[_T]]):  # pylint: disable=duplicate-bases
+class AsyncFilter(
+    AsyncIterator[_T], Awaitable[List[_T]]
+):  # pylint: disable=duplicate-bases
     """Class returned by `async_filter`. See that function for details.
 
     We don't recommend instantiating this class directly.
@@ -97,7 +86,9 @@ class AsyncFilter(AsyncIterator[_T], Awaitable[List[_T]]):  # pylint: disable=du
         elif asyncio.iscoroutinefunction(func):
             self.__generator_instance = self.__sync_generator_async_pred()
         else:
-            raise TypeError("Must be either an async predicate, an async iterable, or both.")
+            raise TypeError(
+                "Must be either an async predicate, an async iterable, or both."
+            )
 
     async def __sync_generator_async_pred(self) -> AsyncIterator[_T]:
         for item in self.__iterable:
@@ -271,7 +262,9 @@ def bounded_gather(
     return asyncio.gather(*tasks, return_exceptions=return_exceptions)
 
 
-class AsyncIter(AsyncIterator[_T], Awaitable[List[_T]]):  # pylint: disable=duplicate-bases
+class AsyncIter(
+    AsyncIterator[_T], Awaitable[List[_T]]
+):  # pylint: disable=duplicate-bases
     """Asynchronous iterator yielding items from ``iterable``
     that sleeps for ``delay`` seconds every ``steps`` items.
 
@@ -382,7 +375,9 @@ class AsyncIter(AsyncIterator[_T], Awaitable[List[_T]]):  # pylint: disable=dupl
         """
         return [item async for item in self]
 
-    def filter(self, function: Callable[[_T], Union[bool, Awaitable[bool]]]) -> AsyncFilter[_T]:
+    def filter(
+        self, function: Callable[[_T], Union[bool, Awaitable[bool]]]
+    ) -> AsyncFilter[_T]:
         """Filter the iterable with an (optionally async) predicate.
 
         Parameters
@@ -579,7 +574,9 @@ def get_end_user_data_statement(file: Union[Path, str]) -> Optional[str]:
     except FileNotFoundError:
         log.critical("'%s' does not exist.", str(info_json))
     except KeyError:
-        log.critical("'%s' is missing an entry for 'end_user_data_statement'", str(info_json))
+        log.critical(
+            "'%s' is missing an entry for 'end_user_data_statement'", str(info_json)
+        )
     except json.JSONDecodeError as exc:
         log.critical("'%s' is not a valid JSON file.", str(info_json), exc_info=exc)
     except UnicodeError as exc:
@@ -653,18 +650,19 @@ def get_end_user_data_statement_or_raise(file: Union[Path, str]) -> str:
 @overload
 def can_user_send_messages_in(
     obj: discord.abc.User, messageable: discord.PartialMessageable, /
-) -> NoReturn:
-    ...
+) -> NoReturn: ...
 
 
 @overload
-def can_user_send_messages_in(obj: discord.Member, messageable: GuildMessageable, /) -> bool:
-    ...
+def can_user_send_messages_in(
+    obj: discord.Member, messageable: GuildMessageable, /
+) -> bool: ...
 
 
 @overload
-def can_user_send_messages_in(obj: discord.User, messageable: DMMessageable, /) -> Literal[True]:
-    ...
+def can_user_send_messages_in(
+    obj: discord.User, messageable: DMMessageable, /
+) -> Literal[True]: ...
 
 
 def can_user_send_messages_in(
@@ -712,7 +710,11 @@ def can_user_send_messages_in(
     TypeError
         When the passed channel is of type `discord.PartialMessageable`.
     """
-    channel = messageable.channel if isinstance(messageable, dpy_commands.Context) else messageable
+    channel = (
+        messageable.channel
+        if isinstance(messageable, dpy_commands.Context)
+        else messageable
+    )
     if isinstance(channel, discord.PartialMessageable):
         # If we have a partial messageable, we sadly can't do much...
         raise TypeError("Can't check permissions for PartialMessageable.")
@@ -768,7 +770,9 @@ def can_user_manage_channel(
     """
     perms = channel.permissions_for(obj)
     if isinstance(channel, discord.Thread):
-        return perms.manage_threads or (allow_thread_owner and channel.owner_id == obj.id)
+        return perms.manage_threads or (
+            allow_thread_owner and channel.owner_id == obj.id
+        )
 
     return perms.manage_channels
 
@@ -776,21 +780,24 @@ def can_user_manage_channel(
 @overload
 def can_user_react_in(
     obj: discord.abc.User, messageable: discord.PartialMessageable, /
-) -> NoReturn:
-    ...
+) -> NoReturn: ...
 
 
 @overload
-def can_user_react_in(obj: discord.Member, messageable: GuildMessageable, /) -> bool:
-    ...
+def can_user_react_in(
+    obj: discord.Member, messageable: GuildMessageable, /
+) -> bool: ...
 
 
 @overload
-def can_user_react_in(obj: discord.User, messageable: DMMessageable, /) -> Literal[True]:
-    ...
+def can_user_react_in(
+    obj: discord.User, messageable: DMMessageable, /
+) -> Literal[True]: ...
 
 
-def can_user_react_in(obj: discord.abc.User, messageable: discord.abc.Messageable, /) -> bool:
+def can_user_react_in(
+    obj: discord.abc.User, messageable: discord.abc.Messageable, /
+) -> bool:
     """
     Checks if a user/guild member can react in the given messageable.
 
@@ -833,7 +840,11 @@ def can_user_react_in(obj: discord.abc.User, messageable: discord.abc.Messageabl
     TypeError
         When the passed channel is of type `discord.PartialMessageable`.
     """
-    channel = messageable.channel if isinstance(messageable, dpy_commands.Context) else messageable
+    channel = (
+        messageable.channel
+        if isinstance(messageable, dpy_commands.Context)
+        else messageable
+    )
     if isinstance(channel, discord.PartialMessageable):
         # If we have a partial messageable, we sadly can't do much...
         raise TypeError("Can't check permissions for PartialMessageable.")

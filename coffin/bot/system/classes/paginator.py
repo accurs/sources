@@ -1,8 +1,10 @@
-from inspect import iscoroutinefunction as iscoro, isfunction as isfunc
 import asyncio
+from inspect import iscoroutinefunction as iscoro
+from inspect import isfunction as isfunc
+from io import BytesIO
+
 import discord
 from discord import File
-from io import BytesIO
 
 
 class prev_page(discord.ui.Button):
@@ -240,7 +242,9 @@ class Paginator(discord.ui.View):
                 attachments = []
                 if files := current.get("files", current.get("attachments")):
                     for file in files:
-                        attachments.append(File(fp = BytesIO(file["data"]), filename = file["filename"]))
+                        attachments.append(
+                            File(fp=BytesIO(file["data"]), filename=file["filename"])
+                        )
                     current["attachments"] = attachments
                     current.pop("files", None)
                 await interaction.message.edit(**current, view=self)
@@ -266,7 +270,9 @@ class Paginator(discord.ui.View):
                 c = {}
                 if files := current.get("files", current.get("attachments")):
                     for file in files:
-                        attachments.append(File(fp = BytesIO(file["data"]), filename = file["filename"]))
+                        attachments.append(
+                            File(fp=BytesIO(file["data"]), filename=file["filename"])
+                        )
                     c["attachments"] = attachments
                 for key, value in current.items():
                     if key not in ("files", "attachments"):
@@ -313,7 +319,11 @@ class Paginator(discord.ui.View):
                     c = {}
                     if files := current.get("files", current.get("attachments")):
                         for file in files:
-                            attachments.append(File(fp = BytesIO(file["data"]), filename = file["filename"]))
+                            attachments.append(
+                                File(
+                                    fp=BytesIO(file["data"]), filename=file["filename"]
+                                )
+                            )
                         c["files"] = attachments
                     for key, value in current.items():
                         if key not in ("files", "attachments"):

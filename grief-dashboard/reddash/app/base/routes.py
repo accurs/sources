@@ -4,18 +4,18 @@ License: MIT
 Copyright (c) 2019 - present AppSeed.us
 """
 
-from flask import jsonify, render_template, redirect, request, url_for, session, g, make_response
-from datetime import datetime, timedelta
-from flask_babel import _, refresh
-
-from reddash.app.base import blueprint
-from reddash.app import app
-
-import requests
-import websocket
 import json
 import logging
+from datetime import datetime, timedelta
+
 import jwt
+import requests
+import websocket
+from flask import (g, jsonify, make_response, redirect, render_template,
+                   request, session, url_for)
+from flask_babel import _, refresh
+from reddash.app import app
+from reddash.app.base import blueprint
 
 dashlog = logging.getLogger("reddash")
 
@@ -57,7 +57,9 @@ def callback():
                 else:
                     dashlog.error(result["error"])
                     return render_template("login/login.html", status="5")
-            if isinstance(result["result"], dict) and result["result"].get("disconnected", False):
+            if isinstance(result["result"], dict) and result["result"].get(
+                "disconnected", False
+            ):
                 return render_template("login/login.html", status="4")
             secret = result["result"]["secret"]
     else:
@@ -81,7 +83,8 @@ def callback():
         dashlog.error(f"Failed to log someone in.\n{response.json()}")
         return render_template("login/login.html", status="2")
     new = requests.get(
-        "https://discordapp.com/api/v6/users/@me", headers={"Authorization": f"Bearer {token}"},
+        "https://discordapp.com/api/v6/users/@me",
+        headers={"Authorization": f"Bearer {token}"},
     )
     new_data = new.json()
     if "id" in new_data:
@@ -92,9 +95,9 @@ def callback():
         }
         token = jwt.encode(payload, app.jwt_secret_key, algorithm="HS256")
         session["id"] = token
-        session[
-            "avatar"
-        ] = f"https://cdn.discordapp.com/avatars/{new_data['id']}/{new_data['avatar']}.png"
+        session["avatar"] = (
+            f"https://cdn.discordapp.com/avatars/{new_data['id']}/{new_data['avatar']}.png"
+        )
         session["username"] = new_data["username"]
 
         redirecting_to = "base_blueprint.index"
@@ -146,7 +149,10 @@ def commands():
     prefix = app.variables.get("prefix", ["[p]"])
 
     return render_template(
-        "pages/commands.html", cogs=[k["name"] for k in data], data=data, prefixes=prefix
+        "pages/commands.html",
+        cogs=[k["name"] for k in data],
+        data=data,
+        prefixes=prefix,
     )
 
 

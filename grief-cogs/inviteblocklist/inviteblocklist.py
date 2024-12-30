@@ -5,6 +5,7 @@ from typing import Pattern, Union
 import discord
 from discord.ext.commands.converter import IDConverter, InviteConverter
 from discord.ext.commands.errors import BadArgument
+
 from grief.core import Config, VersionInfo, commands, version_info
 from grief.core.i18n import Translator
 from grief.core.utils.chat_formatting import humanize_list, pagify
@@ -256,7 +257,9 @@ class InviteBlocklist(commands.Cog):
 
     @invite_blocklist.command(name="add")
     async def add_to_blocklist(
-        self, ctx: commands.Context, *invite_or_guild_id: Union[InviteConverter, ValidServerID]
+        self,
+        ctx: commands.Context,
+        *invite_or_guild_id: Union[InviteConverter, ValidServerID],
     ):
         """
         Add a guild ID to the blocklist, providing an invite link will also work
@@ -281,10 +284,14 @@ class InviteBlocklist(commands.Cog):
                         blacklist.append(i.id)
         if guilds_blocked:
             await ctx.send(
-                _("Now blocking invites from {guild}.").format(guild=humanize_list(guilds_blocked))
+                _("Now blocking invites from {guild}.").format(
+                    guild=humanize_list(guilds_blocked)
+                )
             )
         else:
-            await ctx.send(_("None of the provided invite links or guild ID's are new."))
+            await ctx.send(
+                _("None of the provided invite links or guild ID's are new.")
+            )
 
     @invite_blocklist.group(name="remove", aliases=["del", "rem"])
     async def remove_from_blocklist(
@@ -315,10 +322,14 @@ class InviteBlocklist(commands.Cog):
                         blacklist.remove(i.id)
         if guilds_blocked:
             await ctx.send(
-                _("Removed {guild} from blocklist.").format(guild=humanize_list(guilds_blocked))
+                _("Removed {guild} from blocklist.").format(
+                    guild=humanize_list(guilds_blocked)
+                )
             )
         else:
-            await ctx.send(_("None of the provided invite links or guild ID's are being blocked."))
+            await ctx.send(
+                _("None of the provided invite links or guild ID's are being blocked.")
+            )
 
     @invite_blocklist.command(name="info")
     async def blocklist_info(self, ctx: commands.Context):
@@ -331,9 +342,12 @@ class InviteBlocklist(commands.Cog):
         )
         block_list = await self.config.guild(ctx.guild).channel_user_role_allow()
         if block_list:
-            msg += _("__Blocked Channels, Users, and Roles:__\n{chan_user_roel}").format(
+            msg += _(
+                "__Blocked Channels, Users, and Roles:__\n{chan_user_roel}"
+            ).format(
                 chan_user_role="\n".join(
-                    await ChannelUserRole().convert(ctx, str(obj_id)) for obj_id in block_list
+                    await ChannelUserRole().convert(ctx, str(obj_id))
+                    for obj_id in block_list
                 )
             )
         for page in pagify(msg):
@@ -345,7 +359,9 @@ class InviteBlocklist(commands.Cog):
 
     @invite_allowlist.command(name="add")
     async def add_to_allowlist(
-        self, ctx: commands.Context, *invite_or_guild_id: Union[InviteConverter, ValidServerID]
+        self,
+        ctx: commands.Context,
+        *invite_or_guild_id: Union[InviteConverter, ValidServerID],
     ):
         """
         Add a guild ID to the allowlist, providing an invite link will also work
@@ -366,14 +382,18 @@ class InviteBlocklist(commands.Cog):
                         guilds_blocked.append(f"{i.guild.name} - {i.guild.id}")
         if guilds_blocked:
             await ctx.send(
-                _("Now Allowing invites from {guild}.").format(guild=humanize_list(guilds_blocked))
+                _("Now Allowing invites from {guild}.").format(
+                    guild=humanize_list(guilds_blocked)
+                )
             )
         else:
             await ctx.send(_("None of the provided invite links or ID's are new."))
 
     @invite_allowlist.command(name="remove", aliases=["del", "rem"])
     async def remove_from_allowlist(
-        self, ctx: commands.Context, *invite_or_guild_id: Union[InviteConverter, ValidServerID]
+        self,
+        ctx: commands.Context,
+        *invite_or_guild_id: Union[InviteConverter, ValidServerID],
     ):
         """
         Add a guild ID to the allowlist, providing an invite link will also work
@@ -394,11 +414,15 @@ class InviteBlocklist(commands.Cog):
                         whitelist.remove(i.guild.id)
         if guilds_blocked:
             await ctx.send(
-                _("Removed {guild} from allowlist.").format(guild=humanize_list(guilds_blocked))
+                _("Removed {guild} from allowlist.").format(
+                    guild=humanize_list(guilds_blocked)
+                )
             )
         else:
             await ctx.send(
-                _("None of the provided invite links or guild ID's are currently allowed.")
+                _(
+                    "None of the provided invite links or guild ID's are currently allowed."
+                )
             )
 
     @invite_allowlist.command(name="info")
@@ -412,9 +436,12 @@ class InviteBlocklist(commands.Cog):
         )
         allow_list = await self.config.guild(ctx.guild).channel_user_role_allow()
         if allow_list:
-            msg += _("__Allowed Channels, Users, and Roles:__\n{chan_user_roel}").format(
+            msg += _(
+                "__Allowed Channels, Users, and Roles:__\n{chan_user_roel}"
+            ).format(
                 chan_user_role="\n".join(
-                    await ChannelUserRole().convert(ctx, str(obj_id)) for obj_id in allow_list
+                    await ChannelUserRole().convert(ctx, str(obj_id))
+                    for obj_id in allow_list
                 )
             )
         for page in pagify(msg):
@@ -458,7 +485,9 @@ class InviteBlocklist(commands.Cog):
         """
         if len(channel_user_role) < 1:
             return await ctx.send(
-                _("You must supply 1 or more channels users or roles to be whitelisted.")
+                _(
+                    "You must supply 1 or more channels users or roles to be whitelisted."
+                )
             )
         async with self.config.guild(ctx.guild).immunity_list() as whitelist:
             for obj in channel_user_role:
