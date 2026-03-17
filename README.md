@@ -1,1 +1,1 @@
-# sources
+### This is a reupload of the old sources repository. A website will be posted later along with a backup CDN download link, making any DMCA takedown of this repository effectively pointless.
