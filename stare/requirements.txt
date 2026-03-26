@@ -1,0 +1,15 @@
+discord
+discord_ios
+jishaku
+
+asyncpg
+
+requests
+
+aiohttp
+pytz
+
+pomice
+beautifulsoup4 
+
+brotli

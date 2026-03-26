@@ -1,0 +1,42 @@
+class Colors:
+    DEFAULT = 0x35578E
+    SUCCESS = 0x35578E
+    ERROR = 0x35578E
+    WARNING = 0x35578E
+    LOADING = 0x35578E
+
+class Emojis:
+    SUCCESS = "<:approve:1477386700689768499>"
+    ERROR = "<:deny:1477387094291648563>"
+    WARNING = "<:warn:1477385295371567269>"
+    INFO = "<:information:1472267718182043871>"
+    LOADING = "<a:loading:1472264803882893538>"
+    FORWARD = "<:right:1472264412789346365>"
+    BACKWARD = "<:left:1472264409756733480>"
+    SKIPTO = "<:skipto:1472264407085088920>"
+    CLOSE = "<:cancel:1472264411422003321>"
+    LASTFM = "<:lastfm:1472264777614098665>"
+
+class Config:
+    BOT_TOKEN = "MTQ3MjAyMzU0MDIyNzExNzMyMg.GZM4mM.nEM0HzH7jEuoQMBLBCc03xFtecD3tDcYPNcBFk"
+    PREFIX = ";"
+    
+    SUPPORT_CATEGORY_ID = 1477398005068988547
+    
+    DB_HOST = "15.204.157.229"
+    DB_PORT = 5432
+    DB_NAME = "mydb"
+    DB_USER = "myuser"
+    DB_PASSWORD = "yourpassword"
+    
+    class KEYS:
+        LASTFM = "c438d5e6351236efb60d447649fa226e"
+        SPOTIFY_CLIENT_ID = "043c83c8755e4bb294589476be777105"
+        SPOTIFY_CLIENT_SECRET = "2fa839bad2a941318de78fddb37fdce5"
+        API_TOKEN = "stare_api_token_secure_2024"
+        RAPIDAPI = "c1cade4689msh21dd3316024cf4ep13637fjsn16678ce0b229"
+        RIVE = "9b8c3c3049e69c3edaab5c3274d729f77f90692f4adf8074426408fd01d7be9a"
+    
+    COLORS = Colors
+    
+    EMOJIS = Emojis
