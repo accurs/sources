@@ -1,0 +1,422 @@
+
+[2026-03-21 16:31:54.746381] 1484952684401529046-1774110714
+Command: set icon
+User: noluckforlove (513684550753320971)
+Guild: PretendServices
+Traceback (most recent call last):
+  File "/root/evy/disk/config.py", line 25, in icon
+    async with session.get(url) as response:
+  File "/usr/local/lib/python3.12/dist-packages/aiohttp/client.py", line 1510, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/aiohttp/client.py", line 639, in _request
+    raise err_exc_cls(url)
+aiohttp.client_exceptions.InvalidUrlClientError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 266, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/config.py", line 32, in icon
+    except asyncio.TimeoutError:
+           ^^^^^^^
+NameError: name 'asyncio' is not defined. Did you forget to import 'asyncio'
+
+
+[2026-03-21 16:32:20.513442] 1484952563102126120-1774110740
+Command: set icon
+User: noluckforlove (513684550753320971)
+Guild: PretendServices
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/evy/disk/config.py", line 18, in icon
+    message = await self.bot.wait_for(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/tasks.py", line 519, in wait_for
+    async with timeouts.timeout(timeout):
+  File "/usr/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 266, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/config.py", line 32, in icon
+    except asyncio.TimeoutError:
+           ^^^^^^^
+NameError: name 'asyncio' is not defined. Did you forget to import 'asyncio'
+
+
+[2026-03-21 16:39:32.837107] 1484954627634892811-1774111172
+Command: gedit icon
+User: noluckforlove (513684550753320971)
+Guild: PretendServices
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 266, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/config.py", line 66, in ge_icon
+    await ctx.success('I have **cleared** the server icon.')
+          ^^^^^^^^^^^
+AttributeError: 'NeoContext' object has no attribute 'success'
+
+
+[2026-03-21 16:40:05.268479] 1484954760561037314-1774111205
+Command: gedit icon
+User: noluckforlove (513684550753320971)
+Guild: PretendServices
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 266, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/config.py", line 75, in ge_icon
+    await ctx.success(f'I have **updated** the server icon to [**image**]({url}).')
+          ^^^^^^^^^^^
+AttributeError: 'NeoContext' object has no attribute 'success'
+
+
+[2026-03-22 12:13:15.754204] 1485250004359712818-1774181595
+Command: jishaku
+User: noluckforlove (513684550753320971)
+Guild: PretendServices
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/bot.py", line 1390, in invoke
+    await ctx.command.invoke(ctx)
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 1720, in invoke
+    await super().invoke(ctx)
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 1079, in invoke
+    await self.prepare(ctx)
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 996, in prepare
+    await self._parse_arguments(ctx)
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 924, in _parse_arguments
+    raise TooManyArguments('Too many arguments passed to ' + self.qualified_name)
+discord.ext.commands.errors.TooManyArguments: Too many arguments passed to jishaku
+
+
+[2026-03-22 13:23:36.255429] 1485267703471018034-1774185816
+Command: emoji addmultiple
+User: noluckforlove (513684550753320971)
+Guild: PretendServices
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/config.py", line 34, in addmultiple
+    await asyncio.sleep(.5)
+          ^^^^^^^
+NameError: name 'asyncio' is not defined. Did you forget to import 'asyncio'
+
+
+[2026-03-22 13:25:26.704595] 1485268165616472105-1774185926
+Command: emoji addmultiple
+User: noluckforlove (513684550753320971)
+Guild: PretendServices
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/config.py", line 34, in addmultiple
+    await asyncio.sleep(.5)
+          ^^^^^^^
+NameError: name 'asyncio' is not defined. Did you forget to import 'asyncio'
+
+
+[2026-03-22 20:36:03.245214] UjVuSAHxNV
+Command: work
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 308, in work
+    if self.has_item(data, "laptop"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 201, in has_item
+    return int(inv.get(item_id, 0)) > 0
+               ^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+
+
+[2026-03-22 20:36:58.819885] lOhGnmUgmE
+Command: fish
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 351, in fish
+    if not self.has_item(data, "fishrod"):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 201, in has_item
+    return int(inv.get(item_id, 0)) > 0
+               ^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+
+
+[2026-03-22 20:38:48.980073] xoAymrKokF
+Command: work
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 308, in work
+  File "/root/evy/disk/economy.py", line 201, in has_item
+    SET inventory = jsonb_set(inventory, ARRAY[$1], $4::text::jsonb)
+       ^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+
+
+[2026-03-22 20:39:25.661394] cpNSPdXkZt
+Command: inventory
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 390, in inventory
+    set_cooldown("mine", ctx.author.id, 1800)
+                             ^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'items'
+
+
+[2026-03-22 20:44:07.013070] lbBqlwmKwP
+Command: buy
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 736, in buy
+    await self.add_item(ctx.author.id, ctx.guild.id, match["id"])
+  File "/root/evy/disk/economy.py", line 196, in add_item
+    await self._save_inv(user_id, guild_id, inv)
+  File "/root/evy/disk/economy.py", line 169, in _save_inv
+    await self.bot.db.execute(
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/pool.py", line 592, in execute
+    return await con.execute(query, *args, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 357, in execute
+    _, status, _ = await self._execute(
+                   ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 1873, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 1970, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 2013, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 443, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.DuplicatePreparedStatementError: prepared statement "__asyncpg_stmt_4__" already exists
+HINT:  
+NOTE: pgbouncer with pool_mode set to "transaction" or
+"statement" does not support prepared statements properly.
+You have two options:
+
+* if you are using pgbouncer for connection pooling to a
+  single server, switch to the connection pool functionality
+  provided by asyncpg, it is a much better option for this
+  purpose;
+
+* if you have no option of avoiding the use of pgbouncer,
+  then you can set statement_cache_size to 0 when creating
+  the asyncpg connection object.
+
+
+
+[2026-03-22 20:44:36.020920] ZwUTPahWLw
+Command: buy
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 736, in buy
+    await self.add_item(ctx.author.id, ctx.guild.id, match["id"])
+  File "/root/evy/disk/economy.py", line 196, in add_item
+    await self._save_inv(user_id, guild_id, inv)
+  File "/root/evy/disk/economy.py", line 169, in _save_inv
+    await self.bot.db.execute(
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/pool.py", line 592, in execute
+    return await con.execute(query, *args, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 357, in execute
+    _, status, _ = await self._execute(
+                   ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 1873, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 1970, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 2013, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 443, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.DuplicatePreparedStatementError: prepared statement "__asyncpg_stmt_5__" already exists
+HINT:  
+NOTE: pgbouncer with pool_mode set to "transaction" or
+"statement" does not support prepared statements properly.
+You have two options:
+
+* if you are using pgbouncer for connection pooling to a
+  single server, switch to the connection pool functionality
+  provided by asyncpg, it is a much better option for this
+  purpose;
+
+* if you have no option of avoiding the use of pgbouncer,
+  then you can set statement_cache_size to 0 when creating
+  the asyncpg connection object.
+
+
+
+[2026-03-22 20:46:52.080238] cqZhzrleKg
+Command: leaderboard
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 743, in leaderboard
+    rows = await self.bot.db.fetch(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/pool.py", line 629, in fetch
+    return await con.fetch(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 694, in fetch
+    return await self._execute(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 1873, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 1970, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 2013, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 443, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.DuplicatePreparedStatementError: prepared statement "__asyncpg_stmt_6__" already exists
+HINT:  
+NOTE: pgbouncer with pool_mode set to "transaction" or
+"statement" does not support prepared statements properly.
+You have two options:
+
+* if you are using pgbouncer for connection pooling to a
+  single server, switch to the connection pool functionality
+  provided by asyncpg, it is a much better option for this
+  purpose;
+
+* if you have no option of avoiding the use of pgbouncer,
+  then you can set statement_cache_size to 0 when creating
+  the asyncpg connection object.
+
+
+
+[2026-03-23 07:34:13.496219] apHlFzvNyL
+Command: daily
+User: 69sh (713128996287807600)
+Guild: PretendServices
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 310, in daily
+    cd = await self.cd_get(ctx.author.id, ctx.guild.id, "daily")
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 141, in cd_get
+    row = await self._row(
+          ^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/economy.py", line 108, in _row
+    return await c.fetchrow(q, *a, timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 752, in fetchrow
+    data = await self._execute(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 1873, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 1970, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 2021, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/asyncpg/connection.py", line 443, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.DuplicatePreparedStatementError: prepared statement "__asyncpg_stmt_1__" already exists
+HINT:  
+NOTE: pgbouncer with pool_mode set to "transaction" or
+"statement" does not support prepared statements properly.
+You have two options:
+
+* if you are using pgbouncer for connection pooling to a
+  single server, switch to the connection pool functionality
+  provided by asyncpg, it is a much better option for this
+  purpose;
+
+* if you have no option of avoiding the use of pgbouncer,
+  then you can set statement_cache_size to 0 when creating
+  the asyncpg connection object.
+
+
+
+[2026-03-23 07:57:19.119274] fPvyeVsFMn
+Command: lastfm album
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/lastfm.py", line 420, in lfm_album
+    tags      = a.get("tags", {}).get("tag", [])
+                ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+
+
+[2026-03-23 07:59:45.236119] LffbmXObdb
+Command: lastfm album
+User: 69sh (713128996287807600)
+Guild: flaunt
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/discord/ext/commands/core.py", line 241, in wrapped
+    ret = await coro(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/evy/disk/lastfm.py", line 420, in lfm_album
+    tags      = a.get("tags", {}).get("tag", [])
+                ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+
