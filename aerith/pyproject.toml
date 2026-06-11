@@ -1,0 +1,7 @@
+[project]
+name = "aerith"
+version = "0.1.0"
+description = "hi"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
